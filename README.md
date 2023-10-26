@@ -1,2 +1,3 @@
 # INLAcorrel
-Models for correlation matrices
+
+Models for correlation matrices based on graphs.
