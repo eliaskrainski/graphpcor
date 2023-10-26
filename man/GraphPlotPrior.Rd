@@ -21,13 +21,13 @@ GraphPlotPrior(
 
 \item{width}{c}
 
+\item{height}{d}
+
 \item{fontsizeLast}{e}
 
 \item{widthLast}{f}
 
 \item{heightLast}{g}
-
-\item{heigth}{d}
 }
 \description{
 Function to plot the graph prior

@@ -7,7 +7,7 @@ Authors@R: c(
          role = c("cre", "aut", "cph"), 
          comment = c(ORCID = "0000-0002-7063-2615")),
   person("Denis", "Rustand", email = "denis@rustand.fr", 
-        role = c("cre", "aut"),
+        role = c("aut", "cph"),
         comment = c(ORCID = "0000-0001-9708-5220")),
   person("Haavard", "Rue", email = "haavard.rue@kaust.edu.sa",
          role = c("aut"),
@@ -29,6 +29,7 @@ Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 3.6),
     graph,
+    Rgraphviz,
     numDeriv
 Imports:
     graphics,

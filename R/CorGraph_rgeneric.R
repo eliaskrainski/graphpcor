@@ -1,12 +1,10 @@
 #'
 #'  R generic implementation of the graph model
 #'  @export
-CorGraphs.model <- function (cmd = c("graph", "Q", "mu", "initial", "log.norm.const",
-                                     "log.prior", "quit"), theta = NULL)
+CorGraphs.model <- function(cmd = c("graph", "Q", "mu", "initial", "log.norm.const",
+                                    "log.prior", "quit"), theta = NULL, Argm = NULL)
 {
   envir <- parent.env(environment())
-  library(Rgraphviz)
-  library(numDeriv)
   if (exists("GS", envir=envir)) {
     GS <- get("GS", envir=envir) # need to get or already in environment?
   } else {
@@ -40,7 +38,7 @@ CorGraphs.model <- function (cmd = c("graph", "Q", "mu", "initial", "log.norm.co
 
   log.prior <- function() {
     q <- theta[-(1:Argm$SP$NC)]
-    val <- (sum(dgamma(exp(theta[1:Argm$SP$NC]), shape = 1, rate = 0.01, log = TRUE)) + sum(theta[1:Argm$SP$NC]) +
+    val <- (sum(stats::dgamma(exp(theta[1:Argm$SP$NC]), shape = 1, rate = 0.01, log = TRUE)) + sum(theta[1:Argm$SP$NC]) +
               sum(unlist(Argm$GraphPrior(Argm$S, q, Argm$lambda, Argm$SP, Argm$Tdist)))+sum(theta[-(1:Argm$SP$NC)]))
     return(val)
   }

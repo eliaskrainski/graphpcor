@@ -7,7 +7,8 @@
 \usage{
 CorGraphs.model(
   cmd = c("graph", "Q", "mu", "initial", "log.norm.const", "log.prior", "quit"),
-  theta = NULL
+  theta = NULL,
+  Argm = NULL
 )
 }
 \description{

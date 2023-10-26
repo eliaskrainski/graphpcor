@@ -26,3 +26,10 @@ GraphPlot(
 \description{
 #' Function to plot a graph
 }
+\examples{
+\dontrun{
+ graph.def <- list(p1 ~ c1 + c2)
+ graph.plot <- GraphPlot(graph.def, base = 0)
+ plot(graph.plot$gr, nodeAttrs = graph.plot$nAttrs)
+}
+}

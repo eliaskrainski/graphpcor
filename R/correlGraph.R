@@ -95,10 +95,10 @@ GraphDens <- function(S){
 #' @param SD0 standard deviation for model 0 (NULL if model 0 is independent, i.e., last step)
 #' @param STR model structure (i.e., for the number of nodes)
 #' @param NC number of children
-#' @returndistance
+#' @return distance
 #' @export
 Tdist <- function(f1, f0=NULL, SD1, SD0=NULL, STR, NC){ # f negative logarithm of density
-  Q1 <- hessian(f1, rep(0, length(STR)), SDev=c(SD0, SD1)) # precision 1
+  Q1 <- numDeriv::hessian(f1, rep(0, length(STR)), SDev=c(SD0, SD1)) # precision 1
   diag(Q1) <- diag(Q1)+1e-12
   L1 <- chol(Q1)
   VC1 <- chol2inv(L1) # variance-covariance 1
@@ -107,7 +107,7 @@ Tdist <- function(f1, f0=NULL, SD1, SD0=NULL, STR, NC){ # f negative logarithm o
   lc1 <- chol(Cor1)
   Dt1 <- 2*sum(log(diag(lc1))) # determinant 1
   if(length(SD0)>0) { # only if model 0 is not identity
-    Q0 <- hessian(f0, rep(0, length(STR)-1), SDev=SD0) # precision 0
+    Q0 <- numDeriv::hessian(f0, rep(0, length(STR)-1), SDev=SD0) # precision 0
     diag(Q0) <- diag(Q0)+1e-12
     L0 <- chol(Q0)
     VC0 <- chol2inv(L0) # variance-covariance 0
@@ -141,16 +141,16 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
         return(Tdist(f1=SP$JD[[i]], f0=SP$JD[[i+1]], SD1=SDNew, SD0=SDBase, STR=SP$STR[[i]], NC=SP$NC))
       }
       if(log(SDNew)<(-4.5/sqrt(SP$NP-i+1))){
-        SPF <- splinefun(c(-sqrt(c(4,9))/sqrt(SP$NP-i+1)), c(log(abs(grad(fq,exp(-sqrt(4)/sqrt(SP$NP-i+1))))), log(abs(grad(fq,exp(-sqrt(9)/sqrt(SP$NP-i+1)))))))
+        SPF <- stats::splinefun(c(-sqrt(c(4,9))/sqrt(SP$NP-i+1)), c(log(abs(numDeriv::grad(fq,exp(-sqrt(4)/sqrt(SP$NP-i+1))))), log(abs(numDeriv::grad(fq,exp(-sqrt(9)/sqrt(SP$NP-i+1)))))))
         LGD <- SPF(log(SDNew))
       }else{
-        LGD <- log(abs(grad(fq,SDNew)))
+        LGD <- log(abs(numDeriv::grad(fq,SDNew)))
       }
-      # LGD <- log(abs(grad(fq,SDNew)))
+      # LGD <- log(abs(numDeriv::grad(fq,SDNew)))
       # N=1000
       # GP <- NULL
       # tt=seq(-5,5, len=N)
-      # GP <- sapply(tt, function(x) log(lambda) - lambda*DIS[[i]] +log(abs(grad(fq,exp(x)))))
+      # GP <- sapply(tt, function(x) log(lambda) - lambda*DIS[[i]] +log(abs(numDeriv::grad(fq,exp(x)))))
       # dev.new()
       # plot(tt, GP, pch=19)
       # dev.off()
@@ -164,10 +164,10 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
     return(Tdist(f1=SP$JD[[SP$NP]], SD1=SDNew, STR=SP$STR[[SP$NP]], NC=SP$NC))
   }
   if(lat[SP$NP]< (-4.5)){
-    SPF <- splinefun(c(-2, -4), c(log(abs(grad(fqbase,exp(-2)))), log(abs(grad(fqbase,exp(-4))))))
+    SPF <- stats::splinefun(c(-2, -4), c(log(abs(numDeriv::grad(fqbase,exp(-2)))), log(abs(numDeriv::grad(fqbase,exp(-4))))))
     LGD <- SPF(lat[SP$NP])
   }else{
-    LGD <- log(abs(grad(fqbase,exp(lat[SP$NP]))))
+    LGD <- log(abs(numDeriv::grad(fqbase,exp(lat[SP$NP]))))
   }
   Prd <- log(lambda) - lambda*DIS[[SP$NP]] + LGD
   PRT[[SP$NP]] <- Prd
@@ -180,6 +180,13 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
 #' @param fontsize c
 #' @param width d
 #' @param height e
+#' @export
+#' @examples
+#' \dontrun{
+#'  graph.def <- list(p1 ~ c1 + c2)
+#'  graph.plot <- GraphPlot(graph.def, base = 0)
+#'  plot(graph.plot$gr, nodeAttrs = graph.plot$nAttrs)
+#' }
 GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(0.5,0.5)){
   parents <- sapply(S, function(x) strsplit(as.character(x), split="~")[[2]])
   children <- sapply(S, function(x) strsplit(as.character(x), split="~")[[3]])
@@ -218,7 +225,7 @@ GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height
       edg[[i]] <- list(edges=childrenU[[i]]) #graph
     }
   }
-  gr <- graphNEL(nodes=nod, edgeL=edg, edgemode='directed')
+  gr <- graph::graphNEL(nodes=nod, edgeL=edg, edgemode='directed')
   return(list(gr=gr, nAttrs=nAttrs))
 }
 #'
@@ -226,7 +233,7 @@ GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height
 #' @param S model structure given as a formula
 #' @param fontsize b
 #' @param width c
-#' @param heigth d
+#' @param height d
 #' @param fontsizeLast e
 #' @param widthLast f
 #' @param heightLast g
@@ -250,7 +257,7 @@ GraphPlotPrior <- function(S, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(
   nAttrs$height <- sapply(nod[grep("c", nod)], function(x) x=heightLast)
   nAttrs$width <- sapply(nod[grep("c", nod)], function(x) x=widthLast)
   nAttrs$fontsize <- sapply(nod[grep("c", nod)], function(x) x=fontsizeLast)
-  GRAPHS[[length(parents)+1]] <- list("gr"=graphNEL(nodes=nod[(length(parents)+1):length(nod)]), "nAttrs"=nAttrs)
+  GRAPHS[[length(parents)+1]] <- list("gr"=graph::graphNEL(nodes=nod[(length(parents)+1):length(nod)]), "nAttrs"=nAttrs)
   return(GRAPHS)
 }
 #'
@@ -261,7 +268,7 @@ GraphPlotPrior <- function(S, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(
 #' If FALSE the correlation is returned. Default value is FALSE.
 ThetaCor <- function(SP, lat, COV = FALSE){
   # remove round
-  Q <- hessian(SP$JD[[1]], rep(0, length(SP$STR[[1]])), SDev=exp(lat[-(1:SP$NC)]))#*SP$Pmat # precision matrix
+  Q <- numDeriv::hessian(SP$JD[[1]], rep(0, length(SP$STR[[1]])), SDev=exp(lat[-(1:SP$NC)]))#*SP$Pmat # precision matrix
   diag(Q) <- diag(Q)+1e-12
   VC <- solve(Q) # variance-covariance #chol2solve?
   LUB <- VC[1:SP$NC,1:SP$NC] # left-upper block

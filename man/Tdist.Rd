@@ -19,6 +19,9 @@ Tdist(f1, f0 = NULL, SD1, SD0 = NULL, STR, NC)
 
 \item{NC}{number of children}
 }
+\value{
+distance
+}
 \description{
 Function that returns the distance between two models
 }
