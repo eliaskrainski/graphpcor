@@ -6,20 +6,22 @@
 \usage{
 CorGraphs.rmodel(
   cmd = c("graph", "Q", "mu", "initial", "log.norm.const", "log.prior", "quit"),
-  theta = NULL,
-  Argm = NULL
+  theta = NULL
 )
 }
 \arguments{
 \item{cmd}{the name of the object to return.}
 
 \item{theta}{internal parameters.}
-
-\item{Argm}{named list with the output from the GraphDens() function.}
 }
 \value{
 the asked object
 }
 \description{
-R generic implementation of the graph model.
+An argument 'args' should be provided as a named list with
+\itemize{
+\item SP: output from the \code{\link[=GraphDens]{GraphDens()}} function.
+\item GraphPrior: function to compute the prior.
+\item S, lambda, Tdist: required to \code{\link[=GraphPrior]{GraphPrior()}}
+}
 }

@@ -1,34 +1,38 @@
 #' R generic implementation of the graph model.
 #' @param cmd the name of the object to return.
 #' @param theta internal parameters.
-#' @param Argm named list with the output from the GraphDens() function.
+#' @description
+#' An argument 'args' should be provided as a named list with
+#' \itemize{
+#'  \item SP: output from the [GraphDens()] function.
+#'  \item GraphPrior: function to compute the prior.
+#'  \item S, lambda, Tdist: required to [GraphPrior()]
+#' }
 #' @return the asked object
 #' @export
 CorGraphs.rmodel <- function(cmd = c("graph", "Q", "mu", "initial",
                                     "log.norm.const", "log.prior", "quit"),
-                            theta = NULL,
-                            Argm = NULL)
+                             theta = NULL)
 {
+
   envir <- parent.env(environment())
-  if (exists("GS", envir=envir)) {
-    GS <- get("GS", envir=envir) # need to get or already in environment?
-  } else {
-    GS <- Argm$SP # graph structure
-    assign("GS", GS, envir=envir)
+  if (!exists("iArgs", envir = envir)) {
+    assign("iArgs", args, envir = envir)
   }
+  iArgs <- get("iArgs", envir = envir)
 
   graph <- function() {
     return(Q()) # does not depend on theta
   }
 
   Q <- function() {
-    q <- exp(theta[-(1:Argm$SP$NC)])
-    Qmat <- numDeriv::hessian(GS$JD[[1]], rep(0, length(GS$STR[[1]])), SDev=q)*GS$Pmat # precision matrix
-    diag(Qmat) <- diag(Q)+1e-12
+    q <- exp(theta[-(1:iArgs$SP$NC)])
+    Qmat <- numDeriv::hessian(iArgs$SP$JD[[1]], rep(0, length(iArgs$SP$STR[[1]])), SDev=q)*iArgs$SP$Pmat # precision matrix
+    diag(Qmat) <- diag(Qmat) + 1e-12
     VC <- solve(Qmat) # variance-covariance
-    LUB <- VC[1:Argm$SP$NC,1:Argm$SP$NC] # left-upper block
+    LUB <- VC[1:iArgs$SP$NC,1:iArgs$SP$NC] # left-upper block
     Cor <- diag(diag(LUB)^(-1/2)) %*% LUB %*% diag(diag(LUB)^(-1/2)) # correlation
-    SD <- diag(exp(-1/2*theta[1:Argm$SP$NC]))
+    SD <- diag(exp(-1/2*theta[1:iArgs$SP$NC]))
     COV <- SD %*% Cor %*% SD
     return (solve(COV))
   }
@@ -42,14 +46,14 @@ CorGraphs.rmodel <- function(cmd = c("graph", "Q", "mu", "initial",
   }
 
   log.prior <- function() {
-    q <- theta[-(1:Argm$SP$NC)]
-    val <- (sum(stats::dgamma(exp(theta[1:Argm$SP$NC]), shape = 1, rate = 0.01, log = TRUE)) + sum(theta[1:Argm$SP$NC]) +
-              sum(unlist(Argm$GraphPrior(Argm$S, q, Argm$lambda, Argm$SP, Argm$Tdist)))+sum(theta[-(1:Argm$SP$NC)]))
+    q <- theta[-(1:iArgs$SP$NC)]
+    val <- (sum(stats::dgamma(exp(theta[1:iArgs$SP$NC]), shape = 1, rate = 0.01, log = TRUE)) + sum(theta[1:iArgs$SP$NC]) +
+              sum(unlist(iArgs$GraphPrior(iArgs$S, q, iArgs$lambda, iArgs$SP, iArgs$Tdist)))+sum(theta[-(1:iArgs$SP$NC)]))
     return(val)
   }
 
   initial <- function() {
-    return(c(rep(4, Argm$SP$NC), rep(Argm$init, Argm$SP$NP)))
+    return(c(rep(4, iArgs$SP$NC), rep(iArgs$init, iArgs$SP$NP)))
   }
 
   quit <- function() {
@@ -61,5 +65,7 @@ CorGraphs.rmodel <- function(cmd = c("graph", "Q", "mu", "initial",
   }
 
   val <- do.call(match.arg(cmd), args = list())
+
   return(val)
+
 }

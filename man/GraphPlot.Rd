@@ -2,7 +2,7 @@
 % Please edit documentation in R/correlGraph.R
 \name{GraphPlot}
 \alias{GraphPlot}
-\title{#' Function to plot a graph}
+\title{Function to plot a graph}
 \usage{
 GraphPlot(
   S,
@@ -24,12 +24,10 @@ GraphPlot(
 \item{height}{e}
 }
 \description{
-#' Function to plot a graph
+Function to plot a graph
 }
 \examples{
-\dontrun{
  graph.def <- list(p1 ~ c1 + c2)
  graph.plot <- GraphPlot(graph.def, base = 0)
  plot(graph.plot$gr, nodeAttrs = graph.plot$nAttrs)
-}
 }

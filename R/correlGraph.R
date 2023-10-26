@@ -130,6 +130,7 @@ Tdist <- function(f1, f0=NULL, SD1, SD0=NULL, STR, NC){ # f negative logarithm o
 #' @param SP GraphDens applied to S (avoids to recompute it)
 #' @param Tdist function that returns the distance between two models
 #' @return PRT the prior for theta
+#' @export
 GraphPrior <- function(S, lat, lambda, SP, Tdist){
   DIS <- vector("list", length=SP$NP)
   PRT <- vector("list", length=SP$NP) # prior theta
@@ -175,7 +176,7 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
   return(PRT)
 }
 #'
-#' #' Function to plot a graph
+#' Function to plot a graph
 #' @param S model structure given as a formula
 #' @param base b
 #' @param fontsize c
@@ -185,11 +186,9 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
 #' @import Rgraphviz
 #' @export
 #' @examples
-#' \dontrun{
 #'  graph.def <- list(p1 ~ c1 + c2)
 #'  graph.plot <- GraphPlot(graph.def, base = 0)
 #'  plot(graph.plot$gr, nodeAttrs = graph.plot$nAttrs)
-#' }
 GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(0.5,0.5)){
   parents <- sapply(S, function(x) strsplit(as.character(x), split="~")[[2]])
   children <- sapply(S, function(x) strsplit(as.character(x), split="~")[[3]])
@@ -269,6 +268,7 @@ GraphPlotPrior <- function(S, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(
 #' @param lat b
 #' @param COV logical indicating if it is to return the covariance.
 #' If FALSE the correlation is returned. Default value is FALSE.
+#' @export
 ThetaCor <- function(SP, lat, COV = FALSE){
   # remove round
   Q <- numDeriv::hessian(SP$JD[[1]], rep(0, length(SP$STR[[1]])), SDev=exp(lat[-(1:SP$NC)]))#*SP$Pmat # precision matrix
