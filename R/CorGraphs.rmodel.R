@@ -1,11 +1,10 @@
 #' R generic implementation of the graph model.
-#' @aliases CorGraphs.model
 #' @param cmd the name of the object to return.
 #' @param theta internal parameters.
 #' @param Argm named list with the output from the GraphDens() function.
 #' @return the asked object
 #' @export
-CorGraphs.model <- function(cmd = c("graph", "Q", "mu", "initial",
+CorGraphs.rmodel <- function(cmd = c("graph", "Q", "mu", "initial",
                                     "log.norm.const", "log.prior", "quit"),
                             theta = NULL,
                             Argm = NULL)
