@@ -96,6 +96,7 @@ GraphDens <- function(S){
 #' @param STR model structure (i.e., for the number of nodes)
 #' @param NC number of children
 #' @return distance
+#' @import numDeriv
 #' @export
 Tdist <- function(f1, f0=NULL, SD1, SD0=NULL, STR, NC){ # f negative logarithm of density
   Q1 <- numDeriv::hessian(f1, rep(0, length(STR)), SDev=c(SD0, SD1)) # precision 1
@@ -180,6 +181,8 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
 #' @param fontsize c
 #' @param width d
 #' @param height e
+#' @import graph
+#' @import Rgraphviz
 #' @export
 #' @examples
 #' \dontrun{

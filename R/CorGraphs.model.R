@@ -1,8 +1,14 @@
-#'
-#'  R generic implementation of the graph model
-#'  @export
-CorGraphs.model <- function(cmd = c("graph", "Q", "mu", "initial", "log.norm.const",
-                                    "log.prior", "quit"), theta = NULL, Argm = NULL)
+#' R generic implementation of the graph model.
+#' @aliases CorGraphs.model
+#' @param cmd the name of the object to return.
+#' @param theta internal parameters.
+#' @param Argm named list with the output from the GraphDens() function.
+#' @return the asked object
+#' @export
+CorGraphs.model <- function(cmd = c("graph", "Q", "mu", "initial",
+                                    "log.norm.const", "log.prior", "quit"),
+                            theta = NULL,
+                            Argm = NULL)
 {
   envir <- parent.env(environment())
   if (exists("GS", envir=envir)) {
@@ -18,9 +24,9 @@ CorGraphs.model <- function(cmd = c("graph", "Q", "mu", "initial", "log.norm.con
 
   Q <- function() {
     q <- exp(theta[-(1:Argm$SP$NC)])
-    Q <- hessian(GS$JD[[1]], rep(0, length(GS$STR[[1]])), SDev=q)*GS$Pmat # precision matrix
-    diag(Q) <- diag(Q)+1e-12
-    VC <- solve(Q) # variance-covariance
+    Qmat <- numDeriv::hessian(GS$JD[[1]], rep(0, length(GS$STR[[1]])), SDev=q)*GS$Pmat # precision matrix
+    diag(Qmat) <- diag(Q)+1e-12
+    VC <- solve(Qmat) # variance-covariance
     LUB <- VC[1:Argm$SP$NC,1:Argm$SP$NC] # left-upper block
     Cor <- diag(diag(LUB)^(-1/2)) %*% LUB %*% diag(diag(LUB)^(-1/2)) # correlation
     SD <- diag(exp(-1/2*theta[1:Argm$SP$NC]))
