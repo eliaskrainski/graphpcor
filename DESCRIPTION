@@ -1,0 +1,45 @@
+Package: INLAcorrel
+Type: Package
+Title: Graph based models for correlation matrices using 'INLA'
+Version: 23.10.26.001
+Authors@R: c(
+  person("Elias Teixeira", "Krainski", email = "eliaskrainski@gmail.com",
+         role = c("cre", "aut", "cph"), 
+         comment = c(ORCID = "0000-0002-7063-2615")),
+  person("Denis", "Rustand", email = "denis@rustand.fr", 
+        role = c("cre", "aut"),
+        comment = c(ORCID = "0000-0001-9708-5220")),
+  person("Haavard", "Rue", email = "haavard.rue@kaust.edu.sa",
+         role = c("aut"),
+         comment = c(ORCID = "0000-0002-0222-1881"))
+  )
+Description: Prepare objects to implement correlation models 
+  defined over a graph. The internal matrices objects are built 
+  in order to use the 'INLA' package (<https://www.r-inla.org>).
+  These objects contain data to for the 'cgeneric' interface in
+  'INLA', enabling fast parallel computations.
+URL: https://github.com/eliaskrainski/INLAcorrel
+Additional_repositories: https://inla.r-inla-download.org/R/testing
+BugReports: https://github.com/eliaskrainski/INLAcorrel/issues
+License: GPL (>=2) 
+Encoding: UTF-8
+RoxygenNote: 7.2.3
+NeedsCompilation: yes
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 3.6),
+    Matrix
+Imports:
+    graphics,
+    grDevices,
+    methods,
+    stats,
+    utils
+Suggests:
+    INLA (>= 23.10.25),
+    knitr,
+    ggplot2,
+    rmarkdown,
+    parallel
+VignetteBuilder: knitr
+BuildVignettes: true
