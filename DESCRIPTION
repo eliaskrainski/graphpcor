@@ -28,7 +28,8 @@ NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 3.6),
-    Matrix
+    graph,
+    numDeriv
 Imports:
     graphics,
     grDevices,
