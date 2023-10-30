@@ -29,12 +29,12 @@ CorGraphs.rmodel <- function(cmd = c("graph", "Q", "mu", "initial",
     q <- exp(theta[-(1:iArgs$SP$NC)])
     Qmat <- numDeriv::hessian(iArgs$SP$JD[[1]], rep(0, length(iArgs$SP$STR[[1]])), SDev=q)*iArgs$SP$Pmat # precision matrix
     diag(Qmat) <- diag(Qmat) + 1e-12
-    VC <- solve(Qmat) # variance-covariance
-    LUB <- VC[1:iArgs$SP$NC,1:iArgs$SP$NC] # left-upper block
-    Cor <- diag(diag(LUB)^(-1/2)) %*% LUB %*% diag(diag(LUB)^(-1/2)) # correlation
-    SD <- diag(exp(-1/2*theta[1:iArgs$SP$NC]))
-    COV <- SD %*% Cor %*% SD
-    return (solve(COV))
+      VC <- solve(Qmat) # variance-covariance
+      LUB <- VC[1:iArgs$SP$NC,1:iArgs$SP$NC] # left-upper block
+      Cor <- diag(diag(LUB)^(-1/2)) %*% LUB %*% diag(diag(LUB)^(-1/2)) # correlation
+      SD <- diag(exp(-1/2*theta[1:iArgs$SP$NC]))
+      COV <- SD %*% Cor %*% SD
+      return (solve(COV))
   }
 
   mu <- function() {
