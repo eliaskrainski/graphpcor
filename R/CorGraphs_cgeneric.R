@@ -87,6 +87,20 @@ CorGraphs_cgeneric <-
       cat("NC =", NC, "\n")
     stopifnot(max(unlist(
       iielements2)[unlist(ichildren2)]) == NC)
+    iiminus <- gregexpr("-", stilde[3,], fixed = TRUE)
+    if(debug)
+      print(iiminus)
+    iiplus <- gregexpr("+", stilde[3,], fixed = TRUE)
+    if(debug)
+      print(iiplus)
+    iisignal <- vector('list', nS)
+    for(k in 1:nS) {
+      ss <- c(sum(iiminus[[k]]>0),
+              sum(iiplus[[k]]>0))
+      a <- integer(max(iiminus[[k]], iiplus[[k]]))
+      s <- integer()
+
+    }
 
     if(FALSE) {
 
@@ -101,8 +115,11 @@ CorGraphs_cgeneric <-
         if (any(ichildren2[[k]])) {
           ii <- iielements2[[k]][ichildren2[[k]]]
           cat("k1 =", k, "ii =", ii, "\n")
-          Q[ii, jj[k]] <- -1
           Q[jj[k], jj[k]] <- Q[jj[k], jj[k]] + length(ii)
+          for(i in ii) {
+            if(iiminus[[k]])
+            Q[i, jj[k]] <- -1
+          }
         }
         if (any(iparent2[[k]])) {
           i1 <- NC + iParents1[k]

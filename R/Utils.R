@@ -10,15 +10,16 @@
 #'  }
 #' @export
 #' @examples
-#'  S <- list(
+#' S <- list(
 #'      p3 ~ p1 - p2,
 #'      p1 ~ -c1 + c2 + c3, p2 ~ c4)
 #' str(Sleft(S))
-Sleft <- function(S) {
+Sleft <- function(S, debug = FALSE) {
   nS <- length(S)
   stilde <- sapply(S, function(x)
     strsplit(gsub(" ", "", as.character(x)),
              split = "~"))
+
   if(debug)
     print(stilde)
   stopifnot(all(substr(stilde[2, ], 1, 1) == "p"))
@@ -66,12 +67,15 @@ Sleft <- function(S) {
 }
 #' Function to build Q from a graph model
 #' @param theta vector with the log of the parameters
+#' @return precision matrix
+#' @export
 #' @examples
-#'  S <- list(
+#' S <- list(
 #'      p3 ~ p1 - p2,
 #'      p1 ~ -c1 + c2 + c3, p2 ~ c4)
-#' Q <- QS(S)
-QS <- function(S, debug = FALSE) {
+#' Q <- QS(S, theta = c(1, 1, 1))
+#' cov2cor(solve(Q)[1:4, 1:4])
+QS <- function(S, theta, debug = FALSE) {
   nS <- length(S)
   stilde <- sapply(S, function(x)
     strsplit(gsub(" ", "", as.character(x)),
@@ -88,11 +92,11 @@ QS <- function(S, debug = FALSE) {
   if(debug)
     cat("NP = ", NP, "\n")
 
+  S.elements <- Sleft(S)
   NC <- sum(sapply(S.elements, function(s)
     sum(!s$parent)))
 
   q <- exp(theta)
-  S.elements <- Sleft(S)
 
   Qa <- cbind(rbind(diag(NC), matrix(0, NP, NC)),
               rbind(matrix(0, NC, NP), diag(q)))

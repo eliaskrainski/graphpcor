@@ -1,7 +1,7 @@
 Package: INLAcorrel
 Type: Package
 Title: Graph based models for correlation matrices using 'INLA'
-Version: 23.10.26.004
+Version: 23.10.26.005
 Authors@R: c(
   person("Elias Teixeira", "Krainski", email = "eliaskrainski@gmail.com",
          role = c("cre", "aut", "cph"), 
