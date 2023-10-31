@@ -1,0 +1,384 @@
+---
+title: "Graph based correlation models"
+author: "Anna Freni-Sterrantino, Denis Rustand, Janet van Niekerk, Elias T Krainski,
+  and Håvard Rue"
+date: "November, 2023"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(INLAcorrel)
+```
+
+# Abstract
+
+In this vignette we introduce the models for correlation matrices 
+based on a graph from a Direct Acyclic Graph - DAG.
+
+# The model definition
+
+The definition is through a graph which is basically nodes and edges, 
+where there is two kind of nodes, one to represent observation level 
+variables and other to represent latent level variables. 
+The particularity of the graphs we consider start by defining that
+observation level variables are represented by nodes 
+which are always at the end of the graph, or are always leaves.
+The latent variables are represented by nodes which are always 
+parent either latent variables or to observation level variables.
+Therefore, we consider the latent variables identified as parents and the 
+observation level variables as children, even though a parent may be 
+children to another parent as well. 
+
+We should mention that the "children" are not restricted to be 
+representing observations but can also represent
+parameters in the linear predictor of a model.
+
+Our convention is to identify the parents 
+by the letter "p" and an integer number 
+from one to the number of parents,
+and the children by the letter "c" 
+and and an integer number from one to the total number of children.
+Thus $p1$ is parent one and $p2$ is parent two,
+representing two latent variables, 
+and $c1$, $c2$ and $c3$ 
+are children one, children two and children three,
+respectively, representing three observation level variables. 
+
+## Intial example
+
+In order to set the notation, let us consider three observation variables 
+and only one common correlation parameter. 
+The graph to represent this assumption has only one parent.
+We specify this by
+```{r graph1}
+g1 <- list(p1 ~ c1 + c2 + c3)
+```
+which means that $p1$ is parent to children $c1$, $c2$ and $c3$.
+
+We can visualize it by 
+```{r visgraph1}
+g1p <- GraphPlot(g1)
+plot(g1p$gr, nodeAttrs = g1p$nAttrs)
+```
+
+From this model definition we will use the methods 
+IN THE PAPER 
+to build the correlation matrix. 
+First, we build the precision matrix, 
+assuming $q_1$ = 1:
+```{r q1}
+q1 <- QS(g1, theta = c(0))
+q1
+```
+
+The correlation matrix is then obtained with 
+```{r c1}
+cov1a <- solve(q1)
+cov1a
+c1 <- cov2cor(cov1a)
+round(c1, 3)
+```
+where the first lines/columns
+are for the observation level variables.
+
+## Allowing negative correlations
+
+The signal of the correlation is defined in the formula. 
+If we want the correlation between $c1$ or $c2$ and $c3$ 
+equal minus the correlation between $c1$ and $c2$ we define
+```{r graph1b}
+g1b <- list(p1 ~ c1 + c2 - c3)
+```
+
+The correlation matrix is then obtained with 
+```{r c1b}
+q1b <- QS(g1b, theta = 0)
+cov1b <- solve(q1b)
+cov1b
+c1b <- cov2cor(cov1b)
+round(c1b, 3)
+```
+
+If we want to have the correlation between 
+$c1$ and $c2$ and $c1$ and $c3$ be minus the 
+correlation between $c2$ and $c3$ we do
+```{r graph1c}
+g1c <- list(p1 ~ -c1 + c2 + c3)
+```
+
+The correlation matrix is then obtained with 
+```{r c1c}
+q1c <- QS(g1c, theta = 0)
+cov1c <- solve(q1c)
+cov1c
+c1c <- cov2cor(cov1c)
+round(c1c, 3)
+```
+
+As we have three edges, either one can have different 
+signal to the other two, but same absolute value.
+
+# Correlation matrix with two parameters
+
+We now implement a correlation matrix model with two parameters, 
+considering two latent factors.
+We consider the example in section 3.2 of the paper.
+
+We have three variables, observations, which are correlated. 
+Following the previous definition, we will represent it by $c1$, $c2$ and $c3$. 
+Suppose that the correlation between $c1$ and $c3$ is equal to the 
+correlation between $c2$ and $c3$.
+This corresponds to having $c1$ and $c2$ under the same branch.
+The graph to represent this model assumption, based in our convention, 
+can be represented by the following set of two equations
+```{r graph2}
+g2 <- list(p1 ~ c1 + c2, 
+           p2 ~ p1 + c3)
+```
+which means that $p1$ is parent to $c1$ and $c2$ and that
+$p2$ is parent to $p1$ and $c3$. 
+
+We can visualize it by 
+```{r visgraph2}
+g2p <- GraphPlot(g2)
+plot(g2p$gr, nodeAttrs = g2p$nAttrs)
+```
+
+From this model definition we will use the methods 
+IN THE PAPER 
+to build the correlation matrix. 
+First, we build the precision matrix, 
+assuming $q_1$ = $q_2$ = 1:
+```{r q2}
+q2 <- QS(g2, theta = c(0, 0))
+q2
+```
+
+The correlation matrix is then obtained with 
+```{r c2}
+cov2 <- solve(q2)
+cov2
+c2 <- cov2cor(cov2)
+round(c2, 3)
+```
+where the first lines/columns 
+are for the observation level variables.
+
+Notice that we can have more children under either parent 
+keeping the same correlation model, with two parameters. 
+
+## Negative correlation
+
+We can change the signal at any edge of the graph. 
+The change in the edge of parent to children is 
+simpler to interpret. 
+We have already seen this case in the one-parameter graph example. 
+
+In this second graph example, the change in the 
+signal of edge between $p1$ and $p2$ or the
+edge between $p2$ and $c3$ imply the same change 
+in the correlation matrix, as we can see next
+```{r graph2b}
+g2b <- list(p1 ~ c1 + c2, 
+            p2 ~ -p1 + c3)
+q2b <- QS(g2b, theta = c(0, 0))
+q2b
+cov2b <- solve(q2b)
+cov2b
+c2b <- cov2cor(cov2b)
+round(c2b, 3)
+```
+
+```{r graph2c}
+g2c <- list(p1 ~ c1 + c2, 
+            p2 ~ p1 - c3)
+q2c <- QS(g2c, theta = c(0, 0))
+q2c
+cov2c <- solve(q2c)
+cov2c
+c2c <- cov2cor(cov2c)
+round(c2c, 3)
+```
+
+However, the change in an edge of parent to another parent
+could have more complex implications if these
+parents have parents as children. 
+We will see this in the next example.
+
+# Correlation matrix with three parameters
+
+This example is similar to the one in Section 3.4 of the paper. 
+Here we consider five correlated observation variables
+represented as $c1$, $c2$, $c3$, $c4$ and $c5$ in the graph.
+We assume that the correlation between $c1$ and $c2$ 
+is equal to the correlation between $c1$ and $c3$, 
+and, of course, equal the correlation between $c2$ and $c3$.
+This restriction also implies that the correlation between 
+any of these three first variables to $c4$ is the same. 
+A further assumption is if we assume the correlation between
+$c1$ and $c4$ is the same as between $c1$ and $c5$.
+
+## Two different correlation values
+
+If we assume that the correlation between $c1$
+(or any of the first variables) and $c4$ to be 
+the same as between $c1$ and $c5$.
+This implies that $c4$ and $c5$ are children to the same parent.
+
+The graph to represent this model assumption
+can be represented by the following set of equations
+```{r graph3}
+g3 <- list(p1 ~ c1 + c2 + c3, 
+           p2 ~ c4 + c5,
+           p3 ~ p1 + p2)
+```
+that is, $p1$ is parent to $p2$ and $p3$, 
+$p2$ is parent to $c1$, $c2$ and $c3$, 
+and $p3$ is parent to $c4$ and $c5$.
+
+We can visualize it by 
+```{r visgraph3}
+g3p <- GraphPlot(g3)
+plot(g3p$gr, nodeAttrs = g3p$nAttrs)
+```
+
+From this model definition we will use the methods 
+IN THE PAPER 
+to build the correlation matrix. 
+First, we build the precision matrix, 
+assuming $q_1$ = $q_2$ = $q_3$ = 1:
+```{r q3}
+q3 <- QS(g3, theta = c(0, 0, 0))
+q3
+```
+
+The correlation matrix is then obtained with 
+```{r c3}
+cov3 <- solve(q3)
+cov3
+c3 <- cov2cor(cov3)
+round(c3, 3)
+```
+where the first lines/columns represents 
+are for the observation level variables.
+
+## Negative correlations
+
+Here we explore negative correlations by changing 
+the signal of edge between $p1$ and $p3$.
+
+```{r graph3b}
+g3b <- list(p1 ~ c1 + c2 + c3, 
+            p2 ~ c4 + c5, 
+            p3 ~ -p1 + p2)
+q3b <- QS(g3b, theta = c(0, 0, 0))
+q3b
+cov3b <- solve(q3b)
+cov3b
+c3b <- cov2cor(cov3b)
+round(c3b, 3)
+```
+
+Now, at two different edges simultaneously, 
+by also changing the signal of edge between $p2$ and $c5$
+
+```{r graph3c}
+g3c <- list(p1 ~ c1 + c2 + c3, 
+            p2 ~ c4 - c5, 
+            p3 ~ -p1 + p2)
+q3c <- QS(g3c, theta = c(0, 0, 0))
+q3c
+cov3c <- solve(q3c)
+cov3c
+c3c <- cov2cor(cov3c)
+round(c3c, 3)
+```
+
+## Three different correlation values
+
+With the same number of latent variables
+but now a different graph.
+If we make $p3$, the main parent, also to have 
+observation variables as children, 
+there will be then three possible correlation 
+values between observation variables.
+
+We can make $c3$ as children of $p3$.
+```{r graph4}
+g4 <- list(p1 ~ c1 + c2, 
+           p2 ~ c4 + c5,
+           p3 ~ p1 + p2 + c3)
+g4p <- GraphPlot(g4)
+plot(g4p$gr, nodeAttrs = g4p$nAttrs)
+```
+
+```{r c4}
+q4 <- QS(g4, theta = c(0, 0, 0))
+q4
+cov4 <- solve(q4)
+cov4
+c4 <- cov2cor(cov4)
+round(c4, 3)
+```
+
+We can also allow negative correlations. 
+For example, change the signal of the edge
+between $p3$ and $p2$ and
+between $p2$ and $c5$. 
+
+```{r graph4b}
+g4b <- list(p1 ~ c1 + c2, 
+            p2 ~ c4 - c5,
+            p3 ~ p1 - p2 + c3)
+q4b <- QS(g4b, theta = c(0, 0, 0))
+q4b
+cov4b <- solve(q4b)
+cov4b
+c4b <- cov2cor(cov4b)
+round(c4b, 3)
+```
+
+## Four different correlations
+
+Changing further, we can make $p1$ children to $p2$.
+
+```{r graph5}
+g5 <- list(p1 ~ c1 + c2, 
+           p2 ~ c4 + c5 + p1,
+           p3 ~ p2 + c3)
+g5p <- GraphPlot(g5)
+plot(g5p$gr, nodeAttrs = g5p$nAttrs)
+```
+
+```{r c5}
+q5 <- QS(g5, theta = c(0, 0, 0))
+q5
+cov5 <- solve(q5)
+cov5
+c5 <- cov2cor(cov5)
+round(c5, 3)
+```
+
+Changes in signals now can make interesting behaviours.
+Let us change the signal of the edges 
+$p1$ to $c1$, $p3$ to $p2$ and $p2$ to $p5$.
+
+```{r graph5b}
+g5b <- list(p1 ~ -c1 + c2, 
+            p2 ~ c4 - c5 + p1,
+            p3 ~ -p2 + c3)
+```
+
+```{r c5b}
+q5b <- QS(g5b, theta = c(0, 0, 0))
+q5b
+cov5b <- solve(q5b)
+cov5b
+c5b <- cov2cor(cov5b)
+round(c5b, 3)
+```
+
