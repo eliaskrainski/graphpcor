@@ -14,6 +14,7 @@
 #'  }
 #' @export
 GraphDens <- function(S){
+  S <- S[order(sapply(S, function(x) strsplit(as.character(x), split="~")[[2]]))]
   parents <- sapply(S, function(x) strsplit(as.character(x), split="~")[[2]])
   children <- sapply(S, function(x) strsplit(as.character(x), split="~")[[3]])
   childrenU <- sapply(children, function(x) strsplit(gsub("\\s", "", as.character(x)), split="\\+"))
@@ -190,6 +191,7 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
 #'  graph.plot <- GraphPlot(graph.def, base = 0)
 #'  plot(graph.plot$gr, nodeAttrs = graph.plot$nAttrs)
 GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(0.5,0.5)){
+  S <- S[order(sapply(S, function(x) strsplit(as.character(x), split="~")[[2]]))]
   parents <- sapply(S, function(x) strsplit(as.character(x), split="~")[[2]])
   children <- sapply(S, function(x) strsplit(as.character(x), split="~")[[3]])
   childrenU <- sapply(children, function(x) strsplit(gsub("\\s", "", as.character(x)), split="\\+"))
@@ -241,6 +243,7 @@ GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height
 #' @param heightLast g
 #' @export
 GraphPlotPrior <- function(S, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(0.5,0.5), fontsizeLast=14, widthLast=0.75, heightLast=0.5){
+  S <- S[order(sapply(S, function(x) strsplit(as.character(x), split="~")[[2]]))]
   parents <- sapply(S, function(x) strsplit(as.character(x), split="~")[[2]])
   children <- sapply(S, function(x) strsplit(as.character(x), split="~")[[3]])
   childrenU <- sapply(children, function(x) strsplit(gsub("\\s", "", as.character(x)), split="\\+"))
