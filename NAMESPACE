@@ -2,6 +2,7 @@
 
 export(CorGraphs.rmodel)
 export(CorGraphs_cgeneric)
+export(CorGraphs_rmodel)
 export(GraphDens)
 export(GraphPlot)
 export(GraphPlotPrior)

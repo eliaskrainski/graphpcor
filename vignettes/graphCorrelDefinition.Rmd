@@ -363,7 +363,7 @@ c5 <- cov2cor(cov5)
 round(c5, 3)
 ```
 
-Changes in signals now can make interesting behaviours.
+Changes in signals now can make interesting behaviour.
 Let us change the signal of the edges 
 $p1$ to $c1$, $p3$ to $p2$ and $p2$ to $p5$.
 

@@ -20,7 +20,7 @@ Sleft <- function(S, debug = FALSE) {
     strsplit(gsub(" ", "", as.character(x)),
              split = "~"))
 
-  if(debug)
+  if(debug>1)
     print(stilde)
   stopifnot(all(substr(stilde[2, ], 1, 1) == "p"))
 
@@ -37,16 +37,22 @@ Sleft <- function(S, debug = FALSE) {
   S.elements <- vector("list", nS)
   names(S.elements) <- stilde[2, ]
   for(k in 1:nS) {
+    if(debug>1)
+      cat("k =", k, "\n")
     ch <- stilde[3, k]
     if(substr(ch, 1, 1) != "-")
       ch <- paste0("+", ch)
     p <- s <- integer(nchar(ch))
     i1 <- gregexpr("-", ch, fixed = TRUE)[[1]]
+    if(debug>1)
+      print(new("integer", i1))
     if(any(i1>0)) {
       s[i1[i1>0]] <- -1
       p[i1[i1>0]] <- i1[i1>0]
     }
     i2 <- gregexpr("+", ch, fixed = TRUE)[[1]]
+    if(debug>1)
+      print(new("integer", i2))
     if(any(i2>0)) {
       s[i2[i2>0]] <- 1
       p[i2[i2>0]] <- i2[i2>0]
@@ -55,6 +61,8 @@ Sleft <- function(S, debug = FALSE) {
                    split = "+", fixed = TRUE)[[1]]
     ss <- unlist(lapply(ss, function(x)
       strsplit(x, "-", fixed = TRUE)[[1]]))
+    if(debug>1)
+      print(ss)
     S.elements[[k]] <- list(
       n = length(ss),
       term = ss,
@@ -62,6 +70,8 @@ Sleft <- function(S, debug = FALSE) {
       id = as.integer(substring(ss, 2)),
       signal = s[s!=0]
     )
+    if(debug)
+      print(str(S.elements[[k]]))
   }
   return(S.elements)
 }
@@ -92,7 +102,7 @@ QS <- function(S, theta, debug = FALSE) {
   if(debug)
     cat("NP = ", NP, "\n")
 
-  S.elements <- Sleft(S)
+  S.elements <- Sleft(S, debug = debug)
   NC <- sum(sapply(S.elements, function(s)
     sum(!s$parent)))
 
@@ -116,11 +126,16 @@ QS <- function(S, theta, debug = FALSE) {
       sq <- -Sk$signal[Sk$parent] * q[ii-NC]
       for(i in 1:length(ii)) {
         Qa[i1, i1] <- Qa[i1, i1] + q[ii[i] - NC]
-        Qa[ii[i], i1] <- Qa[ii[i], i1] + sq[i]
+        if(ii[i]>i1) {
+          Qa[i1, ii[i]] <- Qa[i1, ii[i]] + sq[i]
+        } else {
+          Qa[ii[i], i1] <- Qa[ii[i], i1] + sq[i]
+        }
       }
     }
   }
-  Qa
+  if(debug>1)
+    print(Qa)
 
   Q <- Qa
   Q[lower.tri(Q)] <- t(Qa)[lower.tri(Q)]
