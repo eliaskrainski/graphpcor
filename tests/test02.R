@@ -1,5 +1,5 @@
 
-library(INLAcorrel)
+library(corGraphs)
 library(INLA)
 
 S <- list(p1 ~ p2 + p3 + c5, p2 ~ c1 + c2 + p4, p3 ~ c3, p4 ~ c4)
@@ -50,8 +50,8 @@ ArgsList <- list(
 
 str(ArgsList)
 
-detach("package:INLAcorrel", unload = TRUE)
-library(INLAcorrel)
+detach("package:corGraphs", unload = TRUE)
+library(corGraphs)
 
 rGmodel <- inla.rgeneric.define(
     CorGraphs.rmodel,

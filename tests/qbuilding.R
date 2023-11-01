@@ -1,7 +1,7 @@
 ## check consistency by defining the same model
 ## with different label, ordering
 
-library(INLAcorrel)
+library(corGraphs)
 
 s1 <- list(p1 ~ c1,
            p2 ~ p1 + c2 + c3,
@@ -60,6 +60,5 @@ plot(1, type = "n", axes = FALSE, xlab = "", ylab="")
 for(k in 1:length(p4))
    plot(p4[[k]]$gr)
 
-detach("package:INLAcorrel", unload=TRUE)
-library(INLAcorrel)
-
+detach("package:corGraphs", unload=TRUE)
+library(corGraphs)

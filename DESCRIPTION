@@ -1,7 +1,7 @@
-Package: INLAcorrel
+Package: corGraphs
 Type: Package
-Title: Graph based models for correlation matrices using 'INLA'
-Version: 23.10.26.005
+Title: Graph based models for correlation matrices
+Version: 23.10.26.006
 Authors@R: c(
   person("Elias Teixeira", "Krainski", email = "eliaskrainski@gmail.com",
          role = c("cre", "aut", "cph"), 
@@ -14,13 +14,16 @@ Authors@R: c(
          comment = c(ORCID = "0000-0002-0222-1881"))
   )
 Description: Prepare objects to implement correlation models 
-  defined over a graph. The internal matrices objects are built 
+  defined over a graph. 
+  These objects can be used for modeling multivariate outcomes, 
+  correlation in the latent level or among latent parameters. 
+  Uses of it with internal matrices objects are built 
   in order to use the 'INLA' package (<https://www.r-inla.org>).
   These objects contain data to for the 'cgeneric' interface in
   'INLA', enabling fast parallel computations.
-URL: https://github.com/eliaskrainski/INLAcorrel
+URL: https://github.com/eliaskrainski/corGraphs
 Additional_repositories: https://inla.r-inla-download.org/R/testing
-BugReports: https://github.com/eliaskrainski/INLAcorrel/issues
+BugReports: https://github.com/eliaskrainski/corGraphs/issues
 License: GPL (>=2) 
 Encoding: UTF-8
 RoxygenNote: 7.2.3
