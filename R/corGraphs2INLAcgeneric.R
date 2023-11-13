@@ -26,7 +26,7 @@
 #' then sigma[2] is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-CorGraphs_cgeneric <-
+corGraphs2INLAcgeneric <-
   function(graph,
            lambda,
            sigma.prior.reference,
@@ -36,13 +36,13 @@ CorGraphs_cgeneric <-
 
     if (is.null(libpath)) {
       if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("INLAcorrel")
+        libpath <- INLA::inla.external.lib("corGraphs")
       } else {
-        libpath <- system.file("libs", package = "INLAcorrel")
+        libpath <- system.file("libs", package = "corGraphs")
         if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "INLAcorrel.dll")
+          libpath <- file.path(libpath, "corGraphs.dll")
         } else {
-          libpath <- file.path(libpath, "INLAcorrel.so")
+          libpath <- file.path(libpath, "corGraphs.so")
         }
       }
     }
@@ -138,7 +138,7 @@ CorGraphs_cgeneric <-
     the_model <- do.call(
       "inla.cgeneric.define",
       list(
-        model = "inla_cgeneric_sstspde",
+        model = "inla_cgeneric_corgraphs",
         shlib = libpath,
         n = n,
         debug = as.integer(debug),

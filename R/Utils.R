@@ -85,7 +85,7 @@ Sleft <- function(S, debug = FALSE) {
 #'      p1 ~ -c1 + c2 + c3, p2 ~ c4)
 #' Q <- QS(S, theta = c(1, 1, 1))
 #' cov2cor(solve(Q)[1:4, 1:4])
-QS <- function(S, theta, debug = FALSE) {
+S2Q <- function(S, theta, debug = FALSE) {
   nS <- length(S)
   stilde <- sapply(S, function(x)
     strsplit(gsub(" ", "", as.character(x)),
