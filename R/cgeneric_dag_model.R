@@ -109,23 +109,13 @@ cgeneric_dag_model <-
         i2th = as.integer(i2th),
         iq2th = as.integer(iq2th),
         i1th = as.integer(i1th),
-        sth = as.integer(sth),
         iq1th = as.integer(iq1th),
+        sth = as.double(sth),
         q = as.double(q0),
-        lambda = lambda,
-        slambdas = slambdas
+        lambda = as.double(lambda),
+        slambdas = as.double(slambdas)
       )
     )
-    if (constr) {
-      the_model$f$extraconstr <- mm$extraconstr
-    }
-    # Prepend specialised model class identifier, for bru_mapper use:
-    class(the_model) <- c("stModel_cgeneric", class(the_model))
-    # Add objects needed by bru_get_mapper.stModel_cgeneric:
-    # (alternatively, construct the mapper already here, but that would
-    # require loading inlabru even when it's not going to be used)
-    the_model[["smesh"]] <- smesh
-    the_model[["tmesh"]] <- tmesh
 
-    the_model
+    return(the_model)
   }

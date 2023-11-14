@@ -22,9 +22,3 @@ of the graph terms.
 \description{
 Function that returns density for a given model structure
 }
-\examples{
-S <- list(
-     p3 ~ p1 - p2,
-     p1 ~ -c1 + c2 + c3, p2 ~ c4)
-str(dag_elements(S))
-}

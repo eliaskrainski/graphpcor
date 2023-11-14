@@ -1,7 +1,7 @@
 Package: corGraphs
 Type: Package
 Title: Graph based models for correlation matrices
-Version: 23.11.14.001
+Version: 23.11.14.002
 Authors@R: c(
   person("Elias Teixeira", "Krainski", email = "eliaskrainski@gmail.com",
          role = c("cre", "aut", "cph"), 

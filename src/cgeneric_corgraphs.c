@@ -31,53 +31,52 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 {
 
 	double *ret = NULL;
-	int i, j, k, N, M, ith, nth;
+	int i, j, k, N, M, n2, np, N2;
 
 	// the size of the model
 	assert(data->n_ints > 1);
 	assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
-	N = data->ints[0]->ints[0];			       // this will always be the case
+	N = data->ints[0]->ints[0];
 	assert(N > 0);
+	M = N * N;
 
-	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];		       // this will always be the case
-	assert(debug >= 0);				       // just to 'find an use for "debug" ...'
-	if (debug>0) debug = 1;
+	assert(!strcasecmp(data->ints[1]->name, "p"));     // this will always be the case
+	np = data->ints[1]->ints[0];
+	assert(np > 0);
+	n2 = N + np;
+	N2 = (n2 * n2);
 
-	assert(!strcasecmp(data->ints[2]->name, "NC"));
-	int NC = data->ints[2]->ints[0];
-	assert(NC > 0);
-	double sigmas[NC];
-	int ifix[NC];
-	M = NC + ( ( NC*(NC-1) ) / 2 ) ;
+	assert(!strcasecmp(data->ints[2]->name, "i2th"));     // this will always be the case
+	inla_cgeneric_vec_tp *i2th = data->ints[2];
+	assert(i2th->len == np);
 
-        assert(!strcasecmp(data->ints[3]->name, "NP"));
-        int NP = data->ints[3]->ints[0];
-        assert(NP >= 0);
+	assert(!strcasecmp(data->ints[3]->name, "iq2th"));     // this will always be the case
+	inla_cgeneric_vec_tp *iq2th = data->ints[3];
+	assert(i2th->len == iq2th->len);
 
-	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
-	double lambda = data->doubles[0]->doubles[0];
+	assert(!strcasecmp(data->ints[4]->name, "i1th"));     // this will always be the case
+	inla_cgeneric_vec_tp *i1th = data->ints[4];
+
+	assert(!strcasecmp(data->ints[5]->name, "iq1th"));     // this will always be the case
+	inla_cgeneric_vec_tp *iq1th = data->ints[5];
+	assert(i1th->len == iq1th->len);
+
+	assert(!strcasecmp(data->doubles[0]->name, "sth"));     // this will always be the case
+	inla_cgeneric_vec_tp *sth = data->doubles[0];
+	assert(i1th->len == sth->len);
+
+	assert(!strcasecmp(data->doubles[1]->name, "q"));
+	inla_cgeneric_vec_tp *q = data->doubles[1];
+	assert(q->len == M);
+
+	assert(!strcasecmp(data->doubles[2]->name, "lambda"));
+	double lambda = data->doubles[1]->doubles[2];
 	assert(lambda>0);
 
-	assert(!strcasecmp(data->doubles[1]->name, "slambdas"));
-        inla_cgeneric_vec_tp *slambdas = data->doubles[1];
-	assert(slambdas->length>0);
-	assert(slambdas->length>=NC);
-
-        assert(!strcasecmp(data->doubles[2]->name, "plambdas"));
-        inla_cgeneric_vec_tp *plambdas = data->doubles[2];
-        assert(plambdas->length>0);
-	assert(plambdas->length>=NC);
-
-        nth = 0;
-	for(i = 0; i<NC; i++) {
-		if (iszero(plambdas->doubles[i])) {
-			ifix[i] = 1;
-		} else {
-			ifix[i] = 0;
-			nth++;
-		}
-	}
+	assert(!strcasecmp(data->doubles[3]->name, "slambdas"));
+	inla_cgeneric_vec_tp *slambdas = data->doubles[3];
+	assert(slambdas->len>0);
+	assert(slambdas->len == N);
 
 	switch (cmd) {
 	case INLA_CGENERIC_GRAPH:
@@ -104,14 +103,35 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		int offset = 2;
 		ret = Calloc(offset + M, double);
 
-		assert(!strcasecmp(data->mats[0]->name, "xx"));
-		inla_cgeneric_mat_tp *xx = data->mats[0];
-		assert(xx->nrow == N);
-		assert(xx->ncol == N);
-
 		int ipiv[N], info=0;
 
-		dgesv_(&N, &N, &xx->x[0], &N, ipiv, &ret[offset], &N, &info, F_ONE);
+		double vv[N2], qq[N2], vc[M];
+		for(i=0; i<M; i++) {
+		  qq[i] = q->doubles[i];
+		}
+		for(i=0; i<N; i++) {
+		  qq[iq2th->ints[i]] += exp(-2 * theta[i2th->ints[i]]);
+		}
+		k = 0;
+		for(i=0; i < i1th->len; i++) {
+		  qq[iq1th->ints[i]] = -sth->doubles[i] * exp( -2 * theta[i1th->ints[i]]);
+		}
+
+		dgesv_(&n2, &n2, qq, &n2, ipiv, vv, &n2, &info, F_ONE);
+
+		k=0;
+		int k2 = 0;
+		for(j=0; j<N; j++) {
+		  for(i=0; i<n2; i++) {
+		    if((i<N) & (j<N)) {
+		      vc[k2] = vv[k];
+		      k2++;
+		    }
+		    k++;
+		  }
+		}
+
+		dgesv_(&N, &N, vc, &N, ipiv, &ret[offset], &N, &info, F_ONE);
 
 		ret[0] = -1;				       /* REQUIRED */
 		ret[1] = M;				       /* REQUIRED */
@@ -130,13 +150,9 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	{
 		// return c(P, initials)
 		// where P is the number of hyperparameters
-		ret = Calloc(nth + 1, double);
-		ith = 0;
-		ret[ith++] = (double) nth;
-		for(i = 0; i < NC; i++) {
-			if (ifix[i] == 0) {
-				ret[ith++] = 0.0;
-			}
+		ret = Calloc(n2 + 1, double);
+		for(i = 0; i < N2; i++) {
+			ret[1+i] = 1.0;
 		}
 	}
 
@@ -147,16 +163,15 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret = Calloc(1, double);
 		// PC-priors
 		ret[0] = 0.0;
-		ith = 0;
+		/*
 		double lam = 0;
-		for(i = 0; i < nth; i++) {
-			if (ifix[i] == 0) {
-				lam = -log(plambdas->doubles[i]) / slambdas->doubles[i];
-				ret[0] += log(lam) + theta[ith] - lam * exp(theta[ith]);
-				ith++;
-			}
+		for(i = 0; i < N; i++) {
+			lam = slambdas->doubles[i];
+		  ret[0] += log(lam) + theta[i] - lam * exp(theta[i]);
+		} */
+		for(i = 0; i < np; i++) {
+		  ret[0] += -0.5 * SQR(theta[i]);
 		}
-		assert(ith == nth);
 	}
 		break;
 

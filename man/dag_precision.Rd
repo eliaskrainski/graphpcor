@@ -4,7 +4,7 @@
 \alias{dag_precision}
 \title{Function to build Q from a graph model}
 \usage{
-dag_precision(dag, theta, debug = FALSE)
+dag_precision(dag, theta, debug = FALSE, new = TRUE)
 }
 \arguments{
 \item{theta}{vector with the log of the parameters}
