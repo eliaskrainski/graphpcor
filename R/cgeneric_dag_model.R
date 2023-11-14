@@ -50,8 +50,37 @@ cgeneric_dag_model <-
       }
     }
 
-    nS <- length(S)
-    stilde <- sapply(S, function(x)
+    el <- dag_elements(dag)
+    stopifnot(all(substr(names(el), 1, 1) == "p"))
+    ip <- as.integer(substring(names(el), 2))
+    stopifnot(length(ip) == length(unique(ip)))
+    p <- length(ip)
+    n <- sum(sapply(el, function(x) sum(!x$parent)))
+    p.nc <- sapply(el, function(x) x$n)
+    dd <- c(rep(1, n), p.nc)
+    stopifnot((n+p) == length(dd))
+    q0 <- diag(x = dd, nrow = n + p, ncol = n + p)
+    ij <- matrix(1:((n+p)^2), n+p, n+p)
+    j1th <- i1th <- integer(2*p)
+    j2th <- i2th <- integer(p)
+    k <- 0
+    for(i in 1:p) {
+      i0 <- which(!el[[i]]$parent)
+      if(length(i0)>0) {
+        jj <- p + el[[i]][i0]
+        q0[i, j0] <- -1.0
+        q0[j0, i] <- -1.0
+      } else {
+        ii <- n + i
+        i0 <- which(el[[i]]$parent)
+        stopifnot(length(i0)>0)
+        jj <- n + el[[i]]$id[i0]
+        i1th[k + 1:length(jj)] <- ij[ii, ][jj]
+        k <- k + length(jj)
+      }
+    }
+
+    stilde <- sapply(dag, function(x)
       strsplit(as.character(x), split = "~"))
     if(debug)
       print(stilde)
