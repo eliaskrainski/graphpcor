@@ -34,7 +34,7 @@ cgeneric_dag_model <-
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
-           useINLAprecomp = TRUE,
+           useINLAprecomp = !TRUE,
            libpath = NULL) {
 
     if (is.null(libpath)) {
@@ -61,133 +61,59 @@ cgeneric_dag_model <-
     stopifnot((n+p) == length(dd))
     q0 <- diag(x = dd, nrow = n + p, ncol = n + p)
     ij <- matrix(1:((n+p)^2), n+p, n+p)
-    j1th <- i1th <- integer(2*p)
-    j2th <- i2th <- integer(p)
-    k <- 0
+    iq1th <- integer(2 * (p - 1))
+    sth <- i1th <- integer(p-1)
+    iq2th <- i2th <- integer(p)
+    k2 <- k1 <- 0
     for(i in 1:p) {
       i0 <- which(!el[[i]]$parent)
       if(length(i0)>0) {
-        jj <- p + el[[i]][i0]
-        q0[i, j0] <- -1.0
-        q0[j0, i] <- -1.0
-      } else {
-        ii <- n + i
-        i0 <- which(el[[i]]$parent)
-        stopifnot(length(i0)>0)
-        jj <- n + el[[i]]$id[i0]
-        i1th[k + 1:length(jj)] <- ij[ii, ][jj]
-        k <- k + length(jj)
+        j <- el[[i]]$id[i0]
+        q0[j, n+i] <- -el[[i]]$signal[i0]
+        q0[n+i, j] <- -el[[i]]$signal[i0]
+      }
+      i2th[k1 + 1] <- i
+      iq2th[k1 + 1] <- ij[(col(ij) == (n+i)) & (row(ij) == (n+i))]
+      k1 <- k1 + 1
+      i0 <- which(el[[i]]$parent)
+      nj <- length(i0)
+      if(nj>0) {
+        j0 <- el[[i]]$id[i0]
+        i1th[k2 + 1:nj] <- j0
+        sth[k2 + 1:nj] <- el[[i]]$signal[i0] ## carry on the signal
+        j <- n + j0
+        iq1th[k2 + 1:nj] <- ij[, n+i][j]
+        k2 <- k2 + nj
+        i1th[k2 + 1:nj] <- j0
+        sth[k2 + 1:nj] <- el[[i]]$signal[i0] ## carry on the signal
+        iq1th[k2 + 1:nj] <- ij[n+i, ][j]
+        k2 <- k2 + nj
       }
     }
+    stopifnot(k1 == p)
+    stopifnot(k2 == (2*(p-1)))
 
-    stilde <- sapply(dag, function(x)
-      strsplit(as.character(x), split = "~"))
-    if(debug)
-      print(stilde)
-    stopifnot(all(substr(stilde[2, ], 1, 1) == "p"))
-    iParents1 <- as.integer(substring(
-      unlist(stilde[2, ]), 2))
-    if(debug)
-      print(iParents1)
-    NP <- length(iParents1)
-    if(debug)
-      cat("NP = ", NP, "\n")
-    elements2 <- lapply(strsplit(
-      gsub(" ", "", unlist(stilde[3, ])),
-      "+", fixed = TRUE), unique)
-    if(debug)
-      print(elements2)
-    stopifnot(all(unique(
-      unlist(lapply(elements2, substr, 1, 1))
-      ) %in% c("p", "c")))
-    iielements2 <- lapply(elements2, function(x)
-      as.integer(substring(x, 2)))
-    if(debug)
-      print(iielements2)
-    iparent2 <- lapply(elements2, function(x)
-      substr(x, 1, 1) == "p")
-    if(debug)
-      print(iparent2)
-    stopifnot(all(unlist(
-      iielements2)[unlist(iparent2)]) %in% iParents1)
-    ichildren2 <- lapply(elements2, function(x)
-      substr(x, 1, 1) == "c")
-    if(debug)
-      print(ichildren2)
-    NC <- sum(unlist(ichildren2))
-    if(debug)
-      cat("NC =", NC, "\n")
-    stopifnot(max(unlist(
-      iielements2)[unlist(ichildren2)]) == NC)
-    iiminus <- gregexpr("-", stilde[3,], fixed = TRUE)
-    if(debug)
-      print(iiminus)
-    iiplus <- gregexpr("+", stilde[3,], fixed = TRUE)
-    if(debug)
-      print(iiplus)
-    iisignal <- vector('list', nS)
-    for(k in 1:nS) {
-      ss <- c(sum(iiminus[[k]]>0),
-              sum(iiplus[[k]]>0))
-      a <- integer(max(iiminus[[k]], iiplus[[k]]))
-      s <- integer()
-
-    }
-
-    if(FALSE) {
-
-      q2i <- c(.1, 100, 10000)
-      q2i
-
-      Q <- cbind(rbind(diag(NC), matrix(0, NP, NC)),
-               rbind(matrix(0, NC, NP), diag(q2i)))
-      Q
-      jj <- NC + iParents1
-      for(k in 1:nS) {
-        if (any(ichildren2[[k]])) {
-          ii <- iielements2[[k]][ichildren2[[k]]]
-          cat("k1 =", k, "ii =", ii, "\n")
-          Q[jj[k], jj[k]] <- Q[jj[k], jj[k]] + length(ii)
-          for(i in ii) {
-            if(iiminus[[k]])
-            Q[i, jj[k]] <- -1
-          }
-        }
-        if (any(iparent2[[k]])) {
-          i1 <- NC + iParents1[k]
-          ii <- NC + iielements2[[k]][iparent2[[k]]]
-          cat("k2 =", k, "ii =", ii, "\n")
-          for(i in ii) {
-            Q[i1, i1] <- Q[i1, i1] + q2i[i-NC]
-            Q[i, i1] <- Q[i, i1] - q2i[i-NC]
-          }
-        }
-      }
-      Q
-
-    }
+    stopifnot(length(sigma.prior.reference) == n)
+    stopifnot(length(sigma.prior.probability) == n)
+    stopifnot(all(sigma.prior.probability>0.0))
+    stopifnot(all(sigma.prior.probability<1.0))
+    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
     the_model <- do.call(
       "inla.cgeneric.define",
       list(
         model = "inla_cgeneric_corgraphs",
         shlib = libpath,
-        n = n,
-        debug = as.integer(debug),
-        verbose = as.integer(verbose),
-        Rmanifold = as.integer(Rmanifold),
-        dimension = as.integer(dimension),
-        aaa = as.integer(alphas),
-        nm = as.integer(nm),
-        cc = as.double(cc),
-        bb = mm$bb,
-        prs = control.priors$prs,
-        prt = control.priors$prt,
-        psigma = control.priors$psigma,
-        ii = lmats$graph@i,
-        jj = lmats$graph@j,
-        tt = t(mm$TT),
-        xx = t(lmats$xx)
+        n = as.integer(n),
+        p = as.integer(p),
+        i2th = as.integer(i2th),
+        iq2th = as.integer(iq2th),
+        i1th = as.integer(i1th),
+        sth = as.integer(sth),
+        iq1th = as.integer(iq1th),
+        q = as.double(q0),
+        lambda = lambda,
+        slambdas = slambdas
       )
     )
     if (constr) {
