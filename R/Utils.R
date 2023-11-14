@@ -95,7 +95,10 @@ dag_precision_elements <- function(dag) {
     if(nci>0) {
       j <- el[[i]]$id[i0]
       sch[k0 + 1:nci] <- el[[i]]$signal[i0]
-      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (n+i)) & row(ij)==j]
+      iq1ch[k0 + 1:nci] <- ij[(row(ij) == (n+i)) & (col(ij) %in% j)]
+      k0 <- k0 + nci
+      sch[k0 + 1:nci] <- el[[i]]$signal[i0]
+      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (n+i)) & (row(ij) %in% j)]
       k0 <- k0 + nci
       q0[j, n+i] <- -el[[i]]$signal[i0]
       q0[n+i, j] <- -el[[i]]$signal[i0]
