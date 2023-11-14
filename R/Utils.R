@@ -84,13 +84,19 @@ dag_precision_elements <- function(dag) {
   q0 <- diag(x = dd, nrow = n + p, ncol = n + p)
   ij <- matrix(1:((n+p)^2), n+p, n+p)
   iq1th <- integer(2 * (p - 1))
+  sch <- iq1ch <- integer(2*n)
   sth <- i1th <- integer(p-1)
   iq2th <- i2th <- integer(p)
+  k0 <- 0
   k2 <- k1 <- 0
   for(i in 1:p) {
     i0 <- which(!el[[i]]$parent)
-    if(length(i0)>0) {
+    nci <- length(i0)
+    if(nci>0) {
       j <- el[[i]]$id[i0]
+      sch[k0 + 1:nci] <- el[[i]]$signal[i0]
+      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (n+i)) & row(ij)==j]
+      k0 <- k0 + nci
       q0[j, n+i] <- -el[[i]]$signal[i0]
       q0[n+i, j] <- -el[[i]]$signal[i0]
     }
@@ -121,6 +127,8 @@ dag_precision_elements <- function(dag) {
     iq2th = as.integer(iq2th),
     i1th = as.integer(i1th),
     iq1th = as.integer(iq1th),
+    iq1ch = as.integer(iq1ch),
+    sch = as.double(sch),
     sth = as.double(sth),
     q = q0
   ))
@@ -140,7 +148,7 @@ dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
     q.el <- dag_precision_elements(dag)
     Q <- q.el$q
     nc <- q.el$n
-    Q[q.el$iq2th] <- Q[q.el$i2th] +
+    Q[q.el$iq2th] <- Q[q.el$iq2th] +
         exp(-2 * theta[q.el$i2th])
     Q[q.el$iq1th] <- -1.0 * q.el$sth * exp(-2*theta[q.el$i1th])
   } else {
