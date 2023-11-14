@@ -16,6 +16,8 @@ s4 <- list(p1 ~ p2 + c1,
            p2 ~ p3 + c2 + c3,
            p3 ~ c4)
 
+dag_elements(s1)
+
 s1.plot <- GraphPlot(s1)
 s2.plot <- GraphPlot(s2)
 s3.plot <- GraphPlot(s3)
@@ -27,10 +29,10 @@ plot(s2.plot$gr, nodeAttrs = s2.plot$nAttrs)
 plot(s3.plot$gr, nodeAttrs = s3.plot$nAttrs)
 plot(s4.plot$gr, nodeAttrs = s4.plot$nAttrs)
 
-q1 <- QS(s1, c(0,0,0))
-q2 <- QS(s2, c(0,0,0))
-q3 <- QS(s3, c(0,0,0))
-q4 <- QS(s4, c(0,0,0))
+q1 <- dag_precision(s1, c(0,0,0))
+q2 <- dag_precision(s2, c(0,0,0))
+q3 <- dag_precision(s3, c(0,0,0))
+q4 <- dag_precision(s4, c(0,0,0))
 
 nc <- 4
 cov2cor(solve(q1)[1:nc, 1:nc])

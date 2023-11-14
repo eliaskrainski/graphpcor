@@ -1,18 +1,18 @@
 
 /* cgeneric_corgraphs.c
- * 
+ *
  * Copyright (C) 2023 Elias Krainski
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -86,17 +86,16 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret = Calloc(2 + 2 * M, double);
 		ret[0] = N;				       /* dimension */
 		ret[1] = M;				       /* number of (i <= j) */
-		while (k < 2) {
-			for (int i = 0; i < N; i++) {
-				ret[k++] = i;
-				if (N>1) {
-					for(int j = i; j < N; j++) {
-						ret[k++] = j;
-					}
-				}
-			}
-			k++;
-		}
+      for (int i = 0; i < N; i++) {
+        for(int j = i; j < N; j++) {
+          ret[k++] = i;
+        }
+      }
+      for (int i = 0; i < N; i++) {
+        for(int j = i; j < N; j++) {
+          ret[k++] = j;
+        }
+      }
 	}
 		break;
 
@@ -121,7 +120,7 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	case INLA_CGENERIC_MU:
 	{
-		// return (N, mu). if N==0 then mu is not needed as its taken to be mu[]==0 
+		// return (N, mu). if N==0 then mu is not needed as its taken to be mu[]==0
 		ret = Calloc(1, double);
 		ret[0] = 0;
 	}
@@ -130,7 +129,7 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	case INLA_CGENERIC_INITIAL:
 	{
 		// return c(P, initials)
-		// where P is the number of hyperparameters 
+		// where P is the number of hyperparameters
 		ret = Calloc(nth + 1, double);
 		ith = 0;
 		ret[ith++] = (double) nth;
@@ -140,7 +139,7 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 	}
-	
+
 		break;
 
 	case INLA_CGENERIC_LOG_PRIOR:

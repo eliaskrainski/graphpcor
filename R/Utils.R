@@ -1,5 +1,5 @@
 #' Function that returns density for a given model structure
-#' @param S model structure given as a formula list
+#' @param dag model structure given as a formula list
 #' @return a list with same length of S.
 #' Each element as a named list to specify the left hand side
 #' of the graph terms.
@@ -13,10 +13,10 @@
 #' S <- list(
 #'      p3 ~ p1 - p2,
 #'      p1 ~ -c1 + c2 + c3, p2 ~ c4)
-#' str(Sleft(S))
-Sleft <- function(S, debug = FALSE) {
-  nS <- length(S)
-  stilde <- sapply(S, function(x)
+#' str(dag_elements(S))
+dag_elements <- function(dag, debug = FALSE) {
+  nS <- length(dag)
+  stilde <- sapply(dag, function(x)
     strsplit(gsub(" ", "", as.character(x)),
              split = "~"))
 
@@ -34,8 +34,8 @@ Sleft <- function(S, debug = FALSE) {
 
   stilde
 
-  S.elements <- vector("list", nS)
-  names(S.elements) <- stilde[2, ]
+  dag_sl <- vector("list", nS)
+  names(dag_sl) <- stilde[2, ]
   for(k in 1:nS) {
     if(debug>1)
       cat("k =", k, "\n")
@@ -63,7 +63,7 @@ Sleft <- function(S, debug = FALSE) {
       strsplit(x, "-", fixed = TRUE)[[1]]))
     if(debug>1)
       print(ss)
-    S.elements[[k]] <- list(
+    dag_sl[[k]] <- list(
       n = length(ss),
       term = ss,
       parent = substr(ss, 1, 1) == "p",
@@ -71,9 +71,9 @@ Sleft <- function(S, debug = FALSE) {
       signal = s[s!=0]
     )
     if(debug)
-      print(str(S.elements[[k]]))
+      print(str(dag_sl[[k]]))
   }
-  return(S.elements)
+  return(dag_sl)
 }
 #' Function to build Q from a graph model
 #' @param theta vector with the log of the parameters
@@ -83,11 +83,11 @@ Sleft <- function(S, debug = FALSE) {
 #' S <- list(
 #'      p3 ~ p1 - p2,
 #'      p1 ~ -c1 + c2 + c3, p2 ~ c4)
-#' Q <- QS(S, theta = c(1, 1, 1))
+#' Q <- dag_precision(S, theta = c(1, 1, 1))
 #' cov2cor(solve(Q)[1:4, 1:4])
-S2Q <- function(S, theta, debug = FALSE) {
-  nS <- length(S)
-  stilde <- sapply(S, function(x)
+dag_precision <- function(dag, theta, debug = FALSE) {
+  nS <- length(dag)
+  stilde <- sapply(dag, function(x)
     strsplit(gsub(" ", "", as.character(x)),
              split = "~"))
   if(debug)
@@ -102,21 +102,26 @@ S2Q <- function(S, theta, debug = FALSE) {
   if(debug)
     cat("NP = ", NP, "\n")
 
-  S.elements <- Sleft(S, debug = debug)
-  NC <- sum(sapply(S.elements, function(s)
+  dag_sl <- dag_elements(dag, debug = debug)
+  NC <- sum(sapply(dag_sl, function(s)
     sum(!s$parent)))
 
   q <- exp(theta)
 
-  Qa <- cbind(rbind(diag(NC), matrix(0, NP, NC)),
-              rbind(matrix(0, NC, NP), diag(q)))
-  Qa
+  Qa <- cbind(
+    rbind(diag(NC), matrix(0, NP, NC)),
+    rbind(matrix(0, NC, NP), diag(q)))
+  Qth <- cbind(
+    rbind(diag(NC), matrix(0, NP, NC)),
+    rbind(matrix(0, NC, NP), diag(NP)*0.0))
   jj <- NC + iParents1
   for(k in 1:nS) {
-    Sk <- S.elements[[k]]
+    Sk <- dag_sl[[k]]
     ich <- !Sk$parent
     if (any(ich)) {
       ii <- Sk$id[ich]
+      Qa[jj[k], jj[k]] <- Qa[jj[k], jj[k]] + length(ii)
+      Qa[ii, jj[k]] <- -Sk$signal[ich]
       Qa[jj[k], jj[k]] <- Qa[jj[k], jj[k]] + length(ii)
       Qa[ii, jj[k]] <- -Sk$signal[ich]
     }
@@ -135,8 +140,7 @@ S2Q <- function(S, theta, debug = FALSE) {
     }
   }
   if(debug>1)
-    print(Qa)
-
+      print(Qa)
   Q <- Qa
   Q[lower.tri(Q)] <- t(Qa)[lower.tri(Q)]
   return(Q)

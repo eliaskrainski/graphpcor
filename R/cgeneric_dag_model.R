@@ -1,17 +1,20 @@
-#' Define a Graph based correlation graph model object
-#'  to define a random model for the `INLA` `f()` call.
+#' Build the objects to implement the model using the
+#' cgeneric method in `INLA` from a list of expressions
+#' defining a Direct Acyclic Graph - DAG correlation model
+#' to be used as a model in a `INLA` `f()` model component.
 #'
-#' @param graph a graph model.
-#' @param lambda the lambda for the graph prior.
+#' @param dag the DAG model.
+#' @param lambda the lambda for the graph correlation prior.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
 #' to define the prior for the standard deviation parameters.
 #' @param useINLAprecomp logical indicating if is to be used
-#' shared object pre-compiled by INLA. Not considered if
+#' shared object pre-compiled by INLA. It is not considered if
 #' libpath is provided.
 #' @param libpath string to the shared object. Default is NULL.
 #' @details
+#'  The correlation prior as in the paper depends on the lambda value.
 #'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
 #' which can be defined from the following probability statement
 #'  P(sigma > U) = a.
@@ -26,8 +29,8 @@
 #' then sigma[2] is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-corGraphs2INLAcgeneric <-
-  function(graph,
+cgeneric_dag_model <-
+  function(dag,
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
