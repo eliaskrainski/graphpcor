@@ -16,8 +16,6 @@ g4 <- list(p1 ~ p2 + c1,
            p2 ~ p3 + c2 + c3,
            p3 ~ c4)
 
-dag_elements(g1)
-
 g1.plot <- GraphPlot(g1)
 g2.plot <- GraphPlot(g2)
 g3.plot <- GraphPlot(g3)

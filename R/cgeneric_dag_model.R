@@ -34,6 +34,7 @@ cgeneric_dag_model <-
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
+           debug = FALSE,
            useINLAprecomp = !TRUE,
            libpath = NULL) {
 
@@ -59,20 +60,25 @@ cgeneric_dag_model <-
     stopifnot(all(sigma.prior.probability<1.0))
     slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
+    qc <- q.el$q[1:q.el$n, 1:q.el$n]
+    ii <- col(qc)[!upper.tri(qc)]
+    jj <- row(qc)[!upper.tri(qc)]
+
     the_model <- do.call(
       "inla.cgeneric.define",
       list(
         model = "inla_cgeneric_corgraphs",
         shlib = libpath,
         n = as.integer(q.el$n),
+        debug = as.integer(debug),
         p = as.integer(q.el$p),
         i2th = as.integer(q.el$i2th-1L),
         iq2th = as.integer(q.el$iq2th-1L),
         i1th = as.integer(q.el$i1th-1L),
         iq1th = as.integer(q.el$iq1th-1L),
         iq1ch = as.integer(q.el$iq1ch-1L),
-        ii = as.integer(col(q.el$q[1:q.el$n, 1:q.el$n])-1),
-        jj = as.integer(row(q.el$q[1:q.el$n, 1:q.el$n])-1),
+        ii = as.integer(ii - 1L),
+        jj = as.integer(jj - 1L),
         sch = as.double(q.el$sch),
         sth = as.double(q.el$sth),
         q = as.double(q.el$q),
