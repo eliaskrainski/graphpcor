@@ -31,46 +31,45 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 {
 
 	double *ret = NULL;
-	int i, j, k, N, M, M2, n2, np, m2;
+	int i, j, k, N, M, np, nparam;
 
 	// the size of the model
 	assert(data->n_ints > 1);
 	assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
 	N = data->ints[0]->ints[0];
 	assert(N > 0);
-	M2 = N * N;
 	M = N + (int)((double)N * ((double)(N-1)) / 2.0);
+	double vc[N], mcov[M];
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
 	int debug = data->ints[0]->ints[0];
 
-	assert(!strcasecmp(data->ints[2]->name, "p"));     // this will always be the case
+	assert(!strcasecmp(data->ints[2]->name, "np"));     // this will always be the case
 	np = data->ints[2]->ints[0];
 	assert(np > 0);
-	n2 = N + np;
-	m2 = (n2 * n2);
-	if(debug) {
-	  printf("(N = %d, M = %d, uM = %d, n2 = %d, m2 = %d)\n", N, M, M2, n2, m2) ;
-	}
-	double q2[np];
+	nparam = N + np;
+	double q2[np], vparents[np];
+/*	if(debug) {
+	  printf("(N = %d, M = %d, np = %d)\n", N, M, np) ;
+}*/
 
-	assert(!strcasecmp(data->ints[3]->name, "i2th"));     // this will always be the case
-	inla_cgeneric_vec_tp *i2th = data->ints[3];
-	assert(i2th->len == np);
+	assert(!strcasecmp(data->ints[3]->name, "nv"));     // this will always be the case
+	inla_cgeneric_vec_tp *nv = data->ints[3];
+	assert(nv->len == np);
 
-	assert(!strcasecmp(data->ints[4]->name, "iq2th"));     // this will always be the case
-	inla_cgeneric_vec_tp *iq2th = data->ints[4];
-	assert(i2th->len == iq2th->len);
+	assert(!strcasecmp(data->ints[4]->name, "ipar"));     // this will always be the case
+	inla_cgeneric_vec_tp *ipar = data->ints[4];
+	assert(ipar->len == N);
 
-	assert(!strcasecmp(data->ints[5]->name, "i1th"));     // this will always be the case
-	inla_cgeneric_vec_tp *i1th = data->ints[5];
+	assert(!strcasecmp(data->ints[5]->name, "iiv"));     // this will always be the case
+	inla_cgeneric_vec_tp *iiv = data->ints[5];
 
-	assert(!strcasecmp(data->ints[6]->name, "iq1th"));     // this will always be the case
-	inla_cgeneric_vec_tp *iq1th = data->ints[6];
-	assert(i1th->len == iq1th->len);
+	assert(!strcasecmp(data->ints[6]->name, "jjv"));     // this will always be the case
+	inla_cgeneric_vec_tp *jjv = data->ints[6];
+	assert(iiv->len == jjv->len);
 
-	assert(!strcasecmp(data->ints[7]->name, "iq1ch"));     // this will always be the case
-	inla_cgeneric_vec_tp *iq1ch = data->ints[7];
+	assert(!strcasecmp(data->ints[7]->name, "itop"));     // this will always be the case
+	inla_cgeneric_vec_tp *itop = data->ints[7];
 
 	assert(!strcasecmp(data->ints[8]->name, "ii"));     // this will always be the case
 	inla_cgeneric_vec_tp *ii = data->ints[8];
@@ -78,39 +77,29 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->ints[9]->name, "jj"));     // this will always be the case
 	inla_cgeneric_vec_tp *jj = data->ints[9];
 
-	assert(!strcasecmp(data->doubles[0]->name, "sch"));     // this will always be the case
-	inla_cgeneric_vec_tp *sch = data->doubles[0];
-	assert(iq1ch->len == sch->len);
-
-	assert(!strcasecmp(data->doubles[1]->name, "sth"));     // this will always be the case
-	inla_cgeneric_vec_tp *sth = data->doubles[1];
-	assert(i1th->len == sth->len);
-
-	assert(!strcasecmp(data->doubles[2]->name, "q"));
-	inla_cgeneric_vec_tp *q = data->doubles[2];
-	assert(q->len == m2);
-
-	assert(!strcasecmp(data->doubles[3]->name, "lambda"));
-	double lambda = data->doubles[1]->doubles[3];
+	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
+	double lambda = data->doubles[0]->doubles[0];
 	assert(lambda>0);
 
-	assert(!strcasecmp(data->doubles[4]->name, "slambdas"));
-	inla_cgeneric_vec_tp *slambdas = data->doubles[4];
+	assert(!strcasecmp(data->doubles[1]->name, "slambdas"));
+	inla_cgeneric_vec_tp *slambdas = data->doubles[1];
 	assert(slambdas->len>0);
 	assert(slambdas->len == N);
 
 	if(theta) {
-	  if(debug>1) {
-	    for (i=0; i<N; i++)
-	      printf("theta[%d] = %2.1f \n", i, theta[i]);
+	  for(i=0; i<N; i++) {
+	    vc[i] = exp(theta[i]);
 	  }
-	  for(i=0; i<np; i++) {
-	    q2[i] = exp(-2 * theta[N +i]);
-	    if(debug>1) {
+	  for (i=0; i<np; i++) {
+	    q2[i] = exp(2 * theta[N+i]);
+/*	    if(debug>1) {
 	      printf("%2.1f %2.1f\n", theta[N+i], q2[i]);
-	    }
+}*/
 	  }
 	} else {
+	  for(i=0; i<N; i++) {
+	    vc[i] = NAN;
+	  }
 	  for(i=0; i<np; i++) {
 	    q2[i] = NAN;
 	  }
@@ -144,130 +133,164 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret[0] = -1;				       /* REQUIRED */
     ret[1] = M;				       /* REQUIRED */
 
-		int ipiv[N], ipiv2[n2], info=0;
+if(debug>1){
+  printf(" nv:\n");
+  for(i=0; i<nv->len; i++) {
+    printf("%d ", nv->ints[i]);
+  }
+  printf("\n iiv:\n");
+  for(i=0; i<iiv->len; i++) {
+    printf("%d ", iiv->ints[i]);
+  }
+  printf("\n jjv:\n");
+  for(i=0; i<jjv->len; i++) {
+    printf("%d ", jjv->ints[i]);
+  }
+  printf("\n itop[i,j]:\n");
+  k=0;
+  for(i=0; i<N; i++) {
+    for(j=i; j<N; j++) {
+      printf("%d ", itop->ints[k]);
+      k++;
+    }
+    if(debug>1){
+      printf("\n");
+    }
+  }
+}
 
-		double qq[m2], vv[m2], vc[M];
+    char uplo = 'U';
+    int info=0;
+    double *qq = (double *) calloc(N*N, sizeof(double));
+    double vcc[N];
 
-		for(i=0; i<m2; i++) {
-		  qq[i] = q->doubles[i];
-		}
-		for(i=0; i<sch->len; i++){
-		  qq[iq1ch->ints[i]] *= sch->doubles[i];
-		}
-		for(i=0; i<iq2th->len; i++) {
-		  qq[iq2th->ints[i]] += q2[i2th->ints[i]];
-		}
-		k = 0;
-		for(i=0; i<i1th->len; i++) {
-		  qq[iq1th->ints[i]] = -sth->doubles[i] * q2[i1th->ints[i]];
-		}
-		if(debug>1){
-		  printf("Q[i,j]:\n");
-		  k=0;
-		  for(i=0; i<n2; i++) {
-		    for(j=0; j<n2; j++) {
-		      printf("%2.1f ", qq[k]);
-  		    k++;
-	  	  }
-		    if(debug>1){
-		      printf("\n");
-		    }
-		  }
-		  printf("vv[i,j]:\n");
-		}
-		k=0;
-		for(i=0; i<n2; i++) {
-		  for(j=0; j<n2; j++) {
-		    if(i==j) {
-		      vv[k] = 1.0;
-		    } else {
-		      vv[k] = 0;
-		    }
-		    if(debug>1){
-		      printf("%2.3f ", vv[k]);
-		    }
-		    k++;
-		  }
-		  if(debug>1){
-		    printf("\n");
-		  }
-		}
-		assert(k==m2);
-
-		dgesv_(&n2, &n2, qq, &n2, ipiv2, vv, &n2, &info, F_ONE);
-
-		if(debug>1){
-		  printf("vv[i,j]:\n");
-		  k=0;
-		  for(i=0; i<n2; i++) {
-		    for(j=0; j<n2; j++) {
-		      printf("%2.1f ", vv[k]);
-		      k++;
-		    }
-		    if(debug>1){
-		      printf("\n");
-		    }
-		  }
-		}
-
-		k=0;
-		int kc = 0;
-		double ss[N];
-		for(i=0; i<N; i++) {
-		  for(j=0; j<n2; j++) {
-		    if(j<N) {
-		      vc[kc] = vv[k];
-		      if(i==j) ss[i] = sqrt(vc[kc]);
-		      kc++;
-		    }
-		    k++;
-		  }
-		  if(debug>1)
-		    printf("ss[%d] = %2.1f\n", i, ss[i]) ;
-		}
-		if(debug>1)
-		  printf("\n") ;
-		assert(kc==M2);
-
-		if(debug>1){
-		  printf("vc[i,j]:\n");
-		  k=0;
-		  for(i=0; i<N; i++) {
-		    for(j=0; j<N; j++) {
-		      printf("%2.1f ", vc[k]);
-		      k++;
-		    }
-		    if(debug>1){
-		      printf("\n");
-		    }
-		  }
-		}
-
-		k=0;
+    for(i=0; i<np; i++) {
+      vparents[i] = 0.0;
+    }
+    for(i=0; i<iiv->len; i++) {
+      vparents[iiv->ints[i]] += q2[jjv->ints[i]];
+    }
+    k=0;
     for(i=0; i<N; i++) {
-      for(j=0; j<N; j++) {
+      vcc[i] = 1.0 + vparents[ipar->ints[i]];
+      for(j=i; j<N; j++) {
         if(i==j) {
-          qq[k] = exp(theta[i]);
+          mcov[k] = 1.0 + vparents[itop->ints[k]];
         } else {
-          qq[k] = 0.0;
-        }
-        vc[k] = exp(theta[i]+theta[j]) * vc[k] / (ss[i] * ss[j]);
-		    k++;
-		  }
-		}
-		dgesv_(&N, &N, vc, &N, ipiv, qq, &N, &info, F_ONE);
-
-    k = 0;
-    kc = 0;
-    for(i=0; i<N; i++) {
-      for(j=0; j<N; j++) {
-        if(j>=i) {
-          ret[offset + kc] = qq[k];
-          kc++;
+          mcov[k] = vparents[itop->ints[k]];
         }
         k++;
       }
     }
+
+    if(debug>1) {
+      for(i = 0; i<N; i++)
+        printf("vc[%d] = %2.3f, vcc[%d] = %2.3f\n", i, vc[i], i, vcc[i]);
+      for(i = 0; i<np; i++)
+        printf("vparents[%d] = %2.3f\n", i, vparents[i]);
+		  printf("V[i,j]:\n");
+		  k=0;
+		  for(i=0; i<N; i++) {
+		    printf("%2.5f: ", vc[i]);
+		    for(j=i; j<N; j++) {
+		      printf("%2.3f ", mcov[k]);
+  		    k++;
+	  	  }
+	      printf("\n");
+		  }
+		}
+
+		k=0;
+		for(i=0; i<N; i++) {
+		  for(j=i; j<N; j++) {
+		    mcov[k] /=  sqrt(vcc[i] * vcc[j]);
+		    k++;
+		  }
+		}
+		k=0;
+		for(i=0; i<N; i++) {
+		  for(j=0; j<N; j++) {
+		    if(i==j){
+		      qq[k] = 1.0;
+		    } else {
+		      qq[k] = 0.0;
+		    }
+		    k++;
+		  }
+		}
+
+		if(debug>1){
+		  printf("V[i,j]:\n");
+		  k=0;
+		  for(i=0; i<N; i++) {
+		    for(j=i; j<N; j++) {
+		      printf("%2.3f ", mcov[k]);
+		      k++;
+		    }
+		    if(debug>1){
+		      printf("\n");
+		    }
+		  }
+		}
+/*		k=0;
+		for(i=0; i<N; i++) {
+		  for(j=i; j<N; j++) {
+		    mcov[k] *= exp(theta[i]+theta[j]);
+		    k++;
+		  }
+		}
+ */
+		if(debug>1){
+		  printf("V[i,j]:\n");
+		  k=0;
+		  for(i=0; i<N; i++) {
+		    for(j=i; j<N; j++) {
+		      printf("%2.3f ", mcov[k]);
+		      k++;
+		    }
+		    if(debug>1){
+		      printf("\n");
+		    }
+		  }
+		  printf("Q[i,j]:\n");
+		}
+
+		dposv_(&uplo, &N, &N, &mcov[0], &N, &qq[0], &N, &info, F_ONE);
+
+		printf("INFO for dposv is %d\n", info);
+
+		if(debug>1) {
+		  printf("V[i,j]:\n");
+		  k=0;
+		  for(i=0; i<N; i++) {
+		    printf("%2.5f: ", vc[i]);
+		    for(j=i; j<N; j++) {
+		      printf("%2.3f ", mcov[k]);
+		      k++;
+		    }
+		    printf("\n");
+		  }
+		}
+
+		k=0;
+		  int k2=0;
+		  for(i=0; i<N; i++) {
+		    for(j=0; j<N; j++) {
+		      if(j>=i) {
+		        ret[offset+k2] = qq[k];
+		        k2++;
+		      }
+		      if(debug>1){
+		        printf("%2.1f ", qq[k]);
+		      }
+		      k++;
+		    }
+		    if(debug>1){
+		      printf("\n");
+		    }
+		}
+		  free(qq);
+
 	}
 	  break;
 	case INLA_CGENERIC_MU:
@@ -282,9 +305,9 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	{
 		// return c(P, initials)
 		// where P is the number of hyperparameters
-		ret = Calloc(n2 + 1, double);
-	  ret[0] = n2;
-	  for(i = 0; i < n2; i++) {
+		ret = Calloc(nparam + 1, double);
+	  ret[0] = nparam;
+	  for(i = 0; i < nparam; i++) {
 			ret[1+i] = 1.0;
 		}
 	}

@@ -2,10 +2,7 @@
 % Please edit documentation in R/cgeneric_dag_model.R
 \name{cgeneric_dag_model}
 \alias{cgeneric_dag_model}
-\title{Build the objects to implement the model using the
-cgeneric method in \code{INLA} from a list of expressions
-defining a Direct Acyclic Graph - DAG correlation model
-to be used as a model in a \code{INLA} \code{f()} model component.}
+\title{Implement the model from covariance}
 \usage{
 cgeneric_dag_model(
   dag,
@@ -17,44 +14,9 @@ cgeneric_dag_model(
   libpath = NULL
 )
 }
-\arguments{
-\item{dag}{the DAG model.}
-
-\item{lambda}{the lambda for the graph correlation prior.}
-
-\item{sigma.prior.reference}{a vector with the reference values
-to define the prior for the standard deviation parameters.}
-
-\item{sigma.prior.probability}{a vector with the probability values
-to define the prior for the standard deviation parameters.}
-
-\item{useINLAprecomp}{logical indicating if is to be used
-shared object pre-compiled by INLA. It is not considered if
-libpath is provided.}
-
-\item{libpath}{string to the shared object. Default is NULL.}
-}
 \value{
 objects to be used in the f() formula term in INLA.
 }
 \description{
-Build the objects to implement the model using the
-cgeneric method in \code{INLA} from a list of expressions
-defining a Direct Acyclic Graph - DAG correlation model
-to be used as a model in a \code{INLA} \code{f()} model component.
-}
-\details{
-The correlation prior as in the paper depends on the lambda value.
-The prior for each \eqn{sigma_i} is the Penalized-complexity prior
-which can be defined from the following probability statement
-P(sigma > U) = a.
-where "U" is a reference value and "a" is a probability.
-The values "U" and probabilities "a" for each \eqn{sigma_i}
-are passed in the \code{sigma.prior.reference} and \code{sigma.prior.probability}
-arguments.
-If a=0 then U is taken to be the fixed value of the corresponding sigma.
-E.g. if there are three sigmas in the model and one supply
-sigma.prior.reference = c(1, 2, 3) and
-sigma.prior.probability = c(0.05, 0.0, 0.01)
-then sigma\link{2} is fixed to 2 and not estimated.
+Implement the model from covariance
 }

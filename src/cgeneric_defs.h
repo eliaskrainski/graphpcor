@@ -66,8 +66,12 @@ typedef int fortran_charlen_t;
 #define F_ONE ((fortran_charlen_t)1)
 
 void dgesv_(int *N, int *NRHS, double *A, int *LDA, int *IPIV,
-	    double *B, int *LDB, int *INLFO, fortran_charlen_t);
+            double *B, int *LDB, int *INLFO, fortran_charlen_t);
 
+void dposv_(char *uplo, int *N, int *NRHS, double *A, int *LDA,
+            double *B, int *LDB, int *INLFO, fortran_charlen_t);
+
+inla_cgeneric_func_tp inla_cgeneric_corgraphs0;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs;
 
 __END_DECLS

@@ -29,7 +29,7 @@
 #' then sigma[2] is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-cgeneric_dag_model <-
+cgeneric0_dag_model <-
   function(dag,
            lambda,
            sigma.prior.reference,
@@ -61,13 +61,14 @@ cgeneric_dag_model <-
     slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
     qc <- q.el$q[1:q.el$n, 1:q.el$n]
+    diag(qc) <- diag(qc) + 1e-9
     ii <- col(qc)[!upper.tri(qc)]
     jj <- row(qc)[!upper.tri(qc)]
 
     the_model <- do.call(
       "inla.cgeneric.define",
       list(
-        model = "inla_cgeneric_corgraphs",
+        model = "inla_cgeneric_corgraphs0",
         shlib = libpath,
         n = as.integer(q.el$n),
         debug = as.integer(debug),
@@ -82,6 +83,70 @@ cgeneric_dag_model <-
         sch = as.double(q.el$sch),
         sth = as.double(q.el$sth),
         q = as.double(q.el$q),
+        lambda = as.double(lambda),
+        slambdas = as.double(slambdas)
+      )
+    )
+
+    return(the_model)
+  }
+#' Implement the model from covariance
+#' @return objects to be used in the f() formula term in INLA.
+#' @export
+cgeneric_dag_model <-
+  function(dag,
+           lambda,
+           sigma.prior.reference,
+           sigma.prior.probability,
+           debug = FALSE,
+           useINLAprecomp = !TRUE,
+           libpath = NULL) {
+
+    if (is.null(libpath)) {
+      if (useINLAprecomp) {
+        libpath <- INLA::inla.external.lib("corGraphs")
+      } else {
+        libpath <- system.file("libs", package = "corGraphs")
+        if (Sys.info()["sysname"] == "Windows") {
+          libpath <- file.path(libpath, "corGraphs.dll")
+        } else {
+          libpath <- file.path(libpath, "corGraphs.so")
+        }
+      }
+    }
+
+    d.el <- dag_correlation_elements(dag)
+    np <- length(d.el$iv)
+    nc <- length(d.el$iparent)
+    nv <- sapply(d.el$iv, length)
+    iiv <- rep(1:np, nv)
+    jjv <- unlist(d.el$iv)
+    itop <- d.el$itop
+    ii <- col(itop)[!upper.tri(itop)]
+    jj <- row(itop)[!upper.tri(itop)]
+    itop <- itop[!upper.tri(itop)]
+
+    stopifnot(length(sigma.prior.reference) == nc)
+    stopifnot(length(sigma.prior.probability) == nc)
+    stopifnot(all(sigma.prior.probability>0.0))
+    stopifnot(all(sigma.prior.probability<1.0))
+    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
+
+    the_model <- do.call(
+      "inla.cgeneric.define",
+      list(
+        model = "inla_cgeneric_corgraphs",
+        shlib = libpath,
+        n = as.integer(nc),
+        debug = as.integer(debug),
+        np = as.integer(np),
+        nv = as.integer(nv),
+        ipar = as.integer(d.el$iparent-1L),
+        iiv = as.integer(iiv-1L),
+        jjv = as.integer(jjv-1L),
+        itop = as.integer(itop-1L),
+        ii = as.integer(ii-1L),
+        jj = as.integer(jj-1L),
         lambda = as.double(lambda),
         slambdas = as.double(slambdas)
       )

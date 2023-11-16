@@ -16,10 +16,11 @@ dag_elements <- function(dag, debug = FALSE) {
 
   if(debug>1)
     print(stilde)
-  stopifnot(all(substr(stilde[2, ], 1, 1) == "p"))
+  idParents <- unlist(stilde[2, ])
+  stopifnot(length(dag) == length(unique(idParents)))
+  stopifnot(all(substr(idParents, 1, 1) == "p"))
 
-  iParents1 <- as.integer(substring(
-    unlist(stilde[2, ]), 2))
+  iParents1 <- as.integer(substring(idParents, 2))
   if(debug)
     print(iParents1)
   NP <- length(iParents1)
@@ -29,7 +30,7 @@ dag_elements <- function(dag, debug = FALSE) {
   stilde
 
   dag_sl <- vector("list", nS)
-  names(dag_sl) <- stilde[2, ]
+  names(dag_sl) <- idParents
   for(k in 1:nS) {
     if(debug>1)
       cat("k =", k, "\n")
@@ -71,7 +72,7 @@ dag_elements <- function(dag, debug = FALSE) {
 }
 #' Function to build the precision elements
 #' @param dag model structure given as a formula list
-dag_precision_elements <- function(dag) {
+dag_precision_elements <- function(dag, UPLO = FALSE) {
   el <- dag_elements(dag)
   stopifnot(all(substr(names(el), 1, 1) == "p"))
   ip <- as.integer(substring(names(el), 2))
@@ -95,10 +96,10 @@ dag_precision_elements <- function(dag) {
     if(nci>0) {
       j <- el[[i]]$id[i0]
       sch[k0 + 1:nci] <- el[[i]]$signal[i0]
-      iq1ch[k0 + 1:nci] <- ij[(row(ij) == (n+i)) & (col(ij) %in% j)]
+      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (n+i)) & (row(ij) %in% j)]
       k0 <- k0 + nci
       sch[k0 + 1:nci] <- el[[i]]$signal[i0]
-      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (n+i)) & (row(ij) %in% j)]
+      iq1ch[k0 + 1:nci] <- ij[(row(ij) == (n+i)) & (col(ij) %in% j)]
       k0 <- k0 + nci
       q0[j, n+i] <- -el[[i]]$signal[i0]
       q0[n+i, j] <- -el[[i]]$signal[i0]
@@ -219,3 +220,50 @@ dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
   return(Q)
 }
 
+dag_correlation_elements <- function(dag) {
+   d.el <- dag_elements(dag)
+   np <- length(d.el)
+   iv <- lapply(1:np, function(i) i)
+   for(i in 1:np) {
+     ip <- which(d.el[[i]]$parent)
+     if(length(ip)>0) {
+       jj <- d.el[[i]]$id[ip]
+       for(j in jj) {
+         iv[[j]] <- c(iv[[j]], iv[[i]])
+       }
+     }
+   }
+#   return(iv)
+   NC <- sum(sapply(d.el, function(s) sum(!s$parent)))
+   iP <- integer(NC)
+   for(i in 1:np) {
+     ic <- which(!d.el[[i]]$parent)
+     if(length(ic)>0)
+       for(j in 1:length(ic)) {
+         iP[d.el[[i]]$id[ic[j]]] <- i
+       }
+   }
+   itop <- matrix(0L, NC, NC)
+   for(i in 1:NC) {
+     for(j in 1:NC) {
+       itop[i, j] <- max(intersect(iv[[iP[i]]], iv[[iP[j]]]))
+     }
+   }
+   stopifnot(all.equal(iP,diag(itop)))
+   return(list(iv = iv, iparent = iP, itop = itop))
+}
+
+dag_covariance <- function(dag, theta) {
+  ij <- dag_correlation_elements(dag)
+  np <- length(ij$iv)
+  nc <- length(ij$iparent)
+  vv <- diag(nc)
+  for(i in 1:nc) {
+    for (j in 1:nc) {
+      vi <- sum(exp(theta[ij$iv[[ij$iparent[i]]]]))
+      vj <- sum(exp(theta[ij$iv[[ij$iparent[j]]]]))
+      vv[i, j] <- vv[i, j] + vi * vj
+    }
+  }
+  return(vv)
+}

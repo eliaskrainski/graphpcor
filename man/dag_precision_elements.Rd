@@ -4,7 +4,7 @@
 \alias{dag_precision_elements}
 \title{Function to build the precision elements}
 \usage{
-dag_precision_elements(dag)
+dag_precision_elements(dag, UPLO = FALSE)
 }
 \arguments{
 \item{dag}{model structure given as a formula list}
