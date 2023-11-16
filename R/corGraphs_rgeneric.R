@@ -10,7 +10,7 @@
 #' }
 #' @return the asked object
 #' @export
-corGraphs2INLArgeneric <- function(cmd = c("graph", "Q", "mu", "initial",
+corGraphs_rgeneric <- function(cmd = c("graph", "Q", "mu", "initial",
                                     "log.norm.const", "log.prior", "quit"),
                              theta = NULL)
 {
