@@ -38,7 +38,7 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
 	N = data->ints[0]->ints[0];
 	assert(N > 0);
-	M = N + (int)((double)N * ((double)(N-1)) / 2.0);
+	M = (int)((double)N * ((double)(N+1)) / 2.0);
 	double vc[N], mcov[M];
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
@@ -117,10 +117,11 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
       ret[k++] = ii->ints[i];
     }
     for (i = 0; i < M; i++) {
-      ret[k++] = jj->ints[i];
+      ret[k] = jj->ints[i];
       if(debug>1){
         printf("%d %2.1f %2.1f\n", i, ret[k-M], ret[k]);
       }
+      k++;
     }
 
 	}
@@ -149,7 +150,7 @@ if(debug>1){
   printf("\n itop[i,j]:\n");
   k=0;
   for(i=0; i<N; i++) {
-    for(j=i; j<N; j++) {
+    for(j=0; j<N; j++) {
       printf("%d ", itop->ints[k]);
       k++;
     }
@@ -173,7 +174,7 @@ if(debug>1){
     k=0;
     for(i=0; i<N; i++) {
       vcc[i] = 1.0 + vparents[ipar->ints[i]];
-      for(j=i; j<N; j++) {
+      for(j=0; j<N; j++) {
         if(i==j) {
           mcov[k] = 1.0 + vparents[itop->ints[k]];
         } else {
@@ -192,7 +193,7 @@ if(debug>1){
 		  k=0;
 		  for(i=0; i<N; i++) {
 		    printf("%2.5f: ", vc[i]);
-		    for(j=i; j<N; j++) {
+		    for(j=0; j<N; j++) {
 		      printf("%2.3f ", mcov[k]);
   		    k++;
 	  	  }
@@ -202,7 +203,7 @@ if(debug>1){
 
 		k=0;
 		for(i=0; i<N; i++) {
-		  for(j=i; j<N; j++) {
+		  for(j=0; j<N; j++) {
 		    mcov[k] /=  sqrt(vcc[i] * vcc[j]);
 		    k++;
 		  }
@@ -223,7 +224,7 @@ if(debug>1){
 		  printf("V[i,j]:\n");
 		  k=0;
 		  for(i=0; i<N; i++) {
-		    for(j=i; j<N; j++) {
+		    for(j=0; j<N; j++) {
 		      printf("%2.3f ", mcov[k]);
 		      k++;
 		    }
@@ -232,19 +233,19 @@ if(debug>1){
 		    }
 		  }
 		}
-/*		k=0;
+		k=0;
 		for(i=0; i<N; i++) {
-		  for(j=i; j<N; j++) {
+		  for(j=0; j<N; j++) {
 		    mcov[k] *= exp(theta[i]+theta[j]);
 		    k++;
 		  }
 		}
- */
+
 		if(debug>1){
 		  printf("V[i,j]:\n");
 		  k=0;
 		  for(i=0; i<N; i++) {
-		    for(j=i; j<N; j++) {
+		    for(j=0; j<N; j++) {
 		      printf("%2.3f ", mcov[k]);
 		      k++;
 		    }
@@ -264,7 +265,7 @@ if(debug>1){
 		  k=0;
 		  for(i=0; i<N; i++) {
 		    printf("%2.5f: ", vc[i]);
-		    for(j=i; j<N; j++) {
+		    for(j=0; j<N; j++) {
 		      printf("%2.3f ", mcov[k]);
 		      k++;
 		    }
@@ -288,7 +289,8 @@ if(debug>1){
 		    if(debug>1){
 		      printf("\n");
 		    }
-		}
+		  }
+		  assert(k2==M);
 		  free(qq);
 
 	}

@@ -104,7 +104,7 @@ corGraphs_rgeneric <- function(cmd = c("graph", "Q", "mu", "initial",
       VC <- solve(Qmat) # variance-covariance
       LUB <- VC[1:iArgs$SP$NC,1:iArgs$SP$NC] # left-upper block
       Cor <- diag(diag(LUB)^(-1/2)) %*% LUB %*% diag(diag(LUB)^(-1/2)) # correlation
-      SD <- diag(exp(-1/2*theta[1:iArgs$SP$NC]))
+      SD <- diag(exp(-0.5*theta[1:iArgs$SP$NC]))
       COV <- SD %*% Cor %*% SD
       return (solve(COV))
 

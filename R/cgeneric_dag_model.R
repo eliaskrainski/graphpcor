@@ -124,7 +124,6 @@ cgeneric_dag_model <-
     itop <- d.el$itop
     ii <- col(itop)[!upper.tri(itop)]
     jj <- row(itop)[!upper.tri(itop)]
-    itop <- itop[!upper.tri(itop)]
 
     stopifnot(length(sigma.prior.reference) == nc)
     stopifnot(length(sigma.prior.probability) == nc)

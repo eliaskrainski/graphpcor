@@ -107,7 +107,7 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 	      printf("theta[%d] = %2.1f \n", i, theta[i]);
 	  }*/
 	  for(i=0; i<np; i++) {
-	    q2[i] = exp(theta[N +i]);
+	    q2[i] = exp(-2*theta[N +i]);
 	    /*
 	    if(debug>1) {
 	      printf("%2.1f %2.1f\n", theta[N+i], q2[i]);
@@ -164,7 +164,7 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 		k = 0;
 		for(i=0; i<i1th->len; i++) {
 //		  qq[iq1th->ints[i]] = -sth->doubles[i] * q2[i1th->ints[i]];
-		  qq[iq1th->ints[i]] = - q2[i1th->ints[i]];
+		  qq[iq1th->ints[i]] = -1.0*q2[i1th->ints[i]];
 		}
 		/*
 		if(debug>1){
