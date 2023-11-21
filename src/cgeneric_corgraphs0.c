@@ -148,7 +148,8 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 		ret[0] = -1;				       /* REQUIRED */
     ret[1] = M;				       /* REQUIRED */
 
-		int ipiv[N], ipiv2[n2], info=0;
+		int info=0; //ipiv[N], ipiv2[n2], info=0;
+		char uplo = 'U';
 
 		double qq[m2], vv[m2], vc[M];
 
@@ -204,7 +205,9 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 		}
 		assert(k==m2);
 
-		dgesv_(&n2, &n2, qq, &n2, ipiv2, vv, &n2, &info, F_ONE);
+//		dgesv_(&n2, &n2, qq, &n2, ipiv2, vv, &n2, &info, F_ONE);
+		dposv_(&uplo, &n2, &n2, &qq[0], &n2, &vv[0], &n2, &info, F_ONE);
+
 
 		/*
 		if(debug>1){
@@ -272,7 +275,8 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 		    k++;
 		  }
 		}
-		dgesv_(&N, &N, vc, &N, ipiv, qq, &N, &info, F_ONE);
+		//dgesv_(&N, &N, vc, &N, ipiv, qq, &N, &info, F_ONE);
+    dposv_(&uplo, &N, &N, &vc[0], &N, &qq[0], &N, &info, F_ONE);
 
     k = 0;
     kc = 0;

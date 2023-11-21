@@ -6,12 +6,10 @@ inla.setOption(safe = FALSE,
                num.threads = 6)
 
 dag <- list(
-    p1 ~ p2 + p3 + c1,
-    p2 ~ c2 + c3 + p4,
-    p3 ~ c4,
-    p4 ~ c5)
+    p1 ~ p2 + c1 + c2,
+    p2 ~ c3 + c4)
 np <- length(dag)
-nc <- 5
+nc <- 4
 
 SP_plot <- GraphPlot(dag, base=0)
 
@@ -28,7 +26,7 @@ mcov <- ThetaCor(
     COV = TRUE)
 round(mcov, 3)
 
-n <- 300
+n <- 500
 
 ll <- chol(mcov)
 xx <- matrix(rnorm(n * nc), n) %*% ll
@@ -42,8 +40,7 @@ dataf <- data.frame(
     y = c(rpois(n, exp(1 + xx[, 1])),
           rpois(n, exp(2 + xx[, 2])),
           rpois(n, exp(3 + xx[, 3])),
-          rpois(n, exp(1 + xx[, 4])),
-          rpois(n, exp(2 + xx[, 5])))
+          rpois(n, exp(1 + xx[, 4])))
 )
 
 ff <- y ~ 0 + factor(i) +
@@ -74,6 +71,26 @@ fit <- inla(
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE)
 
+c0Gmodel <- cgeneric0_dag_model(
+    dag = dag,
+    lambda = 5,
+    sigma.prior.reference = rep(1, nc),
+    sigma.prior.probability = rep(0.1, nc)
+)
+
+c0ff <- y ~ 0 + factor(i) +
+    f(i, model = c0Gmodel, replicate = r, vb.correct = FALSE)
+
+c0fit <- inla(
+    formula = c0ff,
+    family = "poisson",
+    data = dataf,
+    control.mode = list(
+        theta = c(theta0, theta1), 
+        restart = TRUE),
+    control.inla = list(int.strategy = "eb"),
+    verbose = !TRUE) ### if true prints looooooottttssss of details
+
 cGmodel <- cgeneric_dag_model(
     dag = dag,
     lambda = 5,
@@ -94,16 +111,19 @@ cfit <- inla(
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE) ### if true prints looooooottttssss of details
 
-rbind(fit$cpu, cfit$cpu)
+rbind(fit$cpu, c0fit$cpu, cfit$cpu)
 
 rbind(true = c(theta1, theta0), 
       rg = fit$mode$theta,
+      c0g = c0fit$mode$theta,
       cg = cfit$mode$theta)
 
 plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
+plot(c0fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
 tail(fit$logfile, 30)
+tail(c0fit$logfile, 30)
 tail(cfit$logfile, 30)
 
 detach("package:corGraphs", unload = TRUE)
