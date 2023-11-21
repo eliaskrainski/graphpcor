@@ -13,8 +13,8 @@ Authors@R: c(
          role = c("aut"),
          comment = c(ORCID = "0000-0002-0222-1881"))
   )
-Description: Prepare objects to implement correlation models 
-  defined over a graph. 
+Description: Tools to define, plot and prepare objects to 
+  implement correlation models defined over a specific DAG. 
   These objects can be used for modeling multivariate outcomes, 
   correlation in the latent level or among latent parameters. 
   Uses of it with internal matrices objects are built 
