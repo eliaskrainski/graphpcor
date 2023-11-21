@@ -143,8 +143,8 @@ dag_precision_elements <- function(dag, UPLO = FALSE) {
 #' @export
 #' @examples
 #' S <- list(
-#'      p3 ~ p1 - p2,
-#'      p1 ~ -c1 + c2 + c3, p2 ~ c4)
+#'      p1 ~ p2 - p3 + c1 + c2,
+#'      p2 ~ -c3 + c4, p3 ~ c5 + c6)
 #' Q <- dag_precision(S, theta = c(1, 1, 1))
 #' cov2cor(solve(Q)[1:4, 1:4])
 dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
