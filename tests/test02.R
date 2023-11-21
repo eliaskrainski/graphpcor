@@ -91,13 +91,17 @@ cfit <- inla(
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
     num.threads = 6,
-    verbose = !TRUE)
+    verbose = !TRUE) ### if true prints looooooottttssss of details
 
 rbind(fit$cpu, cfit$cpu)
 
 rbind(c(theta1, theta0), 
       fit$mode$theta,
       cfit$mode$theta)
+
+
+plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
+plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
 tail(fit$logfile, 30)
 tail(cfit$logfile, 30)
