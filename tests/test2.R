@@ -19,12 +19,16 @@ plot(SP_plot$gr, nodeAttrs = SP_plot$nAttrs)
 SP <- GraphDens(dag)
 names(SP)
 
-(theta0 <- (1:nc - nc/2))
-(theta1 <- (1:np-np/2))
-mcov <- ThetaCor(
-    SP, c(theta1, theta0), 
-    COV = TRUE)
-round(mcov, 3)
+(theta.c <- (1:nc - nc/2))
+(theta.p <- c(0.5, 0.5))
+
+qq <- dag_precision(dag, theta.p)
+mcorr <- cov2cor(solve(qq)[1:nc, 1:nc])
+dd <- diag(exp(-0.5 * theta.c))
+mcov <- dd %*% mcorr %*%dd
+
+round(mcorr * 100)
+round(mcov, 1)
 
 n <- 500
 
@@ -66,7 +70,7 @@ fit <- inla(
     family = "poisson",
     data = dataf,
     control.mode = list(
-        theta = c(theta0, theta1), 
+        theta = c(theta.c, theta.p), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE)
@@ -86,7 +90,7 @@ c0fit <- inla(
     family = "poisson",
     data = dataf,
     control.mode = list(
-        theta = c(theta0, theta1), 
+        theta = c(theta.c, theta.p), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE) ### if true prints looooooottttssss of details
@@ -106,14 +110,14 @@ cfit <- inla(
     family = "poisson",
     data = dataf,
     control.mode = list(
-        theta = c(theta0, theta1), 
+        theta = c(theta.c, theta.p), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE) ### if true prints looooooottttssss of details
 
 rbind(fit$cpu, c0fit$cpu, cfit$cpu)
 
-rbind(true = c(theta1, theta0), 
+rbind(true = c(theta.c, theta.p), 
       rg = fit$mode$theta,
       c0g = c0fit$mode$theta,
       cg = cfit$mode$theta)
@@ -125,6 +129,18 @@ plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 tail(fit$logfile, 30)
 tail(c0fit$logfile, 30)
 tail(cfit$logfile, 30)
+
+qq.fit <- dag_precision(dag, c0fit$mode$theta[nc+1:np])
+cc.fit <- cov2cor(solve(qq.fit)[1:nc, 1:nc])
+
+round(cor(xx)*100)
+round(cc.fit*100)
+
+ss.fit <- diag(exp(-0.5*c0fit$mode$theta[1:nc]))
+mcov.fit <- ss.fit %*% cc.fit %*% ss.fit
+
+round(cov(xx), 2)
+round(mcov.fit, 2)
 
 detach("package:corGraphs", unload = TRUE)
 library(corGraphs)

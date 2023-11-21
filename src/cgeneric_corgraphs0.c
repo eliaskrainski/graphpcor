@@ -156,9 +156,9 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 		for(i=0; i<m2; i++) {
 		  qq[i] = q->doubles[i];
 		}
-/*		for(i=0; i<sch->len; i++){
+		for(i=0; i<sch->len; i++){
 		  qq[iq1ch->ints[i]] *= sch->doubles[i];
-}*/
+    }
 		for(i=0; i<iq2th->len; i++) {
 		  qq[iq2th->ints[i]] += q2[i2th->ints[i]];
 		}
