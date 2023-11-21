@@ -5,34 +5,40 @@ library(INLA)
 inla.setOption(safe = FALSE,
                num.threads = 6)
 
-S <- list(p1 ~ p2 + p3 + c1, p2 ~ c2 + c3 + p4, p3 ~ c4, p4 ~ c5)
-SP_plot <- GraphPlot(S, base=0)
+dag <- list(
+    p1 ~ p2 + p3 + c1,
+    p2 ~ c2 + c3 + p4,
+    p3 ~ c4,
+    p4 ~ c5)
+np <- length(dag)
+nc <- 5
+
+SP_plot <- GraphPlot(dag, base=0)
 
 par(mar = c(1, 1, 1, 1))
 plot(SP_plot$gr, nodeAttrs = SP_plot$nAttrs)
 
-SP <- GraphDens(S)
+SP <- GraphDens(dag)
 names(SP)
 
-theta0 <- c(-0.5, 0, 0.5, 1)
-theta1 <- -2:2
+(theta0 <- (1:nc - nc/2))
+(theta1 <- (1:np-np/2))
 mcov <- ThetaCor(
     SP, c(theta1, theta0), 
     COV = TRUE)
 round(mcov, 3)
 
-n <- 500
-m <- nrow(mcov)
+n <- 300
 
 ll <- chol(mcov)
-xx <- matrix(rnorm(n * m), n) %*% ll
+xx <- matrix(rnorm(n * nc), n) %*% ll
 
 cov(xx)
 cor(xx)
 
 dataf <- data.frame(
-    i = rep(1:m, eac = n),
-    r = rep(1:n, m),
+    i = rep(1:nc, eac = n),
+    r = rep(1:n, nc),
     y = c(rpois(n, exp(1 + xx[, 1])),
           rpois(n, exp(2 + xx[, 2])),
           rpois(n, exp(3 + xx[, 3])),
@@ -44,7 +50,7 @@ ff <- y ~ 0 + factor(i) +
     f(i, model = rGmodel, replicate = r, vb.correct = FALSE)
 
 ArgsList <- list(
-    S = S,
+    S = dag,
     lambda = 7,
     SP = SP,
     Tdist = Tdist,
@@ -66,17 +72,13 @@ fit <- inla(
         theta = c(theta0, theta1), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
-    num.threads = 6,
     verbose = !TRUE)
 
-rbind(c(theta1, theta0), 
-      fit$mode$theta)
-
 cGmodel <- cgeneric_dag_model(
-    dag = S,
+    dag = dag,
     lambda = 5,
-    sigma.prior.reference = rep(1, m),
-    sigma.prior.probability = rep(0.1, m)
+    sigma.prior.reference = rep(1, nc),
+    sigma.prior.probability = rep(0.1, nc)
 )
 
 cff <- y ~ 0 + factor(i) +
@@ -90,49 +92,19 @@ cfit <- inla(
         theta = c(theta0, theta1), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
-    num.threads = 6,
     verbose = !TRUE) ### if true prints looooooottttssss of details
 
 rbind(fit$cpu, cfit$cpu)
 
-rbind(c(theta1, theta0), 
-      fit$mode$theta,
-      cfit$mode$theta)
-
+rbind(true = c(theta1, theta0), 
+      rg = fit$mode$theta,
+      cg = cfit$mode$theta)
 
 plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
 tail(fit$logfile, 30)
 tail(cfit$logfile, 30)
-
-round(fit$summary.fixed, 2)
-round(fit$summary.hyperpar, 2)
-
-ESTcov <- ThetaCor(
-    SP, fit$summary.hyperpar$mean,
-    COV = FALSE)
-colnames(ESTcov) <- rownames(ESTcov) <-
-    SP$STR[[1]][(SP$NP+1):(SP$NP+SP$NC)]
-
-round(mcov, 2)
-round(cov(xx), 2)
-round(ESTcov, 2)
-
-si <- diag(exp(-0.5 * cfit$mode$theta[1:m]))
-
-dag_precision(S, rep(1, SP$NC))
-
-qq <- dag_precision(S, cfit$mode$theta[-(1:m)])
-
-round(qq, 3)
-
-cc <- cov2cor(solve(qq)[1:m, 1:m])
-vv <- si%*%cc%*%si
-
-round(mcov, 2)
-round(cc, 2)
-round(vv, 2)
 
 detach("package:corGraphs", unload = TRUE)
 library(corGraphs)
