@@ -317,6 +317,8 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 			lam = slambdas->doubles[i];
 		  ret[0] += log(lam) + theta[i] - lam * exp(theta[i]);
 		}
+
+		// this is temporary
 		for(i = 0; i < np; i++) {
 		  ret[0] += -0.5 * SQR(theta[N+i]);
 		}

@@ -325,6 +325,8 @@ if(debug>1){
 			lam = slambdas->doubles[i];
 		  ret[0] += log(lam) + theta[i] - lam * exp(theta[i]);
 		}
+
+		// this is temporary
 		for(i = 0; i < np; i++) {
 		  ret[0] += -0.5 * SQR(theta[N+i]);
 		}
