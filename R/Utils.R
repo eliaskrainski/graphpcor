@@ -142,11 +142,19 @@ dag_precision_elements <- function(dag, UPLO = FALSE) {
 #' @return precision matrix
 #' @export
 #' @examples
-#' S <- list(
+#' dag1 <- list(
 #'      p1 ~ p2 - p3 + c1 + c2,
 #'      p2 ~ -c3 + c4, p3 ~ c5 + c6)
-#' Q <- dag_precision(S, theta = c(1, 1, 1))
-#' cov2cor(solve(Q)[1:4, 1:4])
+#' Q1 <- dag_precision(dag1, theta = c(1, 1, 1))
+#' cov1 <- chol2inv(chol(Q1))
+#' round(100 * cov2cor(cov1[1:6, 1:6]))
+#'
+#' dag2 <- list(
+#'      p1 ~ p2 + c1 + c2,
+#'      p2 ~ -p3 -c3 + c4, p3 ~ c5 + c6)
+#' Q2 <- dag_precision(dag2, theta = c(1, 1, 1))
+#' cov2 <- chol2inv(chol(Q2))
+#' round(100 * cov2cor(cov2[1:6, 1:6]))
 dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
   if(new) {
     q.el <- dag_precision_elements(dag)

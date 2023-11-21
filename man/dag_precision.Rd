@@ -16,10 +16,17 @@ precision matrix
 Function to build Q from a graph model
 }
 \examples{
-S <- list(
+dag1 <- list(
      p1 ~ p2 - p3 + c1 + c2,
      p2 ~ -c3 + c4, p3 ~ c5 + c6)
-Q <- dag_precision(S, theta = c(1, 1, 1))
-cov <- chol2inv(chol(Q))
-round(100 * cov2cor(cov[1:6, 1:6]))
+Q1 <- dag_precision(dag1, theta = c(1, 1, 1))
+cov1 <- chol2inv(chol(Q1))
+round(100 * cov2cor(cov1[1:6, 1:6]))
+
+dag2 <- list(
+     p1 ~ p2 + c1 + c2,
+     p2 ~ -p3 -c3 + c4, p3 ~ c5 + c6)
+Q2 <- dag_precision(dag2, theta = c(1, 1, 1))
+cov2 <- chol2inv(chol(Q2))
+round(100 * cov2cor(cov2[1:6, 1:6]))
 }
