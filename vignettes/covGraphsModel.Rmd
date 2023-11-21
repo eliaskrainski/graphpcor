@@ -23,8 +23,8 @@ We first define a specific kind of direct acyclic graph - DAG which is
 used to define the model and provides an intuitive visualization. 
 Then we define three simple rules for writing the joint distribution
 for all the variables in the model.
-The properties are follows from the covariance and correlation matrices derived.
-Illustrative examples are considered all the way along.
+Illustrative examples are considered and the model properties, 
+from the induced covariance and correlation matrices, are derived.
 
 ## The DAG definition
 
@@ -42,7 +42,7 @@ We have some examples in Figure 1 bellow.
 ```{r graphs, echo = FALSE, fig.width = 9, fig.height = 4, out.width="79%", fig.align = 'center', fig.cap = "Graphs representing different models. A model with one parent, (A), a model with two parents (B), and two different models with three parents (C) and (D)."}
 g1 <- list(p1 ~ c1 + c2 + c3)
 g1p <- GraphPlot(g1)
-g2 <- list(p1 ~ p2 + c3 + c4, p2 ~ c1 + c2)
+g2 <- list(p1 ~ p2 + c1 + c2, p2 ~ c3 + c4)
 g2p <- GraphPlot(g2)
 g3a <- list(p1 ~ p2 + p3 + c1 + c2, p2 ~ c3 + c4, p3 ~ c5 + c6)
 g3b <- list(p1 ~ p2 + c1 + c2, p2 ~ p3 + c3 + c4, p3 ~ c5 + c6)
@@ -59,29 +59,31 @@ plot(g3bp$gr, nodeAttrs = g3bp$nAttrs)
 legend("topleft", "(D)", bty = "n")
 ```
 
-
-The covariance between the children is derived from the
-relationship between the parents and how they are shared by the variables. 
-To build a DAG for a problem we have to consider that, as we will see later, 
-usually stronger correlation are induced between variables linked by a shorter path. 
+In order to build a model for a problem, we have to consider 
+how the correlation will be structured. In our model, 
+the covariance between the children is induced from the
+relationship between the parents and how they are shared. 
+The strength of the correlation between children depends on how many parents, 
+and their hierarchy, are in the path linking them.
 Let C(a,b) be the correlation between the variables $a$ and $b$.
 In the model defined with graph (A), 
-$|$C($c_1$,$c_2$)$|$=$|$C($c_1$,$c_3$)$|$=$|$C($c_2$,$c_3$)$|$.
-In the model defined with graph (B), 
-$|$C($c_1$,$c_3$)$|$=$|$C($c_1$,$c_4$)$|$=
-$|$C($c_2$,$c_3$)$|$=$|$C($c_2$,$c_4$)$|$,
-$|$C($c_1$,$c_3$)$|\leq|$C($c_1$,$c_2$)$|$, and 
-$|$C($c_1$,$c_3$)$|\leq|$C($c_3$,$c_4$)$|$.
-
-Both the graphs (C) and (D) have three latent variables 
-with $p_1$ as the main node. 
-However, in the sense of a path between parent nodes, 
-$p_1$ is a central parent in (C), but not in (D), where $p_2$ is.
-This changes the pair correlation order, 
-for example, there are three latent variables in the path between 
-$c_1$ and $c_5$ in (C) but two in (D). 
-This changes the marginal properties for the variables involved 
-as we will see later on.
+|C($c_1$,$c_2$)| = |C($c_1$,$c_3$)| = |C($c_2$,$c_3$)|.
+In from graph (B) 
+|C($c_1$,$c_3$)| = |C($c_1,c_4$)| = |C($c_2$,$c_3$)| = 
+|C($c_2$,$c_4$)| $\leq$ |C($c_1$,$c_2$)| $\leq$ |C($c_3$,$c_4$)|.
+In the models defined with graphs (C) and (D) we have 
+|C($c_1$,$c_2$)|$\leq$|C($c_3$,$c_4$)|, 
+|C($c_1$,$c_2$)|$\leq$|C($c_5$,$c_6$)|, and
+|C($c_1$,$c_3$)|=|C($c_1$,$c_4$)|=
+|C($c_2$,$c_3$)|=|C($c_2$,$c_4$)| and
+|C($c_1$,$c_5$)|=|C($c_1$,$c_6$)|=
+|C($c_2$,$c_5$)|=|C($c_2$,$c_6$)|.
+If we want to not fix the order between |C($c_3$,$c_4$)| 
+and |C($c_5$,$c_6$) we can use the model from graph (C), 
+whereas model (D) impose |C($c_3$,$c_4$)|$\leq$|C($c_5$,$c_6$)| and
+the correlation strength between a children of $p_3$ 
+to a children of $p_1$ to be smaller than to a children of $p_2$, e.g.
+|C($c_1$,$c_5$)|$\leq$|C($c_3$,$c_5$)|.
 
 ## Model definition
 

@@ -236,7 +236,7 @@ if(debug>1){
 		k=0;
 		for(i=0; i<N; i++) {
 		  for(j=0; j<N; j++) {
-		    mcov[k] *= exp(theta[i]+theta[j]);
+		    mcov[k] *= exp(-0.5*(theta[i]+theta[j]));
 		    k++;
 		  }
 		}
