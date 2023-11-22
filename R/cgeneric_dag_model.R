@@ -117,13 +117,18 @@ cgeneric_dag_model <-
     }
 
     d.el <- dag_elements(dag)
-    d.elc <- dag_e2covariance(dag)
-    np <- length(d.el$np)
-    nc <- length(d.el$nc)
+    ich <- unlist(lapply(d.el, function(x)
+      x$id[!x$parent]))
+    sch <- unlist(lapply(d.el, function(x)
+      x$signal[!x$parent]))
+    sch <- sch[ich]
+    d.elc <- dag_e2covariance(d.el)
+    np <- length(dag)
     nv <- sapply(d.elc$iv, length)
     iiv <- rep(1:np, nv)
-    jjv <- unlist(d.el$iv)
-    itop <- d.el$itop
+    jjv <- unlist(d.elc$iv)
+    itop <- d.elc$itop
+    nc <- nrow(itop)
     ii <- col(itop)[!upper.tri(itop)]
     jj <- row(itop)[!upper.tri(itop)]
 
@@ -136,20 +141,21 @@ cgeneric_dag_model <-
     the_model <- do.call(
       "inla.cgeneric.define",
       list(
-        model = "inla_cgeneric_corgraphs",
+        model = "inla_cgeneric_corgraphs_sfixed",
         shlib = libpath,
         n = as.integer(nc),
         debug = as.integer(debug),
         np = as.integer(np),
         nv = as.integer(nv),
-        ipar = as.integer(d.el$iparent-1L),
+        ipar = as.integer(d.elc$iparent-1L),
         iiv = as.integer(iiv-1L),
         jjv = as.integer(jjv-1L),
         itop = as.integer(itop-1L),
         ii = as.integer(ii-1L),
         jj = as.integer(jj-1L),
         lambda = as.double(lambda),
-        slambdas = as.double(slambdas)
+        slambdas = as.double(slambdas),
+        schildren = as.double(sch)
       )
     )
 

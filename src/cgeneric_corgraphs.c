@@ -39,7 +39,7 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	N = data->ints[0]->ints[0];
 	assert(N > 0);
 	M = (int)((double)N * ((double)(N+1)) / 2.0);
-	double vc[N], mcov[M];
+	double ss[N], vc[N], mcov[M];
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
 	int debug = data->ints[0]->ints[0];
@@ -48,7 +48,7 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	np = data->ints[2]->ints[0];
 	assert(np > 0);
 	nparam = N + np;
-	double q2[np], vparents[np];
+	double v2[np], vparents[np];
 /*	if(debug) {
 	  printf("(N = %d, M = %d, np = %d)\n", N, M, np) ;
 }*/
@@ -88,12 +88,12 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	if(theta) {
 	  for(i=0; i<N; i++) {
-	    vc[i] = exp(theta[i]);
+	    ss[i] = theta[i];
 	  }
 	  for (i=0; i<np; i++) {
-	    q2[i] = exp(2 * theta[N+i]);
+	    v2[i] = exp(2 * theta[N+i]);
 /*	    if(debug>1) {
-	      printf("%2.1f %2.1f\n", theta[N+i], q2[i]);
+	      printf("%2.1f %2.1f\n", theta[N+i], v2[i]);
 }*/
 	  }
 	} else {
@@ -101,7 +101,7 @@ double *inla_cgeneric_corgraphs(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	    vc[i] = NAN;
 	  }
 	  for(i=0; i<np; i++) {
-	    q2[i] = NAN;
+	    v2[i] = NAN;
 	  }
 	}
 
@@ -169,16 +169,16 @@ if(debug>1){
       vparents[i] = 0.0;
     }
     for(i=0; i<iiv->len; i++) {
-      vparents[iiv->ints[i]] += q2[jjv->ints[i]];
+      vparents[iiv->ints[i]] += v2[jjv->ints[i]];
     }
     k=0;
     for(i=0; i<N; i++) {
       vcc[i] = 1.0 + vparents[ipar->ints[i]];
       for(j=0; j<N; j++) {
         if(i==j) {
-          mcov[k] = 1.0 + vparents[itop->ints[k]];
+          mcov[k] = 1.0 + vparents[itop->ints[k]] * ss[i] * ss[j];
         } else {
-          mcov[k] = vparents[itop->ints[k]];
+          mcov[k] = vparents[itop->ints[k]] * ss[i] * ss[j];
         }
         k++;
       }
