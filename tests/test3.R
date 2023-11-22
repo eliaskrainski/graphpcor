@@ -9,20 +9,20 @@ dag <- list(
     p1 ~ p2 + p3 + c1 + c2,
     p2 ~ c3 + c4,
     p3 ~ c5 - c6)
-np <- length(dag)
-nc <- 6
 
-(theta.c <- (1:nc - nc/2))
-(theta.p <- c(0, 1, 0))
+(np <- length(dag))
+(theta.p <- seq(0.5, -0.5, length = np))
 
-qq <- dag_precision(dag, theta.p)
-mcorr <- cov2cor(solve(qq)[1:nc, 1:nc])
-dd <- diag(exp(-0.5 * theta.c))
+mcorr <- cov2cor(dag_covariance(dag, theta.p))
+
+(nc <- nrow(mcorr))
+(theta.c <- (0.5:nc - nc/2)/2)
+
+dd <- diag(exp(-1.0 * theta.c))
 mcov <- dd %*% mcorr %*%dd
 
 round(mcorr * 100)
 round(mcov, 1)
-
 
 n <- 500
 
@@ -35,12 +35,7 @@ cor(xx)
 dataf <- data.frame(
     i = rep(1:nc, eac = n),
     r = rep(1:n, nc),
-    y = c(rpois(n, exp(3 + xx[, 1])),
-          rpois(n, exp(3 + xx[, 2])),
-          rpois(n, exp(3 + xx[, 3])),
-          rpois(n, exp(3 + xx[, 4])),
-          rpois(n, exp(3 + xx[, 5])),
-          rpois(n, exp(3 + xx[, 6])))
+    y = rpois(n*nc, exp(3 + xx))
 )
 
 cGmodel <- cgeneric_dag_model(
@@ -58,7 +53,7 @@ cfit <- inla(
     family = "poisson",
     data = dataf,
     control.mode = list(
-        theta = c(theta.c, theta.p), 
+        theta = rep(1, nc + np), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE) ### if true prints looooooottttssss of details
@@ -70,13 +65,12 @@ rbind(true = c(theta.c, theta.p),
 
 plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-qq.fit <- dag_precision(dag, cfit$mode$theta[nc+1:np])
-cc.fit <- cov2cor(solve(qq.fit)[1:nc, 1:nc])
+cc.fit <- cov2cor(dag_covariance(dag, cfit$mode$theta[nc+1:np]))
 
 round(cor(xx)*100)
 round(cc.fit*100)
 
-ss.fit <- diag(exp(-0.5*cfit$mode$theta[1:nc]))
+ss.fit <- diag(exp(-1.0*cfit$mode$theta[1:nc]))
 mcov.fit <- ss.fit %*% cc.fit %*% ss.fit
 
 round(cov(xx), 2)
