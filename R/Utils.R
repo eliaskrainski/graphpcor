@@ -183,7 +183,8 @@ dag_precision_elements <- function(dag) {
 #' @examples
 #' dag1 <- list(
 #'      p1 ~ p2 - p3 + c1 + c2,
-#'      p2 ~ -c3 + c4, p3 ~ c5 + c6)
+#'      p2 ~ -c3 + c4,
+#'      p3 ~ c5 + c6)
 #' Q1 <- dag_precision(dag1, theta = c(1, 1, 1))
 #' cov1 <- chol2inv(chol(Q1))
 #' round(100 * cov2cor(cov1[1:6, 1:6]))
@@ -299,7 +300,18 @@ dag_correlation_elements <- function(dag) {
    stopifnot(all.equal(iP,diag(itop)))
    return(list(iv = iv, iparent = iP, itop = itop))
 }
-
+#' Function to compute the covariance between the
+#' children variables for a given dag and the
+#' parameters of the parents
+#' @param theta log of the conditional variances of the
+#' parent variables
+#' @export
+#' @examples
+#' dag1 <- list(
+#'      p1 ~ p2 + c1 + c2,
+#'      p2 ~ -c3 + c4)
+#' dag_covariance(dag1, c(0, 0))
+#' dag_covariance(dag_rlp(dag1), 0)
 dag_covariance <- function(dag, theta) {
   ij <- dag_correlation_elements(dag)
   np <- length(ij$iv)

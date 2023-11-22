@@ -18,7 +18,8 @@ Function to build Q from a graph model
 \examples{
 dag1 <- list(
      p1 ~ p2 - p3 + c1 + c2,
-     p2 ~ -c3 + c4, p3 ~ c5 + c6)
+     p2 ~ -c3 + c4,
+     p3 ~ c5 + c6)
 Q1 <- dag_precision(dag1, theta = c(1, 1, 1))
 cov1 <- chol2inv(chol(Q1))
 round(100 * cov2cor(cov1[1:6, 1:6]))
