@@ -1,4 +1,33 @@
-#' Function that returns density for a given model structure
+#' Function to remove the higher index parent
+#' @export
+#' @examples
+#' dag1 <- list(
+#'      p1 ~ p2 - p3 + c1 + c2,
+#'      p2 ~ -c3 + c4, p3 ~ c5 + c6)
+#' dag_rlp(dag1)
+dag_rlp <- function(dag) {
+  nS <- length(dag)
+  stopifnot(nS>1)
+  stilde <- sapply(dag, function(x)
+    strsplit(gsub(" ", "", as.character(x)),
+             split = "~"))
+  p.rm <- stilde[2, nS]
+  il.rm <- grep(p.rm, stilde[3, ])
+  l.up0 <- as.character(update(
+    as.formula(paste("~", stilde[3, il.rm])),
+    paste(".~.-", p.rm)))[3]
+  if(substr(stilde[3, nS], 1, 1) != "-") {
+     stilde[3, il.rm] <- paste(l.up0, "+", stilde[3, nS])
+  } else {
+    stilde[3, il.rm] <- paste(l.up0, stilde[3, nS])
+  }
+  dag[[il.rm]] <- formula(
+    paste(stilde[2, il.rm], "~", stilde[3, il.rm]))
+  attr(dag[[il.rm]], ".Environment") <-
+    attr(dag[[nS]], ".Environment")
+  return(dag[1:(nS-1)])
+}
+#' Function to extract the elements of a DAG tree
 #' @param dag model structure given as a formula list
 #' @return a list with same length of S.
 #' Each element as a named list to specify the left hand side
@@ -72,7 +101,7 @@ dag_elements <- function(dag, debug = FALSE) {
 }
 #' Function to build the precision elements
 #' @param dag model structure given as a formula list
-dag_precision_elements <- function(dag, UPLO = FALSE) {
+dag_precision_elements <- function(dag) {
   el <- dag_elements(dag)
   stopifnot(all(substr(names(el), 1, 1) == "p"))
   ip <- as.integer(substring(names(el), 2))

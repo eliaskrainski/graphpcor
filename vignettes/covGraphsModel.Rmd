@@ -101,7 +101,7 @@ the mean is zero and the variance is $v_1^2$.
 * **2nd rule**: The conditional mean for $p_j$, $j=2$,...$k$, 
 is its parent and the conditional variance is $v_j^2$.
 
-* **3nd rule**: The conditional mean of $c_i$, $i=1$, ..., $n$, 
+* **3rd rule**: The conditional mean of $c_i$, $i=1$, ..., $n$, 
 is $s_i$ times its parent and the conditional variance is $s_i^2$.
 
 In this model we have $n+k$ parameters. 

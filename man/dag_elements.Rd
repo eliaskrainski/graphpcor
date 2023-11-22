@@ -2,7 +2,7 @@
 % Please edit documentation in R/Utils.R
 \name{dag_elements}
 \alias{dag_elements}
-\title{Function that returns density for a given model structure}
+\title{Function to extract the elements of a DAG tree}
 \usage{
 dag_elements(dag, debug = FALSE)
 }
@@ -20,5 +20,5 @@ of the graph terms.
 }
 }
 \description{
-Function that returns density for a given model structure
+Function to extract the elements of a DAG tree
 }
