@@ -12,6 +12,9 @@ Function to remove the higher index parent
 \examples{
 dag1 <- list(
      p1 ~ p2 - p3 + c1 + c2,
-     p2 ~ -c3 + c4, p3 ~ c5 + c6)
-dag_rlp(dag1)
+     p2 ~ c3 - c4,
+     p3 ~ -c5 + c6)
+dag2 <- dag_rlp(dag1)
+dag2
+dag_rlp(dag2)
 }

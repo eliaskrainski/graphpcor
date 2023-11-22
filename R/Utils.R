@@ -3,8 +3,11 @@
 #' @examples
 #' dag1 <- list(
 #'      p1 ~ p2 - p3 + c1 + c2,
-#'      p2 ~ -c3 + c4, p3 ~ c5 + c6)
-#' dag_rlp(dag1)
+#'      p2 ~ c3 - c4,
+#'      p3 ~ -c5 + c6)
+#' dag2 <- dag_rlp(dag1)
+#' dag2
+#' dag_rlp(dag2)
 dag_rlp <- function(dag) {
   nS <- length(dag)
   stopifnot(nS>1)
@@ -13,16 +16,23 @@ dag_rlp <- function(dag) {
              split = "~"))
   p.rm <- stilde[2, nS]
   il.rm <- grep(p.rm, stilde[3, ])
-  l.up0 <- as.character(update(
-    as.formula(paste("~", stilde[3, il.rm])),
-    paste(".~.-", p.rm)))[3]
+  ii <- gregexpr(p.rm, stilde[3, il.rm])[[1]]
+  iin <- ii+attr(ii, "match.length")
+  if(ii>2) {
+    l.up0 <- substr(stilde[3, il.rm], 1, ii-2)
+    if(iin<nchar(stilde[3, il.rm]))
+      l.up0 <- paste0(l.up0,
+                      substring(stilde[3, il.rm], iin))
+  } else {
+    l.up0 <- substring(stilde[3, il.rm], iin+1)
+  }
   if(substr(stilde[3, nS], 1, 1) != "-") {
      stilde[3, il.rm] <- paste(l.up0, "+", stilde[3, nS])
   } else {
     stilde[3, il.rm] <- paste(l.up0, stilde[3, nS])
   }
   il.env <- attr(dag[[il.rm]], ".Environment")
-  dag[[il.rm]] <- formula(
+  dag[[il.rm]] <- as.formula(
     paste(stilde[2, il.rm], "~", stilde[3, il.rm]))
   attr(dag[[il.rm]], ".Environment") <- il.env
   return(dag[1:(nS-1)])
