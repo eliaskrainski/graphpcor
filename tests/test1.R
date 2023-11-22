@@ -2,28 +2,23 @@
 library(corGraphs)
 library(INLA)
 
-inla.setOption(safe = FALSE,
-               num.threads = 6)
-
 dag1 <- list(p1 ~ c1 + c2 + c3)
-np <- 1
-nc <- 3
+np <- length(dag1)
 
-theta.p <- 0
-theta.c <- c(-1, 0, 1)
+(theta.p <- 0.5)
 
-q1 <- dag_precision(dag1, theta.p)
-q1
+mcorr <- cov2cor(dag_covariance(dag1, theta.p))
 
-mcov0 <- solve(q1)[1:nc, 1:nc]
-mcor <- cov2cor(mcov0)
+(nc <- nrow(mcorr))
+(theta.c <- seq(0.5, -0.5, length = nc))
 
-round(100 * mcor)
+ss <- diag(exp(-1.0 * theta.c))
+mcov <- ss %*% mcorr %*% ss
 
-mcov <- diag(exp(-0.5*theta.c)) %*% mcor %*% diag(exp(-0.5*theta.c))
-mcov
+round(100 * mcorr)
+round(mcov, 1)
 
-n <- 300
+n <- 3000
 m <- nrow(mcov)
 
 ll <- chol(mcov)
@@ -50,63 +45,43 @@ d1plot <- GraphPlot(dag1, base=0)
 par(mar = c(1, 1, 1, 1))
 plot(d1plot$gr, nodeAttrs = d1plot$nAttrs)
 
-SP <- GraphDens(dag1)
-names(SP)
-
-ArgsList <- list(
-    S = dag1,
-    lambda = 7,
-    SP = SP,
-    Tdist = Tdist,
-    GraphPrior = GraphPrior,
-    init = 0,
-    new = FALSE)
-
-str(ArgsList)
-
-rGmodel <- inla.rgeneric.define(
-    corGraphs_rgeneric, 
-    args = ArgsList)
-
 hfix <- list(prec = list(initial = 10, fixed = TRUE))
 
-fit <- inla(
-    formula = ff,
-    data = dataf,
-    control.family = list(list(hyper = hfix)),
-    control.mode = list(theta = rep(1, nc+np), restart = TRUE),
-    verbose = !TRUE)
-
-cGmodel <-cgeneric_dag_model(
+cGmodel <- cgeneric_dag_model(
     dag = dag1,
-    lambda = 5, 
-    sigma.prior.reference = rep(1, m),
-    sigma.prior.probability = rep(0.1, m))
+    lambda = 5,
+    sigma.prior.reference = rep(1, nc),
+    sigma.prior.probability = rep(0.05, nc)
+)
 
-ffc <- y ~ 0 +
+ff <- y ~ 0 +
     f(idx1, model = cGmodel, replicate = repl) +
     f(idx2, w1, copy = "idx1", replicate = repl) +
     f(idx3, w2, copy = "idx1", replicate = repl)
 
-cfit <- inla(
-    formula = ffc, 
+fit <- inla(
+    formula = ff, 
     data = dataf,
     control.family = list(list(hyper = hfix)),
-    control.mode = list(theta = rep(1, nc+np), restart = TRUE, fixed = !TRUE),
     verbose = !TRUE)
 
-rbind(fit$cpu, cfit$cpu)
-c(max(fit$misc$nfunc), max(cfit$misc$nfunc))
+fit$cpu
 
 rbind(true = c(theta.c, theta.p),
-      rg = fit$mode$theta,
-      cg = cfit$mode$theta)
+      cg = fit$mode$theta)
 
 plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
-plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-tail(fit$logfile, 30)
-tail(cfit$logfile, 30)
+mcorr.fit <- cov2cor(dag_covariance(dag1, fit$mode$theta[nc+1:np]))
+
+round(100 * cor(xx))
+round(100 * mcorr.fit)
+
+ss.fit <- diag(exp(-1.0 * fit$mode$theta[1:nc]))
+mcov.fit <- ss %*% mcorr.fit %*% ss
+
+round(cov(xx), 1)
+round(mcov.fit, 1)
 
 detach("package:corGraphs", unload = TRUE)
 library(corGraphs)
