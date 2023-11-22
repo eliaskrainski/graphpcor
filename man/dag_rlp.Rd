@@ -2,12 +2,19 @@
 % Please edit documentation in R/Utils.R
 \name{dag_rlp}
 \alias{dag_rlp}
-\title{Function to remove the higher index parent}
+\title{Function to remove the last parent from the given DAG}
 \usage{
 dag_rlp(dag)
 }
+\arguments{
+\item{dag}{model structure given as a formula list}
+}
+\value{
+a dag without the last parent whose children
+as children of its parent.
+}
 \description{
-Function to remove the higher index parent
+Function to remove the last parent from the given DAG
 }
 \examples{
 dag1 <- list(

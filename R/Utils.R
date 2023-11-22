@@ -1,4 +1,7 @@
-#' Function to remove the higher index parent
+#' Function to remove the last parent from the given DAG
+#' @param dag model structure given as a formula list
+#' @return a dag without the last parent whose children
+#' as children of its parent.
 #' @export
 #' @examples
 #' dag1 <- list(
@@ -9,12 +12,12 @@
 #' dag2
 #' dag_rlp(dag2)
 dag_rlp <- function(dag) {
-  nS <- length(dag)
-  stopifnot(nS>1)
+  np <- length(dag)
+  stopifnot(np>1)
   stilde <- sapply(dag, function(x)
     strsplit(gsub(" ", "", as.character(x)),
              split = "~"))
-  p.rm <- stilde[2, nS]
+  p.rm <- stilde[2, np]
   il.rm <- grep(p.rm, stilde[3, ])
   ii <- gregexpr(p.rm, stilde[3, il.rm])[[1]]
   iin <- ii+attr(ii, "match.length")
@@ -26,19 +29,18 @@ dag_rlp <- function(dag) {
   } else {
     l.up0 <- substring(stilde[3, il.rm], iin+1)
   }
-  if(substr(stilde[3, nS], 1, 1) != "-") {
-     stilde[3, il.rm] <- paste(l.up0, "+", stilde[3, nS])
+  if(substr(stilde[3, np], 1, 1) != "-") {
+     stilde[3, il.rm] <- paste(l.up0, "+", stilde[3, np])
   } else {
-    stilde[3, il.rm] <- paste(l.up0, stilde[3, nS])
+    stilde[3, il.rm] <- paste(l.up0, stilde[3, np])
   }
   il.env <- attr(dag[[il.rm]], ".Environment")
   dag[[il.rm]] <- as.formula(
     paste(stilde[2, il.rm], "~", stilde[3, il.rm]))
   attr(dag[[il.rm]], ".Environment") <- il.env
-  return(dag[1:(nS-1)])
+  return(dag[1:(np-1)])
 }
 #' Function to extract the elements of a DAG tree
-#' @param dag model structure given as a formula list
 #' @return a list with same length of S.
 #' Each element as a named list to specify the left hand side
 #' of the graph terms.
@@ -48,7 +50,7 @@ dag_rlp <- function(dag) {
 #'  \item signal: either minus or plus one
 #'  }
 dag_elements <- function(dag, debug = FALSE) {
-  nS <- length(dag)
+  np <- length(dag)
   stilde <- sapply(dag, function(x)
     strsplit(gsub(" ", "", as.character(x)),
              split = "~"))
@@ -68,9 +70,9 @@ dag_elements <- function(dag, debug = FALSE) {
 
   stilde
 
-  dag_sl <- vector("list", nS)
+  dag_sl <- vector("list", np)
   names(dag_sl) <- idParents
-  for(k in 1:nS) {
+  for(k in 1:np) {
     if(debug>1)
       cat("k =", k, "\n")
     ch <- stilde[3, k]
@@ -109,8 +111,9 @@ dag_elements <- function(dag, debug = FALSE) {
   }
   return(dag_sl)
 }
-#' Function to build the precision elements
-#' @param dag model structure given as a formula list
+#' Function to build the precision elements from
+#' the elements extracted from the DAG tree.
+#' @return the elements to build the precision matrix.
 dag_e2precision <- function(d.el) {
   stopifnot(all(substr(names(d.el), 1, 1) == "p"))
   stopifnot(length(d.el) == length(unique(names(d.el))))
@@ -119,7 +122,7 @@ dag_e2precision <- function(d.el) {
   stopifnot(np == length(unique(ip)))
   nc <- sum(sapply(d.el, function(x) sum(!x$parent)))
   p.nc <- sapply(d.el, function(x) x$n)
-  dd <- c(rep(1, n), p.nc)
+  dd <- c(rep(1, nc), p.nc)
   stopifnot((nc + np) == length(dd))
   q0 <- diag(x = dd, nrow = nc + np, ncol = nc + np)
   ij <- matrix(1:((nc+np)^2), nc+np, nc+np)
@@ -162,7 +165,7 @@ dag_e2precision <- function(d.el) {
     }
   }
   stopifnot(k1 == np)
-  stopifnot(k2 == (2*(p-1)))
+  stopifnot(k2 == (2*(np-1)))
   return(list(
     nc = as.integer(nc),
     np = as.integer(np),
@@ -176,35 +179,40 @@ dag_e2precision <- function(d.el) {
     q = q0
   ))
 }
-#' Function to build Q from a graph model
-#' @param theta vector with the log of the parameters
-#' @return precision matrix
+#' Function to build the precision matrix for DAG tree.
+#' @param theta log of the conditional variances of the
+#' parent variables
+#' @param s.children vector s (one for each children).
+#' Default is null and it is taken as (+1 or -1) from the formula.
+#' @return a precision matrix for given DAG tree and parameters
 #' @export
 #' @examples
 #' dag1 <- list(
 #'      p1 ~ p2 - p3 + c1 + c2,
-#'      p2 ~ -c3 + c4,
-#'      p3 ~ c5 + c6)
-#' Q1 <- dag_precision(dag1, theta = c(1, 1, 1))
+#'      p2 ~ c3 + c4,
+#'      p3 ~ -c5 + c6)
+#' Q1 <- dag_precision(dag1, theta = c(0, 0, 0))
 #' cov1 <- chol2inv(chol(Q1))
 #' round(100 * cov2cor(cov1[1:6, 1:6]))
 #'
 #' dag2 <- list(
 #'      p1 ~ p2 + c1 + c2,
-#'      p2 ~ -p3 -c3 + c4, p3 ~ c5 + c6)
-#' Q2 <- dag_precision(dag2, theta = c(1, 1, 1))
+#'      p2 ~ -p3 + c3 + c4,
+#'      p3 ~ -c5 + c6)
+#' Q2 <- dag_precision(dag2, theta = c(0, 0, 0))
 #' cov2 <- chol2inv(chol(Q2))
 #' round(100 * cov2cor(cov2[1:6, 1:6]))
-dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
+dag_precision <- function(dag, theta, s.children = NULL, debug = FALSE, new = TRUE) {
   if(new) {
-    q.el <- dag_e2precision(dag)
+    d.el <- dag_elements(dag)
+    q.el <- dag_e2precision(d.el)
     Q <- q.el$q
-    nc <- q.el$n
+    nc <- q.el$nc
     Q[q.el$iq2th] <- Q[q.el$iq2th] +
         exp(-2 * theta[q.el$i2th])
     Q[q.el$iq1th] <- -1.0 * q.el$sth * exp(-2*theta[q.el$i1th])
   } else {
-    nS <- length(dag)
+    np <- length(dag)
     stilde <- sapply(dag, function(x)
       strsplit(gsub(" ", "", as.character(x)),
                split = "~"))
@@ -235,7 +243,7 @@ dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
       rbind(diag(NC), matrix(0, NP, NC)),
       rbind(matrix(0, NC, NP), diag(NP)*0.0))
     jj <- NC + iParents1
-    for(k in 1:nS) {
+    for(k in 1:np) {
       Sk <- dag_sl[[k]]
       ich <- !Sk$parent
       if (any(ich)) {
@@ -267,7 +275,8 @@ dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
   }
   return(Q)
 }
-
+#' Internal function to extract elements to build
+#' the covariance matrix
 dag_e2covariance <- function(d.el) {
    np <- length(d.el)
    iv <- lapply(1:np, function(i) i)
@@ -302,8 +311,6 @@ dag_e2covariance <- function(d.el) {
 #' Function to compute the covariance between the
 #' children variables for a given dag and the
 #' parameters of the parents
-#' @param theta log of the conditional variances of the
-#' parent variables
 #' @export
 #' @examples
 #' dag1 <- list(

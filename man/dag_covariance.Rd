@@ -8,10 +8,6 @@ parameters of the parents}
 \usage{
 dag_covariance(dag, theta, s.children = NULL)
 }
-\arguments{
-\item{theta}{log of the conditional variances of the
-parent variables}
-}
 \description{
 Function to compute the covariance between the
 children variables for a given dag and the
