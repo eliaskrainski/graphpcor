@@ -108,12 +108,5 @@ plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 tail(fit$logfile, 30)
 tail(cfit$logfile, 30)
 
-ctest <- inla(
-    formula = ffc, 
-    data = dataf,
-    control.family = list(list(hyper = hfix)),
-    control.mode = list(theta = rep(0, nc+np), restart = !TRUE, fixed = TRUE),
-    verbose = TRUE)
-
 detach("package:corGraphs", unload = TRUE)
 library(corGraphs)

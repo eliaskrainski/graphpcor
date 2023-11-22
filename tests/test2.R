@@ -11,10 +11,10 @@ dag <- list(
 np <- length(dag)
 nc <- 4
 
-SP_plot <- GraphPlot(dag, base=0)
+dgplot <- GraphPlot(dag, base=0)
 
 par(mar = c(1, 1, 1, 1))
-plot(SP_plot$gr, nodeAttrs = SP_plot$nAttrs)
+plot(dgplot$gr, nodeAttrs = dgplot$nAttrs)
 
 SP <- GraphDens(dag)
 names(SP)

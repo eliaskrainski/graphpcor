@@ -52,7 +52,7 @@ cgeneric0_dag_model <-
     }
 
     d.el <- dag_elements(dag)
-    q.el <- dag_e2precision(dag)
+    q.el <- dag_e2precision(d.el)
     NC <- q.el$nc
 
     stopifnot(length(sigma.prior.reference) == NC)

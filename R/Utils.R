@@ -327,8 +327,8 @@ dag_covariance <- function(dag, theta, s.children = NULL) {
   vv <- diag(nc)
   for(i in 1:nc) {
     for (j in 1:nc) {
-      vi <- sum(exp(theta[ij$iv[[ij$iparent[i]]]]))
-      vj <- sum(exp(theta[ij$iv[[ij$iparent[j]]]]))
+      vi <- sum(exp(2 * theta[ij$iv[[ij$iparent[i]]]]))
+      vj <- sum(exp(2 * theta[ij$iv[[ij$iparent[j]]]]))
       vv[i, j] <- vv[i, j] + vi * vj
     }
   }
