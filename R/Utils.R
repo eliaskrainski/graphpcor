@@ -21,10 +21,10 @@ dag_rlp <- function(dag) {
   } else {
     stilde[3, il.rm] <- paste(l.up0, stilde[3, nS])
   }
+  il.env <- attr(dag[[il.rm]], ".Environment")
   dag[[il.rm]] <- formula(
     paste(stilde[2, il.rm], "~", stilde[3, il.rm]))
-  attr(dag[[il.rm]], ".Environment") <-
-    attr(dag[[nS]], ".Environment")
+  attr(dag[[il.rm]], ".Environment") <- il.env
   return(dag[1:(nS-1)])
 }
 #' Function to extract the elements of a DAG tree
