@@ -12,7 +12,7 @@ mcorr <- cov2cor(dag_covariance(dag1, theta.p))
 (nc <- nrow(mcorr))
 (theta.c <- seq(0.5, -0.5, length = nc))
 
-ss <- diag(exp(-1.0 * theta.c))
+ss <- diag(exp(theta.c))
 mcov <- ss %*% mcorr %*% ss
 
 round(100 * mcorr)
@@ -77,7 +77,7 @@ mcorr.fit <- cov2cor(dag_covariance(dag1, fit$mode$theta[nc+1:np]))
 round(100 * cor(xx))
 round(100 * mcorr.fit)
 
-ss.fit <- diag(exp(-1.0 * fit$mode$theta[1:nc]))
+ss.fit <- diag(exp(fit$mode$theta[1:nc]))
 mcov.fit <- ss %*% mcorr.fit %*% ss
 
 round(cov(xx), 1)

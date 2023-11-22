@@ -2,23 +2,20 @@
 library(corGraphs)
 library(INLA)
 
-inla.setOption(safe = FALSE,
-               num.threads = 6)
-
 dag <- list(
     p1 ~ p2 + p3 + c1 + c2,
     p2 ~ c3 + c4,
     p3 ~ c5 - c6)
 
 (np <- length(dag))
-(theta.p <- seq(0.5, -0.5, length = np))
+(theta.p <- seq(0.0, -0.5, length = np))
 
 mcorr <- cov2cor(dag_covariance(dag, theta.p))
 
 (nc <- nrow(mcorr))
 (theta.c <- (0.5:nc - nc/2)/2)
 
-dd <- diag(exp(-1.0 * theta.c))
+dd <- diag(exp(theta.c))
 mcov <- dd %*% mcorr %*%dd
 
 round(mcorr * 100)
@@ -35,7 +32,7 @@ cor(xx)
 dataf <- data.frame(
     i = rep(1:nc, eac = n),
     r = rep(1:n, nc),
-    y = rpois(n*nc, exp(3 + xx))
+    y = as.vector(xx)##rpois(n*nc, exp(1 + xx))
 )
 
 cGmodel <- cgeneric_dag_model(
@@ -50,10 +47,11 @@ cff <- y ~ 0 + factor(i) +
 
 cfit <- inla(
     formula = cff,
-    family = "poisson",
+    ##    family = "poisson",
+    control.family=list(hyper = list(prec = list(initial = 10, fixed = TRUE))),
     data = dataf,
     control.mode = list(
-        theta = rep(1, nc + np), 
+        theta = rep(0, nc + np), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE) ### if true prints looooooottttssss of details
@@ -70,7 +68,7 @@ cc.fit <- cov2cor(dag_covariance(dag, cfit$mode$theta[nc+1:np]))
 round(cor(xx)*100)
 round(cc.fit*100)
 
-ss.fit <- diag(exp(-1.0*cfit$mode$theta[1:nc]))
+ss.fit <- diag(exp(cfit$mode$theta[1:nc]))
 mcov.fit <- ss.fit %*% cc.fit %*% ss.fit
 
 round(cov(xx), 2)

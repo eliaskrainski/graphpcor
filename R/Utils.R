@@ -210,7 +210,7 @@ dag_precision <- function(dag, theta, s.children = NULL, debug = FALSE, new = TR
     nc <- q.el$nc
     Q[q.el$iq2th] <- Q[q.el$iq2th] +
         exp(-2 * theta[q.el$i2th])
-    Q[q.el$iq1th] <- -1.0 * q.el$sth * exp(-2*theta[q.el$i1th])
+    Q[q.el$iq1th] <- -1.0 * q.el$sth * exp(-theta[q.el$i1th])
   } else {
     np <- length(dag)
     stilde <- sapply(dag, function(x)
