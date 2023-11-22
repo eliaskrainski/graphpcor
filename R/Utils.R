@@ -111,61 +111,61 @@ dag_elements <- function(dag, debug = FALSE) {
 }
 #' Function to build the precision elements
 #' @param dag model structure given as a formula list
-dag_precision_elements <- function(dag) {
-  el <- dag_elements(dag)
-  stopifnot(all(substr(names(el), 1, 1) == "p"))
-  ip <- as.integer(substring(names(el), 2))
-  stopifnot(length(ip) == length(unique(ip)))
-  p <- length(ip)
-  n <- sum(sapply(el, function(x) sum(!x$parent)))
-  p.nc <- sapply(el, function(x) x$n)
+dag_e2precision <- function(d.el) {
+  stopifnot(all(substr(names(d.el), 1, 1) == "p"))
+  stopifnot(length(d.el) == length(unique(names(d.el))))
+  ip <- as.integer(substring(names(d.el), 2))
+  np <- length(ip)
+  stopifnot(np == length(unique(ip)))
+  nc <- sum(sapply(d.el, function(x) sum(!x$parent)))
+  p.nc <- sapply(d.el, function(x) x$n)
   dd <- c(rep(1, n), p.nc)
-  stopifnot((n+p) == length(dd))
-  q0 <- diag(x = dd, nrow = n + p, ncol = n + p)
-  ij <- matrix(1:((n+p)^2), n+p, n+p)
-  iq1th <- integer(2 * (p - 1))
-  sch <- iq1ch <- integer(2*n)
-  sth <- i1th <- integer(p-1)
-  iq2th <- i2th <- integer(p)
+  stopifnot((nc + np) == length(dd))
+  q0 <- diag(x = dd, nrow = nc + np, ncol = nc + np)
+  ij <- matrix(1:((nc+np)^2), nc+np, nc+np)
+  iq1th <- integer(2 * (np - 1))
+  sch <- iq1ch <- integer(2*nc)
+  sth <- i1th <- integer(np-1)
+  iq2th <- i2th <- integer(np)
   k0 <- 0
   k2 <- k1 <- 0
-  for(i in 1:p) {
-    i0 <- which(!el[[i]]$parent)
+  for(i in 1:np) {
+    i0 <- which(!d.el[[i]]$parent)
     nci <- length(i0)
     if(nci>0) {
-      j <- el[[i]]$id[i0]
-      sch[k0 + 1:nci] <- el[[i]]$signal[i0]
-      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (n+i)) & (row(ij) %in% j)]
+      j <- d.el[[i]]$id[i0]
+      sch[k0 + 1:nci] <- d.el[[i]]$signal[i0]
+      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (nc+i)) & (row(ij) %in% j)]
       k0 <- k0 + nci
-      sch[k0 + 1:nci] <- el[[i]]$signal[i0]
-      iq1ch[k0 + 1:nci] <- ij[(row(ij) == (n+i)) & (col(ij) %in% j)]
+      sch[k0 + 1:nci] <- d.el[[i]]$signal[i0]
+      iq1ch[k0 + 1:nci] <- ij[(row(ij) == (nc+i)) & (col(ij) %in% j)]
       k0 <- k0 + nci
-      q0[j, n+i] <- -el[[i]]$signal[i0]
-      q0[n+i, j] <- -el[[i]]$signal[i0]
+      q0[j, nc+i] <- -d.el[[i]]$signal[i0]
+      q0[nc+i, j] <- -d.el[[i]]$signal[i0]
     }
     i2th[k1 + 1] <- i
-    iq2th[k1 + 1] <- ij[(col(ij) == (n+i)) & (row(ij) == (n+i))]
+    iq2th[k1 + 1] <- ij[(col(ij) == (nc+i)) & (row(ij) == (nc+i))]
     k1 <- k1 + 1
-    i0 <- which(el[[i]]$parent)
+    i0 <- which(d.el[[i]]$parent)
     nj <- length(i0)
     if(nj>0) {
-      j0 <- el[[i]]$id[i0]
+      j0 <- d.el[[i]]$id[i0]
       i1th[k2 + 1:nj] <- j0
-      sth[k2 + 1:nj] <- el[[i]]$signal[i0] ## carry on the signal
-      j <- n + j0
-      iq1th[k2 + 1:nj] <- ij[, n+i][j]
+      sth[k2 + 1:nj] <- d.el[[i]]$signal[i0] ## carry on the signal
+      j <- nc + j0
+      iq1th[k2 + 1:nj] <- ij[, nc+i][j]
       k2 <- k2 + nj
       i1th[k2 + 1:nj] <- j0
-      sth[k2 + 1:nj] <- el[[i]]$signal[i0] ## carry on the signal
-      iq1th[k2 + 1:nj] <- ij[n+i, ][j]
+      sth[k2 + 1:nj] <- d.el[[i]]$signal[i0] ## carry on the signal
+      iq1th[k2 + 1:nj] <- ij[nc+i, ][j]
       k2 <- k2 + nj
     }
   }
-  stopifnot(k1 == p)
+  stopifnot(k1 == np)
   stopifnot(k2 == (2*(p-1)))
   return(list(
-    n = as.integer(n),
-    p = as.integer(p),
+    nc = as.integer(nc),
+    np = as.integer(np),
     i2th = as.integer(i2th),
     iq2th = as.integer(iq2th),
     i1th = as.integer(i1th),
@@ -197,7 +197,7 @@ dag_precision_elements <- function(dag) {
 #' round(100 * cov2cor(cov2[1:6, 1:6]))
 dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
   if(new) {
-    q.el <- dag_precision_elements(dag)
+    q.el <- dag_e2precision(dag)
     Q <- q.el$q
     nc <- q.el$n
     Q[q.el$iq2th] <- Q[q.el$iq2th] +
@@ -268,8 +268,7 @@ dag_precision <- function(dag, theta, debug = FALSE, new = TRUE) {
   return(Q)
 }
 
-dag_correlation_elements <- function(dag) {
-   d.el <- dag_elements(dag)
+dag_e2covariance <- function(d.el) {
    np <- length(d.el)
    iv <- lapply(1:np, function(i) i)
    for(i in 1:np) {
@@ -312,8 +311,10 @@ dag_correlation_elements <- function(dag) {
 #'      p2 ~ -c3 + c4)
 #' dag_covariance(dag1, c(0, 0))
 #' dag_covariance(dag_rlp(dag1), 0)
-dag_covariance <- function(dag, theta) {
-  ij <- dag_correlation_elements(dag)
+dag_covariance <- function(dag, theta, s.children = NULL) {
+  stopifnot(length(theta) == length(dag))
+  d.el <- dag_elements(dag)
+  ij <- dag_e2covariance(d.el)
   np <- length(ij$iv)
   nc <- length(ij$iparent)
   vv <- diag(nc)
@@ -324,5 +325,15 @@ dag_covariance <- function(dag, theta) {
       vv[i, j] <- vv[i, j] + vi * vj
     }
   }
-  return(vv)
+  if(!is.null(s.children)) {
+    stopifnot(length(s.children) == nc)
+    sc <- diag(s.children)
+  } else {
+    ich <- unlist(lapply(d.el, function(x)
+      x$id[!x$parent]))
+    sch <- unlist(lapply(d.el, function(x)
+      x$signal[!x$parent]))
+    sc <- diag(sch[ich])
+  }
+  return(sc%*%vv%*%sc)
 }

@@ -51,8 +51,9 @@ cgeneric0_dag_model <-
       }
     }
 
-    q.el <- dag_precision_elements(dag)
-    NC <- q.el$n
+    d.el <- dag_elements(dag)
+    q.el <- dag_e2precision(dag)
+    NC <- q.el$nc
 
     stopifnot(length(sigma.prior.reference) == NC)
     stopifnot(length(sigma.prior.probability) == NC)
@@ -60,7 +61,7 @@ cgeneric0_dag_model <-
     stopifnot(all(sigma.prior.probability<1.0))
     slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
-    qc <- q.el$q[1:q.el$n, 1:q.el$n]
+    qc <- q.el$q[1:NC, 1:NC]
     diag(qc) <- diag(qc) + 1e-9
     ii <- col(qc)[!upper.tri(qc)]
     jj <- row(qc)[!upper.tri(qc)]
@@ -70,9 +71,9 @@ cgeneric0_dag_model <-
       list(
         model = "inla_cgeneric_corgraphs0",
         shlib = libpath,
-        n = as.integer(q.el$n),
+        n = as.integer(q.el$nc),
         debug = as.integer(debug),
-        p = as.integer(q.el$p),
+        np = as.integer(q.el$np),
         i2th = as.integer(q.el$i2th-1L),
         iq2th = as.integer(q.el$iq2th-1L),
         i1th = as.integer(q.el$i1th-1L),
@@ -115,10 +116,11 @@ cgeneric_dag_model <-
       }
     }
 
-    d.el <- dag_correlation_elements(dag)
-    np <- length(d.el$iv)
-    nc <- length(d.el$iparent)
-    nv <- sapply(d.el$iv, length)
+    d.el <- dag_elements(dag)
+    d.elc <- dag_e2covariance(dag)
+    np <- length(d.el$np)
+    nc <- length(d.el$nc)
+    nv <- sapply(d.elc$iv, length)
     iiv <- rep(1:np, nv)
     jjv <- unlist(d.el$iv)
     itop <- d.el$itop

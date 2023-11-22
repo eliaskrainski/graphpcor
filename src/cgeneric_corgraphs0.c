@@ -44,7 +44,7 @@ double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
 	assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
 	int debug = data->ints[0]->ints[0];
 
-	assert(!strcasecmp(data->ints[2]->name, "p"));     // this will always be the case
+	assert(!strcasecmp(data->ints[2]->name, "np"));     // this will always be the case
 	np = data->ints[2]->ints[0];
 	assert(np > 0);
 	n2 = N + np;

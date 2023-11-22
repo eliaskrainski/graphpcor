@@ -6,7 +6,7 @@
 children variables for a given dag and the
 parameters of the parents}
 \usage{
-dag_covariance(dag, theta)
+dag_covariance(dag, theta, s.children = NULL)
 }
 \arguments{
 \item{theta}{log of the conditional variances of the
