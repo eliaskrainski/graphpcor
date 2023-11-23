@@ -56,5 +56,5 @@ If a=0 then U is taken to be the fixed value of the corresponding sigma.
 E.g. if there are three sigmas in the model and one supply
 sigma.prior.reference = c(1, 2, 3) and
 sigma.prior.probability = c(0.05, 0.0, 0.01)
-then sigma\link{2} is fixed to 2 and not estimated.
+then the sigma is fixed to 2 and not estimated.
 }

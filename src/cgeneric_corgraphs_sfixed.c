@@ -315,9 +315,12 @@ if(debug>1){
 		// where P is the number of hyperparameters
 		ret = Calloc(nparam + 1, double);
 	  ret[0] = nparam;
-	  for(i = 0; i < nparam; i++) {
-			ret[1+i] = 1.0;
-		}
+	  for(i = 0; i < N; i++) {
+	    ret[1+i] = -1.0;
+	  }
+	  for(i = 0; i < np; i++) {
+	    ret[1+N+i] = 0.0;
+	  }
 	}
     break;
 

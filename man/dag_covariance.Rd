@@ -8,6 +8,13 @@ parameters of the parents}
 \usage{
 dag_covariance(dag, theta, s.children = NULL)
 }
+\arguments{
+\item{dag}{the DAG}
+
+\item{theta}{numeric with v_j}
+
+\item{s.children}{numeric with s_i}
+}
 \description{
 Function to compute the covariance between the
 children variables for a given dag and the

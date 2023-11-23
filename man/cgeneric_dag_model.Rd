@@ -9,11 +9,32 @@ cgeneric_dag_model(
   sigma.prior.reference,
   sigma.prior.probability,
   lambda,
-  iprior = 1,
+  iprior = 3,
   debug = FALSE,
   useINLAprecomp = !TRUE,
   libpath = NULL
 )
+}
+\arguments{
+\item{dag}{the DAG model.}
+
+\item{sigma.prior.reference}{a vector with the reference values
+to define the prior for the standard deviation parameters.}
+
+\item{sigma.prior.probability}{a vector with the probability values
+to define the prior for the standard deviation parameters.}
+
+\item{lambda}{the lambda for the graph correlation prior.}
+
+\item{iprior}{integer to define with prior is going to be used
+for the correlation. 1 is for normal for v_i,
+2 is for pc-precision and 3 is for the derived PC (see the paper).}
+
+\item{useINLAprecomp}{logical indicating if is to be used
+shared object pre-compiled by INLA. It is not considered if
+libpath is provided.}
+
+\item{libpath}{string to the shared object. Default is NULL.}
 }
 \value{
 objects to be used in the f() formula term in INLA.

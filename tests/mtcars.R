@@ -1,28 +1,38 @@
-library(dplyr)
-library(correlation)
-library(see)
-library(ggraph)
-library(ggpubr)
+
+if(FALSE) { ### just to avoid having to add dependencies we don't really need
+    
+    library(dplyr)
+    library(correlation)
+    library(see)
+    library(ggraph)
+    library(ggpubr)
+    
+    
+    mc <- mtcars %>%
+        correlation(partial = FALSE)
+    pc <- mtcars %>%
+        correlation(partial = TRUE)
+    
+    ggarrange(
+        mc %>%
+        plot() +
+        scale_edge_colour_gradientn(
+            limits = c(-1, 1),
+            colors = c("blue", "green")),
+        pc %>%
+        plot() +
+        scale_edge_colour_gradientn(
+            limits = c(-1, 1),
+            colors = c("blue", "green"))
+    )
+
+}
+
 library(corGraphs)
 library(INLA)
 
-mc <- mtcars %>%
-    correlation(partial = FALSE)
-pc <- mtcars %>%
-    correlation(partial = TRUE)
-
-ggarrange(
-    mc %>%
-    plot() +
-    scale_edge_colour_gradientn(
-        limits = c(-1, 1),
-        colors = c("blue", "green")),
-    pc %>%
-    plot() +
-    scale_edge_colour_gradientn(
-        limits = c(-1, 1),
-        colors = c("blue", "green"))
-)
+inla.setOption(
+    num.threads = 6L)
 
 n <- nrow(mtcars)
 nc <- length(jjy <- 1:7)
@@ -89,10 +99,10 @@ ff1
 mtcd1 <- list(
     p1 ~ p2 + p3 + p4 + c1,
     p2 ~ c7,
-    p3 ~ p5 + p6 + c3,
+    p3 ~ p5 + p6 + c6,
     p4 ~ c5,
-    p5 ~ c2 + c4,
-    p6 ~ c6
+    p5 ~ c2,
+    p6 ~ c3 + c4
 )
 
 d2plot <- GraphPlot(mtcd1, base=0)
@@ -103,10 +113,10 @@ plot(d2plot$gr, nodeAttrs = d2plot$nAttrs)
 mtcd <- list(
     p1 ~ p2 + p3 + p4 - c1,
     p2 ~ - c7,
-    p3 ~ p5 + p6 + c3,
+    p3 ~ p5 + p6 + c6,
     p4 ~ -c5,
-    p5 ~ c2 + c4,
-    p6 ~ c6
+    p5 ~ c2,
+    p6 ~ c3 + c4
 )
 (np <- length(mtcd))
 
@@ -114,8 +124,8 @@ cGmodel <- cgeneric_dag_model(
     dag = mtcd,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc),
-    lambda = 5,
-    iprior = 1,
+    lambda = 1,
+    iprior = 3,
     debug = 0
 )
 
@@ -145,11 +155,8 @@ round(cc.fit1*100)
 
 ### joint
 data2 <- data.frame(
-     datax,
-     iv = factor(rep(1:nc, each = n)),
-     i = rep(1:nc, each = n),
-     r = rep(1:n, nc),
-     y = data0$y
+    datax,
+    data1
 )
 
 ff2 <- update(ff0, .~.+f(i, model = cGmodel, replicate = r, vb.correct = FALSE))
@@ -175,6 +182,37 @@ round(mypc*100)
 round(cc.fit1*100)
 round(cc.fit2*100)
 
+ff3 <- update(ff0, .~.+f(i, model = "iidkd", order = nc, n = n*nc, vb.correct = FALSE)) 
+
+lcc <- t(chol(solve(mypc)))
+ini3 <- c(log(diag(lcc)), lcc[lower.tri(lcc)])
+length(ini3)
+
+fit3 <- inla(
+    formula = ff3,
+    control.family=list(hyper = pprc), 
+    data = data2,
+    control.mode = list(theta = ini3, restart = TRUE),
+    control.inla = list(int.strategy = "eb"),
+    control.compute = list(smtp = "pardiso"),
+    inla.call = "remote",
+    num.threads = 2*length(ini3),
+    verbose = !TRUE
+)
+
+xxsamples <- inla.iidkd.sample(
+    n = 3000,
+    result = fit3,
+    name = "i",
+    return.cov = TRUE)
+
+cvfit3 <- Reduce("+", xxsamples)/length(xxsamples)
+cc.fit3 <- cov2cor(cvfit3)
+
+round(mypc*100)
+round(cc.fit1*100)
+round(cc.fit2*100)
+round(cc.fit3*100)
 
 detach("package:corGraphs", unload = TRUE)
 library(corGraphs)

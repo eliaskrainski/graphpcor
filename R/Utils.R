@@ -35,7 +35,7 @@ dag_rlp <- function(dag) {
     stilde[3, il.rm] <- paste(l.up0, stilde[3, np])
   }
   il.env <- attr(dag[[il.rm]], ".Environment")
-  dag[[il.rm]] <- as.formula(
+  dag[[il.rm]] <- stats::as.formula(
     paste(stilde[2, il.rm], "~", stilde[3, il.rm]))
   attr(dag[[il.rm]], ".Environment") <- il.env
   return(dag[1:(np-1)])
@@ -81,14 +81,14 @@ dag_elements <- function(dag, debug = FALSE) {
     p <- s <- integer(nchar(ch))
     i1 <- gregexpr("-", ch, fixed = TRUE)[[1]]
     if(debug>1)
-      print(new("integer", i1))
+      print(utils::new("integer", i1))
     if(any(i1>0)) {
       s[i1[i1>0]] <- -1
       p[i1[i1>0]] <- i1[i1>0]
     }
     i2 <- gregexpr("+", ch, fixed = TRUE)[[1]]
     if(debug>1)
-      print(new("integer", i2))
+      print(utils::new("integer", i2))
     if(any(i2>0)) {
       s[i2[i2>0]] <- 1
       p[i2[i2>0]] <- i2[i2>0]
@@ -107,7 +107,7 @@ dag_elements <- function(dag, debug = FALSE) {
       signal = s[s!=0]
     )
     if(debug)
-      print(str(dag_sl[[k]]))
+      print(utils::str(dag_sl[[k]]))
   }
   return(dag_sl)
 }
@@ -289,7 +289,6 @@ dag_e2covariance <- function(d.el) {
        }
      }
    }
-#   return(iv)
    NC <- sum(sapply(d.el, function(s) sum(!s$parent)))
    sch <- integer(NC)
    iP <- integer(NC)
@@ -309,12 +308,15 @@ dag_e2covariance <- function(d.el) {
        itop[i, j] <- max(intersect(iv[[iP[i]]], iv[[iP[j]]]))
      }
    }
-##   stopifnot(all.equal(iP,diag(itop)))
+   stopifnot(all.equal(iP,diag(itop)))
    return(list(iparent = iP, iv = iv, itop = itop, schildren=sch))
 }
 #' Function to compute the covariance between the
 #' children variables for a given dag and the
 #' parameters of the parents
+#' @param dag the DAG
+#' @param theta numeric with v_j
+#' @param s.children numeric with s_i
 #' @export
 #' @examples
 #' dag1 <- list(
@@ -331,21 +333,11 @@ dag_covariance <- function(dag, theta, s.children = NULL) {
   vi <- sapply(ij$iv, function(i)
     sum(exp(2*theta[i])))
   vv <- diag(nc) + vi[ij$itop]
-  if(FALSE) {
-    for(i in 1:nc) {
-      vi <- sum(exp(2 * theta[ij$iv[[ij$iparent[i]]]]))
-      for (j in 1:nc) {
-        vj <- sum(exp(2 * theta[ij$iv[[ij$iparent[j]]]]))
-        vv[i, j] <- vv[i, j] + vi * vj
-      }
-    }
-  }
   if(!is.null(s.children)) {
-    stopifnot(length(s.children) == nc)
-    vv <- cov2cor(vv)
-    sc <- diag(s.children)
+    vv <- stats::cov2cor(vv)
   } else {
-    sc <- diag(ij$schildren)
+    s.children <- ij$schildren
   }
-  return(sc%*%vv%*%sc)
+  stopifnot(length(s.children) == nc)
+  return(t(vv * s.children) * s.children)
 }

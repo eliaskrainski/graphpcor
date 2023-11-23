@@ -26,7 +26,7 @@
 #' E.g. if there are three sigmas in the model and one supply
 #'  sigma.prior.reference = c(1, 2, 3) and
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
-#' then sigma[2] is fixed to 2 and not estimated.
+#' then the sigma is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
 cgeneric0_dag_model <-
@@ -92,6 +92,19 @@ cgeneric0_dag_model <-
     return(the_model)
   }
 #' Implement the model from covariance
+#' @param dag the DAG model.
+#' @param sigma.prior.reference a vector with the reference values
+#' to define the prior for the standard deviation parameters.
+#' @param sigma.prior.probability a vector with the probability values
+#' to define the prior for the standard deviation parameters.
+#' @param lambda the lambda for the graph correlation prior.
+#' @param iprior integer to define with prior is going to be used
+#' for the correlation. 1 is for normal for v_i,
+#' 2 is for pc-precision and 3 is for the derived PC (see the paper).
+#' @param useINLAprecomp logical indicating if is to be used
+#' shared object pre-compiled by INLA. It is not considered if
+#' libpath is provided.
+#' @param libpath string to the shared object. Default is NULL.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
 cgeneric_dag_model <-
@@ -99,7 +112,7 @@ cgeneric_dag_model <-
            sigma.prior.reference,
            sigma.prior.probability,
            lambda,
-           iprior = 1,
+           iprior = 3,
            debug = FALSE,
            useINLAprecomp = !TRUE,
            libpath = NULL) {
