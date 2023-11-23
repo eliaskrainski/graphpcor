@@ -291,13 +291,17 @@ dag_e2covariance <- function(d.el) {
    }
 #   return(iv)
    NC <- sum(sapply(d.el, function(s) sum(!s$parent)))
+   sch <- integer(NC)
    iP <- integer(NC)
    for(i in 1:np) {
      ic <- which(!d.el[[i]]$parent)
-     if(length(ic)>0)
+     if(length(ic)>0) {
+       sch[d.el[[i]]$id[ic]] <-
+         d.el[[i]]$signal[ic]
        for(j in 1:length(ic)) {
          iP[d.el[[i]]$id[ic[j]]] <- i
        }
+     }
    }
    itop <- matrix(0L, NC, NC)
    for(i in 1:NC) {
@@ -305,8 +309,8 @@ dag_e2covariance <- function(d.el) {
        itop[i, j] <- max(intersect(iv[[iP[i]]], iv[[iP[j]]]))
      }
    }
-   stopifnot(all.equal(iP,diag(itop)))
-   return(list(iv = iv, iparent = iP, itop = itop))
+##   stopifnot(all.equal(iP,diag(itop)))
+   return(list(iparent = iP, iv = iv, itop = itop, schildren=sch))
 }
 #' Function to compute the covariance between the
 #' children variables for a given dag and the
@@ -324,23 +328,24 @@ dag_covariance <- function(dag, theta, s.children = NULL) {
   ij <- dag_e2covariance(d.el)
   np <- length(ij$iv)
   nc <- length(ij$iparent)
-  vv <- diag(nc)
-  for(i in 1:nc) {
-    for (j in 1:nc) {
+  vi <- sapply(ij$iv, function(i)
+    sum(exp(2*theta[i])))
+  vv <- diag(nc) + vi[ij$itop]
+  if(FALSE) {
+    for(i in 1:nc) {
       vi <- sum(exp(2 * theta[ij$iv[[ij$iparent[i]]]]))
-      vj <- sum(exp(2 * theta[ij$iv[[ij$iparent[j]]]]))
-      vv[i, j] <- vv[i, j] + vi * vj
+      for (j in 1:nc) {
+        vj <- sum(exp(2 * theta[ij$iv[[ij$iparent[j]]]]))
+        vv[i, j] <- vv[i, j] + vi * vj
+      }
     }
   }
   if(!is.null(s.children)) {
     stopifnot(length(s.children) == nc)
+    vv <- cov2cor(vv)
     sc <- diag(s.children)
   } else {
-    ich <- unlist(lapply(d.el, function(x)
-      x$id[!x$parent]))
-    sch <- unlist(lapply(d.el, function(x)
-      x$signal[!x$parent]))
-    sc <- diag(sch[ich])
+    sc <- diag(ij$schildren)
   }
   return(sc%*%vv%*%sc)
 }
