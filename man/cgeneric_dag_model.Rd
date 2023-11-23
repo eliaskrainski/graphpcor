@@ -6,9 +6,10 @@
 \usage{
 cgeneric_dag_model(
   dag,
-  lambda,
   sigma.prior.reference,
   sigma.prior.probability,
+  lambda,
+  iprior = 1,
   debug = FALSE,
   useINLAprecomp = !TRUE,
   libpath = NULL

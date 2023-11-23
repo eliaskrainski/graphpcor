@@ -96,9 +96,10 @@ cgeneric0_dag_model <-
 #' @export
 cgeneric_dag_model <-
   function(dag,
-           lambda,
            sigma.prior.reference,
            sigma.prior.probability,
+           lambda,
+           iprior = 1,
            debug = FALSE,
            useINLAprecomp = !TRUE,
            libpath = NULL) {
@@ -122,21 +123,39 @@ cgeneric_dag_model <-
     sch <- unlist(lapply(d.el, function(x)
       x$signal[!x$parent]))
     sch <- sch[ich]
+    if(debug) {
+      cat(c(sch = sch), "\n")
+    }
     d.elc <- dag_e2covariance(d.el)
+    if(debug)
+    print(str(d.elc))
     np <- length(dag)
     nv <- sapply(d.elc$iv, length)
+    if(debug)
+      cat("np = ", np, " and nc = ", nc, "\n")
     iiv <- rep(1:np, nv)
     jjv <- unlist(d.elc$iv)
     itop <- d.elc$itop
+    if(debug) {
+      cat(c(iiv=iiv), "\n")
+      cat(c(jjv=jjv), "\nitop:\n")
+      print(itop)
+    }
     nc <- nrow(itop)
     ii <- col(itop)[!upper.tri(itop)]
     jj <- row(itop)[!upper.tri(itop)]
+    if(debug) {
+      print(str(list(nc=nc,ii=ii,jj=jj)))
+    }
 
     stopifnot(length(sigma.prior.reference) == nc)
     stopifnot(length(sigma.prior.probability) == nc)
     stopifnot(all(sigma.prior.probability>0.0))
     stopifnot(all(sigma.prior.probability<1.0))
     slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
+
+    stopifnot(lambda>0)
+    stopifnot(iprior %in% (1L:3L))
 
     the_model <- do.call(
       "inla.cgeneric.define",
@@ -153,6 +172,7 @@ cgeneric_dag_model <-
         itop = as.integer(itop-1L),
         ii = as.integer(ii-1L),
         jj = as.integer(jj-1L),
+        iprior = as.integer(iprior),
         lambda = as.double(lambda),
         slambdas = as.double(slambdas),
         schildren = as.double(sch)

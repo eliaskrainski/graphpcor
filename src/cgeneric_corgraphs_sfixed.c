@@ -78,6 +78,10 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 	assert(!strcasecmp(data->ints[9]->name, "jj"));     // this will always be the case
 	inla_cgeneric_vec_tp *jj = data->ints[9];
 
+	assert(!strcasecmp(data->ints[10]->name, "iprior"));     // this will always be the case
+	int iprior = data->ints[10]->ints[0];
+	assert(iprior>0);
+
 	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
 	double lambda = data->doubles[0]->doubles[0];
 	assert(lambda>0);
@@ -188,8 +192,9 @@ if(debug>1){
     if(debug>1) {
       for(i = 0; i<N; i++)
         printf("vcc[%d] = %2.3f\n", i, vcc[i]);
-      for(i = 0; i<np; i++)
+      for(i = 0; i<np; i++) {
         printf("vparents[%d] = %2.3f\n", i, vparents[i]);
+      }
 		  printf("V[i,j]:\n");
 		  k=0;
 		  for(i=0; i<N; i++) {
@@ -324,17 +329,27 @@ if(debug>1){
 		double lam = 0;
 		for(i = 0; i < N; i++) {
 			lam = slambdas->doubles[i];
-		  ret[0] += log(lam) + theta[i] - lam * exp(theta[i]);
+		  ret[0] += log(lam) - lam * exp(theta[i]) + theta[i];
 		}
 
-		if(N>0) {
+		if(iprior==1) {
 
-    // this is temporary
+    // this is Gaussian(0,1) for each v_i
 		for(i = 0; i < np; i++) {
 		  ret[0] += -0.5 * SQR(theta[N+i]);
 		}
 
-	} else {
+	}
+
+		if (iprior == 2 ) {
+		  // this is pc-prec each v_i^2, lambda is the one provided
+		  for(i=0; i<np; i++) {
+		    ret[0] += log(lambda) -lambda * exp(theta[N+i]) +theta[N+i];
+		  }
+
+		}
+
+		if(iprior == 3) {
 
 		char uplo = 'U';
 		int info=0, l;
