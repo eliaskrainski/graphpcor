@@ -16,13 +16,11 @@ dgplot <- GraphPlot(dag, base=0)
 par(mar = c(1, 1, 1, 1))
 plot(dgplot$gr, nodeAttrs = dgplot$nAttrs)
 
-SP <- GraphDens(dag)
-names(SP)
-
 (np <- length(dag))
-(theta.p <- seq(0.0, -0.5, length = np))
+(theta.p <- c(0, 0))
 
 mcorr <- cov2cor(dag_covariance(dag, theta.p))
+round(mcorr * 100)
 
 (nc <- nrow(mcorr))
 (theta.c <- (0.5:nc - nc/2)/2)
@@ -30,7 +28,6 @@ mcorr <- cov2cor(dag_covariance(dag, theta.p))
 dd <- diag(exp(theta.c))
 mcov <- dd %*% mcorr %*%dd
 
-round(mcorr * 100)
 round(mcov, 1)
 
 n <- 500
@@ -54,7 +51,8 @@ cGmodel <- cgeneric_dag_model(
     dag = dag,
     lambda = 5,
     sigma.prior.reference = rep(1, nc),
-    sigma.prior.probability = rep(0.1, nc)
+    sigma.prior.probability = rep(0.1, nc),
+    iprior = 3
 )
 
 ff <- y ~ 0 + factor(i) +
@@ -65,7 +63,7 @@ fit <- inla(
     family = "poisson",
     data = dataf,
     control.mode = list(
-        theta = c(theta.c, theta.p), 
+        theta = rep(c(-2, 1), c(nc, np)), 
         restart = TRUE),
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE) ### if true prints looooooottttssss of details

@@ -2,15 +2,26 @@
 library(corGraphs)
 library(INLA)
 
-dag <- list(
+dagp <- list(
     p1 ~ p2 + p3 + c1 + c2,
     p2 ~ c3 + c4,
+    p3 ~ c5 + c6)
+
+d2plot <- GraphPlot(dagp, base=0)
+
+par(mar = c(1, 1, 1, 1))
+plot(d2plot$gr, nodeAttrs = d2plot$nAttrs)
+
+dag <- list(
+    p1 ~ p2 + p3 + c1 + c2,
+    p2 ~ -c3 + c4,
     p3 ~ c5 - c6)
 
 (np <- length(dag))
-(theta.p <- seq(0.0, -0.5, length = np))
+(theta.p <- c(0, 1, -1))
 
 mcorr <- cov2cor(dag_covariance(dag, theta.p))
+round(mcorr * 100)
 
 (nc <- nrow(mcorr))
 (theta.c <- (0.5:nc - nc/2)/2)
@@ -18,7 +29,6 @@ mcorr <- cov2cor(dag_covariance(dag, theta.p))
 dd <- diag(exp(theta.c))
 mcov <- dd %*% mcorr %*%dd
 
-round(mcorr * 100)
 round(mcov, 1)
 
 n <- 500

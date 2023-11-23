@@ -2,12 +2,18 @@
 library(corGraphs)
 library(INLA)
 
+inla.setOption(safe = FALSE,
+               num.threads = 6)
+
 dag1 <- list(p1 ~ c1 + c2 + c3)
 np <- length(dag1)
 
 (theta.p <- 0.5)
 
-mcorr <- cov2cor(dag_covariance(dag1, theta.p))
+mcov0 <- dag_covariance(dag1, theta.p)
+mcov0
+mcorr <- cov2cor(mcov0)
+round(mcorr, 2)
 
 (nc <- nrow(mcorr))
 (theta.c <- seq(0.5, -0.5, length = nc))
@@ -49,9 +55,10 @@ hfix <- list(prec = list(initial = 10, fixed = TRUE))
 
 cGmodel <- cgeneric_dag_model(
     dag = dag1,
-    lambda = 5,
     sigma.prior.reference = rep(1, nc),
-    sigma.prior.probability = rep(0.05, nc)
+    sigma.prior.probability = rep(0.05, nc),
+    lambda = 5,
+    iprior = 3
 )
 
 ff <- y ~ 0 +
