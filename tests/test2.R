@@ -47,7 +47,7 @@ dataf <- data.frame(
 ff <- y ~ 0 + factor(i) +
     f(i, model = rGmodel, replicate = r, vb.correct = FALSE)
 
-cGmodel <- cgeneric_dag_model(
+gmodel <- dag_model(
     dag = dag,
     lambda = 5,
     sigma.prior.reference = rep(1, nc),
@@ -56,7 +56,7 @@ cGmodel <- cgeneric_dag_model(
 )
 
 ff <- y ~ 0 + factor(i) +
-    f(i, model = cGmodel, replicate = r, vb.correct = FALSE)
+    f(i, model = gmodel, replicate = r, vb.correct = FALSE)
 
 fit <- inla(
     formula = ff,

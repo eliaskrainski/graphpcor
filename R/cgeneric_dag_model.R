@@ -107,7 +107,7 @@ cgeneric0_dag_model <-
 #' @param libpath string to the shared object. Default is NULL.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-cgeneric_dag_model <-
+dag_model <-
   function(dag,
            sigma.prior.reference,
            sigma.prior.probability,
@@ -145,7 +145,7 @@ cgeneric_dag_model <-
     np <- length(dag)
     nv <- sapply(d.elc$iv, length)
     if(debug)
-      cat("np = ", np, " and nc = ", nc, "\n")
+      cat("np = ", np, " and nv: ", nv, "\n")
     iiv <- rep(1:np, nv)
     jjv <- unlist(d.elc$iv)
     itop <- d.elc$itop

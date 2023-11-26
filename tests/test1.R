@@ -53,7 +53,7 @@ plot(d1plot$gr, nodeAttrs = d1plot$nAttrs)
 
 hfix <- list(prec = list(initial = 10, fixed = TRUE))
 
-cGmodel <- cgeneric_dag_model(
+gmodel <- dag_model(
     dag = dag1,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.05, nc),
@@ -62,7 +62,7 @@ cGmodel <- cgeneric_dag_model(
 )
 
 ff <- y ~ 0 +
-    f(idx1, model = cGmodel, replicate = repl) +
+    f(idx1, model = gmodel, replicate = repl) +
     f(idx2, w1, copy = "idx1", replicate = repl) +
     f(idx3, w2, copy = "idx1", replicate = repl)
 

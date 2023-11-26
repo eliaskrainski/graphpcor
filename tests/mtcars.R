@@ -120,7 +120,7 @@ mtcd <- list(
 )
 (np <- length(mtcd))
 
-cGmodel <- cgeneric_dag_model(
+gmodel <- dag_model(
     dag = mtcd,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc),
@@ -129,7 +129,7 @@ cGmodel <- cgeneric_dag_model(
     debug = 0
 )
 
-str(cGmodel, 5)
+str(gmodel, 5)
 
 fit1 <- inla(
     formula = ff1,
@@ -159,7 +159,7 @@ data2 <- data.frame(
     data1
 )
 
-ff2 <- update(ff0, .~.+f(i, model = cGmodel, replicate = r, vb.correct = FALSE))
+ff2 <- update(ff0, .~.+f(i, model = gmodel, replicate = r, vb.correct = FALSE))
 
 fit2 <- inla(
     formula = ff2,

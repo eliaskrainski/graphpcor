@@ -45,7 +45,7 @@ dataf <- data.frame(
     y = as.vector(xx)##rpois(n*nc, exp(1 + xx))
 )
 
-cGmodel <- cgeneric_dag_model(
+gmodel <- dag_model(
     dag = dag,
     lambda = 5,
     sigma.prior.reference = rep(1, nc),
@@ -53,7 +53,7 @@ cGmodel <- cgeneric_dag_model(
 )
 
 cff <- y ~ 0 + factor(i) +
-    f(i, model = cGmodel, replicate = r, vb.correct = FALSE)
+    f(i, model = gmodel, replicate = r, vb.correct = FALSE)
 
 cfit <- inla(
     formula = cff,
