@@ -39,10 +39,9 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 	N = data->ints[0]->ints[0];
 	assert(N > 0);
 	M = (int)((double)N * ((double)(N+1)) / 2.0);
-	double mcov[M];
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
-	int debug = data->ints[0]->ints[0];
+	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->ints[2]->name, "np"));     // this will always be the case
 	np = data->ints[2]->ints[0];
@@ -50,9 +49,9 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 	nparam = N + np;
 	double v2[np], vparents[np];
 
-/*	if(debug) {
+	if(debug>99) {
 	  printf("(N = %d, M = %d, np = %d)\n", N, M, np) ;
-}*/
+	}
 
 	assert(!strcasecmp(data->ints[3]->name, "nv"));     // this will always be the case
 	inla_cgeneric_vec_tp *nv = data->ints[3];
@@ -122,9 +121,9 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
     }
     for (i = 0; i < M; i++) {
       ret[k] = jj->ints[i];
-      if(debug>1){
+/*      if(debug>1){
         printf("%d %2.1f %2.1f\n", i, ret[k-M], ret[k]);
-      }
+}*/
       k++;
     }
 
@@ -137,8 +136,10 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 //		memset(ret + offset, 0, M * sizeof(double));
 		ret[0] = -1;				       /* REQUIRED */
     ret[1] = M;				       /* REQUIRED */
+  double mcov[M];
+  double qq[M];
 
-if(debug>1){
+if(debug>999){
   printf(" nv:\n");
   for(i=0; i<nv->len; i++) {
     printf("%d ", nv->ints[i]);
@@ -167,7 +168,7 @@ if(debug>1){
 
     char uplo = 'U';
     int info=0;
-    double *qq = (double *) calloc(N*N, sizeof(double));
+//    double *qq = (double *) calloc(N*N, sizeof(double));
     double vcc[N];
 
     for(i=0; i<np; i++) {
@@ -189,7 +190,7 @@ if(debug>1){
       }
     }
 
-    if(debug>1) {
+    if(debug>999) {
       for(i = 0; i<N; i++)
         printf("vcc[%d] = %2.3f\n", i, vcc[i]);
       for(i = 0; i<np; i++) {
@@ -225,7 +226,7 @@ if(debug>1){
 		  }
 		}
 
-		if(debug>1){
+		if(debug>999){
 		  printf("V[i,j]:\n");
 		  k=0;
 		  for(i=0; i<N; i++) {
@@ -238,6 +239,7 @@ if(debug>1){
 		    }
 		  }
 		}
+
 		k=0;
 		for(i=0; i<N; i++) {
 		  for(j=0; j<N; j++) {
@@ -246,7 +248,7 @@ if(debug>1){
 		  }
 		}
 
-		if(debug>1){
+		if(debug>999){
 		  printf("V[i,j]:\n");
 		  k=0;
 		  for(i=0; i<N; i++) {
@@ -262,12 +264,12 @@ if(debug>1){
 		}
 
 		dposv_(&uplo, &N, &N, &mcov[0], &N, &qq[0], &N, &info, F_ONE);
-		if(debug>1) {
+		if(debug>99) {
 		  printf("INFO for dposv for Q is %d\n", info);
 		}
 
 
-		if(debug>1) {
+		if(debug>999) {
 		  printf("V[i,j]:\n");
 		  k=0;
 		  for(i=0; i<N; i++) {
@@ -287,17 +289,16 @@ if(debug>1){
 		        ret[offset+k2] = qq[k];
 		        k2++;
 		      }
-		      if(debug>1){
+		      if(debug>999){
 		        printf("%2.1f ", qq[k]);
 		      }
 		      k++;
 		    }
-		    if(debug>1){
+		    if(debug>999){
 		      printf("\n");
 		    }
 		  }
 		  assert(k2==M);
-		  free(qq);
 
 	}
 	  break;
@@ -358,8 +359,9 @@ if(debug>1){
 		int info=0, l;
 		double hldet0, hldet1, trc, kld;
 		double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
-		double *C0 = (double *) calloc(N*N, sizeof(double));
-		double *C1 = (double *) calloc(N*N, sizeof(double));
+//		double *C0 = (double *) calloc(N*N, sizeof(double));
+//		double *C1 = (double *) calloc(N*N, sizeof(double));
+    double C0[N*N], C1[N*N];
 
 		for(i=0; i<np; i++) {
 		  v2a[i] = v2[i];
@@ -368,7 +370,7 @@ if(debug>1){
 
 		for(l=np; l>0; l--) {
 
-		  if(debug>1) {
+		  if(debug>999) {
 		    printf("l is now %d\n", l);
 		  }
 
@@ -411,7 +413,7 @@ if(debug>1){
 	  	  }
 	  	}
 
-	  	if(debug>1){
+	  	if(debug>999){
 	  	  printf("C1[i,j]:\n");
 	  	  k=0;
 	  	  for(i=0; i<N; i++) {
@@ -419,9 +421,7 @@ if(debug>1){
 	  	      printf("%2.3f ", C1[k]);
 	  	      k++;
 	  	    }
-	  	    if(debug>1){
-	  	      printf("\n");
-	  	    }
+  	      printf("\n");
 	  	  }
 	  	  printf("C0[i,j]:\n");
 	  	  k=0;
@@ -430,22 +430,20 @@ if(debug>1){
 	  	      printf("%2.3f ", C0[k]);
 	  	      k++;
 	  	    }
-	  	    if(debug>1){
-	  	      printf("\n");
-	  	    }
+  	      printf("\n");
 	  	  }
 	  	}
 
 	  	dpotrf_(&uplo, &N, &C0[0], &N, &info, F_ONE);
-	  	if(debug>1) {
+	  	if(debug>99) {
 	  	  printf("INFO for L0 with l = %d is %d\n", l, info);
 	  	}
 	  	dpotrf_(&uplo, &N, &C1[0], &N, &info, F_ONE);
-	  	if(debug>1) {
+	  	if(debug>99) {
 	  	  printf("INFO for L1 with l = %d is %d\n", l, info);
 	  	}
 
-	  	if(debug>1){
+	  	if(debug>999){
 	  	  printf("L1[i,j]:\n");
 	  	  k=0;
 	  	  for(i=0; i<N; i++) {
@@ -476,7 +474,7 @@ if(debug>1){
 	  	for(i=0; i<N; i++) {
 	  	  hldet0 += log(C0[k]);
 	  	  hldet1 += log(C1[k]);
-	  	  if(debug>1){
+	  	  if(debug>999){
 	  	    printf("%2.5f, %2.5f\n", C1[k], C0[k]);
 	  	  }
 	  	  k += N+1;
@@ -496,7 +494,7 @@ if(debug>1){
 	  	  }
 	  	}
 	  	dposv_(&uplo, &N, &N, &C0[0], &N, &C1[0], &N, &info, F_ONE);
-	  	if(debug>1) {
+	  	if(debug>99) {
 	  	  printf("INFO for dposv with l = %d is %d\n", l, info);
 	  	}
 
@@ -509,14 +507,15 @@ if(debug>1){
 
       kld = 0.5 * (trc - np) - hldet1 + hldet0;
 
-	  	if(debug>1) {
+	  	if(debug>99) {
 	  	  printf("ld0: %2.4f, ld1: %2.4f, trc: %2.4f, kld:= %2.4f\n",
              hldet0, hldet1, trc, kld);
 	  	}
 
 	  	ret[0] += log(lambda) - lambda * sqrt(2 * kld);
-
 		}
+//    free(C0);
+	//	free(C1);
 		}
 
 
