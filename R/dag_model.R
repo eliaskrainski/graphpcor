@@ -140,8 +140,9 @@ dag_model <-
       cat(c(sch = sch), "\n")
     }
     d.elc <- dag_e2covariance(d.el)
-    if(debug)
-    print(str(d.elc))
+    if(debug) {
+      print(str(d.elc))
+    }
     np <- length(dag)
     nv <- sapply(d.elc$iv, length)
     if(debug)
