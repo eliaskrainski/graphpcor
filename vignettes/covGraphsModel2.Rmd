@@ -1,0 +1,202 @@
+---
+output:
+  pdf_document: 
+    keep_tex: yes
+  html_document:
+    df_print: paged
+header-includes:
+- \usepackage{lscape}
+- \usepackage{multicol}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(corGraphs)
+```
+
+# Parents and children DAG's
+
+In our specific DAG we have $n$ variables of interest, the
+children, and $k$ latent variables. 
+Specifically, we define let a set of $n$ children, $c_i$, $i$=1,...,$n$, 
+and $k$ latents, $p_j$, $j$=1,...,$k$.
+
+```{r graphs, echo = FALSE, fig.width = 9, fig.height = 4, out.width="79%", fig.align = 'center', fig.cap = "Graphs with parents and children."}
+g1 <- list(p1 ~ c1 + c2 + c3)
+g1p <- GraphPlot(g1)
+g2 <- list(p1 ~ p2 + c1 + c2, p2 ~ c3 + c4)
+g2p <- GraphPlot(g2)
+g3a <- list(p1 ~ p2 + p3 + c1 + c2, p2 ~ c3 + c4, p3 ~ c5 + c6)
+g3b <- list(p1 ~ p2 + c1 + c2, p2 ~ p3 + c3 + c4, p3 ~ c5 + c6)
+g3ap <- GraphPlot(g3a)
+g3bp <- GraphPlot(g3b)
+par(mfrow = c(2, 2), mar = c(0, 0, 0, 0))
+plot(g1p$gr, nodeAttrs = g1p$nAttrs)
+legend("topleft", "(A)", bty = "n")
+plot(g2p$gr, nodeAttrs = g2p$nAttrs)
+legend("topleft", "(B)", bty = "n")
+plot(g3ap$gr, nodeAttrs = g3ap$nAttrs)
+legend("topleft", "(C)", bty = "n")
+plot(g3bp$gr, nodeAttrs = g3bp$nAttrs)
+legend("topleft", "(D)", bty = "n")
+```
+
+## Model definition
+
+* **1st rule**: Joint distribution for parents,
+$p_1$, ..., $p_k$, with precision matrix diagonal equals 
+$q_1^2$, ..., $q_k^2$ and the off diagonal elements, $i,j$, 
+equals zero if there is no connection between $p_i$ and $p_j$ or
+$r_{ij}$ if so.
+
+* **2rd rule**: For $c_i$, $i=1$, ..., $n$, we set
+N($p_{c_i}$, 1), where $p_{c_i}$ is the parent of $c_i$.
+**(as before)**
+
+The joint distribution for all the $n+k$ variables is
+\[ 
+p(c_1,\ldots,c_n,p_1,\ldots,p_k) \propto 
+ \mathrm{exp} \left\{ \frac{-1}{2} \left[ 
+ \sum_{i=1}^n (c_j - p_{c_j})^2 + 
+ \mathbf{p}^{T}\mathbf{R}\mathbf{p}
+ \right] \right\} 
+\]
+
+For the DAGs (B), (C) and (D) in Figure 1 we have
+\[ 
+\mathbf{R}^{(B)} = \left[ 
+\begin{array}{cc} 
+q_1^2 & -r \\ -r & q_2^2 
+\end{array} \right],\;
+\mathbf{R}^{(C)} = \left[ 
+\begin{array}{ccc} 
+q_1^2 & -r_{12} & -r_{13} \\ 
+-r_{12} & q_2^2 &  \\
+-r_{13} &  & q_3^2
+\end{array} \right]\; \textrm{ and }\;
+\mathbf{R}^{(D)} = \left[ 
+\begin{array}{ccc} 
+q_1^2 & -r_{12} &  \\ 
+-r_{12} & q_2^2 & -r_{23} \\
+ & -r_{23}  & q_3^2
+\end{array} \right]
+\]
+
+For the model from (B), the joint distribution has precision
+\[
+\left[ \begin {array}{cccccc} 
+1&0&0&0&-1&0\\ 
+0&1&0&0&-1&0\\ 
+0&0&1&0&0&-1\\ 
+0&0&0&1&0&-1\\ 
+-1&-1&0&0&{a}^{-2}+3&-r\\ 
+0&0&-1&-1&-r&{b}^{-2}+2
+\end {array} \right] 
+\]
+
+The covariance for $c_1$, ..., $c_4$ in (B) is
+\[ \Sigma =  \frac{1}{b^2a^2+b^2-r^2}
+\left[ \begin {array}{cccc} 
+{b}^{2}{a}^{2}+2\,{b}^{2}-{r}^{2}&{b}^{2}&r&r\\ {b}^{2}&{b}^{2}{a}^{2}+2\,{b}^{2}-{r}^{2}&r&r\\ r&r&{b}^{2}{a}^{2}+{b}^{2}-{r}^{2}+{a}^{2}+1&{a}^{2}+1\\ r&r&{a}^{2}+1&{b}^{2}{a}^{2}+{b}^{2}-{r}^{2}+{a}^{2}+1\end {array} \right]
+\]
+
+For the correlations,
+C($c_1$, $c_2$) =
+$\frac{{b}^{2}}{{b}^{2}({a}^{2}+2)-{r}^{2}}$,
+C($c_1$,$c_3$) = 
+C($c_1$,$c_4$) = 
+C($c_2$,$c_3$) = 
+C($c_2$,$c_4$) = 
+$\frac{r}{\sqrt{[{b}^{2}({a}^{2}+2)-{r}^{2}]
+[{b}^{2}({a}^{2}+1)-{r}^{2}+{a}^{2}+1]}}$
+and 
+C($c_3$,$c_4$)=
+$\frac {{a}^{2}+1}{{b}^{2}({a}^{2}+1)-{r}^{2}+{a}^{2}+1}$.
+
+If $r=0$ we have
+\[ \Sigma = 
+\left[ \begin {array}{cccc} 
+\frac{{a}^{2}+2}{{a}^{2}+1} & ( {a}^{2}+1 )^{-1} & 0 & 0\\
+( {a}^{2}+1 )^{-1}& \frac{{a}^{2}+2}{{a}^{2}+1} & 0 & 0\\ 
+ 0 & 0 & \frac{{b}^{2}+1}{{b}^{2}}& {b}^{-2} \\ 
+ 0 & 0 & {b}^{-2} & \frac{{b}^{2}+1}{{b}^{2}}
+ \end {array} \right] 
+\]
+
+## Links between children 
+
+Allow children to have links
+
+\includegraphics[angle=90,width=0.5\textwidth]{p1c4.jpeg}
+
+Consider a joint distribution for linked children as
+\[
+p(\mathbf{c}) \propto \exp \left\{
+-\frac{1}{2}(\mathbf{c}-\mathbf{p}_\mathbf{c})^T\mathbf{K}
+(\mathbf{c}-\mathbf{p}_\mathbf{c})
+\right\}. 
+\]
+
+The joint distribution can be written as
+\[ p(\mathbf{c},\mathbf{p}) \propto \exp \left\{ -\frac{1}{2} \left(
+\left[ \begin{array}{c} c_1$-$p_1 \\ c_2$-$p_1 \end{array} \right]^T
+\left[ \begin{array}{cc}
+1 & $-$r \\ $-$r & 1
+\end{array} \right] 
+\left[ \begin{array}{c} c_1$-$p_1 \\ c_2$-$p_1 \end{array} \right] + 
+\left[ \begin{array}{c} c_3$-$p_2 \\ c_4$-$p_2 \end{array} \right]^T
+\left[ \begin{array}{cc}
+1 & $-$s \\ $-$s & 1
+\end{array} \right]
+\left[ \begin{array}{c} c_3$-$p_2 \\ c_4$-$p_2 \end{array} \right]
++\frac{p_1^2}{q^2}
+\right) \right\} .
+\]
+
+This gives the joint precision as 
+\[
+\left[ \begin {array}{ccccc} 
+1&-r&0&0&1-r\\ 
+-r&1&0&0&1-r\\ 
+0&0&1&-s&1-s\\ 
+0&0&-s&1&1-s\\ 
+1-r&1-r&1-s&1-s&{q}^{-2}+2(2-r-s)
+\end {array} \right] 
+\]
+and the covariance for the children as
+\[
+\left[ \begin {array}{cccc} 
+{\frac {-1-{q}^{2}+{q}^{2}{r}^{2}}{{r}^{2}-1}}&
+{\frac {-r-{q}^{2}+{q}^{2}{r}^{2}}{{r}^{2}-1}}&
+{q}^{2}&{q}^{2}
+\\ {\frac {-r-{q}^{2}+{q}^{2}{r}^{2}}{{r}^{2}-1}}&{\frac {-1-{q}^{2}+{q}^{2}{r}^{2}}{{r}^{2}-1}}&{q}^{2}&{q}^{2}
+\\ {q}^{2}&{q}^{2}&{\frac {-1-{q}^{2}+{q}^{2}{s}^{2}}{{s}^{2}-1}}&{\frac {-s+{q}^{2}{s}^{2}-{q}^{2}}{{s}^{2}-1}}
+\\ {q}^{2}&{q}^{2}&{\frac {-s+{q}^{2}{s}^{2}-{q}^{2}}{{s}^{2}-1}}&{\frac {-1-{q}^{2}+{q}^{2}{s}^{2}}{{s}^{2}-1}}
+\end {array} \right]
+\]
+
+The correlations are 
+C($c_1$, $c_2$) = $\frac {-r-{q}^{2}+{q}^{2}{r}^{2}}{-1-{q}^{2}+{q}^{2}{r}^{2}}$, 
+C($c_1$,$c_3$) = 
+C($c_1$,$c_4$) = 
+C($c_2$,$c_3$) = 
+C($c_2$,$c_4$) = 
+$\frac{{q}^{2}}{\sqrt {{\frac {-1-{q}^{2}+{q}^{2}{r}^{2}}{{r}^{2}-1}}}\sqrt {{\frac {-1-{q}^{2}+{q}^{2}{s}^{2}}{{s}^{2}-1}}}}$
+and 
+C($c_3$,$c_4$) = 
+$\frac {-s-{q}^{2}+{q}^{2}{s}^{2}}{-1-{q}^{2}+{q}^{2}{s}^{2}}$.
+
+Correlation instead 
+
+\includegraphics[width=0.5\textwidth]{prpc4}
+
+For the above graph, we consider the joint distribution for the 
+parents as 
+\[ \left[ \begin{array}{cc} 
+1 & -a \\ -a & 1 
+\end{array} \right]
+\] 
+and the ones for the children as before. 
+
+This gives the joint precision as 
+
