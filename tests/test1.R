@@ -24,7 +24,7 @@ mcov <- ss %*% mcorr %*% ss
 round(100 * mcorr)
 round(mcov, 1)
 
-n <- 3000
+n <- 300
 m <- nrow(mcov)
 
 ll <- chol(mcov)

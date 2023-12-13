@@ -49,8 +49,7 @@ __BEGIN_DECLS
 #include "cgeneric.h"
 
 #define Calloc(n_, type_)  (type_ *)calloc((n_), sizeof(type_))
-#define SQR(x) ((x)*(x))
-#define pow2(x) SQR(x)
+#define pow2(x) ((x)*(x))
 #define pow3(x) (pow2(x)*(x))
 #define pow4(x) (pow2(x)*pow2(x))
 #ifdef __SUPPORT_SNAN__
@@ -65,6 +64,11 @@ typedef int fortran_charlen_t;
 #endif
 #define F_ONE ((fortran_charlen_t)1)
 
+void dgemm_(char *transa, char *transb,
+            int *m, int *n, int *k, double *alpha,
+            double *a, int *lda, double *b, int *ldb,
+            double *beta, double *c, int *ldc, fortran_charlen_t);
+
 void dgesv_(int *N, int *NRHS, double *A, int *LDA, int *IPIV,
             double *B, int *LDB, int *INLFO, fortran_charlen_t);
 
@@ -76,7 +80,8 @@ void dposv_(char *uplo, int *N, int *NRHS, double *A, int *LDA,
 
 inla_cgeneric_func_tp inla_cgeneric_corgraphs0;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs_sfixed;
-inla_cgeneric_func_tp inla_cgeneric_corgraphs;
+inla_cgeneric_func_tp inla_cgeneric_corgraphs_sch;
+inla_cgeneric_func_tp inla_cgeneric_corgraphs_cholQ;
 
 __END_DECLS
 #endif

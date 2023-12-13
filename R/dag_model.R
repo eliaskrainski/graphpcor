@@ -113,6 +113,7 @@ dag_model <-
            sigma.prior.probability,
            lambda,
            iprior = 3,
+           sfixed = TRUE,
            debug = FALSE,
            useINLAprecomp = !TRUE,
            libpath = NULL) {
@@ -148,7 +149,7 @@ dag_model <-
     if(debug)
       cat("np = ", np, " and nv: ", nv, "\n")
     iiv <- rep(1:np, nv)
-    jjv <- unlist(d.elc$iv)
+    jjv <- unlist(lapply(d.elc$iv, sort))
     itop <- d.elc$itop
     if(debug) {
       cat(c(iiv=iiv), "\n")
@@ -171,27 +172,72 @@ dag_model <-
     stopifnot(lambda>0)
     stopifnot(iprior %in% (1L:3L))
 
-    the_model <- do.call(
-      "inla.cgeneric.define",
-      list(
-        model = "inla_cgeneric_corgraphs_sfixed",
-        shlib = libpath,
-        n = as.integer(nc),
-        debug = as.integer(debug),
-        np = as.integer(np),
-        nv = as.integer(nv),
-        ipar = as.integer(d.elc$iparent-1L),
-        iiv = as.integer(iiv-1L),
-        jjv = as.integer(jjv-1L),
-        itop = as.integer(itop-1L),
-        ii = as.integer(ii-1L),
-        jj = as.integer(jj-1L),
-        iprior = as.integer(iprior),
-        lambda = as.double(lambda),
-        slambdas = as.double(slambdas),
-        schildren = as.double(sch)
+    if(sfixed) {
+
+      the_model <- do.call(
+        "inla.cgeneric.define",
+        list(
+          model = "inla_cgeneric_corgraphs_sfixed",
+          shlib = libpath,
+          n = as.integer(nc),
+          debug = as.integer(debug),
+          np = as.integer(np),
+          nv = as.integer(nv),
+          ipar = as.integer(d.elc$iparent-1L),
+          iiv = as.integer(iiv-1L),
+          jjv = as.integer(jjv-1L),
+          itop = as.integer(itop-1L),
+          ii = as.integer(ii-1L),
+          jj = as.integer(jj-1L),
+          iprior = as.integer(iprior),
+          lambda = as.double(lambda),
+          slambdas = as.double(slambdas),
+          schildren = as.double(sch)
+        )
       )
-    )
+
+    } else {
+
+      if(FALSE) {
+
+        the_model <- do.call(
+          "inla.cgeneric.define",
+          list(
+            model = "inla_cgeneric_corgraphs_sch",
+            shlib = libpath,
+            n = as.integer(nc),
+            debug = as.integer(debug),
+            np = as.integer(np),
+            nv = as.integer(nv),
+            ipar = as.integer(d.elc$iparent-1L),
+            iiv = as.integer(iiv-1L),
+            jjv = as.integer(jjv-1L),
+            itop = as.integer(itop-1L),
+            ii = as.integer(ii-1L),
+            jj = as.integer(jj-1L),
+            iprior = as.integer(iprior),
+            lambda = as.double(lambda),
+            slambdas = as.double(slambdas)
+          )
+        )
+
+      } else {
+
+        the_model <- do.call(
+          "inla.cgeneric.define",
+          list(
+            model = "inla_cgeneric_corgraphs_cholQ",
+            shlib = libpath,
+            n = as.integer(nc),
+            debug = as.integer(debug),
+            np = as.integer(np),
+            i
+          )
+        )
+
+      }
+
+    }
 
     return(the_model)
   }

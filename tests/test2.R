@@ -30,7 +30,7 @@ mcov <- dd %*% mcorr %*%dd
 
 round(mcov, 1)
 
-n <- 500
+n <- 300
 
 ll <- chol(mcov)
 xx <- matrix(rnorm(n * nc), n) %*% ll
@@ -52,7 +52,8 @@ gmodel <- dag_model(
     lambda = 5,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc),
-    iprior = 3
+    iprior = 3,
+    debug = 0 ### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details
 )
 
 ff <- y ~ 0 + factor(i) +
@@ -62,11 +63,8 @@ fit <- inla(
     formula = ff,
     family = "poisson",
     data = dataf,
-    control.mode = list(
-        theta = rep(c(-2, 1), c(nc, np)), 
-        restart = TRUE),
     control.inla = list(int.strategy = "eb"),
-    verbose = !TRUE) ### if true prints looooooottttssss of details
+    verbose = !TRUE) 
 
 fit$cpu
 
@@ -87,7 +85,6 @@ mcov.fit <- ss.fit %*% cc.fit %*% ss.fit
 
 round(cov(xx), 2)
 round(mcov.fit, 2)
-
 
 detach("package:corGraphs", unload = TRUE)
 library(corGraphs)

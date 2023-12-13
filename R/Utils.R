@@ -341,3 +341,18 @@ dag_covariance <- function(dag, theta, s.children = NULL) {
   stopifnot(length(s.children) == nc)
   return(t(vv * s.children) * s.children)
 }
+#' Covariance with model 2
+dag_covariance2 <- function(dag, theta) {
+  d.el <- dag_elements(dag)
+  ij <- dag_e2covariance(d.el)
+  np <- length(ij$iv)
+  nc <- length(ij$iparent)
+  vp <- sapply(ij$iv, function(i)
+    sum(exp(2.0 * theta[nc+i])))
+  thc <- theta[1:nc]
+  vv <- matrix(
+    theta[col(diag(nc))] * vp[ij$itop] *
+      theta[row(diag(nc))], nc
+  ) + diag(1/(theta[1:nc]^2))
+  return(vv)
+}

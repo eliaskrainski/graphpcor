@@ -38,6 +38,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
   N = data->ints[0]->ints[0];
   assert(N > 0);
+  int N2 = N*N;
   M = (int)((double)N * ((double)(N+1)) / 2.0);
 
   assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
@@ -50,7 +51,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   double v2[np], vparents[np];
 
   if(debug>99) {
-    printf("(N = %d, M = %d, np = %d)\n", N, M, np) ;
+    printf("(np = %d, N = %d, M = %d), N2 = %d\n", np, N, M, N2) ;
   }
 
   assert(!strcasecmp(data->ints[3]->name, "nv"));     // this will always be the case
@@ -135,9 +136,13 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
     ret = Calloc(offset + M, double);
     //		memset(ret + offset, 0, M * sizeof(double));
     ret[0] = -1;				       /* REQUIRED */
-        ret[1] = M;				       /* REQUIRED */
-        double mcov[M];
-        double qq[M];
+    ret[1] = M;				       /* REQUIRED */
+
+    char uplo = 'U';
+    int info=0;
+    //    double *qq = (double *) calloc(N*N, sizeof(double));
+    double vcc[N];
+    double mcov[N2], qq[N2];
 
         if(debug>999){
           printf(" nv:\n");
@@ -166,10 +171,6 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
           }
         }
 
-        char uplo = 'U';
-        int info=0;
-        //    double *qq = (double *) calloc(N*N, sizeof(double));
-        double vcc[N];
 
         for(i=0; i<np; i++) {
           vparents[i] = 0.0;
@@ -281,12 +282,13 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
           }
         }
 
+        // copy to ret
         k=0;
-        int k2=0;
+        int k2=offset;
         for(i=0; i<N; i++) {
           for(j=0; j<N; j++) {
             if(j>=i) {
-              ret[offset+k2] = qq[k];
+              ret[k2] = qq[k];
               k2++;
             }
             if(debug>999){
@@ -298,7 +300,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
             printf("\n");
           }
         }
-        assert(k2==M);
+        assert(k2==(offset+M));
 
   }
     break;
@@ -340,7 +342,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 
       // this is Gaussian(0,1) for each v_i
       for(i = 0; i < np; i++) {
-        ret[0] += -0.5 * SQR(theta[N+i]);
+        ret[0] += -0.5 * pow2(theta[N+i]);
       }
 
     }
@@ -359,11 +361,11 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
       int info=0, l;
       double hldet0, hldet1, trc, kld;
       double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
-      double C0[N*N], C1[N*N], cc0[N*N], cc1[N*N];
+      double C0[N2], C1[N2], cc0[N2], cc1[N2];
 
       for(i=0; i<np; i++) {
-        v2a[i] = v2[i];
-        v2b[i] = v2[i];
+        v2a[i] = v2[i]; // copy
+        v2b[i] = v2[i]; // copy
       }
 
       for(l=np; l>0; l--) {
@@ -376,6 +378,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
         if(l<np) {
           v2b[l]= 0.0;
         }
+
         if(debug>999){
           printf("v2a[i]:\n");
           for(i=0; i<np; i++) {
@@ -399,12 +402,12 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 
         k=0;
         for(i=0; i<N; i++) {
-          s0[i] = sqrt(1.0 + vp0[ipar->ints[i]]);
-          s1[i] = sqrt(1.0 + vp1[ipar->ints[i]]);
           for(j=0; j<N; j++) {
-            if(i==j) {
-              C0[k] = 1.0 + vp0[itop->ints[k]];
-              C1[k] = 1.0 + vp1[itop->ints[k]];
+            if(j==i) {
+              C0[k] = 1.0 + vp0[ipar->ints[i]];
+              C1[k] = 1.0 + vp1[ipar->ints[i]];
+              s0[i] = sqrt(C0[k]);
+              s1[i] = sqrt(C1[k]);
             } else {
               C0[k] = sch->doubles[i] * sch->doubles[j] * vp0[itop->ints[k]];
               C1[k] = sch->doubles[i] * sch->doubles[j] * vp1[itop->ints[k]];
@@ -412,6 +415,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
             k++;
           }
         }
+
         if(debug>999){
           printf("vp0[i]:\n");
           for(i=0; i<np; i++) {
@@ -421,8 +425,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
           for(i=0; i<np; i++) {
             printf("%2.1f ", vp1[i]);
           }
-          printf("\n");
-          printf("s0[i]:\n");
+          printf("\ns0[i]:\n");
           for(i=0; i<N; i++) {
             printf("%2.1f ", s0[i]);
           }
@@ -430,8 +433,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
           for(i=0; i<N; i++) {
             printf("%2.1f ", s1[i]);
           }
-          printf("\n");
-          printf("C0[i,j]:\n");
+          printf("\nC0[i,j]:\n");
           k=0;
           for(i=0; i<N; i++) {
             for(j=0; j<N; j++) {
@@ -528,22 +530,22 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
           k += N+1;
         }
 
-        dposv_(&uplo, &N, &N, &C0[0], &N, &C1[0], &N, &info, F_ONE);
+        dposv_(&uplo, &N, &N, &C1[0], &N, &C0[0], &N, &info, F_ONE);
         if(debug>99) {
           printf("INFO for dposv with l = %d is %d\n", l, info);
         }
 
-        trc = 0.0;
+        // add trace of C1/C0
         k=0;
         for(i=0; i<N; i++) {
-          trc += C1[k];
+          trc += C0[k];
           k += N+1;
         }
 
         kld = 0.5 * (trc - np) - hldet1 + hldet0;
 
         if(debug>99) {
-          printf("ld0: %2.4f, ld1: %2.4f, trc: %2.4f, kld:= %2.4f\n",
+          printf("ld0: %2.4f, ld1: %2.4f, tr(C1/C0): %2.4f, kld:= %2.4f\n",
                  hldet0, hldet1, trc, kld);
         }
 

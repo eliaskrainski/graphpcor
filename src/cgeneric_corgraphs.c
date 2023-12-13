@@ -328,7 +328,7 @@ if(debug>1){
 
 		// this is temporary
 		for(i = 0; i < np; i++) {
-		  ret[0] += -0.5 * SQR(theta[N+i]);
+		  ret[0] += -0.5 * pow2(theta[N+i]);
 		}
 	}
 	  break;

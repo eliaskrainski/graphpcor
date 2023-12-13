@@ -10,6 +10,7 @@ dag_model(
   sigma.prior.probability,
   lambda,
   iprior = 3,
+  sfixed = TRUE,
   debug = FALSE,
   useINLAprecomp = !TRUE,
   libpath = NULL
