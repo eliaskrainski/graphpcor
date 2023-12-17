@@ -198,8 +198,6 @@ dag_model <-
 
     } else {
 
-      if(FALSE) {
-
         the_model <- do.call(
           "inla.cgeneric.define",
           list(
@@ -220,24 +218,49 @@ dag_model <-
             slambdas = as.double(slambdas)
           )
         )
-
-      } else {
-
-        the_model <- do.call(
-          "inla.cgeneric.define",
-          list(
-            model = "inla_cgeneric_corgraphs_cholQ",
-            shlib = libpath,
-            n = as.integer(nc),
-            debug = as.integer(debug),
-            np = as.integer(np),
-            i
-          )
-        )
-
-      }
-
     }
 
     return(the_model)
   }
+
+#' @return objects to be used in the f() formula term in INLA.
+#' @export
+graph_model <-
+  function(graph,
+           sigma.prior.reference,
+           sigma.prior.probability,
+           lambda,
+           debug = FALSE,
+           useINLAprecomp = !TRUE,
+           libpath = NULL) {
+
+    return(graph_chol_index(graph))
+
+    if (is.null(libpath)) {
+      if (useINLAprecomp) {
+        libpath <- INLA::inla.external.lib("corGraphs")
+      } else {
+        libpath <- system.file("libs", package = "corGraphs")
+        if (Sys.info()["sysname"] == "Windows") {
+          libpath <- file.path(libpath, "corGraphs.dll")
+        } else {
+          libpath <- file.path(libpath, "corGraphs.so")
+        }
+      }
+    }
+
+    the_model <- do.call(
+      "inla.cgeneric.define",
+      list(
+        model = "inla_cgeneric_corgraphs_cholQ",
+        shlib = libpath,
+        n = as.integer(nc),
+        debug = as.integer(debug),
+        np = as.integer(np),
+        i
+      )
+    )
+
+    return(the_model)
+
+}
