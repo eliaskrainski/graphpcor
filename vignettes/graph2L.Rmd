@@ -1,0 +1,169 @@
+---
+title: "General framework for graph derived correlation matrices"
+author: "H. Rue et al"
+date: "Dec, 2023"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(INLA)
+options(digits = 2)
+hrexample <- TRUE
+```
+
+## The fill-in elements
+
+Let $\mathbf{Q}$ be a $n \times n$ sparse symmetric positive definite matrix 
+which can be written as $\mathbf{Q} = \mathbf{L}\mathbf{L}^T$, 
+where $\mathbf{L}$ is a lower triangular matrix 
+called the Cholesky triangle/factor of $\mathbf{Q}$.
+The elements $\mathbf{Q}_{ij}$ from $\mathbf{L}$ are given as 
+\[
+\mathbf{Q}_{ij} = \sum_{k=1}^j \mathbf{L}_{ik}\mathbf{L}_{jk},
+\textrm{ for } i\geq j,
+\]
+which includes elements of $\mathbf{L}$ at 
+lines $i$ and $j$ from column $1$ up to column $j$.
+
+Let $\mathbf{R}$ be the lower triangle of $\mathbf{Q}$, including its diagonal.
+For certain models the number of non-zero elements in $\mathbf{L}$
+is equal the number of non-zero elements in $\mathbf{R}$.
+However, in general $\mathbf{L}$ contains more non-zero elements than $\mathbf{R}$.
+The non-zero elements of $\mathbf{L}$ at the corresponding elements in $\mathbf{R}$
+which are equal to zero are called the fill-in elements.
+Let $n_R$ be the number of non-zero elements in $\mathbf{R}$ and $n_L$ be the 
+number of non-zero elements in $\mathbf{L}$.
+
+Our purpose is to parametrize $\mathbf{L}$ considering its diagonal 
+elements $\mathbf{L}_{ii} = \exp(\theta_i) > 0$ for $1<i<n$ and, 
+the $n_R-n$ elements in $\mathbf{L}$ at the same positions of the $R_n-n$
+non-zero elements of $\mathbf{R}_{ij}$, for $i>j$, as
+$\mathbf{L}_{ij} = \theta_k \in \mathbb{R}$, $k\in\{n+1,\ldots,n_R\}$.
+
+For the models with $n_L-n_R>0$ fill-in elements in $\mathbf{L}$, we use
+\[
+\mathbf{L}_{ij} = -\frac{\sum_{k=1}^{j-1} \mathbf{L}_{ik}\mathbf{L}_{jk}}
+{\mathbf{L}_{jj}}
+\]
+and start from the the top-left fill-in element,
+then go towards right then down line by line from left to right.
+
+# Example
+
+Let a $n \times n$ SPD matrix $\mathbf{Q}$.
+
+```{r graph, include = hrexample}
+## Example (from "idea.pdf")
+Q <- Matrix(cbind(
+  c(3,0,-1,0,0,0,0,-1,0,-1),
+  c(0,2,-1,0,0,0,-1,0,0,0),
+  c(-1,-1,2,0,0,0,0,0,0,0),
+  c(0,0,0,2,-1,0,0,-1,0,0),
+  c(0,0,0,-1,3,-1,0,-1,0,0),
+  c(0,0,0,0,-1,2,-1,0,0,0),
+  c(0,-1,0,0,0,-1,2,0,0,0),
+  c(-1,0,0,-1,-1,0,0,5,-1,-1),
+  c(0,0,0,0,0,0,0,-1,1,0),
+  c(-1,0,0,0,0,0,0,-1,0,2)
+) + diag(10))
+n <- nrow(Q)
+```
+
+```{r anotherR, eval=!hrexample, include = !hrexample}
+rQ <- function(n) {
+  Q <- cov(matrix(rnorm(10*n*n), ncol = n)) 
+  p <- log(n)/n
+  Q[lower.tri(Q)] <- Q[lower.tri(Q)] * rbinom(n*(n-1)/2, 1, p)
+  Q[upper.tri(Q)] <- t(Q)[upper.tri(Q)]
+ return(Matrix(Q))
+}
+n <- 10
+Q <- rQ(n)
+```
+
+Check it 
+```{r Qcheck}  
+isSymmetric(Q)
+q <- Q * lower.tri(Q, diag = TRUE)
+q
+nnzq <- sum(q!=0) ## number of non-zeros in the lower triangle of Q
+nnzq
+g <- inla.read.graph(Q)
+plot(g)
+```
+
+The Cholesky decomposition: $\mathbf{Q} = \mathbf{L}\mathbf{L}^T$ 
+```{r l1}
+l <- t(chol(Q))
+l
+nnzl <- sum(l!=0) ### number of nonzeros in L
+c(nnzq, nnzl)
+```
+
+Ordering
+```{r og}
+og <- inla.qreordering(Q)
+og$ireordering
+Q.o <- Q[og$i, og$i]
+q.o <- Q.o*lower.tri(Q.o, diag = TRUE)
+l.o <- t(chol(Q.o))
+l.o
+nnzl.o <- sum(l.o!=0) ### non-zeros of the Cholesky factor after reordering Q
+c(nnzq, nnzl, nnzl.o)
+lfi <- ((l.o!=0) & (q.o==0))*1L
+lfi 
+nlfi <- sum(lfi)
+```
+
+Visualize the ordered graph (right), the fill-in edges (center) and the 
+graph from the $\mathbf{L}+\mathbf{L}^T$ pattern (right):
+```{r l2plot, fig.width=12, fig.height=6, include = nlfi>0}
+par(mfrow = c(1, 3))
+plot(inla.read.graph(Q.o))
+plot(inla.read.graph(lfi + t(lfi)))
+plot(inla.read.graph(l.o+t(l.o)))
+```
+
+The $i$ and $j$ index set of the fill-in elements
+
+```{r ij, include=nlfi>0}
+ii <- row(lfi)[as.matrix(lfi)!=0]
+ii
+jj <- col(lfi)[as.matrix(lfi)!=0]
+jj
+```
+
+
+Start by the matrix with the fill-in positions as NA
+
+```{r lres, include = nlfi>0}
+### starting L (from the Q_ij pattern)
+l.res <- as.matrix(l.o)
+l.res[which(lfi==1)] <- NA
+Matrix(l.res) ## this is what we have to start with
+```
+
+Fill this matrix computing the fill-in elements, 
+from top-left, at each line from left to right.
+
+```{r lfill, include = nlfi>0}
+### NOTE: ii and jj index vectors are ordered (topleft to bottomright)
+for(v in 1:length(ii)) {
+  i <- ii[v]
+  j <- jj[v]
+  if(j==1) {
+    cat("j = 1\n")
+    l.res[i,1] <- 0.0
+  } else {
+    stopifnot((i>1) & (j>1)) ## L_{11} not allowed
+    stopifnot(j>1) ## j=1 is not allowed
+    k <- 1:(j-1)
+    l.res[i, j] <- -sum(l.res[i, k] * l.res[j, k]) / l.res[j, j]
+  }
+}
+Matrix(l.res)
+all.equal(Matrix(l.res), l.o)
+```
