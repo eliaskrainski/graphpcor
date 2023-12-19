@@ -20,11 +20,11 @@ graph_elements <- function(graph) {
   jj <- as.integer(substring(attr(test, "gsch")[2, ], 2))
   return(list(ii = ii, jj = jj))
 }
-#' Precision and Cholesky fill-in indexes
-graph_chol_index <- function(graph, returnQ = FALSE) {
-  ij <- graph_elements(graph)
+#' Precision structure (as discrete Laplacian)
+#' @param ij output of graph_elements
+graph_Laplacian <- function(ij) {
   n <- max(ij$ii, ij$jj)
-  q <- diag(n)
+  q <- matrix(0, n, n)
   for(k in 1:length(ij$ii)) {
     i <- ij$ii[k]
     j <- ij$jj[k]
@@ -33,13 +33,19 @@ graph_chol_index <- function(graph, returnQ = FALSE) {
     q[i, j] <- q[i, j] -1
     q[j, i] <- q[j, i] -1
   }
-  if(returnQ)
-    return(q)
-  ij$iiq <- which(q!=0)
+  return(q)
+}
+#' Precision and Cholesky fill-in indexes
+graph_chol_index <- function(graph) {
+  ij <- graph_elements(graph)
+  n <- max(ij$ii, ij$jj)
+  q <- graph_Laplacian(ij) + diag(n)
+  ret <- list(n = n, i = ij$ii, j = ij$jj)
+  qnz <- q!=0
+  ret$qii <- which(qnz)
+  ret$qiiu <- which(qnz & upper.tri(q, diag = TRUE))
   l <- chol(q)
-  ll <- abs((l + t(l))*1000)
-  ij$iil <- which(ll!=0)
-  ij$lii <- row(ll)[ij$iil]
-  ij$ljj <- col(ll)[ij$iil]
-  return(ij)
+  ll <- abs(l*1000)
+  ret$lii <- which(ll!=0)
+  return(ret)
 }
