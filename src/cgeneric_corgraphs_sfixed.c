@@ -1,5 +1,5 @@
 
-/* cgeneric_corgraphs.c
+/* cgeneric_corgraphs_sfixed.c
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -25,6 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
+#include "corgraphs_utils.h"
 #include "cgeneric_defs.h"
 
 double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
@@ -48,7 +49,8 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   np = data->ints[2]->ints[0];
   assert(np > 0);
   nparam = N + np;
-  double v2[np], vparents[np];
+  double v2[np], v2h[np], vparents[np];
+  double hsmall = 0.005;
 
   if(debug>99) {
     printf("(np = %d, N = %d, M = %d), N2 = %d\n", np, N, M, N2) ;
@@ -99,6 +101,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   if(theta) {
     for (i=0; i<np; i++) {
       v2[i] = exp(2.0 * theta[N+i]);
+      v2h[i] = exp(2.0 * (theta[N+i] + hsmall));
       /*	    if(debug>1) {
        printf("%2.1f %2.1f\n", theta[N+i], v2[i]);
       }*/
@@ -357,17 +360,27 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 
     if(iprior == 3) {
 
-      char uplo = 'U';
-      int info=0, l;
-      double hldet0, hldet1, trc, kld;
-      double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
-      double C0[N2], C1[N2], cc0[N2], cc1[N2];
+//      char uplo = 'U';
+  //    int info=0, l;
+    //  double hldet0, hldet1, trc, kld;
+      //double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
+      //double C0[N2], C1[N2], cc0[N2], cc1[N2];
 
-      for(i=0; i<np; i++) {
-        v2a[i] = v2[i]; // copy
-        v2b[i] = v2[i]; // copy
-      }
+      double kld, kldh, kldd;
 
+      kld = variance_parent_children_kld(
+        debug, np, N, iiv->len,
+        &iiv->ints[0], &jjv->ints[0], &ipar->ints[0],
+        &itop->ints[0], &sch->doubles[0], &v2[0]);
+
+      kldh = variance_parent_children_kld(
+        debug, np, N, iiv->len,
+        &iiv->ints[0], &jjv->ints[0], &ipar->ints[0],
+        &itop->ints[0], &sch->doubles[0], &v2h[0]);
+
+      kldd = fabs(kldh - kld) / hsmall;
+
+/*
       for(l=np; l>0; l--) {
 
         if(debug>999) {
@@ -549,11 +562,12 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
                  hldet0, hldet1, trc, kld);
         }
 
-        ret[0] += log(lambda) - lambda * sqrt(2 * kld);
       }
+ */
+
+       ret[0] += log(lambda) - lambda * sqrt(2 * kld) + log(kldd);
 
     }
-
 
   }
     break;
