@@ -36,7 +36,7 @@ graph_Laplacian <- function(ij) {
   return(q)
 }
 #' Precision and Cholesky fill-in indexes
-graph_chol_index <- function(graph) {
+graph_qchol_index <- function(graph) {
   ij <- graph_elements(graph)
   n <- max(ij$ii, ij$jj)
   q <- graph_Laplacian(ij) + diag(n)
