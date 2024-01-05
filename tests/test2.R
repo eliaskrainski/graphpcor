@@ -53,7 +53,8 @@ gmodel <- dag_model(
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc),
     iprior = 3,
-    debug = 0 ### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details
+    useINLAprecomp = FALSE,
+    debug = 0 ### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details    
 )
 
 ff <- y ~ 0 + factor(i) +

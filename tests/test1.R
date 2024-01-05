@@ -58,7 +58,8 @@ gmodel <- dag_model(
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.05, nc),
     lambda = 5,
-    iprior = 3
+    iprior = 3,
+    useINLAprecomp = FALSE
 )
 
 ff <- y ~ 0 +
