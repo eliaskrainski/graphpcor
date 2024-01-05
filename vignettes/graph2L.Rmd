@@ -20,15 +20,16 @@ Let $\mathbf{Q}$ be a $n \times n$ sparse symmetric positive definite matrix
 which can be written as $\mathbf{Q} = \mathbf{L}\mathbf{L}^T$, 
 where $\mathbf{L}$ is a lower triangular matrix 
 called the Cholesky triangle/factor of $\mathbf{Q}$.
-The elements $\mathbf{Q}_{ij}$ from $\mathbf{L}$ are given as 
+The elements $\mathbf{Q}_{ij}$ are given from $\mathbf{L}$ as
 \[
 \mathbf{Q}_{ij} = \sum_{k=1}^j \mathbf{L}_{ik}\mathbf{L}_{jk},
 \textrm{ for } i\geq j,
 \]
-which includes elements of $\mathbf{L}$ at 
+which depends on previously computed elements of $\mathbf{L}$ at 
 lines $i$ and $j$ from column $1$ up to column $j$.
 
-Let $\mathbf{R}$ be the lower triangle of $\mathbf{Q}$, including its diagonal.
+Let $\mathbf{R}$ be the lower triangle of $\mathbf{Q}$
+including its diagonal.
 For certain models the number of non-zero elements in $\mathbf{L}$
 is equal the number of non-zero elements in $\mathbf{R}$.
 However, in general $\mathbf{L}$ contains more non-zero elements than $\mathbf{R}$.
@@ -37,19 +38,18 @@ which are equal to zero are called the fill-in elements.
 Let $n_R$ be the number of non-zero elements in $\mathbf{R}$ and $n_L$ be the 
 number of non-zero elements in $\mathbf{L}$.
 
-Our purpose is to parametrize $\mathbf{L}$ considering its diagonal 
-elements $\mathbf{L}_{ii} = \exp(\theta_i) > 0$ for $1<i<n$ and, 
-the $n_R-n$ elements in $\mathbf{L}$ at the same positions of the $R_n-n$
-non-zero elements of $\mathbf{R}_{ij}$, for $i>j$, as
+We parametrize $\mathbf{L}$ having its diagonal elements 
+$\mathbf{L}_{ii} = \exp(\theta_i) > 0$ for $1<i<n$ and, 
+the $n_R-n$ off-diagonal elements in $\mathbf{L}$ whose corresponding 
+non-zero elements of $\mathbf{R}$, for $i>j$, as
 $\mathbf{L}_{ij} = \theta_k \in \mathbb{R}$, $k\in\{n+1,\ldots,n_R\}$.
-
-For the models with $n_L-n_R>0$ fill-in elements in $\mathbf{L}$, we use
+The remaining $n_L-n_R>0$ fill-in elements in $\mathbf{L}$ are computed with
 \[
 \mathbf{L}_{ij} = -\frac{\sum_{k=1}^{j-1} \mathbf{L}_{ik}\mathbf{L}_{jk}}
 {\mathbf{L}_{jj}}
 \]
-and start from the the top-left fill-in element,
-then go towards right then down line by line from left to right.
+starting from the top-left fill-in element,
+line by line from left to right and from top to bottom.
 
 # Example
 

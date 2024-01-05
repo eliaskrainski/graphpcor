@@ -234,7 +234,7 @@ graph_model <-
            useINLAprecomp = !TRUE,
            libpath = NULL) {
 
-    return(graph_chol_index(graph))
+    return(graph_qchol_index(graph))
 
     if (is.null(libpath)) {
       if (useINLAprecomp) {

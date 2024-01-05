@@ -149,6 +149,7 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
       }else{
         LGD <- log(abs(numDeriv::grad(fq,SDNew)))
       }
+      print(c(kld = DIS[[i]], d = LGD))
       # LGD <- log(abs(numDeriv::grad(fq,SDNew)))
       # N=1000
       # GP <- NULL
@@ -158,6 +159,7 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
       # plot(tt, GP, pch=19)
       # dev.off()
       # browser()
+      print(log(lambda) - lambda*DIS[[i]])
       Prd <- log(lambda) - lambda*DIS[[i]] + LGD # prior for distance (log scale)
       PRT[[i]] <- Prd # prior for theta
     }
@@ -172,6 +174,7 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
   }else{
     LGD <- log(abs(numDeriv::grad(fqbase,exp(lat[SP$NP]))))
   }
+  print(c(kld = DIS[[SP$NP]], d = LGD))
   Prd <- log(lambda) - lambda*DIS[[SP$NP]] + LGD
   PRT[[SP$NP]] <- Prd
   return(PRT)
