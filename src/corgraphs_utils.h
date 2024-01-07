@@ -50,4 +50,9 @@ void dpotrf_(char *uplo, int *N, double *A, int *LDA,
 void dposv_(char *uplo, int *N, int *NRHS, double *A, int *LDA,
             double *B, int *LDB, int *INLFO, fortran_charlen_t);
 
-double variance_parent_children_kld(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2) ;
+void cov2cor(int verbose, int n, double *cc) ;
+double cov2kld(int verbose, int n, double *C0, double *C1);
+void covariance_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;
+void correlation_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;
+void theta_parent_children_kldd(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *theta, double *kld, double *kldd) ;
+

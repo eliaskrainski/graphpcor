@@ -49,8 +49,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   np = data->ints[2]->ints[0];
   assert(np > 0);
   nparam = N + np;
-  double v2[np], v2h[np], vparents[np];
-  double hsmall = 0.005;
+  double v2[np], vparents[np];
 
   if(debug>99) {
     printf("(np = %d, N = %d, M = %d), N2 = %d\n", np, N, M, N2) ;
@@ -101,7 +100,6 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   if(theta) {
     for (i=0; i<np; i++) {
       v2[i] = exp(2.0 * theta[N+i]);
-      v2h[i] = exp(2.0 * (theta[N+i] + hsmall));
       /*	    if(debug>1) {
        printf("%2.1f %2.1f\n", theta[N+i], v2[i]);
       }*/
@@ -168,13 +166,13 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
               printf("%d ", itop->ints[k]);
               k++;
             }
-            if(debug>1){
-              printf("\n");
-            }
+            printf("\n");
           }
         }
 
+        correlation_parent_children(debug, np, N, iiv->len, &iiv->ints[0], &jjv->ints[0], &ipar->ints[0], &itop->ints[0], &sch->doubles[0], &v2[0], &mcov[0]);
 
+/*
         for(i=0; i<np; i++) {
           vparents[i] = 0.0;
         }
@@ -214,10 +212,23 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
         k=0;
         for(i=0; i<N; i++) {
           for(j=0; j<N; j++) {
-            mcov[k] /=  sqrt(vcc[i] * vcc[j]);
-            k++;
+            mcov[k++] /=  sqrt(vcc[i] * vcc[j]);
           }
         }
+
+        if(debug>999){
+          printf("mcorrel[i,j]:\n");
+          k=0;
+          for(i=0; i<N; i++) {
+            for(j=0; j<N; j++) {
+              printf("%2.3f ", mcov[k++]);
+            }
+            printf("\n");
+          }
+        }
+
+     */
+
         k=0;
         for(i=0; i<N; i++) {
           for(j=0; j<N; j++) {
@@ -230,41 +241,22 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
           }
         }
 
-        if(debug>999){
-          printf("V[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", mcov[k]);
-              k++;
-            }
-            if(debug>1){
-              printf("\n");
-            }
-          }
-        }
-
         k=0;
         for(i=0; i<N; i++) {
           for(j=0; j<N; j++) {
-            mcov[k] *= exp(theta[i]+theta[j]);
-            k++;
+            mcov[k++] *= exp(theta[i]+theta[j]);
           }
         }
 
         if(debug>999){
-          printf("V[i,j]:\n");
+          printf("VV[i,j]:\n");
           k=0;
           for(i=0; i<N; i++) {
             for(j=0; j<N; j++) {
-              printf("%2.3f ", mcov[k]);
-              k++;
+              printf("%2.3f ", mcov[k++]);
             }
-            if(debug>1){
-              printf("\n");
-            }
+            printf("\n");
           }
-          printf("Q[i,j]:\n");
         }
 
         dposv_(&uplo, &N, &N, &mcov[0], &N, &qq[0], &N, &info, F_ONE);
@@ -272,14 +264,20 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
           printf("INFO for dposv for Q is %d\n", info);
         }
 
-
         if(debug>999) {
           printf("V[i,j]:\n");
           k=0;
           for(i=0; i<N; i++) {
             for(j=0; j<N; j++) {
-              printf("%2.3f ", mcov[k]);
-              k++;
+              printf("%2.3f ", mcov[k++]);
+            }
+            printf("\n");
+          }
+          k=0;
+          printf("Q[i,j]:\n");
+          for(i=0; i<N; i++) {
+            for(j=0; j<N; j++) {
+              printf("%2.1f ", qq[k++]);
             }
             printf("\n");
           }
@@ -291,16 +289,9 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
         for(i=0; i<N; i++) {
           for(j=0; j<N; j++) {
             if(j>=i) {
-              ret[k2] = qq[k];
-              k2++;
-            }
-            if(debug>999){
-              printf("%2.1f ", qq[k]);
+              ret[k2++] = qq[k];
             }
             k++;
-          }
-          if(debug>999){
-            printf("\n");
           }
         }
         assert(k2==(offset+M));
@@ -366,206 +357,22 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
       //double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
       //double C0[N2], C1[N2], cc0[N2], cc1[N2];
 
-      double kld, kldh, kldd;
+      double kld[np], kldd[np];
 
-      kld = variance_parent_children_kld(
+      theta_parent_children_kldd(
         debug, np, N, iiv->len,
         &iiv->ints[0], &jjv->ints[0], &ipar->ints[0],
-        &itop->ints[0], &sch->doubles[0], &v2[0]);
-
-      kldh = variance_parent_children_kld(
-        debug, np, N, iiv->len,
-        &iiv->ints[0], &jjv->ints[0], &ipar->ints[0],
-        &itop->ints[0], &sch->doubles[0], &v2h[0]);
-
-      kldd = fabs(kldh - kld) / hsmall;
-
-/*
-      for(l=np; l>0; l--) {
-
-        if(debug>999) {
-          printf("l is now %d\n", l);
-        }
-
-        v2a[l-1] = 0.0;
-        if(l<np) {
-          v2b[l]= 0.0;
-        }
-
-        if(debug>999){
-          printf("v2a[i]:\n");
-          for(i=0; i<np; i++) {
-            printf("%2.1f ", v2a[i]);
-          }
-          printf("\n");
-          printf("v2b[i]:\n");
-          for(i=0; i<np; i++) {
-            printf("%2.1f ", v2b[i]);
-          }
-          printf("\n");
-        }
-        for(i=0; i<np; i++) {
-          vp0[i] = 0.0;
-          vp1[i] = 0.0;
-        }
-        for(i=0; i<iiv->len; i++) {
-          vp0[iiv->ints[i]] += v2a[jjv->ints[i]];
-          vp1[iiv->ints[i]] += v2b[jjv->ints[i]];
-        }
-
-        k=0;
-        for(i=0; i<N; i++) {
-          for(j=0; j<N; j++) {
-            if(j==i) {
-              C0[k] = 1.0 + vp0[ipar->ints[i]];
-              C1[k] = 1.0 + vp1[ipar->ints[i]];
-              s0[i] = sqrt(C0[k]);
-              s1[i] = sqrt(C1[k]);
-            } else {
-              C0[k] = sch->doubles[i] * sch->doubles[j] * vp0[itop->ints[k]];
-              C1[k] = sch->doubles[i] * sch->doubles[j] * vp1[itop->ints[k]];
-            }
-            k++;
-          }
-        }
-
-        if(debug>999){
-          printf("vp0[i]:\n");
-          for(i=0; i<np; i++) {
-            printf("%2.1f ", vp0[i]);
-          }
-          printf("\nvp1[i]:\n");
-          for(i=0; i<np; i++) {
-            printf("%2.1f ", vp1[i]);
-          }
-          printf("\ns0[i]:\n");
-          for(i=0; i<N; i++) {
-            printf("%2.1f ", s0[i]);
-          }
-          printf("\ns1[i]:\n");
-          for(i=0; i<N; i++) {
-            printf("%2.1f ", s1[i]);
-          }
-          printf("\nC0[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", C0[k]);
-              k++;
-            }
-            printf("\n");
-          }
-          printf("C1[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", C1[k]);
-              k++;
-            }
-            printf("\n");
-          }
-        }
-        k=0;
-        for(i=0; i<N; i++) {
-          for(j=0; j<N; j++) {
-            C0[k] /= (s0[i] * s0[j]);
-            C1[k] /= (s1[i] * s1[j]);
-            cc0[k] = C0[k]; // copy
-            cc1[k] = C1[k]; // copy
-            k++;
-          }
-        }
-
-        if(debug>999){
-          printf("C0[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", C0[k]);
-              k++;
-            }
-            printf("\n");
-          }
-          printf("C1[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", C1[k]);
-              k++;
-            }
-            printf("\n");
-          }
-        }
-
-        dpotrf_(&uplo, &N, &cc0[0], &N, &info, F_ONE);
-        if(debug>99) {
-          printf("INFO for L0 with l = %d is %d\n", l, info);
-        }
-        dpotrf_(&uplo, &N, &cc1[0], &N, &info, F_ONE);
-        if(debug>99) {
-          printf("INFO for L1 with l = %d is %d\n", l, info);
-        }
-
-        if(debug>999){
-          printf("L0[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", C0[k]);
-              k++;
-            }
-            if(debug>1){
-              printf("\n");
-            }
-          }
-          printf("L1[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", C1[k]);
-              k++;
-            }
-            if(debug>1){
-              printf("\n");
-            }
-          }
-        }
-
-        hldet0 = 0.0;
-        hldet1 = 0.0;
-        k=0;
-        for(i=0; i<N; i++) {
-          hldet0 += log(cc0[k]);
-          hldet1 += log(cc1[k]);
-          if(debug>999){
-            printf("ld0 = %2.5f, ld1 = %2.5f\n", cc0[k], cc1[k]);
-          }
-          k += N+1;
-        }
-
-        dposv_(&uplo, &N, &N, &C1[0], &N, &C0[0], &N, &info, F_ONE);
-        if(debug>99) {
-          printf("INFO for dposv with l = %d is %d\n", l, info);
-        }
-
-        // add trace of C1/C0
-        k=0;
-        for(i=0; i<N; i++) {
-          trc += C0[k];
-          k += N+1;
-        }
-
-        kld = 0.5 * (trc - np) - hldet1 + hldet0;
+        &itop->ints[0], &sch->doubles[0],
+        &theta[N], &kld[0], &kldd[0]);
 
         if(debug>99) {
-          printf("ld0: %2.4f, ld1: %2.4f, tr(C1/C0): %2.4f, kld:= %2.4f\n",
-                 hldet0, hldet1, trc, kld);
+          for(i=0; i<np; i++)
+            printf("k and d : %2.7f and %2.7f \n", kld[i], kldd[i]);
         }
 
-      }
- */
-
-       ret[0] += log(lambda) - lambda * sqrt(2 * kld) + log(kldd);
+       for(i=0; i<np; i++) {
+         ret[0] += log(lambda) - lambda * sqrt(2 * kld[i]) + log(kldd[i]);
+       }
 
     }
 

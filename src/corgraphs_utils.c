@@ -27,205 +27,181 @@
 
 #include "corgraphs_utils.h"
 
-double variance_parent_children_kld(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2) {
+void cov2cor(int verbose, int n, double *cc) {
+  double s[n];
+  int i, j, k=0;
+  for(i=0; i<n; i++) {
+    s[i] = sqrt(cc[k]);
+    k += n+1;
+    //    printf("i = %d, k = %d, %2.1f ", i, k, s[i]);
+  }
 
-  if(verbose>999)
-    printf("working inside variance_parent_children_kld now\n");
+  if(verbose>999) {
+    printf("\ns[i]:\n");
+    for(i=0; i<n; i++) {
+      printf("%2.1f ", s[i]);
+    }
+  }
 
+  k=0;
+  for(i=0; i<n; i++) {
+    for(j=0; j<n; j++) {
+      cc[k++] /= (s[i] * s[j]);
+    }
+  }
+
+  if(verbose>9999) {
+    printf("cc[i,j]:\n");
+    k=0;
+    for(i=0; i<n; i++) {
+      for(j=0; j<n; j++) {
+        printf("%2.3f ", cc[k++]);
+      }
+      printf("\n");
+    }
+  }
+
+}
+
+double covariance_kld(int verbose, int n, double *C0, double *C1) {
   char uplo = 'U';
-  int info=0, N2 = N*N, l, i, j, k;
-  double hldet0, hldet1, trc, kld = 0.0;
-  double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
-  double C0[N2], C1[N2], cc0[N2], cc1[N2];
+  int info=0, i, k, n2 = n*n;
+  double hldet0=0, hldet1=0, trc = 0, kld = 0;
+  double cc0[n2], cc1[n2];
+
+  for(k=0; k<n2; k++) {
+    cc0[k] = C0[k]; // copy
+    cc1[k] = C1[k]; // copy
+  }
+
+  dpotrf_(&uplo, &n, &cc0[0], &n, &info, F_ONE);
+  dpotrf_(&uplo, &n, &cc1[0], &n, &info, F_ONE);
+
+  k=0;
+  for(i=0; i<n; i++) {
+    hldet0 += log(cc0[k]);
+    hldet1 += log(cc1[k]);
+    k += n+1;
+  }
+
+  dposv_(&uplo, &n, &n, &C0[0], &n, &C1[0], &n, &info, F_ONE);
+
+  // trace of C1/C0
+  k=0;
+  for(i=0; i<n; i++) {
+    trc += C1[k];
+    k += n+1;
+  }
+
+  kld += 0.5 * (trc - n) - hldet1 + hldet0;
+
+  if(verbose>99) {
+    printf("ld0: %2.4f, ld1: %2.4f, tr(C1/C0): %2.4f, kld:= %2.4f\n",
+           hldet0, hldet1, trc, kld);
+  }
+  return kld;
+}
+
+void covariance_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) {
+
+  int i, j, k;
+  double vp[np];
 
   for(i=0; i<np; i++) {
-    v2a[i] = v2[i]; // copy
-    v2b[i] = v2[i]; // copy
+    vp[i] = 0.0;
   }
+  for(i=0; i<niiv; i++) {
+    vp[iiv[i]] += v2[jjv[i]];
+  }
+
+  k=0;
+  for(i=0; i<N; i++) {
+    for(j=0; j<N; j++) {
+      if(j==i) {
+        CC[k] = 1.0 + vp[ipar[i]];
+      } else {
+        CC[k] = sch[i] * sch[j] * vp[itop[k]];
+      }
+      k++;
+    }
+  }
+
+  if(verbose>999){
+    printf("vp[i]:\n");
+    for(i=0; i<np; i++) {
+      printf("%2.1f ", vp[i]);
+    }
+    printf("\nCC[i,j]:\n");
+    k=0;
+    for(i=0; i<N; i++) {
+      for(j=0; j<N; j++) {
+        printf("%2.3f ", CC[k]);
+        k++;
+      }
+      printf("\n");
+    }
+  }
+
+}
+
+void correlation_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) {
+  covariance_parent_children(verbose, np, N, niiv, &iiv[0], &jjv[0], &ipar[0], &itop[0], &sch[0], &v2[0], &CC[0]) ;
+  cov2cor(verbose, N, &CC[0]) ;
+}
+
+void theta_parent_children_kldd(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *theta, double *kld, double *kldd) {
+
+  int i, l, k, N2 = N*N;
+  double hs = 0.005, kldh;
+  double v2a[np], v2b[np];
+  double C0[N2], C1[N2], C0c[N2], C1h[N2];
+
+  for(i=0; i<np; i++) {
+    v2a[i] = exp(2.0 * theta[i]);
+    v2b[i] = v2a[i];
+  }
+
+  correlation_parent_children(verbose, np, N, niiv, &iiv[0], &jjv[0], &ipar[0], &itop[0], &sch[0], &v2a[0], &C1[0]);
 
   for(l=np; l>0; l--) {
 
-    if(verbose>999) {
+    if(verbose>99) {
       printf("l is now %d\n", l);
     }
 
-    v2a[l-1] = 0.0;
     if(l<np) {
-      v2b[l]= 0.0;
+      v2a[l] = 0.0; // zero all above last
     }
-
-    if(verbose>999){
-      printf("v2a[i]:\n");
-      for(i=0; i<np; i++) {
-        printf("%2.1f ", v2a[i]);
-      }
-      printf("\n");
-      printf("v2b[i]:\n");
-      for(i=0; i<np; i++) {
-        printf("%2.1f ", v2b[i]);
-      }
-      printf("\n");
-    }
-    for(i=0; i<np; i++) {
-      vp0[i] = 0.0;
-      vp1[i] = 0.0;
-    }
-    for(i=0; i<niiv; i++) {
-      vp0[iiv[i]] += v2a[jjv[i]];
-      vp1[iiv[i]] += v2b[jjv[i]];
-    }
-
-    k=0;
-    for(i=0; i<N; i++) {
-      for(j=0; j<N; j++) {
-        if(j==i) {
-          C0[k] = 1.0 + vp0[ipar[i]];
-          C1[k] = 1.0 + vp1[ipar[i]];
-          s0[i] = sqrt(C0[k]);
-          s1[i] = sqrt(C1[k]);
-        } else {
-          C0[k] = sch[i] * sch[j] * vp0[itop[k]];
-          C1[k] = sch[i] * sch[j] * vp1[itop[k]];
-        }
-        k++;
-      }
-    }
-
-    if(verbose>999){
-      printf("vp0[i]:\n");
-      for(i=0; i<np; i++) {
-        printf("%2.1f ", vp0[i]);
-      }
-      printf("\nvp1[i]:\n");
-      for(i=0; i<np; i++) {
-        printf("%2.1f ", vp1[i]);
-      }
-      printf("\ns0[i]:\n");
-      for(i=0; i<N; i++) {
-        printf("%2.1f ", s0[i]);
-      }
-      printf("\ns1[i]:\n");
-      for(i=0; i<N; i++) {
-        printf("%2.1f ", s1[i]);
-      }
-      printf("\nC0[i,j]:\n");
-      k=0;
-      for(i=0; i<N; i++) {
-        for(j=0; j<N; j++) {
-          printf("%2.3f ", C0[k]);
-          k++;
-        }
-        printf("\n");
-      }
-      printf("C1[i,j]:\n");
-      k=0;
-      for(i=0; i<N; i++) {
-        for(j=0; j<N; j++) {
-          printf("%2.3f ", C1[k]);
-          k++;
-        }
-        printf("\n");
-      }
-    }
-    k=0;
-    for(i=0; i<N; i++) {
-      for(j=0; j<N; j++) {
-        C0[k] /= (s0[i] * s0[j]);
-        C1[k] /= (s1[i] * s1[j]);
-        cc0[k] = C0[k]; // copy
-        cc1[k] = C1[k]; // copy
-        k++;
-      }
-    }
-
-    if(verbose>999){
-      printf("C0[i,j]:\n");
-      k=0;
-      for(i=0; i<N; i++) {
-        for(j=0; j<N; j++) {
-          printf("%2.3f ", C0[k]);
-          k++;
-        }
-        printf("\n");
-      }
-      printf("C1[i,j]:\n");
-      k=0;
-      for(i=0; i<N; i++) {
-        for(j=0; j<N; j++) {
-          printf("%2.3f ", C1[k]);
-          k++;
-        }
-        printf("\n");
-      }
-    }
-
-    dpotrf_(&uplo, &N, &cc0[0], &N, &info, F_ONE);
+    v2a[l-1] = exp(2.0 * (theta[l-1] + hs));
     if(verbose>99) {
-      printf("INFO for L0 with l = %d is %d\n", l, info);
+      printf("C1h:\n");
     }
-    dpotrf_(&uplo, &N, &cc1[0], &N, &info, F_ONE);
-    if(verbose>99) {
-      printf("INFO for L1 with l = %d is %d\n", l, info);
-    }
-
-    if(verbose>999){
-      printf("L0[i,j]:\n");
-      k=0;
-      for(i=0; i<N; i++) {
-        for(j=0; j<N; j++) {
-          printf("%2.3f ", C0[k]);
-          k++;
-        }
-        if(verbose>1){
-          printf("\n");
-        }
-      }
-      printf("L1[i,j]:\n");
-      k=0;
-      for(i=0; i<N; i++) {
-        for(j=0; j<N; j++) {
-          printf("%2.3f ", C1[k]);
-          k++;
-        }
-        if(verbose>1){
-          printf("\n");
-        }
-      }
-    }
-
-    hldet0 = 0.0;
-    hldet1 = 0.0;
-    k=0;
-    for(i=0; i<N; i++) {
-      hldet0 += log(cc0[k]);
-      hldet1 += log(cc1[k]);
-      if(verbose>999){
-        printf("ld0 = %2.5f, ld1 = %2.5f\n", cc0[k], cc1[k]);
-      }
-      k += N+1;
-    }
-
-    dposv_(&uplo, &N, &N, &C1[0], &N, &C0[0], &N, &info, F_ONE);
-    if(verbose>99) {
-      printf("INFO for dposv with l = %d is %d\n", l, info);
-    }
-
-    // add trace of C1/C0
-    k=0;
-    for(i=0; i<N; i++) {
-      trc += C0[k];
-      k += N+1;
-    }
-
-    kld += 0.5 * (trc - np) - hldet1 + hldet0;
+    correlation_parent_children(verbose, np, N, niiv, &iiv[0], &jjv[0], &ipar[0], &itop[0], &sch[0], &v2a[0], &C1h[0]);
 
     if(verbose>99) {
-      printf("ld0: %2.4f, ld1: %2.4f, tr(C1/C0): %2.4f, kld:= %2.4f\n",
-             hldet0, hldet1, trc, kld);
+      printf("C0:\n");
+    }
+    v2b[l-1] = 0.0; // from last one is zero
+    correlation_parent_children(verbose, np, N, niiv, &iiv[0], &jjv[0], &ipar[0], &itop[0], &sch[0], &v2b[0], &C0[0]);
+    for(k=0; k<N2; k++) {
+      C0c[k] = C0[k]; // copy
     }
 
-  }
+    kld[l-1] = covariance_kld(verbose, N, &C0[0], &C1[0]);
 
-  return kld;
+    if(l>1) {      // prepare for next step
+      for(k=0; k<N2; k++) {
+        C1[k] = C0c[k]; // copy one-param reduced matrix
+      }
+    }
+
+    kldh = covariance_kld(verbose, N, &C0c[0], &C1h[0]);
+    kldd[l-1] = fabs(kldh - kld[l-1]) / hs;
+
+    if(verbose>999) {
+      printf("k,d: %2.5f %2.5f\n", kld[l], kldd[l]);
+    }
+
+  } // end l
 
 }
