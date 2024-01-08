@@ -54,5 +54,5 @@ void cov2cor(int verbose, int n, double *cc) ;
 double cov2kld(int verbose, int n, double *C0, double *C1);
 void covariance_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;
 void correlation_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;
-void theta_parent_children_kldd(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *theta, double *kld, double *kldd) ;
+void theta_parent_children_kldh(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *theta, double hs, double *kld, double *kldd) ;
 

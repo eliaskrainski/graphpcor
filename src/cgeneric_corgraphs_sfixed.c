@@ -49,7 +49,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   np = data->ints[2]->ints[0];
   assert(np > 0);
   nparam = N + np;
-  double v2[np], vparents[np];
+  double v2[np];
 
   if(debug>99) {
     printf("(np = %d, N = %d, M = %d), N2 = %d\n", np, N, M, N2) ;
@@ -142,7 +142,6 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
     char uplo = 'U';
     int info=0;
     //    double *qq = (double *) calloc(N*N, sizeof(double));
-    double vcc[N];
     double mcov[N2], qq[N2];
 
         if(debug>999){
@@ -171,63 +170,6 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
         }
 
         correlation_parent_children(debug, np, N, iiv->len, &iiv->ints[0], &jjv->ints[0], &ipar->ints[0], &itop->ints[0], &sch->doubles[0], &v2[0], &mcov[0]);
-
-/*
-        for(i=0; i<np; i++) {
-          vparents[i] = 0.0;
-        }
-        for(i=0; i<iiv->len; i++) {
-          vparents[iiv->ints[i]] += v2[jjv->ints[i]];
-        }
-        k=0;
-        for(i=0; i<N; i++) {
-          vcc[i] = 1.0 + vparents[ipar->ints[i]];
-          for(j=0; j<N; j++) {
-            if(i==j) {
-              mcov[k] = 1.0 + vparents[itop->ints[k]];
-            } else {
-              mcov[k] = sch->doubles[i] * sch->doubles[j] * vparents[itop->ints[k]];
-            }
-            k++;
-          }
-        }
-
-        if(debug>999) {
-          for(i = 0; i<N; i++)
-            printf("vcc[%d] = %2.3f\n", i, vcc[i]);
-          for(i = 0; i<np; i++) {
-            printf("vparents[%d] = %2.3f\n", i, vparents[i]);
-          }
-          printf("V[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", mcov[k]);
-              k++;
-            }
-            printf("\n");
-          }
-        }
-
-        k=0;
-        for(i=0; i<N; i++) {
-          for(j=0; j<N; j++) {
-            mcov[k++] /=  sqrt(vcc[i] * vcc[j]);
-          }
-        }
-
-        if(debug>999){
-          printf("mcorrel[i,j]:\n");
-          k=0;
-          for(i=0; i<N; i++) {
-            for(j=0; j<N; j++) {
-              printf("%2.3f ", mcov[k++]);
-            }
-            printf("\n");
-          }
-        }
-
-     */
 
         k=0;
         for(i=0; i<N; i++) {
@@ -357,21 +299,23 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
       //double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
       //double C0[N2], C1[N2], cc0[N2], cc1[N2];
 
-      double kld[np], kldd[np];
+      double d, dd, hs = 0.005, kld[np], kldh[np];
 
-      theta_parent_children_kldd(
+      theta_parent_children_kldh(
         debug, np, N, iiv->len,
         &iiv->ints[0], &jjv->ints[0], &ipar->ints[0],
         &itop->ints[0], &sch->doubles[0],
-        &theta[N], &kld[0], &kldd[0]);
+        &theta[N], hs, &kld[0], &kldh[0]);
 
         if(debug>99) {
           for(i=0; i<np; i++)
-            printf("k and d : %2.7f and %2.7f \n", kld[i], kldd[i]);
+            printf("k and d : %2.7f and %2.7f \n", kld[i], kldh[i]);
         }
 
        for(i=0; i<np; i++) {
-         ret[0] += log(lambda) - lambda * sqrt(2 * kld[i]) + log(kldd[i]);
+         d = sqrt(2 * kld[i]);
+         dd = fabs(sqrt(2.0 * kldh[i]) - d) / hs ;
+         ret[0] += log(lambda) - lambda * d + log(dd);
        }
 
     }

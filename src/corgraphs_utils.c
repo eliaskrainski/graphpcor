@@ -149,10 +149,9 @@ void correlation_parent_children(int verbose, int np, int N, int niiv, int *iiv,
   cov2cor(verbose, N, &CC[0]) ;
 }
 
-void theta_parent_children_kldd(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *theta, double *kld, double *kldd) {
+void theta_parent_children_kldh(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *theta, double hs, double *kld, double *kldh) {
 
   int i, l, k, N2 = N*N;
-  double hs = 0.005, kldh;
   double v2a[np], v2b[np];
   double C0[N2], C1[N2], C0c[N2], C1h[N2];
 
@@ -195,11 +194,10 @@ void theta_parent_children_kldd(int verbose, int np, int N, int niiv, int *iiv, 
       }
     }
 
-    kldh = covariance_kld(verbose, N, &C0c[0], &C1h[0]);
-    kldd[l-1] = fabs(kldh - kld[l-1]) / hs;
+    kldh[l-1] = covariance_kld(verbose, N, &C0c[0], &C1h[0]);
 
     if(verbose>999) {
-      printf("k,d: %2.5f %2.5f\n", kld[l], kldd[l]);
+      printf("k,d: %2.5f %2.5f\n", kld[l-1], kldh[l-1]);
     }
 
   } // end l
