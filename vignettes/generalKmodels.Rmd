@@ -1,0 +1,65 @@
+---
+title: "Generalized Kronecker product models"
+author: "Elias et. al."
+date: "Jan 2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Properties of a general aproach for combining dependence models.
+
+
+# Introduction 
+
+The usual Kronecker product models is considered for a random vector 
+that than can be organized as a matrix with elements 
+$\mathbf{x}_{ij}$, for 
+$i \in \{1, \ldots, n\}$ and $j \in \{1, \ldots, k\}$. 
+Let $\mathbf{x}_{i.}$ be the $i$th row of $\mathbf{x}$ and 
+$\mathbf{x}_{.j}$ be the $j$th column of $\mathbf{x}$.
+The vec(.) operator is defined as 
+\[\textrm{vec}(\mathbf{x}) = (\mathbf{x}_{.1}^T,\ldots,\mathbf{x}_{.k}^T)^{T}\]
+and vec($\mathbf{x}$) is a vector with length equals $n\times k$. 
+If the covariance matrix of vec($\mathbf{x}$) is written as 
+\[\Sigma_\mathbf{x} = \Sigma_c \otimes \Sigma_r\]
+$\Sigma_c$ is the covariance between columns of $\mathbf{x}$ 
+(for every row of $\mathbf{x}$) 
+and $\Sigma_r$ is the covariance between lines of $\mathbf{x}$ 
+(for every column of $\mathbf{x}$).
+
+Usually it is imposed a unit diagonal of $\Sigma_r$ 
+so that the variance are estimated for each column
+as the diagonal elements of $\Sigma_c$.
+This is the simplest multivariate model for multivariate random vectors
+as it gives a common covariance for the columns as well for the lines. 
+The computational aspect is appealing as the factorization of 
+$\Sigma_{\mathbf{x}}$ is reduced to the factorization of 
+$\Sigma_r$ and $\Sigma_c$.
+Simulations can be done setting 
+\[ 
+\mathbf{x} = \mathbf{L}_r\mathbf{z}\mathbf{L}_c^T 
+\]
+where $\mathbf{z}$ is a $n\times k$ matrix with each entry
+drawn from a unit variance random variable, 
+$\mathbf{L}_c\mathbf{L}_c^T = \Sigma_c$ and 
+$\mathbf{L}_r\mathbf{L}_r^T = \Sigma_r$. 
+Optionally, 
+\[ 
+\textrm{vec}(\mathbf{x}) = (\mathbf{L}_c \otimes \mathbf{L}_r)\textrm{vec}(\mathbf{z}) .
+\]
+
+One generalization of this model is to assume a different covariance 
+for each column of $\mathbf{x}$, $\Sigma_{1}, \ldots, \Sigma_{k}$.
+The covariance between the columns of $\mathbf{x}$ is still $\Sigma_c$.
+Simulations can now be done considering
+\[ 
+\mathbf{x} = [\mathbf{L}_1\mathbf{z_{.1}} : \ldots : \mathbf{L}_k\mathbf{z}_{.k}] \mathbf{L}_c^T
+\]
+where $\mathbf{L}_j\mathbf{L}_j^T = \Sigma_j$, $j\in \{1,\ldots,k\}$.
+The full covariance matrix for $\mathbf{x}$ 
+can be written from this simulation formula as 
+$(\mathbf{L_c}\otimes \mathbf{I}_n)
+\textrm{Bdiag}(\Sigma_1, \ldots, \Sigma_k)(\mathbf{L}_c^T\otimes\mathbf{I}_n)$.
