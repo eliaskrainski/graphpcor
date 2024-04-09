@@ -1,9 +1,9 @@
 #' Build the objects to implement the model using the
 #' cgeneric method in `INLA` from a list of expressions
-#' defining a Direct Acyclic Graph - DAG correlation model
+#' defining a Direct Cyclic Graph - DCG correlation model
 #' to be used as a model in a `INLA` `f()` model component.
 #'
-#' @param dag the DAG model.
+#' @param dcg the dcg model.
 #' @param lambda the lambda for the graph correlation prior.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
@@ -29,8 +29,8 @@
 #' then the sigma is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-cgeneric0_dag_model <-
-  function(dag,
+cgeneric0_dcg_model <-
+  function(dcg,
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
@@ -51,8 +51,8 @@ cgeneric0_dag_model <-
       }
     }
 
-    d.el <- dag_elements(dag)
-    q.el <- dag_e2precision(d.el)
+    d.el <- dcg_elements(dcg)
+    q.el <- dcg_e2precision(d.el)
     NC <- q.el$nc
 
     stopifnot(length(sigma.prior.reference) == NC)
@@ -92,7 +92,7 @@ cgeneric0_dag_model <-
     return(the_model)
   }
 #' Implement the model from covariance
-#' @param dag the DAG model.
+#' @param dcg the dcg model.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
@@ -107,8 +107,8 @@ cgeneric0_dag_model <-
 #' @param libpath string to the shared object. Default is NULL.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-dag_model <-
-  function(dag,
+dcg_model <-
+  function(dcg,
            sigma.prior.reference,
            sigma.prior.probability,
            lambda,
@@ -131,7 +131,7 @@ dag_model <-
       }
     }
 
-    d.el <- dag_elements(dag)
+    d.el <- dcg_elements(dcg)
     ich <- unlist(lapply(d.el, function(x)
       x$id[!x$parent]))
     sch <- unlist(lapply(d.el, function(x)
@@ -140,11 +140,11 @@ dag_model <-
     if(debug) {
       cat(c(sch = sch), "\n")
     }
-    d.elc <- dag_e2covariance(d.el)
+    d.elc <- dcg_e2covariance(d.el)
     if(debug) {
       print(str(d.elc))
     }
-    np <- length(dag)
+    np <- length(dcg)
     nv <- sapply(d.elc$iv, length)
     if(debug)
       cat("np = ", np, " and nv: ", nv, "\n")
@@ -222,10 +222,10 @@ dag_model <-
 
     return(the_model)
   }
-
+#' Defining a Direct Cyclic Graph - DCG correlation model
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-graph_model <-
+dag_model <-
   function(graph,
            sigma.prior.reference,
            sigma.prior.probability,
