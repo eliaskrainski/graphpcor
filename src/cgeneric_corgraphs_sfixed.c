@@ -299,7 +299,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
       //double v2a[np], v2b[np], vp0[np], vp1[np], s0[N], s1[N];
       //double C0[N2], C1[N2], cc0[N2], cc1[N2];
 
-      double d, dd, hs = 0.005, kld[np], kldh[np];
+      double d, dh, dd, hs = 0.005, kld[np], kldh[np];
 
       theta_parent_children_kldh(
         debug, np, N, iiv->len,
@@ -314,7 +314,8 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
 
        for(i=0; i<np; i++) {
          d = sqrt(2 * kld[i]);
-         dd = fabs(sqrt(2.0 * kldh[i]) - d) / hs ;
+         dh = sqrt(2.0 * kldh[i]);
+         dd = fabs(dh - d) / hs ;
          ret[0] += log(lambda) - lambda * d + log(dd);
        }
 
