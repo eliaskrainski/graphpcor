@@ -1,7 +1,4 @@
 ---
-title: "Generalized Kronecker product models"
-author: "Elias et. al."
-date: "Jan 2024"
 output: 
   pdf_document:
 classoption: twocolumn
@@ -147,7 +144,7 @@ M_1 &  &  &   \\
 \]
 
 Another way is to first apply the transformation to introduce correlation between columns 
-and then between rows of the already cor^2elated columns
+and then between rows of the already correlated columns
 \[ \begin{array}{rcl}
 \textrm{vec}(\mathbf{x}) & = & \mathrm{vec}([\mathbf{L}_1(\mathbf{z}\mathbf{L}_c^T)_{.1} : \ldots : \mathbf{L}_k(\mathbf{z}\mathbf{L}_c^T)_{.k}]  \\
  & = & \mathrm{bdiag}(\mathbf{L}_1,\ldots,\mathbf{L}_k)\mathrm{vec}(\mathbf{z}\mathbf{L}_c^T) \\
@@ -279,3 +276,96 @@ list(cov(xx2[, 1:2]),
      cov(xx2[, 5:6]))
 ```
 
+## From non-separable models 
+
+In the space-time SPDE framework, the the space-time operator
+is the temporal operator plus the spatial operator. 
+This is directly linked to the precision, 
+which is a sum of Kronecker products. 
+E.g.:
+\[ 
+\textrm{Prec(vec(}\mathbf{x})) =\Sigma_c^{-1} \otimes \mathbf{I}_n + \mathbf{I}_k \otimes \Sigma_r^{-1}
+\]
+
+```{r qk}
+Qc <- chol2inv(chol(cc))
+Qr <- chol2inv(chol(rr1))
+QQ <- kronecker(Qc, diag(2)) + 
+  kronecker(diag(3), Qr)
+is.matrix(Ql <- try(chol(QQ)))
+```
+
+
+
+\newpage
+
+### Groups with different sizes
+
+Furthermore, consider the case where vec($\mathbf{x}$) contains $k$
+vectors each with possible different lengths, $n_1, \ldots, n_k$,
+$\mathbf{x} = \{x_{1,1}, \ldots, x_{1,n_1}, x_{2,1}, \ldots, x_{2,n_2}, \ldots, x_{k,1}, \ldots, x_{k,n}\}$.
+Now $\Sigma_j$ has dimension equals $n_j$, $j\in \{1,\ldots,k\}$
+and so $\mathbf{L}_k$. 
+
+
+## Example
+
+First, we define a function to build the full covariance matrix from the 
+within and between ones. 
+We would like to deal with cases when there are different number of elements 
+within families. 
+
+The particular kronecker product considering different sizes function
+```{r ddKron}
+ddKron <- function(M, dd) {    
+    stopifnot(nrow(M) == length(dd))
+    dm <- dim(M)
+    k <- max(dd)
+    jj <- unlist(lapply(
+        1:dm[1], function(j)
+        (1:k)[1:dd[j]] + k*(j-1)
+    ))
+    return(kronecker(M, diag(k))[jj, jj])
+}
+```
+
+The following function can be used to build the joint covariance when 
+first applying the transformation within families or between them.
+
+```{r gKcov}
+gKcov <- function(A, B) {
+    if(is.list(A)) {
+        A <- lapply(A, chol)
+        r <- Matrix::bdiag(lapply(A, t)) %*%
+            ddKron(B, sapply(A, nrow))  %*%
+            Matrix::bdiag(A)
+    } else {
+        stopifnot(is.list(B))
+        kk <- sapply(B, nrow)
+        l <- chol(A)
+        r <- ddKron(t(l), kk) %*%
+            Matrix::bdiag(B) %*%
+            ddKron(l, kk)
+    }
+    return(r)
+}
+```
+
+For within families, we consider the following list of covariance matrices, 
+with different sizes
+```{r ss}
+ss <- list(
+  matrix(c(3,2,2,3), 2), 
+  matrix(c(4,2,1, 2,3,-1, 1,-1,2), 3), 
+  crossprod(matrix(
+    c(1,2,1,-1, 0,1,1,-1, 0,0,1,2, 0,0,0,1),
+    4)))
+``` 
+
+The joint covariance considering the transformation between families first and then 
+applying the transformation within each family after is build by supplying 
+the first argument as the list of within covariances and 
+as the second argument the between correlation matrix
+```{r jc1}
+jC1 <- gKcov(ss, cc)
+```
