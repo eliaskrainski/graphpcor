@@ -5,21 +5,21 @@ library(INLA)
 inla.setOption(safe = FALSE,
                num.threads = 6)
 
-dag <- list(
+dcg <- list(
     p1 ~ p2 + c1 + c2,
     p2 ~ c3 + c4)
-np <- length(dag)
+np <- length(dcg)
 nc <- 4
 
-dgplot <- GraphPlot(dag, base=0)
+dgplot <- GraphPlot(dcg, base=0)
 
 par(mar = c(1, 1, 1, 1))
 plot(dgplot$gr, nodeAttrs = dgplot$nAttrs)
 
-(np <- length(dag))
+(np <- length(dcg))
 (theta.p <- c(0, 0))
 
-mcorr <- cov2cor(dag_covariance(dag, theta.p))
+mcorr <- cov2cor(dcg_covariance(dcg, theta.p))
 round(mcorr * 100)
 
 (nc <- nrow(mcorr))
@@ -47,14 +47,14 @@ dataf <- data.frame(
 ff <- y ~ 0 + factor(i) +
     f(i, model = rGmodel, replicate = r, vb.correct = FALSE)
 
-gmodel <- dag_model(
-    dag = dag,
-    lambda = 5,
+gmodel <- dcg_model(
+    dcg = dcg,
+    lambda = 2,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc),
     iprior = 3,
     useINLAprecomp = FALSE,
-    debug = 0 ### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details    
+    debug = 0### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details    
 )
 
 ff <- y ~ 0 + factor(i) +
@@ -65,9 +65,12 @@ fit <- inla(
     family = "poisson",
     data = dataf,
     control.inla = list(int.strategy = "eb"),
+##    control.mode = list(theta = rep(0, 6),  restart = FALSE, fixed = !TRUE),
     verbose = !TRUE) 
 
-fit$cpu
+fit$cpu.used
+
+fit$misc$nf
 
 rbind(true = c(theta.c, theta.p), 
       cg = fit$mode$theta)
@@ -76,7 +79,7 @@ plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
 tail(fit$logfile, 30)
 
-cc.fit <- cov2cor(dag_covariance(dag, fit$mode$theta[nc+1:np]))
+cc.fit <- cov2cor(dcg_covariance(dcg, fit$mode$theta[nc+1:np]))
 
 round(cor(xx)*100)
 round(cc.fit*100)
