@@ -30,7 +30,7 @@ mcov <- dd %*% mcorr %*%dd
 
 round(mcov, 1)
 
-n <- 300
+n <- 3000
 
 ll <- chol(mcov)
 xx <- matrix(rnorm(n * nc), n) %*% ll

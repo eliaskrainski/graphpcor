@@ -3,6 +3,7 @@
 #' @param lfi indicator of fill-in elements
 #' @return a filled L matrix.
 fiL <- function(L, lfi) {
+  L <- as.matrix(L)
   ii <- row(lfi)[as.matrix(lfi)!=0]
   jj <- col(lfi)[as.matrix(lfi)!=0]
   for(v in 1:length(ii)) {
@@ -36,15 +37,17 @@ fiL <- function(L, lfi) {
 #' )
 #' dag_L(g)
 dag_L <- function(g, theta = NULL) {
+  loadNamespace("Matrix")
   g <- inla.as.sparse(g)
   n <- nrow(g)
-  patt <- (g !=0 ) + (t(g) != 0)
+  patt <- as.matrix((g !=0 ) + (Matrix::t(g) != 0))
   patt[patt>1] <- 1L
   R <- INLA::inla.as.sparse(
     Diagonal(n, 1L + rowSums(patt)) -(patt))
-  ii <- INLA:::inla.qreordering(R)
+##  ii <- INLA:::inla.qreordering(R)
   ##    return(ii)
-  oR <- R[ii$ireordering, ii$ireordering]
+  ##print(ii)
+  oR <- R##[ii$ireordering, ii$ireordering]
   ##    print(oR)
   ij <- which(oR@i > oR@j)
   nnzq <- length(ij)
@@ -53,19 +56,22 @@ dag_L <- function(g, theta = NULL) {
   L <- Diagonal(n, exp(theta[1:n]))
   if(nnzq==0)
     return(crossprod(L))
-  orL <- sparseMatrix(
+  oL <- as.matrix(sparseMatrix(
     i = oR@i[ij] + 1L,
     j = oR@j[ij] + 1L,
     x = theta[n + 1:nnzq],
     dims = c(n, n)
-  ) + L
-  ##    print(orL)
-  sL <- t(chol(as.matrix(oR)))
-  lfi <- ((sL!=0) & (as.matrix(oR)==0)) * 1L
+  ) + L)
+##    print(oL)
+  sR <- as.matrix(oR)
+  sL <- t(chol(sR))
+  lfi <- ((sL!=0) & (sR==0)) * 1L
+##  print(lfi)
   if(sum(lfi)>0) {
-##    cat("fill-in", sum(lfi), 'values\n')
-    oL <- fiL(orL, lfi)
+  ##  cat("fill-in", sum(lfi), 'values\n')
+    oL <- fiL(oL, lfi)
+##    print(oL)
   }
-  ##return(orL)
-  return(tcrossprod(orL)[ii$reordering, ii$reordering])
+  ##return(oL)
+  return(INLA::inla.as.sparse(oL))##[ii$reordering, ii$reordering]))
 }

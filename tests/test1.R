@@ -8,10 +8,11 @@ inla.setOption(safe = FALSE,
 dcg1 <- list(p1 ~ c1 + c2 + c3)
 np <- length(dcg1)
 
-(theta.p <- 0.5)
+(theta.p <- -0.5)
 
 mcov0 <- dcg_covariance(dcg1, theta.p)
 mcov0
+
 mcorr <- cov2cor(mcov0)
 round(mcorr, 2)
 
