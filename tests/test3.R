@@ -2,25 +2,25 @@
 library(corGraphs)
 library(INLA)
 
-dagp <- list(
+dcgp <- list(
     p1 ~ p2 + c1 + c2,
     p2 ~ p3 + c3 + c4,
     p3 ~ c5 + c6)
 
-d2plot <- GraphPlot(dagp, base=0)
+d2plot <- GraphPlot(dcgp, base=0)
 
 par(mar = c(1, 1, 1, 1))
 plot(d2plot$gr, nodeAttrs = d2plot$nAttrs)
 
-dag <- list(
+dcg <- list(
     p1 ~ p2 + p3 + c1 + c2,
     p2 ~ -c3 + c4,
     p3 ~ c5 - c6)
 
-(np <- length(dag))
+(np <- length(dcg))
 (theta.p <- c(0, -0.33, 0.33))
 
-mcov <- corGraphs:::dag_covariance(dag, theta.p)
+mcov <- corGraphs:::dcg_covariance(dcg, theta.p)
 mcorr <- cov2cor(mcov)
 
 nc <- nrow(mcov)
@@ -43,8 +43,8 @@ dataf <- data.frame(
     y = as.vector(xx)##rpois(n*nc, exp(1 + xx))
 )
 
-gmodel <- dag_model(
-    dag = dag,
+gmodel <- dcg_model(
+    dcg = dcg,
     lambda = 5,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc)
@@ -71,7 +71,7 @@ rbind(true = c(theta.c, theta.p),
 
 plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-cc.fit <- cov2cor(dag_covariance(dag, cfit$mode$theta[nc+1:np]))
+cc.fit <- cov2cor(dcg_covariance(dcg, cfit$mode$theta[nc+1:np]))
 
 round(cor(xx)*100)
 round(cc.fit*100)
