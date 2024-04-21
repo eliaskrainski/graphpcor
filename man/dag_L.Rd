@@ -16,13 +16,16 @@ Default is NULL and it will be random in this case.}
 Function to build a precision matrix from a graph model
 }
 \examples{
-g <- inla.as.sparse(
-  sparseMatrix(
+g <- sparseMatrix(
    i = c(1, 2, 3, 4, 5),
    j = c(3, 3, 5, 5, 6),
    x = 1L,
    dims = c(6, 6)
-  )
+); g <- g + t(g)
+dag_L(g) ## random
+dag_L(g) ## random
+dag_L(g,
+  theta = c(rep(log(3), 6), ## diagonal
+            rep(-1, 5)) ## off-diagonal
 )
-dag_L(g)
 }

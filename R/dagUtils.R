@@ -27,51 +27,43 @@ fiL <- function(L, lfi) {
 #' Default is NULL and it will be random in this case.
 #' @export
 #' @examples
-#' g <- inla.as.sparse(
-#'   sparseMatrix(
+#' g <- sparseMatrix(
 #'    i = c(1, 2, 3, 4, 5),
 #'    j = c(3, 3, 5, 5, 6),
 #'    x = 1L,
 #'    dims = c(6, 6)
-#'   )
+#' ); g <- g + t(g)
+#' dag_L(g) ## random
+#' dag_L(g) ## random
+#' dag_L(g,
+#'   theta = c(rep(log(3), 6), ## diagonal
+#'             rep(-1, 5)) ## off-diagonal
 #' )
-#' dag_L(g)
 dag_L <- function(g, theta = NULL) {
   loadNamespace("Matrix")
-  g <- inla.as.sparse(g)
+  g <- INLA::inla.as.sparse(g)
   n <- nrow(g)
   patt <- as.matrix((g !=0 ) + (Matrix::t(g) != 0))
   patt[patt>1] <- 1L
   R <- INLA::inla.as.sparse(
     Diagonal(n, 1L + rowSums(patt)) -(patt))
-##  ii <- INLA:::inla.qreordering(R)
-  ##    return(ii)
-  ##print(ii)
-  oR <- R##[ii$ireordering, ii$ireordering]
-  ##    print(oR)
-  ij <- which(oR@i > oR@j)
+  ij <- which(R@i > R@j)
   nnzq <- length(ij)
   if(is.null(theta))
     theta <- rnorm(n + nnzq)
   L <- Diagonal(n, exp(theta[1:n]))
   if(nnzq==0)
     return(crossprod(L))
-  oL <- as.matrix(sparseMatrix(
-    i = oR@i[ij] + 1L,
-    j = oR@j[ij] + 1L,
+  sL <- t(chol(R))
+  retL <- as.matrix(sparseMatrix(
+    i = R@i[ij] + 1L,
+    j = R@j[ij] + 1L,
     x = theta[n + 1:nnzq],
     dims = c(n, n)
   ) + L)
-##    print(oL)
-  sR <- as.matrix(oR)
-  sL <- t(chol(sR))
-  lfi <- ((sL!=0) & (sR==0)) * 1L
-##  print(lfi)
+  lfi <- ((sL!=0) & (R==0)) * 1L
   if(sum(lfi)>0) {
-  ##  cat("fill-in", sum(lfi), 'values\n')
-    oL <- fiL(oL, lfi)
-##    print(oL)
+    retL <- fiL(retL, lfi)
   }
-  ##return(oL)
-  return(INLA::inla.as.sparse(oL))##[ii$reordering, ii$reordering]))
+  return(INLA::inla.as.sparse(retL))
 }
