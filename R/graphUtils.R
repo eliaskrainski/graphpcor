@@ -24,7 +24,9 @@ graph_elements <- function(graph) {
 }
 #' Precision structure (as discrete Laplacian)
 #' @param ij output of graph_elements
-graph_Laplacian <- function(ij) {
+#' @export
+graph_Laplacian <- function(graph) {
+  ij <- graph_elements(graph)
   n <- max(ij$ii, ij$jj)
   q <- matrix(0, n, n)
   for(k in 1:length(ij$ii)) {
@@ -38,11 +40,10 @@ graph_Laplacian <- function(ij) {
   return(q)
 }
 #' Precision and Cholesky fill-in indexes
-graph_qchol_index <- function(graph) {
-  ij <- graph_elements(graph)
+graph_qchol_index <- function(ij) {
   n <- max(ij$ii, ij$jj)
   q <- graph_Laplacian(ij) + diag(n)
-  ret <- list(n = n, i = ij$ii, j = ij$jj)
+  ret <- list(n = n, ii = ij$ii, jj = ij$jj)
   qnz <- q!=0
   ret$qii <- which(qnz)
   ret$qiiu <- which(qnz & upper.tri(q, diag = TRUE))
