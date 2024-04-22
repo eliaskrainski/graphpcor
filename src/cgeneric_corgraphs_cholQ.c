@@ -1,5 +1,5 @@
 
-/* cgeneric_corgraphs.c
+/* cgeneric_corgraphs_cholQ.c
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -27,6 +27,22 @@
 
 #include "cgeneric_defs.h"
 
+void fillL(int *d, int *m, int *ii, int *jj, double *x) {
+  int i, j, l, k, p, n = *d, nij = *m;
+  for(l=0; l<nij; l++) {
+    i = ii[l];
+    j = jj[l];
+  //  printf("%d: ", l);
+    if(j>0) {
+      p = j*n + i;
+      for(k=0; k<j; k++) {
+//        printf("%d: i %d, j %d, k %d\n", p, i, j, k);
+        x[p] -= x[k*n+i] * x[k*n+j] / x[j*n+j];
+      }
+    }
+  }
+}
+
 double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
@@ -48,29 +64,32 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
   nparam = N + ne;
   M = N + ne;
 
-  assert(!strcasecmp(data->ints[3]->name, "ii"));     // this will always be the case
-  inla_cgeneric_vec_tp *ii = data->ints[3];
-  assert(ne == ii->len);
+  assert(!strcasecmp(data->ints[3]->name, "nnz"));	       // this will always be the case
+  int nnz = data->ints[3]->ints[0];
+  assert(M == nnz);
 
-  assert(!strcasecmp(data->ints[4]->name, "jj"));     // this will always be the case
-  inla_cgeneric_vec_tp *jj = data->ints[4];
-  assert(ii->len == jj->len);
+  assert(!strcasecmp(data->ints[4]->name, "nfi"));	       // this will always be the case
+  int nfi = data->ints[4]->ints[0];
 
-  assert(!strcasecmp(data->ints[5]->name, "iiq"));     // this will always be the case
-  inla_cgeneric_vec_tp *iiq = data->ints[5];
-  assert(ii->len == iiq->len);
+  assert(!strcasecmp(data->ints[5]->name, "ii"));     // this will always be the case
+  inla_cgeneric_vec_tp *ii = data->ints[5];
+  assert(M == ii->len);
 
-  assert(!strcasecmp(data->ints[6]->name, "iifi"));     // this will always be the case
-  inla_cgeneric_vec_tp *iifi = data->ints[6];
-  int nfi = iifi->len;
+  assert(!strcasecmp(data->ints[6]->name, "jj"));     // this will always be the case
+  inla_cgeneric_vec_tp *jj = data->ints[6];
+  assert(M == jj->len);
 
-  assert(!strcasecmp(data->ints[7]->name, "ifi"));
-  inla_cgeneric_vec_tp *ifi = data->ints[7];
-  assert(nfi = ifi->len);
+  assert(!strcasecmp(data->ints[7]->name, "ilq"));     // this will always be the case
+  inla_cgeneric_vec_tp *ilq = data->ints[7];
+  assert(M == ilq->len);
 
-  assert(!strcasecmp(data->ints[8]->name, "jfi"));
-  inla_cgeneric_vec_tp *jfi = data->ints[8];
-  assert(nfi = jfi->len);
+  assert(!strcasecmp(data->ints[8]->name, "ifi"));     // this will always be the case
+  inla_cgeneric_vec_tp *ifi = data->ints[8];
+  assert(nfi == ifi->len);
+
+  assert(!strcasecmp(data->ints[9]->name, "jfi"));     // this will always be the case
+  inla_cgeneric_vec_tp *jfi = data->ints[9];
+  assert(nfi == jfi->len);
 
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
   double lambda = data->doubles[0]->doubles[0];
@@ -95,13 +114,13 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
       printf("%d ", jj->ints[i]);
     }
 
-    printf("\n iiq:\n");
-    for(i=0; i<iiq->len; i++) {
-      printf("%d ", iiq->ints[i]);
-    }
     printf("\n ifi:\n");
     for(i=0; i<ifi->len; i++) {
       printf("%d ", ifi->ints[i]);
+    }
+    printf("\n jfi:\n");
+    for(i=0; i<jfi->len; i++) {
+      printf("%d ", jfi->ints[i]);
     }
 
   }
@@ -140,18 +159,13 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
       ll[k] = exp(theta[i]);
       k += N;
     }
-    for(i=0; i<iiq->len; i++) {
-      ll[iiq->ints[i]] = theta[N+i];
+    for(i=(N-1); i<nnz; i++) {
+      ll[ilq->ints[i]] = theta[i];
     }
 
     if(nfi>0) {
 
-      int l, ki, kj;
-      for(l=0; l<iifi->len; l++) {
-        i = ifi->ints[l];
-        j = jfi->ints[l];
-        ki = 1;
-      }
+      fillL(&N, &nfi, &ifi->ints[0], &jfi->ints[0], &ll[0]) ;
 
     }
 
@@ -176,8 +190,8 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
       ret[offset+k] = qq[k];
       k += N;
     }
-    for(i=0; i<iiq->len; i++) {
-      ret[offset+iiq->ints[i]] = qq[iiq->ints[i]];
+    for(i=0; i<nnz; i++) {
+      ret[offset+ilq->ints[i]] = qq[ilq->ints[i]];
     }
 
   }

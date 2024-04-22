@@ -18,7 +18,7 @@ G4 <- graph_Laplacian(g4)
 g4o <- inla.qreordering(G4)
 G4.reord <- G4[g4o$reo, g4o$reo]
 
-par(mfrow = c(2, 3), mar = c(1, 1, 1, 1))
+par(mfcol = c(2, 3), mar = c(1, 1, 1, 1))
 plot(inla.read.graph(G1))
 plot(inla.read.graph(G2))
 plot(inla.read.graph(G3))
@@ -26,8 +26,8 @@ plot(inla.read.graph(G3.reord))
 plot(inla.read.graph(G4))
 plot(inla.read.graph(G4.reord))
 
-thetas11 <- rep(c(log(2), -1), c(6, 5))
-thetas12 <- rep(c(log(2), -1), c(6, 6))
+thetas11 <- rep(c(log(2), -1, 1), c(6, 3, 2))
+thetas12 <- rep(c(log(2), -1, 1), c(6, 3, 3))
 
 library(ggpubr)
 

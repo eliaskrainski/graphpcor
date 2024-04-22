@@ -12,8 +12,6 @@ dag_model <-
            useINLAprecomp = !TRUE,
            libpath = NULL) {
 
-    return(graph_qchol_index(graph))
-
     if (is.null(libpath)) {
       if (useINLAprecomp) {
         libpath <- INLA::inla.external.lib("corGraphs")
@@ -27,15 +25,46 @@ dag_model <-
       }
     }
 
+    qij <- graph_qchol_index(graph)
+    n <- as.integer(qij$n)
+    stopifnot(n>0)
+
+    stopifnot(all(lambda>0))
+    stopifnot(length(sigma.prior.reference) == n)
+    stopifnot(length(sigma.prior.probability) == n)
+    stopifnot(all(sigma.prior.probability>0.0))
+    stopifnot(all(sigma.prior.probability<1.0))
+    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
+
+    ne <- as.integer(length(qij$ii))
+    nnz <- n + nli
+    nfi <- as.integer(length(qij$ifil))
+
+    ii <- as.integer(c(1:n, qij$ii)-1L)
+    jj <- as.integer(c(1:n, qij$jj)-1L)
+    ilq <- as.integer(qij$ilq-1L)
+    il <- as.integer((1:(n^2))[qij$ilq]-1L)
+
+    ifi <- as.integer(row(qij$Q)[qij$ifil]-1L)
+    jfi <- as.integer(col(qij$Q)[qij$ifil]-1L)
+
     the_model <- do.call(
       "inla.cgeneric.define",
       list(
         model = "inla_cgeneric_corgraphs_cholQ",
         shlib = libpath,
-        n = as.integer(nc),
+        n = n,
         debug = as.integer(debug),
-        np = as.integer(np),
-        i
+        ne = ne,
+        nnz = nnz,
+        nfi = nfi,
+        ii = ii,
+        jj = jj,
+        ilq = ilq,
+        ifi = ifi,
+        jfi = jfi,
+        lambda = lambda,
+        slambdas = slambdas
       )
     )
 

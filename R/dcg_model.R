@@ -55,6 +55,7 @@ cgeneric0_dcg_model <-
     q.el <- dcg_e2precision(d.el)
     NC <- q.el$nc
 
+    stopifnot(all(lambda>0))
     stopifnot(length(sigma.prior.reference) == NC)
     stopifnot(length(sigma.prior.probability) == NC)
     stopifnot(all(sigma.prior.probability>0.0))

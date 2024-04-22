@@ -48,15 +48,20 @@ graph_Laplacian <- function(graph) {
   return(q)
 }
 #' Precision and Cholesky fill-in indexes
-graph_qchol_index <- function(ij) {
-  n <- max(ij$ii, ij$jj)
-  q <- graph_Laplacian(ij) + diag(n)
-  ret <- list(n = n, ii = ij$ii, jj = ij$jj)
-  qnz <- q!=0
-  ret$qii <- which(qnz)
-  ret$qiiu <- which(qnz & lower.tri(q, diag = TRUE))
-  l <- t(chol(q))
-  ll <- abs(l * 1000)
-  ret$lii <- which(ll!=0)
+graph_qchol_index <- function(graph) {
+  Lap <- graph_Laplacian(graph)
+  n <- nrow(Lap)
+  ret <- list(
+    Q = Lap,
+    n = n,
+    ii = attr(Lap, "ii"),
+    jj = attr(Lap, "jj")
+    )
+  qnz <- Lap!=0
+  ret$iq <- which(qnz)
+  ret$ilq <- which(
+    qnz & lower.tri(q, diag = TRUE))
+  ll <- t(chol(Lap + diag(n)))
+  ret$ifil <- intersect(ret$ilq, which(ll!=0))
   return(ret)
 }
