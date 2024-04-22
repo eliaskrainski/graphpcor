@@ -1,3 +1,16 @@
+#'
+#' Function to check a DCG
+dcg_check <- function(dcg) {
+  ret <- TRUE
+  return(ret)
+}
+#' Function to convert a dcg into a graph
+dcg2graph <- function(dcg) {
+  sch <- gsub(" ", "", as.character(dcg))
+  sch <- lapply(sch, strsplit, split = "~")
+  ret <- sch
+  return(ret)
+}
 #' Function to remove the last parent from the given dcg
 #' @param dcg model structure given as a formula list
 #' @return a dcg without the last parent whose children
