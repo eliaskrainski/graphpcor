@@ -26,18 +26,8 @@ plot(inla.read.graph(G3.reord))
 plot(inla.read.graph(G4))
 plot(inla.read.graph(G4.reord))
 
-thetas11 <- rep(1, 6+5)
-thetas12 <- rep(1, 6+6)
-
-dag_L(G1, thetas11)
-
-dag_L(G2, thetas12)
-
-dag_L(G3, thetas11)
-dag_L(G3.reord, thetas11)
-
-dag_L(G4, thetas11)
-dag_L(G4.reord, thetas11)
+thetas11 <- rep(c(log(2), -1), c(6, 5))
+thetas12 <- rep(c(log(2), -1), c(6, 6))
 
 library(ggpubr)
 

@@ -16,12 +16,7 @@ Default is NULL and it will be random in this case.}
 Function to build a precision matrix from a graph model
 }
 \examples{
-g <- sparseMatrix(
-   i = c(1, 2, 3, 4, 5),
-   j = c(3, 3, 5, 5, 6),
-   x = 1L,
-   dims = c(6, 6)
-); g <- g + t(g)
+g <- list(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
 dag_L(g) ## random
 dag_L(g) ## random
 dag_L(g,

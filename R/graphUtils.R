@@ -20,7 +20,13 @@ graph_elements <- function(graph) {
   stopifnot(test)
   ii <- as.integer(substring(attr(test, "chs")[1, ], 2))
   jj <- as.integer(substring(attr(test, "chs")[2, ], 2))
-  return(list(ii = ii, jj = jj))
+  if(all(ii<jj)) {
+    ret <- list(ii = jj, jj = ii)
+  } else {
+    stopifnot(all(ii>jj))
+    ret <- list(ii = ii, jj = jj)
+  }
+  return(ret)
 }
 #' Precision structure (as discrete Laplacian)
 #' @param ij output of graph_elements
@@ -37,6 +43,8 @@ graph_Laplacian <- function(graph) {
     q[i, j] <- q[i, j] -1
     q[j, i] <- q[j, i] -1
   }
+  attr(q, "ii") <- ij$ii
+  attr(q, "jj") <- ij$jj
   return(q)
 }
 #' Precision and Cholesky fill-in indexes
@@ -46,8 +54,8 @@ graph_qchol_index <- function(ij) {
   ret <- list(n = n, ii = ij$ii, jj = ij$jj)
   qnz <- q!=0
   ret$qii <- which(qnz)
-  ret$qiiu <- which(qnz & upper.tri(q, diag = TRUE))
-  l <- chol(q)
+  ret$qiiu <- which(qnz & lower.tri(q, diag = TRUE))
+  l <- t(chol(q))
   ll <- abs(l * 1000)
   ret$lii <- which(ll!=0)
   return(ret)

@@ -27,12 +27,7 @@ fiL <- function(L, lfi) {
 #' Default is NULL and it will be random in this case.
 #' @export
 #' @examples
-#' g <- sparseMatrix(
-#'    i = c(1, 2, 3, 4, 5),
-#'    j = c(3, 3, 5, 5, 6),
-#'    x = 1L,
-#'    dims = c(6, 6)
-#' ); g <- g + t(g)
+#' g <- list(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
 #' dag_L(g) ## random
 #' dag_L(g) ## random
 #' dag_L(g,
@@ -41,27 +36,33 @@ fiL <- function(L, lfi) {
 #' )
 dag_L <- function(g, theta = NULL) {
   loadNamespace("Matrix")
-  g <- INLA::inla.as.sparse(g)
-  n <- nrow(g)
-  patt <- as.matrix((g !=0 ) + (Matrix::t(g) != 0))
-  patt[patt>1] <- 1L
-  R <- INLA::inla.as.sparse(
-    Diagonal(n, 1L + rowSums(patt)) -(patt))
-  ij <- which(R@i > R@j)
-  nnzq <- length(ij)
+  if(any(inherits(g, c("matrix", "Matrix"), which = TRUE))) {
+    R <- as.matrix(g)
+    n <- nrow(R)
+    not0 <- (R != 0) & lower.tri(R, diag = FALSE)
+    ii <- row(R)[not0]
+    jj <- col(R)[not0]
+  } else {
+    R <- as.matrix(graph_Laplacian(g))
+    n <- nrow(R)
+    ii <- attr(R, "ii")
+    jj <- attr(R, "jj")
+  }
+  stopifnot(n == max(ii,jj))
+  nnzq <- length(ii)
   if(is.null(theta))
     theta <- rnorm(n + nnzq)
-  L <- Diagonal(n, exp(theta[1:n]))
+  L <- diag(exp(theta[1:n]))
   if(nnzq==0)
-    return(crossprod(L))
-  sL <- t(chol(R))
+    return(INLA::inla.as.sparse(L))
+  sL <- t(chol(R + diag(n)))
+  lfi <- ((sL!=0) & (R==0)) * 1L
   retL <- as.matrix(sparseMatrix(
-    i = R@i[ij] + 1L,
-    j = R@j[ij] + 1L,
+    i = ii,
+    j = jj,
     x = theta[n + 1:nnzq],
     dims = c(n, n)
-  ) + L)
-  lfi <- ((sL!=0) & (R==0)) * 1L
+  )) + L
   if(sum(lfi)>0) {
     retL <- fiL(retL, lfi)
   }
