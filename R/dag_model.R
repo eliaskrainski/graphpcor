@@ -37,13 +37,15 @@ dag_model <-
     slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
     ne <- as.integer(length(qij$ii))
-    nnz <- n + nli
+    nnz <- n + ne
     nfi <- as.integer(length(qij$ifil))
 
     ii <- as.integer(c(1:n, qij$ii)-1L)
     jj <- as.integer(c(1:n, qij$jj)-1L)
+    ii <- ii[order(jj)]
+    jj <- jj[order(jj)]
     ilq <- as.integer(qij$ilq-1L)
-    il <- as.integer((1:(n^2))[qij$ilq]-1L)
+    iuq <- as.integer(qij$iuq-1L)
 
     ifi <- as.integer(row(qij$Q)[qij$ifil]-1L)
     jfi <- as.integer(col(qij$Q)[qij$ifil]-1L)
@@ -58,9 +60,10 @@ dag_model <-
         ne = ne,
         nnz = nnz,
         nfi = nfi,
-        ii = ii,
-        jj = jj,
+        ii = jj,
+        jj = ii,
         ilq = ilq,
+        iuq = iuq,
         ifi = ifi,
         jfi = jfi,
         lambda = lambda,

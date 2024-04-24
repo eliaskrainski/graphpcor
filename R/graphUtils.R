@@ -60,8 +60,10 @@ graph_qchol_index <- function(graph) {
   qnz <- Lap!=0
   ret$iq <- which(qnz)
   ret$ilq <- which(
-    qnz & lower.tri(q, diag = TRUE))
+    qnz & lower.tri(Lap, diag = TRUE))
+  ret$iuq <- which(
+    qnz & upper.tri(Lap, diag = TRUE))
   ll <- t(chol(Lap + diag(n)))
-  ret$ifil <- intersect(ret$ilq, which(ll!=0))
+  ret$ifil <- setdiff(which(ll!=0), ret$ilq)
   return(ret)
 }

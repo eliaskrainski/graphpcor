@@ -28,15 +28,16 @@
 #include "cgeneric_defs.h"
 
 void fillL(int *d, int *m, int *ii, int *jj, double *x) {
+  // fill lower triangle
   int i, j, l, k, p, n = *d, nij = *m;
   for(l=0; l<nij; l++) {
     i = ii[l];
     j = jj[l];
-  //  printf("%d: ", l);
+    //  printf("%d: ", l);
     if(j>0) {
       p = j*n + i;
       for(k=0; k<j; k++) {
-//        printf("%d: i %d, j %d, k %d\n", p, i, j, k);
+        //        printf("%d: i %d, j %d, k %d\n", p, i, j, k);
         x[p] -= x[k*n+i] * x[k*n+j] / x[j*n+j];
       }
     }
@@ -83,12 +84,16 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
   inla_cgeneric_vec_tp *ilq = data->ints[7];
   assert(M == ilq->len);
 
-  assert(!strcasecmp(data->ints[8]->name, "ifi"));     // this will always be the case
-  inla_cgeneric_vec_tp *ifi = data->ints[8];
+  assert(!strcasecmp(data->ints[8]->name, "iuq"));     // this will always be the case
+  inla_cgeneric_vec_tp *iuq = data->ints[8];
+  assert(M == iuq->len);
+
+  assert(!strcasecmp(data->ints[9]->name, "ifi"));     // this will always be the case
+  inla_cgeneric_vec_tp *ifi = data->ints[9];
   assert(nfi == ifi->len);
 
-  assert(!strcasecmp(data->ints[9]->name, "jfi"));     // this will always be the case
-  inla_cgeneric_vec_tp *jfi = data->ints[9];
+  assert(!strcasecmp(data->ints[10]->name, "jfi"));     // this will always be the case
+  inla_cgeneric_vec_tp *jfi = data->ints[10];
   assert(nfi == jfi->len);
 
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
@@ -113,6 +118,14 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
     for(i=0; i<jj->len; i++) {
       printf("%d ", jj->ints[i]);
     }
+    printf("\n ilq:\n");
+    for(i=0; i<ilq->len; i++) {
+      printf("%d ", ilq->ints[i]);
+    }
+    printf("\n iuq:\n");
+    for(i=0; i<iuq->len; i++) {
+      printf("%d ", iuq->ints[i]);
+    }
 
     printf("\n ifi:\n");
     for(i=0; i<ifi->len; i++) {
@@ -125,6 +138,33 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
 
   }
 
+  double param[M];
+  if(theta) {
+    k = 0;
+    for(i=0; i<M; i++) {
+      if(ii->ints[i]==jj->ints[i]) {
+        param[i] = exp(theta[k++]);
+      }
+    }
+    if(ne>0) {
+      for(i=0; i<M; i++) {
+        if(ii->ints[i]!=jj->ints[i]) {
+          param[i] = theta[k++];
+        }
+      }
+    }
+  } else {
+    for(i=0; i<M; i++) {
+      param[i] = NAN;
+    }
+  }
+
+  printf("\n params:\n");
+  for(i=0; i<M; i++) {
+    printf("%2.2f ", param[i]);
+  }
+  printf("\n");
+
   switch (cmd) {
   case INLA_CGENERIC_GRAPH:
   {
@@ -133,9 +173,9 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
     ret[0] = N;                                    /* dimension */
     ret[1] = M;
     /* number of (i <= j) */
-    for (i=0; i<ne; i++) {
+    for (i=0; i<M; i++) {
         ret[k] = ii->ints[i];
-        ret[ne+k] = jj->ints[i];
+        ret[M+k] = jj->ints[i];
         k++;
     }
 
@@ -150,17 +190,28 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
     ret[1] = M;				       /* REQUIRED */
 
     int N2 = N*N;
-    char transa = 'T';
-    char transb = 'N';
     double qq[N2], ll[N2];
-
     k=0;
     for(i=0; i<N; i++) {
-      ll[k] = exp(theta[i]);
-      k += N;
+      for(j=0; j<N; j++) {
+        ll[k] = 0.0;
+        qq[k++] = 0.0;
+      }
     }
-    for(i=(N-1); i<nnz; i++) {
-      ll[ilq->ints[i]] = theta[i];
+
+    for(i=0; i<M; i++) {
+      ll[ilq->ints[i]] = param[i];
+    }
+    if(debug>99) {
+      printf("L[i,j]:\n");
+      k=0;
+      for(i=0; i<N; i++) {
+        for(j=0; j<N; j++) {
+          printf("%2.3f ", ll[k]);
+          k++;
+        }
+        printf("\n");
+      }
     }
 
     if(nfi>0) {
@@ -168,7 +219,20 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
       fillL(&N, &nfi, &ifi->ints[0], &jfi->ints[0], &ll[0]) ;
 
     }
+    if(debug>99) {
+      printf("L[i,j]:\n");
+      k=0;
+      for(i=0; i<N; i++) {
+        for(j=0; j<N; j++) {
+          printf("%2.3f ", ll[k]);
+          k++;
+        }
+        printf("\n");
+      }
+    }
 
+    char transa = 'N';
+    char transb = 'T';
     double alpha = 1.0, beta = 0.0;
     dgemm_(&transa, &transb, &N, &N, &N, &alpha,
            &ll[0], &N, &ll[0], &N, &beta, &qq[0], &N, F_ONE);
@@ -191,7 +255,7 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
       k += N;
     }
     for(i=0; i<nnz; i++) {
-      ret[offset+ilq->ints[i]] = qq[ilq->ints[i]];
+      ret[offset+iuq->ints[i]] = qq[iuq->ints[i]];
     }
 
   }

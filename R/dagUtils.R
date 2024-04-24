@@ -4,8 +4,8 @@
 #' @return a filled L matrix.
 fiL <- function(L, lfi) {
   L <- as.matrix(L)
-  ii <- row(lfi)[as.matrix(lfi)!=0]
-  jj <- col(lfi)[as.matrix(lfi)!=0]
+  ii <- row(L)[lfi]
+  jj <- col(L)[lfi]
   for(v in 1:length(ii)) {
     i <- ii[v]
     j <- jj[v]
@@ -55,15 +55,15 @@ dag_L <- function(g, theta = NULL) {
   L <- diag(exp(theta[1:n]))
   if(nnzq==0)
     return(INLA::inla.as.sparse(L))
-  sL <- t(chol(R + diag(n)))
-  lfi <- ((sL!=0) & (R==0)) * 1L
   retL <- as.matrix(sparseMatrix(
     i = ii,
     j = jj,
     x = theta[n + 1:nnzq],
     dims = c(n, n)
   )) + L
-  if(sum(lfi)>0) {
+  sL <- t(chol(R + diag(n)))
+  lfi <- which((sL!=0) & (R==0))
+  if(length(lfi)>0) {
     retL <- fiL(retL, lfi)
   }
   return(INLA::inla.as.sparse(retL))
