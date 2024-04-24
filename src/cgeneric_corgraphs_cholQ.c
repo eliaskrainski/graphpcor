@@ -159,11 +159,14 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
     }
   }
 
-  printf("\n params:\n");
-  for(i=0; i<M; i++) {
-    printf("%2.2f ", param[i]);
+  if(debug>99){
+    printf("\n params:\n");
+    for(i=0; i<M; i++) {
+      printf("%2.2f ", param[i]);
+    }
+    printf("\n");
+
   }
-  printf("\n");
 
   switch (cmd) {
   case INLA_CGENERIC_GRAPH:
@@ -249,13 +252,10 @@ double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, i
       }
     }
 
-    k=0;
-    for(i=0; i<N; i++) {
-      ret[offset+k] = qq[k];
-      k += N;
-    }
-    for(i=0; i<nnz; i++) {
-      ret[offset+iuq->ints[i]] = qq[iuq->ints[i]];
+    k=2;
+    for(i=0; i<M; i++) {
+      ret[k] = qq[iuq->ints[i]];
+      k++;
     }
 
   }

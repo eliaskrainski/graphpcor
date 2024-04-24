@@ -48,7 +48,7 @@ dag_L <- function(g, theta = NULL) {
     ii <- attr(R, "ii")
     jj <- attr(R, "jj")
   }
-  stopifnot(n == max(ii,jj))
+##  stopifnot(n == max(ii,jj))
   nnzq <- length(ii)
   if(is.null(theta))
     theta <- rnorm(n + nnzq)
