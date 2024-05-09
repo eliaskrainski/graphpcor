@@ -25,6 +25,8 @@ dag_model <-
       }
     }
 
+    if(is.matrix(graph))
+      graph <- matrix2graph(graph)
     qij <- graph_qchol_index(graph)
     n <- as.integer(qij$n)
     stopifnot(n>0)

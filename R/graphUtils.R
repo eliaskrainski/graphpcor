@@ -1,7 +1,18 @@
+#' Make a graph from a matrix
+#' @param G the link matrix
+matrix2graph <- function(G) {
+  iG <- (G!=0) & upper.tri(G)
+  i <- row(G)[iG]
+  j <- col(G)[iG]
+  nlinks <- length(i)
+  if(nlinks<1) return(NULL)
+  r <- lapply(1:nlinks, function(k)
+    as.formula(paste0("c", i[k], "~c", j[k])))
+  return(r)
+}
 #' Function to check a graph
 #' @param graph the graph
 graph_check <- function(graph) {
-  n <- length(graph)
   nlinks <- sum(!sapply(graph, is.null))
   if(nlinks>0) {
     gchar <- gsub(" ", "", as.character(graph))
@@ -12,7 +23,7 @@ graph_check <- function(graph) {
       all(substr(chs[2, ], 1, 1) == "c")
     ij <- as.integer(substring(chs, 2))
     r <- r&all(!is.na(ij))
-
+    n <- min(n, max(ij))
   } else {
     r <- TRUE
     chs <- matrix("", 2, 0)

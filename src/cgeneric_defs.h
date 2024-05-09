@@ -49,7 +49,9 @@ __BEGIN_DECLS
 #include "cgeneric.h"
 #include "corgraphs_utils.h"
 
+#if !defined(Calloc)
 #define Calloc(n_, type_)  (type_ *)calloc((n_), sizeof(type_))
+#endif
 #define pow2(x) ((x)*(x))
 #define pow3(x) (pow2(x)*(x))
 #define pow4(x) (pow2(x)*pow2(x))
