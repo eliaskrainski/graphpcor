@@ -56,13 +56,15 @@ cgeneric_get(dm, cmd = "initial")
 cgeneric_get(dm, cmd = "mu")
 cgeneric_get(dm, cmd = "log_prior")
 
+cgeneric_get(dm, cmd = "log_prior", theta = rnorm(100))
+cgeneric_get(dm, cmd = "log_prior", theta = rnorm(100))
+
 str(
     cgeneric_get(
         dm,
         cmd = c("graph", "Q", "initial", "mu", "log_prior")
     )
 )
-
 
 str(
     cgeneric_get(
@@ -74,7 +76,6 @@ str(
         )
     )
 )
-
 
 detach("package:corGraphs", unload = TRUE)
 library(corGraphs)

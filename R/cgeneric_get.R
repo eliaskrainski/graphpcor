@@ -8,10 +8,12 @@ cgeneric_get <- function(cgeneric_model,
                          theta = NULL,
                          cmd = c("graph", "Q", "initial", "mu", "log_prior")) {
 
+#  stopifnot(cgeneric_model$f$model == "cgeneric")
+ # stopifnot(is.null(cgeneric_model$f$model$cgeneric))
+
   cgdata <- cgeneric_model$f$cgeneric$data
   stopifnot(!is.null(cgdata))
   stopifnot(!is.null(cgdata$ints))
-  stopifnot(!is.null(cgdata$doubles))
   stopifnot(!is.null(cgdata$characters))
 
   cmds <- c("graph", "Q", "initial", "mu", "log_prior")
@@ -28,6 +30,8 @@ cgeneric_get <- function(cgeneric_model,
       cgdata$ints,
       cgdata$doubles,
       cgdata$characters,
+      cgdata$mats,
+      cgdata$smats,
       PACKAGE = "corGraphs"
     )
   }
@@ -44,6 +48,8 @@ cgeneric_get <- function(cgeneric_model,
           cgdata$ints,
           cgdata$doubles,
           cgdata$characters,
+          cgdata$mats,
+          cgdata$smats,
           PACKAGE = "corGraphs"
         )
       )
@@ -59,6 +65,8 @@ cgeneric_get <- function(cgeneric_model,
           cgdata$ints,
           cgdata$doubles,
           cgdata$characters,
+          cgdata$mats,
+          cgdata$smats,
           PACKAGE = "corGraphs"
         )
       })

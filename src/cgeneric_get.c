@@ -32,15 +32,55 @@
 #include <Rinternals.h>
 #include "cgeneric_defs.h"
 
-SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP chars) {
+SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP chars, SEXP mats, SEXP smats) {
 
-  // initial check
-  if(!isNewList(ints))
-    error("'ints' must be a list");
-  if(!isNewList(doubles))
-    error("'doubles' must be a list");
-  if(!isNewList(chars))
-    error("'chars' must be a list");
+  int ni=0, nd=0, nc=0, nm=0, nsm=0;
+  // initial check: mandatory arguments
+  if(isNewList(ints)) {
+    ni = length(ints);
+    if(ni<2) {
+      error("at least length 2 'ints' must be provided!");
+    }
+  } else {
+    error("'ints' must be a list!");
+  }
+  if(isNewList(chars)) {
+    nc = length(chars);
+    if(nc<2) {
+      error("at least length 2 'chars' must be provided!");
+    }
+  } else{
+    error("'chars' must be a list!");
+  }
+
+  // check the optional arguments
+  if(isNull(doubles)) {
+    nd = 0;
+  } else {
+    if(isNewList(doubles)) {
+      nd = length(doubles);
+    } else {
+      error("'doubles' must be a list!");
+    }
+  }
+  if(isNull(mats)) {
+    nm = 0;
+  } else {
+    if(isNewList(mats)) {
+      nm = length(mats);
+    } else {
+      error("'mats' must be a list");
+    }
+  }
+  if(isNull(smats)) {
+    nsm = 0;
+  } else {
+    if(isNewList(smats)) {
+      nsm = length(smats);
+    } else {
+      error("'smats' must be a list");
+    }
+  }
 
   // get initial info
   char *CMD = (char*)CHAR(STRING_ELT(Rcmd, 0));
@@ -51,9 +91,6 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     Rprintf("Rcmd is %s\n", CMD);
     Rprintf("n = %d, debug = %d\n", n, debug);
   }
-  int ni = length(ints);
-  int nd = length(doubles);
-  int nc = length(chars);
   if(debug>0) {
     Rprintf("ni = %d, ", ni);
     Rprintf("nd = %d, ", nd);
@@ -72,13 +109,20 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     Rprintf("\n");
   }
 
-  int j, ilen[ni], dlen[nd], clen[nc];
+  // define objects
+  int j, ilen[ni], clen[nc];
+  lt_dlhandle handle;
+  inla_cgeneric_func_tp *model_func = NULL;
+  inla_cgeneric_data_tp *cgeneric_data = Calloc(1, inla_cgeneric_data_tp);
+  char *cgeneric_shlib;
+  char *cgeneric_model;
+  int *iaux;
+  double *daux, *ret = NULL;
+  char *pcaux;
 
-  // collect data lengths and names
+  // collect lengths and names from ints
   const char *caux;
   SEXP inames = getAttrib(ints, R_NamesSymbol);
-  SEXP dnames = getAttrib(doubles, R_NamesSymbol);
-  SEXP cnames = getAttrib(chars, R_NamesSymbol);
   for(i=0; i<ni; i++) {
     ilen[i] = length(VECTOR_ELT(ints, i));
     if(debug>0) {
@@ -87,35 +131,6 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
               i+1, caux, ilen[i]);
     }
   }
-  if(nd>0) {
-    for(i=0; i<nd; i++) {
-      dlen[i] = length(VECTOR_ELT(doubles, i));
-      if(debug>0) {
-        caux = CHAR(STRING_ELT(dnames, i));
-        Rprintf("length(doubles[[%d]]), %s, is %d\n", i+1, caux, dlen[i]);
-      }
-    }
-  }
-  if(nc>0) {
-    for(i=0; i<nc; i++) {
-      clen[i] = length(VECTOR_ELT(chars, i));
-      caux = CHAR(STRING_ELT(cnames, i));
-      if(debug>0) {
-        Rprintf("length(chars[[%d]]), %s, is %d\n", i+1, caux, clen[i]);
-      }
-      assert(clen[i]==1);
-    }
-  }
-
-// define objects
-  lt_dlhandle handle;
-  inla_cgeneric_func_tp *model_func = NULL;
-  inla_cgeneric_data_tp *cgeneric_data = Calloc(1, inla_cgeneric_data_tp);
-  char *cgeneric_shlib;
-  char *cgeneric_model;
-  int naux, *iaux;
-  double *daux, *ret = NULL;
-  char *pcaux;
 
   // allocate and collect ints
   cgeneric_data->n_ints = ni;
@@ -132,30 +147,48 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     iaux = INTEGER(VECTOR_ELT(ints, i));
     for(j=0; j<ilen[i]; j++) {
       cgeneric_data->ints[i]->ints[j] = iaux[j];
-//      Rprintf("%d ", cgeneric_data->ints[i]->ints[j]);
     }
-  //  Rprintf("\n");
   }
 
-  // allocate and collect doubles
-  cgeneric_data->n_doubles = nd;
-  cgeneric_data->doubles = Calloc(nd, inla_cgeneric_vec_tp *);
-  pcaux = (char*) CHAR(STRING_ELT(dnames,0));
-  for(i=0; i<nd; i++) {
-    cgeneric_data->doubles[i] = Calloc(1, inla_cgeneric_vec_tp);
-    pcaux = (char*) CHAR(STRING_ELT(dnames,i));
-    cgeneric_data->doubles[i]->name = pcaux;
-    cgeneric_data->doubles[i]->len = dlen[i];
-    cgeneric_data->doubles[i]->doubles = Calloc(dlen[i], double);
+  if(nd>0) {
+    // collect lengths and names from doubles
+    int dlen[nd];
+    SEXP dnames = getAttrib(doubles, R_NamesSymbol);
+    for(i=0; i<nd; i++) {
+      dlen[i] = length(VECTOR_ELT(doubles, i));
+      if(debug>0) {
+        caux = CHAR(STRING_ELT(dnames, i));
+        Rprintf("length(doubles[[%d]]), %s, is %d\n", i+1, caux, dlen[i]);
+      }
+    }
+    // allocate and collect doubles
+    cgeneric_data->n_doubles = nd;
+    cgeneric_data->doubles = Calloc(nd, inla_cgeneric_vec_tp *);
+    pcaux = (char*) CHAR(STRING_ELT(dnames,0));
+    for(i=0; i<nd; i++) {
+      cgeneric_data->doubles[i] = Calloc(1, inla_cgeneric_vec_tp);
+      pcaux = (char*) CHAR(STRING_ELT(dnames,i));
+      cgeneric_data->doubles[i]->name = pcaux;
+      cgeneric_data->doubles[i]->len = dlen[i];
+      cgeneric_data->doubles[i]->doubles = Calloc(dlen[i], double);
+      daux = REAL(VECTOR_ELT(doubles, i));
+      for(j=0; j<dlen[i]; j++) {
+        cgeneric_data->doubles[i]->doubles[j] = daux[j];
+        //  Rprintf("%f ", cgeneric_data->doubles[i]->doubles[j]);
+      }
+      //Rprintf("\n");
+    }
+  }
+
+  // collect lengths and names from chars
+  SEXP cnames = getAttrib(chars, R_NamesSymbol);
+  for(i=0; i<nc; i++) {
+    clen[i] = length(VECTOR_ELT(chars, i));
+    caux = CHAR(STRING_ELT(cnames, i));
     if(debug>0) {
-      Rprintf("%d: length(%s) is %d\n", i+1, cgeneric_data->doubles[i]->name, dlen[i]);
+      Rprintf("length(chars[[%d]]), %s, is %d\n", i+1, caux, clen[i]);
     }
-    daux = REAL(VECTOR_ELT(doubles, i));
-    for(j=0; j<dlen[i]; j++) {
-      cgeneric_data->doubles[i]->doubles[j] = daux[j];
-    //  Rprintf("%f ", cgeneric_data->doubles[i]->doubles[j]);
-    }
-    //Rprintf("\n");
+    assert(clen[i]==1);
   }
 
   // allocate and collect chars
@@ -169,8 +202,6 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     cgeneric_data->chars[i]->chars = Calloc(clen[i] + 1L, char);
     if(debug>0) {
       Rprintf("%d: length(%s) is %d\n", i+1, cgeneric_data->chars[i]->name, clen[i]);
-    }
-    if(debug>0) {
       Rprintf("%s, ", pcaux);
       Rprintf("%s :", CHAR(STRING_ELT(VECTOR_ELT(chars, i), 0)));
     }
@@ -180,11 +211,81 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
       Rprintf("%s \n", cgeneric_data->chars[i]->chars);
     }
   }
-  // check strings
-  assert(cgeneric_data->chars[0]->name == "model");
+
+  // check the mandadory strings
+//  assert(cgeneric_data->chars[0]->name == "model");
+  if(strcmp(cgeneric_data->chars[0]->name, "model") != 0)
+    error("'chars[[1]]' is not equal 'model'");
   cgeneric_model = cgeneric_data->chars[0]->chars;
-  assert(cgeneric_data->chars[1]->name == "shlib");
+  //assert(cgeneric_data->chars[1]->name == "shlib");
+  if(strcmp(cgeneric_data->chars[1]->name, "shlib") != 0)
+    error("'chars[[2]]' is not equal 'shlib'");
   cgeneric_shlib = cgeneric_data->chars[1]->chars;
+
+  if(nm>0) {
+    // collect lengths and names from mats
+    int mnr[nm], mnc[nm], mlen[nm];
+    SEXP mnames = getAttrib(mats, R_NamesSymbol);
+    for(i=0; i<nm; i++) {
+      mnr[i] = REAL(VECTOR_ELT(mats, i))[0];
+      mnc[i] = REAL(VECTOR_ELT(mats, i))[1];
+      mlen[i] = mnr[i] * mnc[i];
+      if(debug>0) {
+        caux = CHAR(STRING_ELT(mnames, i));
+        Rprintf("dim(mats[[%d]]), %s, is %d %d\n", i+1, caux, mnr[i], mnc[i]);
+      }
+    }
+
+    // allocate and collect doubles
+    cgeneric_data->n_mats = nm;
+    cgeneric_data->mats = Calloc(nm, inla_cgeneric_mat_tp *);
+    pcaux = (char*) CHAR(STRING_ELT(mnames,0));
+    for(i=0; i<nm; i++) {
+      cgeneric_data->mats[i] = Calloc(1, inla_cgeneric_mat_tp);
+      pcaux = (char*) CHAR(STRING_ELT(mnames,i));
+      cgeneric_data->mats[i]->name = pcaux;
+      cgeneric_data->mats[i]->nrow = mnr[i];
+      cgeneric_data->mats[i]->ncol = mnc[i];
+      cgeneric_data->mats[i]->x = Calloc(mlen[i], double);
+      daux = REAL(VECTOR_ELT(mats, i));
+      for(j=0; j<mlen[i]; j++) {
+        cgeneric_data->mats[i]->x[j] = daux[2+j];
+      }
+    }
+
+  }
+
+  if(nsm>0) {
+    // collect lengths and names from smats
+    int smlen[n], smnr[nsm], smnc[nsm], smn[nsm];
+    SEXP smnames = getAttrib(smats, R_NamesSymbol);
+    for(i=0; i<nsm; i++) {
+      smlen[i] = length(VECTOR_ELT(smats, i));
+      if(debug>0) {
+        caux = CHAR(STRING_ELT(smnames, i));
+        Rprintf("length(smats[[%d]]), %s, is %d\n", i+1, caux, smlen[i]);
+      }
+    }
+
+    // allocate and collect smats
+    cgeneric_data->n_smats = nsm;
+    cgeneric_data->smats = Calloc(nsm, inla_cgeneric_smat_tp *);
+    pcaux = (char*) CHAR(STRING_ELT(smnames,0));
+    for(i=0; i<nsm; i++) {
+      cgeneric_data->smats[i] = Calloc(1, inla_cgeneric_smat_tp);
+      pcaux = (char*) CHAR(STRING_ELT(smnames,i));
+      cgeneric_data->smats[i]->name = pcaux;
+      cgeneric_data->smats[i]->nrow = smnr[i];
+      cgeneric_data->smats[i]->ncol = smnc[i];
+      cgeneric_data->smats[i]->n = smn[i];
+      cgeneric_data->smats[i]->x = Calloc(smn[i], double);
+      daux = REAL(VECTOR_ELT(mats, i));
+      for(j=0; j<smn[i]; j++) {
+        cgeneric_data->smats[i]->x[j] = daux[2+j];
+      }
+    }
+
+  }
 
   // load lib
   static int ltdl_init = 1;
