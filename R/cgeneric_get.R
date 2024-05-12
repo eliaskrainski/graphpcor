@@ -30,8 +30,8 @@ cgeneric_get <- function(cgeneric_model,
       cgdata$ints,
       cgdata$doubles,
       cgdata$characters,
-      cgdata$mats,
-      cgdata$smats,
+      cgdata$matrices,
+      cgdata$smatrices,
       PACKAGE = "corGraphs"
     )
   }
@@ -48,8 +48,8 @@ cgeneric_get <- function(cgeneric_model,
           cgdata$ints,
           cgdata$doubles,
           cgdata$characters,
-          cgdata$mats,
-          cgdata$smats,
+          cgdata$matrices,
+          cgdata$smatrices,
           PACKAGE = "corGraphs"
         )
       )
@@ -65,8 +65,8 @@ cgeneric_get <- function(cgeneric_model,
           cgdata$ints,
           cgdata$doubles,
           cgdata$characters,
-          cgdata$mats,
-          cgdata$smats,
+          cgdata$matrices,
+          cgdata$smatrices,
           PACKAGE = "corGraphs"
         )
       })

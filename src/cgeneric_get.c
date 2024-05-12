@@ -38,14 +38,17 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   // initial check: mandatory arguments
   if(isNewList(ints)) {
     ni = length(ints);
+    assert(ni>1);
     if(ni<2) {
       error("at least length 2 'ints' must be provided!");
     }
   } else {
     error("'ints' must be a list!");
   }
+
   if(isNewList(chars)) {
     nc = length(chars);
+    assert(nc>1);
     if(nc<2) {
       error("at least length 2 'chars' must be provided!");
     }
@@ -59,6 +62,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   } else {
     if(isNewList(doubles)) {
       nd = length(doubles);
+      assert(nd>0);
     } else {
       error("'doubles' must be a list!");
     }
@@ -68,6 +72,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   } else {
     if(isNewList(mats)) {
       nm = length(mats);
+      assert(nm>0);
     } else {
       error("'mats' must be a list");
     }
@@ -77,6 +82,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   } else {
     if(isNewList(smats)) {
       nsm = length(smats);
+      assert(nsm>0);
     } else {
       error("'smats' must be a list");
     }
@@ -92,11 +98,8 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     Rprintf("n = %d, debug = %d\n", n, debug);
   }
   if(debug>0) {
-    Rprintf("ni = %d, ", ni);
-    Rprintf("nd = %d, ", nd);
-    Rprintf("nc = %d \n", nc);
+    Rprintf("ni = %d, nd = %d, nc = %d, nm = %d, nsm = %d\n", ni, nd, nc, nm, nsm);
   }
-  assert(ni>0);
 
   double *theta = NULL;
   if(!isNull(Stheta))
@@ -119,30 +122,23 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   int *iaux;
   double *daux, *ret = NULL;
   char *pcaux;
-
-  // collect lengths and names from ints
   const char *caux;
-  SEXP inames = getAttrib(ints, R_NamesSymbol);
-  for(i=0; i<ni; i++) {
-    ilen[i] = length(VECTOR_ELT(ints, i));
-    if(debug>0) {
-      caux = CHAR(STRING_ELT(inames, i));
-      Rprintf("length(ints[[%d]]), %s, is %d\n",
-              i+1, caux, ilen[i]);
-    }
-  }
 
-  // allocate and collect ints
+  // collect data from ints
+  SEXP inames = getAttrib(ints, R_NamesSymbol);
   cgeneric_data->n_ints = ni;
   cgeneric_data->ints = Calloc(ni, inla_cgeneric_vec_tp *);
   for(i=0; i<ni; i++) {
+    ilen[i] = length(VECTOR_ELT(ints, i));
     cgeneric_data->ints[i] = Calloc(1, inla_cgeneric_vec_tp);
     pcaux = (char*) CHAR(STRING_ELT(inames,i));
     cgeneric_data->ints[i]->name = pcaux;
     cgeneric_data->ints[i]->len = ilen[i];
     cgeneric_data->ints[i]->ints = Calloc(ilen[i], int);
     if(debug>0) {
-      Rprintf("%d: length(%s) is %d\n", i+1, cgeneric_data->ints[i]->name, ilen[i]);
+      caux = CHAR(STRING_ELT(inames, i));
+      Rprintf("length(ints[[%d]]), %s, is %d\n",
+              i+1, caux, ilen[i]);
     }
     iaux = INTEGER(VECTOR_ELT(ints, i));
     for(j=0; j<ilen[i]; j++) {
@@ -174,14 +170,14 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
       daux = REAL(VECTOR_ELT(doubles, i));
       for(j=0; j<dlen[i]; j++) {
         cgeneric_data->doubles[i]->doubles[j] = daux[j];
-        //  Rprintf("%f ", cgeneric_data->doubles[i]->doubles[j]);
       }
-      //Rprintf("\n");
     }
   }
 
-  // collect lengths and names from chars
+  // collect data from chars
   SEXP cnames = getAttrib(chars, R_NamesSymbol);
+  cgeneric_data->n_chars = nc;
+  cgeneric_data->chars = Calloc(nc, inla_cgeneric_vec_tp *);
   for(i=0; i<nc; i++) {
     clen[i] = length(VECTOR_ELT(chars, i));
     caux = CHAR(STRING_ELT(cnames, i));
@@ -189,12 +185,6 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
       Rprintf("length(chars[[%d]]), %s, is %d\n", i+1, caux, clen[i]);
     }
     assert(clen[i]==1);
-  }
-
-  // allocate and collect chars
-  cgeneric_data->n_chars = nc;
-  cgeneric_data->chars = Calloc(nc, inla_cgeneric_vec_tp *);
-  for(i=0; i<nc; i++) {
     cgeneric_data->chars[i] = Calloc(1, inla_cgeneric_vec_tp);
     pcaux = (char*) CHAR(STRING_ELT(cnames,i));
     cgeneric_data->chars[i]->name = pcaux;
@@ -212,7 +202,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     }
   }
 
-  // check the mandadory strings
+  // check the mandatory strings
 //  assert(cgeneric_data->chars[0]->name == "model");
   if(strcmp(cgeneric_data->chars[0]->name, "model") != 0)
     error("'chars[[1]]' is not equal 'model'");
@@ -223,31 +213,27 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   cgeneric_shlib = cgeneric_data->chars[1]->chars;
 
   if(nm>0) {
-    // collect lengths and names from mats
+    // collect data from mats
     int mnr[nm], mnc[nm], mlen[nm];
     SEXP mnames = getAttrib(mats, R_NamesSymbol);
+    cgeneric_data->n_mats = nm;
+    cgeneric_data->mats = Calloc(nm, inla_cgeneric_mat_tp *);
+    pcaux = (char*) CHAR(STRING_ELT(mnames,0));
     for(i=0; i<nm; i++) {
-      mnr[i] = REAL(VECTOR_ELT(mats, i))[0];
-      mnc[i] = REAL(VECTOR_ELT(mats, i))[1];
+      daux = REAL(VECTOR_ELT(mats, i));
+      mnr[i] = daux[0];
+      mnc[i] = daux[1];
       mlen[i] = mnr[i] * mnc[i];
       if(debug>0) {
         caux = CHAR(STRING_ELT(mnames, i));
         Rprintf("dim(mats[[%d]]), %s, is %d %d\n", i+1, caux, mnr[i], mnc[i]);
       }
-    }
-
-    // allocate and collect doubles
-    cgeneric_data->n_mats = nm;
-    cgeneric_data->mats = Calloc(nm, inla_cgeneric_mat_tp *);
-    pcaux = (char*) CHAR(STRING_ELT(mnames,0));
-    for(i=0; i<nm; i++) {
       cgeneric_data->mats[i] = Calloc(1, inla_cgeneric_mat_tp);
       pcaux = (char*) CHAR(STRING_ELT(mnames,i));
       cgeneric_data->mats[i]->name = pcaux;
       cgeneric_data->mats[i]->nrow = mnr[i];
       cgeneric_data->mats[i]->ncol = mnc[i];
       cgeneric_data->mats[i]->x = Calloc(mlen[i], double);
-      daux = REAL(VECTOR_ELT(mats, i));
       for(j=0; j<mlen[i]; j++) {
         cgeneric_data->mats[i]->x[j] = daux[2+j];
       }
@@ -257,31 +243,39 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
 
   if(nsm>0) {
     // collect lengths and names from smats
-    int smlen[n], smnr[nsm], smnc[nsm], smn[nsm];
+    int smlen[nsm], smnr[nsm], smnc[nsm], smn[nsm];
     SEXP smnames = getAttrib(smats, R_NamesSymbol);
+    cgeneric_data->n_smats = nsm;
+    cgeneric_data->smats = Calloc(nsm, inla_cgeneric_smat_tp *);
+    pcaux = (char*) CHAR(STRING_ELT(smnames,0));
     for(i=0; i<nsm; i++) {
       smlen[i] = length(VECTOR_ELT(smats, i));
       if(debug>0) {
         caux = CHAR(STRING_ELT(smnames, i));
         Rprintf("length(smats[[%d]]), %s, is %d\n", i+1, caux, smlen[i]);
       }
-    }
-
-    // allocate and collect smats
-    cgeneric_data->n_smats = nsm;
-    cgeneric_data->smats = Calloc(nsm, inla_cgeneric_smat_tp *);
-    pcaux = (char*) CHAR(STRING_ELT(smnames,0));
-    for(i=0; i<nsm; i++) {
+      daux = REAL(VECTOR_ELT(smats, i));
+      int offset = 0;
+      smnr[i] = daux[offset++];
+      smnc[i] = daux[offset++];
+      smn[i] = daux[offset++];
       cgeneric_data->smats[i] = Calloc(1, inla_cgeneric_smat_tp);
       pcaux = (char*) CHAR(STRING_ELT(smnames,i));
       cgeneric_data->smats[i]->name = pcaux;
       cgeneric_data->smats[i]->nrow = smnr[i];
       cgeneric_data->smats[i]->ncol = smnc[i];
       cgeneric_data->smats[i]->n = smn[i];
+      cgeneric_data->smats[i]->i = Calloc(smn[i], int);
+      cgeneric_data->smats[i]->j = Calloc(smn[i], int);
       cgeneric_data->smats[i]->x = Calloc(smn[i], double);
-      daux = REAL(VECTOR_ELT(mats, i));
       for(j=0; j<smn[i]; j++) {
-        cgeneric_data->smats[i]->x[j] = daux[2+j];
+        cgeneric_data->smats[i]->i[j] = (int)daux[offset++];
+      }
+      for(j=0; j<smn[i]; j++) {
+        cgeneric_data->smats[i]->j[j] = (int)daux[offset++];
+      }
+      for(j=0; j<smn[i]; j++) {
+        cgeneric_data->smats[i]->x[j] = daux[offset++];
       }
     }
 
@@ -305,12 +299,12 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     SEXP ii = PROTECT(allocVector(INTSXP, nout));
     iaux = INTEGER(ii);
     for(i = 0; i < nout; i++) {
-      iaux[i] = ret[i];
+      iaux[i] = ret[2+i];
     }
     SEXP jj = PROTECT(allocVector(INTSXP, nout));
     iaux = INTEGER(jj);
     for(i = 0; i < nout; i++) {
-      iaux[i] = ret[nout+i];
+      iaux[i] = ret[2+nout+i];
     }
     Rret = PROTECT(allocVector(VECSXP, 2));
     SET_VECTOR_ELT(Rret, 0, ii);
