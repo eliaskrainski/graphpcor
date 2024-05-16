@@ -111,6 +111,7 @@ double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, 
   }
 
   switch (cmd) {
+
   case INLA_CGENERIC_GRAPH:
   {
     k = 2;

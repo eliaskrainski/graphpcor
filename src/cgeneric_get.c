@@ -341,7 +341,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     UNPROTECT(1);
   }
 
-  if(strcmp(CMD, "log_prior") == 0) {
+  if(strcmp(CMD, "log.prior") == 0) {
     ret = model_func(INLA_CGENERIC_LOG_PRIOR, theta, cgeneric_data);
     Rret = PROTECT(allocVector(REALSXP, 1));
     REAL(Rret)[0] = ret[0];
