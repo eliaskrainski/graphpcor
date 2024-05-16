@@ -9,16 +9,15 @@ cgeneric_get <- function(cgeneric_model,
                          theta = NULL
                          ) {
 
-#  stopifnot(cgeneric_model$f$model == "cgeneric")
- # stopifnot(is.null(cgeneric_model$f$model$cgeneric))
+  cmd[cmd == "log.prior"] <- "log_prior"
+  cmd <- unique(cmd)
 
-##  print(str(cgeneric_model))
   cgdata <- cgeneric_model$f$cgeneric$data
   stopifnot(!is.null(cgdata))
   stopifnot(!is.null(cgdata$ints))
   stopifnot(!is.null(cgdata$characters))
 
-  cmds <- c("graph", "Q", "initial", "mu", "log.prior")
+  cmds <- c("graph", "Q", "initial", "mu", "log_prior")
   cmd <- match.arg(cmd,
                    cmds,
                    several.ok = TRUE)
