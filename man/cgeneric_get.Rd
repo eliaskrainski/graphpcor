@@ -6,17 +6,17 @@
 \usage{
 cgeneric_get(
   cgeneric_model,
-  theta = NULL,
-  cmd = c("graph", "Q", "initial", "mu", "log_prior")
+  cmd = c("graph", "Q", "initial", "mu", "log.prior"),
+  theta = NULL
 )
 }
 \arguments{
 \item{cgeneric_model}{an object containing the cgeneric model}
 
+\item{cmd}{an string to specify which model element to get}
+
 \item{theta}{a numeric vector with theta.
 If NULL (default) will use the initial from the cgeneric model.}
-
-\item{cmd}{an string to specify which model element to get}
 }
 \description{
 Function to extract cgeneric model
