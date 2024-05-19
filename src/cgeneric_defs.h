@@ -61,6 +61,7 @@ __BEGIN_DECLS
 #define iszero(x) (((__typeof(x))(x)) == 0)
 #endif
 
+inla_cgeneric_func_tp inla_cgeneric_besag;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs0;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs_sfixed;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs_sch;
