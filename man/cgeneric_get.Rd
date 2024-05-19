@@ -7,7 +7,8 @@
 cgeneric_get(
   cgeneric_model,
   cmd = c("graph", "Q", "initial", "mu", "log.prior"),
-  theta = NULL
+  theta = NULL,
+  optimize = TRUE
 )
 }
 \arguments{
@@ -15,7 +16,10 @@ cgeneric_get(
 
 \item{cmd}{an string to specify which model element to get}
 
-\item{theta}{a numeric vector with theta.
+\item{theta}{a numeric vector with theta.}
+
+\item{optimize}{logical indicating if the graph and Q are
+returned only the elements (if TRUE) or to be built (if FALSE).
 If NULL (default) will use the initial from the cgeneric model.}
 }
 \description{
