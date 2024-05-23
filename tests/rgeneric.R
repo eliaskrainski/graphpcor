@@ -38,7 +38,7 @@ inla.setOption(
     safe = FALSE
 )
 
-nxy <- c(10, 15)
+nxy <- c(5, 7)
 nb <- grid2nb(d = nxy)
 nnb <- card(nb)
 n <- length(nnb)
@@ -69,21 +69,22 @@ str(Q1 <- inla.rgeneric.q(m1, "Q", theta = theta1))
 
 library(corGraphs)
 
-m1.graph <- list(
+m2.graph <- list(
     c1~c2,
     c2~c3)
 
 m2 <- dag_model(
-    graph = m1.graph, 
+    graph = m2.graph, 
     sigma.prior.reference = c(1,1,1),
     sigma.prior.probability = c(.05,.05,0.05),
     lambda = 1)
+(n2 <- m2$f$n)
 
 str(cgeneric_get(m2, "initial"))
 str(cgeneric_get(m2, "mu", theta = c(0)))
 str(cgeneric_get(m2, "graph"))
 cgeneric_get(m2, "graph", optimize = !TRUE)
-theta2 <- c(1:-1, -0.5, 0.5)
+theta2 <- c(1:-1, -0.5, -0.5)
 str(cgeneric_get(m2, "Q", theta = theta2))
 Q2 <- cgeneric_get(m2, "Q", theta = theta2, optimize = !TRUE)
 Q2
@@ -93,14 +94,12 @@ cov2cor(solve(Q2))
 kmodel12 <- kronecker(
     m1,
     m2,
-    data = m1data,
     debug = !TRUE)
 str(kmodel12)
 
 kmodel21 <- kronecker(
     m2,
     m1,
-    data = m1data,
     debug = !TRUE)
 
 str(kmodel21)
@@ -130,11 +129,11 @@ Q21 <- inla.rgeneric.q(kmodel21, "Q", theta = c(theta2, theta1))
 all.equal(qq21, Q21)
 
 ## using Q2 (x) Q1 to sample
-x1 <- inla.qsample(n = 1, Q = Q21)[, 1]
+x2 <- inla.qsample(n = 1, Q = Q21)[, 1]
 
 dataf <- data.frame(
-    idx = 1:(2 * n),
-    y2 = rpois(2 * n, exp(3 + x1))
+    idx = 1:(n2 * n),
+    y2 = rpois(n2 * n, exp(3 + x2))
 )
 ## reorder y2 -> y1
 dataf$y1 <- as.integer(t(matrix(dataf$y2, n)))
@@ -159,9 +158,11 @@ rbind(out12$cpu.used,
 rbind(out12$summary.fix,
       out21$summary.fix)
 
-
+nth1 <- length(theta1)
+nth2 <- length(theta2)
 cbind(true=c(theta1, theta2), out12$summary.hy[, c(1,2,3,5)])
-cbind(true=c(theta2, theta1), out21$summary.hy[, c(1,2,3,5)])
+cbind(true=c(theta1, theta2),
+      out21$summary.hy[c(nth2+1, 1:nth2), c(1,2,3,5)])
 
 tail(out12$logfile, 12)
 tail(out21$logfile, 12)
