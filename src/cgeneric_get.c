@@ -310,6 +310,9 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     SET_VECTOR_ELT(Rret, 0, ii);
     SET_VECTOR_ELT(Rret, 1, jj);
     UNPROTECT(3);
+    if(debug>0) {
+      Rprintf("graph with n = %d and %d nz\n", (int)ret[0], nout);
+    }
   }
 
   if(strcmp(CMD, "Q") == 0) {
@@ -321,6 +324,9 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
       daux[i] = ret[2+i];
     }
     UNPROTECT(1);
+    if(debug>0) {
+      Rprintf("Q with %d nz\n", nout);
+    }
   }
 
   if(strcmp(CMD, "mu") == 0) {
@@ -333,6 +339,9 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   if(strcmp(CMD, "initial") == 0) {
     ret = model_func(INLA_CGENERIC_INITIAL, theta, cgeneric_data);
     nout = (int)ret[0];
+    if(debug>0) {
+      Rprintf("intial with %d elements\n", nout);
+    }
     Rret = PROTECT(allocVector(REALSXP, nout));
     daux = REAL(Rret);
     for(i = 0; i < nout; i++) {
@@ -341,7 +350,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     UNPROTECT(1);
   }
 
-  if(strcmp(CMD, "log.prior") == 0) {
+  if(strcmp(CMD, "log_prior") == 0) {
     ret = model_func(INLA_CGENERIC_LOG_PRIOR, theta, cgeneric_data);
     Rret = PROTECT(allocVector(REALSXP, 1));
     REAL(Rret)[0] = ret[0];
