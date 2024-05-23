@@ -5,7 +5,7 @@ setClass(
   slots = "f",
   validity = function(object) {
     all(c("model", "n", "rgeneric") %in%
-          names(object))
+          names(object$f))
   }
 )
 
@@ -14,7 +14,7 @@ setClass(
   slots = "f",
   validity = function(object) {
     all(c("model", "n", "cgeneric") %in%
-          names(object))
+          names(object$f))
   }
 )
 

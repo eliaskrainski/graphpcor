@@ -22,8 +22,9 @@ graph_check <- function(graph) {
     r <- all(substr(chs[1, ], 1, 1) == "c") &
       all(substr(chs[2, ], 1, 1) == "c")
     ij <- as.integer(substring(chs, 2))
+#    print(ij)
     r <- r&all(!is.na(ij))
-    n <- min(n, max(ij))
+    n <- max(ij)
   } else {
     r <- TRUE
     chs <- matrix("", 2, 0)

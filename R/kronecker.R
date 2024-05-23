@@ -3,12 +3,197 @@
 #' @export
 setMethod(
   "kronecker",
+  c(X="inla.cgeneric", Y = "inla.cgeneric"),
+  function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
+
+    mcall <- match.call()
+    if(is.null(mcall$debug)) {
+      debug <-
+        max(X$f$cgeneric$debug,
+        Y$f$cgeneric$debug)
+    } else {
+      debug <- eval(mcall$debug)
+      stopifnot(is.logical(debug))
+    }
+
+    n1 <- as.integer(X$f$n)
+    n2 <- as.integer(Y$f$n)
+    N <- as.integer(n1 * n2)
+
+    ij1 <- cgeneric_get(
+      cgeneric_model = X,
+      cmd = "graph",
+      optimize = TRUE
+    )
+    idx <- which(ij1[[1]]<=ij1[[2]])
+    ij1 <- list(
+      i = ij1[[1]][idx],
+      j = ij1[[2]][idx]
+    )
+    M1 <- length(ij1[[1]])
+
+if(FALSE) {
+    idx1e <- which(ij1$i < ij1$j)
+    stopifnot(length(idx1e) == (M1-n1))
+    ij1e <- list(
+      i = c(ij1$i, ij1$j[idx1e]),
+      j = c(ij1$j, ij1$i[idx1e])
+    )
+    M1e <- length(ij1e[[1]])
+}
+
+    ij2 <- cgeneric_get(
+      cgeneric_model = Y,
+      cmd = "graph",
+      optimize = TRUE
+    )
+    idx <- which(ij2[[1]]<=ij2[[2]])
+    ij2 <- list(
+      i = ij2[[1]][idx],
+      j = ij2[[2]][idx]
+    )
+    M2 <- length(ij2[[1]])
+
+    idx2e <- which(ij2$i < ij2$j)
+    stopifnot(length(idx2e) == (M2-n2))
+    M2e <- M2 + length(idx2e)
+
+    ii <- rep(ij1$i * n2, each = M2e) +
+      c(ij2$i, ij2$j[idx2e])
+    jj <- rep(ij1$j * n2, each = M2e) +
+      c(ij2$j, ij2$i[idx2e])
+    iiord <- order(ii)
+    ijs <- which(ii[iiord] <= jj[iiord])
+    ije <- list(
+      ii = ii[iiord[ijs]],
+      jj = jj[iiord[ijs]],
+      ord = iiord[ijs]
+    )
+    M <- length(ijs)
+
+    ne1 <- (M1-n1)
+    ne2 <- (M2-n2)
+    nnz1 <- n1 + ne1*2
+    nnz2 <- n2 + ne2*2
+    NNZ <- nnz1 * nnz2
+    NNZu <- (NNZ - n1*n2)/2 + n1*n2
+
+    stopifnot(M == NNZu)
+
+    if(is.null(mcall$useINLAprecomp)) {
+      useINLAprecomp = FALSE
+    }
+    if(is.null(mcall$libpath)) {
+      libpath <- NULL
+    }
+
+    if (is.null(libpath)) {
+      if (useINLAprecomp) {
+        libpath <- INLA::inla.external.lib("corGraphs")
+      } else {
+        libpath <- system.file("libs", package = "corGraphs")
+        if (Sys.info()["sysname"] == "Windows") {
+          libpath <- file.path(libpath, "corGraphs.dll")
+        } else {
+          libpath <- file.path(libpath, "corGraphs.so")
+        }
+      }
+    }
+
+    ndata1 <- sapply(
+      X$f$cgeneric$data,
+      length)
+    ndata2 <- sapply(
+      Y$f$cgeneric$data,
+      length)
+
+    ret <- list(
+      f = list(
+        model = "cgeneric",
+        n = as.integer(N),
+        cgeneric = list(
+          model = "inla_cgeneric_kronecker",
+          shlib = libpath,
+          n = as.integer(N),
+          debug = as.integer(debug),
+          data = list()
+        )
+      )
+    )
+
+    ints <- list(
+      n = as.integer(
+        c(N, M,
+          n1, M1, ndata1,
+          n2, M2, ndata2
+        )
+      ),
+      debug = debug
+    )
+
+    ret$f$cgeneric$data$ints <-
+      c(
+        ints,
+        X$f$cgeneric$data$ints[-(1:2)],
+        Y$f$cgeneric$data$ints[-(1:2)],
+        list(
+          idx2e = as.integer(idx2e - 1)
+        )
+      )
+
+    ret$f$cgeneric$data$doubles <-
+      c(
+        X$f$cgeneric$data$doubles,
+        Y$f$cgeneric$data$doubles
+      )
+
+    ret$f$cgeneric$data$characters <-
+      c(
+        list(
+          model = "inla_cgeneric_kronecker",
+          shlib = libpath
+        ),
+        X$f$cgeneric$data$characters,
+        Y$f$cgeneric$data$characters
+      )
+
+    ret$f$cgeneric$data$matrices <-
+      c(
+        X$f$cgeneric$data$matrices,
+        Y$f$cgeneric$data$matrices
+      )
+
+    ret$f$cgeneric$data$smatrices <-
+      c(
+        X$f$cgeneric$data$smatrices,
+        Y$f$cgeneric$data$smatrices,
+        list(Kgraph = c(
+          N, N, M,
+          ije$ii,
+          ije$jj,
+          as.numeric(ije$ord-1)
+          )
+        )
+      )
+
+    class(ret) <- "inla.cgeneric"
+    class(ret$f$cgeneric) <- "inla.cgeneric"
+
+    return(ret)
+
+  }
+)
+
+setMethod(
+  "kronecker",
   c(X="inla.cgeneric", Y = "inla.rgeneric"),
   function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
 
     mcall <- match.call()
     if(is.null(mcall$debug)) {
-      debug <- FALSE
+      debug <-
+        max(X$f$cgeneric$debug,
+            Y$f$cgeneric$debug)
     } else {
       debug <- eval(mcall$debug)
       stopifnot(is.logical(debug))
@@ -62,9 +247,9 @@ setMethod(
       log.prior <- function(n, theta) {
         return(
           cgeneric_get(X, cmd = "log.prior",
-                          theta = theta[1:nth1]) +
+                       theta = theta[1:nth1]) +
             inla.rgeneric.q(Y, cmd = "log.prior",
-                         theta = theta[nth1+1:nth2])
+                            theta = theta[nth1+1:nth2])
         )
       }
 
@@ -123,7 +308,9 @@ setMethod(
 
     mcall <- match.call()
     if(is.null(mcall$debug)) {
-      debug <- FALSE
+      debug <-
+        max(X$f$cgeneric$debug,
+            Y$f$cgeneric$debug)
     } else {
       debug <- eval(mcall$debug)
       stopifnot(is.logical(debug))
@@ -238,7 +425,9 @@ setMethod(
 
     mcall <- match.call()
     if(is.null(mcall$debug)) {
-      debug <- FALSE
+      debug <-
+        max(X$f$cgeneric$debug,
+            Y$f$cgeneric$debug)
     } else {
       debug <- eval(mcall$debug)
       stopifnot(is.logical(debug))
