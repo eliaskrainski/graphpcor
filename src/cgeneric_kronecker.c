@@ -315,6 +315,8 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
       dataM1->smats[i]->j = Calloc(iaux, int);
       dataM1->smats[i]->x = Calloc(iaux, double);
       for(j=0; j<iaux; j++) {
+        dataM1->smats[i]->i[j] = data->smats[i]->i[j];
+        dataM1->smats[i]->j[j] = data->smats[i]->j[j];
         dataM1->smats[i]->x[j] = data->smats[i]->x[j];
       }
     }
@@ -338,6 +340,8 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
       dataM2->smats[i]->j = Calloc(iaux, int);
       dataM2->smats[i]->x = Calloc(iaux, double);
       for(j=0; j<iaux; j++) {
+        dataM2->smats[i]->i[j] = data->smats[nsm1+i]->i[j];
+        dataM2->smats[i]->j[j] = data->smats[nsm1+i]->j[j];
         dataM2->smats[i]->x[j] = data->smats[nsm1+i]->x[j];
       }
     }
