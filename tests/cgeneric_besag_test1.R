@@ -20,7 +20,7 @@ nb.graph <- sparseMatrix(
 )
 
 R0 <- inla.as.sparse(Diagonal(n, nnb) - nb.graph)
-R0[1:7, 1:7]
+R0[1:min(n, 5), 1:min(n, 10)]
 
 idx <- which(R0@i >= R0@j) ## should be lower here and transposed later !!!
 ord <- order(R0@i[idx])
@@ -31,9 +31,9 @@ Rgraph <- inla.as.sparse(
         x = R0@x[idx[ord]]
     )
 )
-Rgraph@i
-Rgraph@j
-Rgraph[1:5, 1:5]
+str(Rgraph@i)
+str(Rgraph@j)
+Rgraph[1:min(n, 5), 1:min(n, 10)]
 
 m1 <- do.call(
     "inla.cgeneric.define",
@@ -77,7 +77,6 @@ dtest1 <- list(
 dtest1$y <- rpois(n, exp(3 + dtest1$x))
 
 
-
 r1 <- inla(
     y ~ f(i, model = m1, constr = FALSE) - 1,
     data = dtest1,
@@ -108,10 +107,11 @@ ri <- inla(
 
 rbind(r1$cpu.used, ri$cpu.used)
 
-c(r1$mode$theta, ri$mode$theta)
+print(r1$cpu.used["Total"] / 
+      ri$cpu.used["Total"]) ### ;)
 
-rbind(r1$summary.fix, 
-      ri$summary.fix)
+
+c(r1$mode$theta, ri$mode$theta)
 
 diag(cor(r1$summary.random$i,
          ri$summary.random$i))
