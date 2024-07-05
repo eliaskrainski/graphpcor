@@ -39,7 +39,7 @@ cov(xx)
 cor(xx)
 
 dataf <- data.frame(
-    i = rep(1:nc, eac = n),
+    i = rep(1:nc, each = n),
     r = rep(1:n, nc),
     y = rpois(n * nc, exp(1 + xx))
 )

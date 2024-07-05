@@ -2,45 +2,36 @@
 library(corGraphs)
 library(INLA)
 
-inla.setOption(safe = FALSE,
-               num.threads = 6)
+inla.setOption(
+    safe = FALSE,
+    num.threads = 6
+)
 
 dcg <- list(
     p1 ~ p2 + c1 + c2,
-    p2 ~ c3 + c4)
-np <- length(dcg)
-nc <- 4
+    p2 ~ c3 + c4 + p3,
+    p3 ~ c5)
+(np <- length(dcg))
+(theta.p <- seq(1/2, -1/2, length = np))
+
+mcorr <- cov2cor(dcg_covariance(dcg, theta.p))
+round(mcorr * 100)
+
+(nc <- nrow(mcorr))
 
 dgplot <- GraphPlot(dcg, base=0)
 
 par(mar = c(1, 1, 1, 1))
 plot(dgplot$gr, nodeAttrs = dgplot$nAttrs)
 
-dc.el <- corGraphs:::dcg_e2covariance(corGraphs:::dcg_elements(dcg))
-dc.el
+(theta.ch <- seq(-1/2, 1/2, length = nc))
 
-(np <- length(dcg))
-(theta.p <- c(0, 1))
-(theta.ch <- seq(-nc/2, nc/2, length = nc))
-
-v2 <- exp(theta.p * 2.0)
-q2 <- theta.ch^2
-vp <- sapply(1:np, function(j)
-    sum(v2[dc.el$iv[[j]]]))
-
-mcov <- matrix(
-    theta.ch[row(diag(nc))] *
-    vp[dc.el$itop] *
-    theta.ch[col(diag(nc))],
-    nc) + diag(1/q2)
-mcov
-
-mcorr <- cov2cor(mcov)
-round(mcorr * 100)
+dd <- diag(exp(theta.ch))
+mcov <- dd %*% mcorr %*%dd
 
 round(mcov, 1)
 
-n <- 300
+n <- 3000
 
 ll <- chol(mcov)
 xx <- matrix(rnorm(n * nc), n) %*% ll
@@ -48,61 +39,58 @@ xx <- matrix(rnorm(n * nc), n) %*% ll
 cov(xx)
 cor(xx)
 
+c(n, nc)
+
 dataf <- data.frame(
-    i = rep(1:nc, eac = n),
+    i = rep(1:nc, each = n),
     r = rep(1:n, nc),
     y = as.vector(xx)##rpois(n * nc, exp(1 + xx))
 )
+head(dataf, 3)
 
 gmodel <- dcg_model(
     dcg = dcg,
-    lambda = 5,
-    sigma.prior.reference = rep(1, nc),
-    sigma.prior.probability = rep(0.1, nc),
+    lambda = 1,
+    sigma.prior.reference = rep(5, nc),
+    sigma.prior.probability = rep(0.2, nc),
     iprior = 3,
-    sfixed = FALSE,
-    useINLAprecomp = FALSE,
     debug = 0 ### if debug>999 and inla(..., verbose = true) prints looooooottttssss of details
     )
-
-str(gmodel)
 
 ff <- y ~ 0 + factor(i) +
     f(i, model = gmodel, replicate = r, vb.correct = FALSE)
 
 fit <- inla(
     formula = ff,
-    ##    family = "poisson",
+##    family = "poisson",
     control.family = list(hyper = list(prec = list(initial = 10, fixed = TRUE))),
     data = dataf,
   #  control.mode = list(
 #        theta = c(theta.ch, theta.p)*0.1,
  #       restart = TRUE, fixed = !TRUE),
 ##        restart = !TRUE, fixed = TRUE),
-    verbose = TRUE,
+##    verbose = TRUE,
 ##    inla.call = "remote",
     control.inla = list(int.strategy = "eb")
 ) 
 
-fit$cpu
+fit$cpu.used
 
 rbind(true = c(theta.ch, theta.p),
       cg = fit$mode$theta)
+
 
 plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
 tail(fit$logfile, 30)
 
-v2fit <- exp(fit$mode$theta[nc + 1:np] * 2.0) 
-q2fit <- fit$mode$theta[1:nc]^2 
-vpfit <- sapply(1:np, function(j)
-    sum(v2fit[dc.el$iv[[j]]]))
+mcorr.fit <- cov2cor(dcg_covariance(
+    dcg,
+    fit$mode$theta[nc+1:np]))
+mcorr.fit
 
-mcov.fit <- matrix(
-    fit$mode$theta[row(diag(nc))] *
-    vpfit[dc.el$itop] *
-    fit$mode$theta[col(diag(nc))],
-    nc) + diag(1/q2fit)
+q.fit <- cgeneric_get(gmodel, "Q", fit$mode$theta, FALSE)
+mcov.fit <- solve(q.fit)
 
 mcov
 round(cov(xx), 2)
