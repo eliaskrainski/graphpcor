@@ -1,6 +1,55 @@
 #' Functions to implement Kronecker (product) models
 #' as methods for kronecker()
 #' @export
+#' @examples
+#' c1 <- list(A = matrix(1, 1, 4), e = 0)
+#' c2 <- list(A = matrix(1, 1, 3), e = 0)
+#' class(c2) <- class(c1) <- "extraconstr"
+#' kronecker(c1, c2)
+
+setMethod(
+  "kronecker",
+  c(X = "extraconstr", Y = "integer"),
+  function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
+    o1 <- kronecker(X$A, diag(Y))
+    ret <- list(
+      A = o1,
+      e = rep(X$e, each = Y)
+    )
+    class(ret) <- "extraconstr"
+    return(ret)
+  }
+)
+setMethod(
+  "kronecker",
+  c(X = "integer", Y = "extraconstr"),
+  function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
+    o1 <- kronecker(diag(ncol(X$A)), Y$A)
+    o2 <- kronecker(X$A, diag(ncol(Y$A)))
+    ret <- list(
+      A = rbind(o1, o2),
+      e = c(X$e, Y$e)
+    )
+    class(ret) <- "extraconstr"
+    return(ret)
+  }
+)
+setMethod(
+  "kronecker",
+  c(X = "extraconstr", Y = "extraconstr"),
+  function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
+    o1 <- kronecker(diag(ncol(X$A)), Y$A)
+    o2 <- kronecker(X$A, diag(ncol(Y$A)))
+    ret <- list(
+      A = rbind(o1, o2),
+      e = c(X$e, Y$e)
+    )
+    class(ret) <- "extraconstr"
+    return(ret)
+  }
+)
+
+
 setMethod(
   "kronecker",
   c(X="inla.cgeneric", Y = "inla.cgeneric"),
@@ -31,16 +80,6 @@ setMethod(
       j = ij1[[2]][idx]
     )
     M1 <- length(ij1[[1]])
-
-if(FALSE) {
-    idx1e <- which(ij1$i < ij1$j)
-    stopifnot(length(idx1e) == (M1-n1))
-    ij1e <- list(
-      i = c(ij1$i, ij1$j[idx1e]),
-      j = c(ij1$j, ij1$i[idx1e])
-    )
-    M1e <- length(ij1e[[1]])
-}
 
     ij2 <- cgeneric_get(
       cgeneric_model = Y,
@@ -178,6 +217,26 @@ if(FALSE) {
 
     class(ret) <- "inla.cgeneric"
     class(ret$f$cgeneric) <- "inla.cgeneric"
+
+    if(is.null(X$f$extraconstr)) {
+      if(is.null(Y$f$extraconstr)) {
+        if(verbose)
+          cat("No extraconstr!\n")
+        return(ret)
+      } else {
+
+      }
+    } else {
+      if(is.null(Y$f$extraconstr)) {
+
+      } else {
+          c1 <- list(
+        A = matrix(0, 0, X$f$n),
+        e = rep(0, )
+      )
+      }
+      ret$f$extraconstr <- kronecker(c1, c2)
+    }
 
     return(ret)
 
