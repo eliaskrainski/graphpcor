@@ -45,41 +45,55 @@ pparam <- c(1, 0.01)
 m1 <- cgeneric_besag(
     graph = nb.graph,
     param = pparam,
-    constr = FALSE, 
+    constr = !TRUE,
     scale = TRUE,
     debug = !TRUE
 )
 
+str(m1)
 
 dtest1 <- list(
     i = 1:n,
-    x = inla.qsample(n = 1, Q = Q0 + Diagonal(n, nnb) * 0.0001,
-                     constr = cnstr)[, 1]
+    x = inla.qsample(
+        n = 1,
+        Q = Qs + Diagonal(n, nnb) * 0.0001,
+        constr = cnstr
+    )[, 1]
 )
 dtest1$y <- rpois(n, exp(3 + dtest1$x))
 
 r1 <- inla(
-    y ~ f(i, model = m1, constr = FALSE) - 1,
+    y ~ 0 + f(i, model = m1, constr = FALSE),
     data = dtest1,
     family = 'poisson',
-    control.inla = list(int.strategy = 'eb'),
+    control.inla = list(
+        int.strategy = 'eb'
+    ),
     control.mode = list(
         theta = theta,
         fixed = TRUE,
         restart = !TRUE
     ),
-    control.compute = list(config = TRUE)
+    control.compute = list(
+        config = TRUE)
 )
 
 ri <- inla(
-    y ~ f(i, model = 'besag', graph = nb.graph,
+    y ~ 0 +
+        f(i, model = 'besag', graph = nb.graph,
           constr = FALSE,
           scale.model = TRUE, diagonal = 0,
-          hyper = list(theta = list(prior = 'pc.prec',
-                                    param = pparam))) - 1,
+          hyper = list(
+              theta = list(
+                  prior = 'pc.prec',
+                  param = pparam
+              )
+          )
+          ),
     data = dtest1,
     family = 'poisson',
-    control.inla = list(int.strategy = 'eb'),
+    control.inla = list(
+        int.strategy = 'eb'),
     control.mode = list(
         theta = theta,
         fixed = TRUE,
@@ -90,6 +104,9 @@ ri <- inla(
 
 grep("iagonal", r1$logfile, value = TRUE)
 grep("iagonal", ri$logfile, value = TRUE)
+
+grep("onstraint", r1$logfile, value = TRUE)
+grep("onstraint", ri$logfile, value = TRUE)
 
 rbind(r1$cpu.used, ri$cpu.used)
 
