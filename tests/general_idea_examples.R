@@ -3,20 +3,27 @@ library(corGraphs)
 
 g1 <- list(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
 G1 <- graph_Laplacian(g1)
+G1
 
 g2 <- c(g1, c1~c6)
 G2 <- graph_Laplacian(g2)
+G2
 
 g3 <- list(c1~c2, c1~c3, c1~c4, c1~c5, c1~c6)
 G3 <- graph_Laplacian(g3)
+G3
 
 g3o <- inla.qreordering(G3)
 G3.reord <- G3[g3o$reo, g3o$reo]
+G3.reord
 
 g4 <- list(c1~c3, c2~c3, c3~c5, c4~c5, c5~c6)
 G4 <- graph_Laplacian(g4)
+G4
+
 g4o <- inla.qreordering(G4)
 G4.reord <- G4[g4o$reo, g4o$reo]
+G4.reord
 
 par(mfcol = c(2, 3), mar = c(1, 1, 1, 1))
 plot(inla.read.graph(G1))
