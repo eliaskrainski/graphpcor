@@ -1,7 +1,7 @@
 
-/* cgeneric_besag.c
+/* cgeneric_generic0.c
  *
- * Copyright (C) 2023 Elias Krainski
+ * Copyright (C) 2024 Elias Krainski
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 
 #include "cgeneric_defs.h"
 
-double *inla_cgeneric_besag(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data) {
+double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data) {
 
   //  Q = \tau*R
 
@@ -126,18 +126,22 @@ double *inla_cgeneric_besag(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgener
   {
     // return c(LOG_PRIOR), PC-PREC
     ret = Calloc(1, double);
-    double val = theta[0] / 2.0;
+    double val = 0.5 * theta[0];
     assert(!strcasecmp(data->doubles[0]->name, "param"));
     double u = data->doubles[0]->doubles[0];
     double a = data->doubles[0]->doubles[1];
     double l = -log(a)/u;
-    if(a==0) {
+    if(u<=0) {
       ret[0] = 0.0;
     } else {
-      if(a==1) {
+      if(a==0) {
         ret[0] = 0.0;
       } else {
-        ret[0] = log(l/2.0) - l * exp(-val) - val;
+        if(a==1) {
+          ret[0] = 0.0;
+        } else {
+          ret[0] = log(0.5 * l) -l * exp(-val) +val;
+        }
       }
     }
     break;
