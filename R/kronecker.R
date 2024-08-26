@@ -1,54 +1,6 @@
 #' Functions to implement Kronecker (product) models
 #' as methods for kronecker()
 #' @export
-#' @examples
-#' c1 <- list(A = matrix(1, 1, 4), e = 0)
-#' c2 <- list(A = matrix(1, 1, 3), e = 0)
-#' class(c2) <- class(c1) <- "extraconstr"
-#' kronecker(c1, c2)
-
-setMethod(
-  "kronecker",
-  c(X = "extraconstr", Y = "integer"),
-  function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
-    o1 <- kronecker(X$A, diag(Y))
-    ret <- list(
-      A = o1,
-      e = rep(X$e, each = Y)
-    )
-    class(ret) <- "extraconstr"
-    return(ret)
-  }
-)
-setMethod(
-  "kronecker",
-  c(X = "integer", Y = "extraconstr"),
-  function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
-    o1 <- kronecker(diag(ncol(X$A)), Y$A)
-    o2 <- kronecker(X$A, diag(ncol(Y$A)))
-    ret <- list(
-      A = rbind(o1, o2),
-      e = c(X$e, Y$e)
-    )
-    class(ret) <- "extraconstr"
-    return(ret)
-  }
-)
-setMethod(
-  "kronecker",
-  c(X = "extraconstr", Y = "extraconstr"),
-  function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
-    o1 <- kronecker(diag(ncol(X$A)), Y$A)
-    o2 <- kronecker(X$A, diag(ncol(Y$A)))
-    ret <- list(
-      A = rbind(o1, o2),
-      e = c(X$e, Y$e)
-    )
-    class(ret) <- "extraconstr"
-    return(ret)
-  }
-)
-
 
 setMethod(
   "kronecker",
@@ -222,20 +174,31 @@ setMethod(
       if(is.null(Y$f$extraconstr)) {
         if(verbose)
           cat("No extraconstr!\n")
-        return(ret)
       } else {
-
+        c2 <- Y$f$extraconstr
+        ret$f$extraconstr <- list(
+          A = kronecker(diag(X$f$n), c2$A),
+          e = rep(c2$e, X$f$n)
+        )
       }
     } else {
+      c1 <- X$f$extraconstr
       if(is.null(Y$f$extraconstr)) {
-
+        ret$f$extraconstr <- list(
+          A = kronecker(c1$A, diag(Y$f$n)),
+          e = rep(c1$e, each = Y$f$n)
+        )
       } else {
-          c1 <- list(
-        A = matrix(0, 0, X$f$n),
-        e = rep(0, )
-      )
+        c2 <- m1$f$extraconstr
+        ret$f$extraconstr <- list(
+          A = rbind(
+            kronecker(c1$A, diag(ncol(c2$A))),
+            kronecker(diag(ncol(c1$A)), c2$A)
+          ),
+          e = c(rep(c1$e, each = ncol(c2$A)),
+                rep(c2$e, ncol(c1$A)))
+        )
       }
-      ret$f$extraconstr <- kronecker(c1, c2)
     }
 
     return(ret)
