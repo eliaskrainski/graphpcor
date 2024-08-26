@@ -8,7 +8,7 @@ inla.setOption(
     safe = FALSE
 )
 
-nxy <- c(100, 200)
+nxy <- c(30, 50)
 nb <- grid2nb(d = nxy, queen = FALSE)
 nnb <- card(nb)
 n <- length(nnb)
