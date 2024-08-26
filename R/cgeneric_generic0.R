@@ -1,9 +1,15 @@
-#' Implement the Besag model using cgeneric interface
-#' to be used as a model in a `INLA` `f()` model component.
-#' @param graph the graph for the model definition.
-#' @param param the parameters for the PC-prior distribution
-#' on the precision parameter stated as
-#'   P(sigma > param[1]) = param[2].
+#' Implement a generic model where the precision matrix is
+#'  \deqn{Q = \tau R}
+#' where the structure matrix R is supplied by the user
+#' and \eqn{\tau} is the (local, see detais) precision parameter.
+#' This uses the cgeneric interface that can be used as a
+#' model in a `INLA` `f()` model component.
+#' @param R the structure matrix for the model definition.
+#' @param param length two vector with the parameters
+#' \eqn{a,b} for the PC-prior distribution defined from
+#'   \deqn{P(\sigma > a) = u}
+#' where \eqn{\sigma} can be interpreted as marginal standard
+#' deviation of the process if scale = TRUE. See details.
 #' @param scale logical indicating if it is to scale
 #' the R structure matrix so that the geometric mean for the
 #' marginal variances is equal to one when the precision is 1.
@@ -12,10 +18,17 @@
 #' shared object pre-compiled by INLA. It is not considered if
 #' libpath is provided.
 #' @param libpath string to the shared object. Default is NULL.
-#' @return objects to be used in the f() formula term in INLA.
+#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
+#' @details
+#' If scale = TRUE the matrix \eqn{R} is scaled so that
+#'  \deqn{Q = \tau s R}
+#'  where \eqn{s} is the geometric mean of the diagonal
+#'  elements of the generalized inverse of \eqn{R}.
+#' \deqn{s = \exp{\sum_i \log((R^{-})_{ii})/n}}
+#'
 #' @export
-cgeneric_besag <-
-  function(graph,
+cgeneric_generic0 <-
+  function(R,
            param,
            constr = TRUE,
            scale = TRUE,
@@ -36,10 +49,6 @@ cgeneric_besag <-
       }
     }
 
-    graph <- INLA::inla.read.graph(graph)
-    n <- as.integer(graph$n)
-    stopifnot(n>0)
-
     stopifnot(param[1]>0)
     if(is.na(param[2])) {
       param[2] = 0.0
@@ -47,31 +56,20 @@ cgeneric_besag <-
     stopifnot(param[2]>=0)
     stopifnot(param[2]<=1)
 
-    ii <- rep(1:n, graph$nnbs)
-    jj <- unlist(graph$nbs[graph$nnbs>0])
-    ijs <- which(ii < jj)
+    R <- INLA::inla.as.sparse(R)
+
+    n <- as.integer(nrow(R))
+    stopifnot(n>0)
+
+    idx <- which(R@i <= R@j)
 
     if(debug) {
       print(str(list(
-        ii = ii,
-        jj = jj,
-        ijs = ijs
+        ii = R@i,
+        jj = R@j,
+        idx = idx
       )))
     }
-
-    ii <- c(1:n, ii[ijs])
-    jj <- c(1:n, jj[ijs])
-
-    R <- INLA::inla.as.sparse(
-      sparseMatrix(
-        i = ii,
-        j = jj,
-        x = c(graph$nnbs,
-              rep(-1, length(ii)-n)
-              ),
-        dims = c(n, n)
-        )
-      )
 
     if(scale) {
       R <- INLA::inla.as.sparse(
@@ -82,10 +80,9 @@ cgeneric_besag <-
       )
     }
 
-    idx <- which(R@i <= R@j)
     ord <- order(R@i[idx])
     nnz <- length(idx)
-    cmodel = "inla_cgeneric_besag"
+    cmodel = "inla_cgeneric_generic0"
 
     the_model <- list(
       f = list(
@@ -125,6 +122,13 @@ cgeneric_besag <-
 
     class(the_model) <- "inla.cgeneric"
     class(the_model$f$cgeneric) <- "inla.cgeneric"
+
+    if(constr) {
+      the_model$f$extraconstr <- list(
+        A = matrix(1, 1, n),
+        e = 0
+      )
+    }
 
     return(the_model)
 
