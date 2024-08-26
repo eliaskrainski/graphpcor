@@ -199,6 +199,8 @@ dcg_model <-
 
     } else {
 
+      warning('work in progres for non fixed signal!')
+
         the_model <- do.call(
           "inla.cgeneric.define",
           list(
