@@ -33,12 +33,6 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 
   double *ret = NULL, prec;
 
-  if (theta) {
-    prec = exp(theta[0]);
-  } else {
-    prec = NAN;
-  }
-
   // the size of the model
   assert(data->n_ints > 1);
   assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
@@ -50,6 +44,22 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 
   if(debug>0) {
     fprintf(stderr, "n = %d and debug = %d\n", N, debug);
+  }
+
+  int fixed = 1;
+  if(data->doubles[0]->doubles[1]>0)
+    fixed = 0;
+  //fprintf(stderr, "fixed = %d\n", fixed);
+
+  if (theta) {
+    if(fixed) {
+      prec = 1 / pow2(data->doubles[0]->doubles[0]);
+      //fprintf(stderr, "prec = %f\n", prec);
+    } else {
+      prec = exp(theta[0]);
+    }
+  } else {
+    prec = NAN;
   }
 
   // the number of neighbors at the diagonal
@@ -111,9 +121,14 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   {
     // return c(M, initials)
     // where M is the number of hyperparameters
-    ret = Calloc(2, double);
-    ret[0] = 1;
-    ret[1] = 0.0;
+    if(fixed) {
+      ret = Calloc(1, double);
+      ret[0] = 0;
+    } else {
+      ret = Calloc(2, double);
+      ret[0] = 1;
+      ret[1] = 0.0;
+    }
     break;
   }
 
@@ -126,21 +141,25 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   {
     // return c(LOG_PRIOR), PC-PREC
     ret = Calloc(1, double);
-    double val = 0.5 * theta[0];
-    assert(!strcasecmp(data->doubles[0]->name, "param"));
-    double u = data->doubles[0]->doubles[0];
-    double a = data->doubles[0]->doubles[1];
-    double l = -log(a)/u;
-    if(u<=0) {
+    if(fixed) {
       ret[0] = 0.0;
     } else {
-      if(a==0) {
+      double val = 0.5 * theta[0];
+      assert(!strcasecmp(data->doubles[0]->name, "param"));
+      double u = data->doubles[0]->doubles[0];
+      double a = data->doubles[0]->doubles[1];
+      double l = -log(a)/u;
+      if(u<=0) {
         ret[0] = 0.0;
       } else {
-        if(a==1) {
+        if(a==0) {
           ret[0] = 0.0;
         } else {
-          ret[0] = log(0.5 * l) -l * exp(-val) +val;
+          if(a==1) {
+            ret[0] = 0.0;
+          } else {
+            ret[0] = log(0.5 * l) -l * exp(-val) +val;
+          }
         }
       }
     }
