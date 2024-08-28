@@ -7,69 +7,31 @@ setMethod(
   c(X="inla.cgeneric", Y = "inla.cgeneric"),
   function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
 
+    old = FALSE
+    if(old) { ## not need to check! (because list(a=1,b=2,a=3,b=4) is ok)
+      ## Check for duplicated data names
+      ## TO DO: allow it
+      stopifnot(all(!(names(X$f$cgeneric$data$ints[-(1:2)]) %in%
+                        names(Y$f$cgeneric$data$ints[-(1:2)]))))
+      stopifnot(all(!(names(X$f$cgeneric$data$doubles) %in%
+                        names(Y$f$cgeneric$data$doubles))))
+      stopifnot(all(!(names(X$f$cgeneric$data$characters[-(1:2)]) %in%
+                        names(Y$f$cgeneric$data$characters[-(1:2)]))))
+      stopifnot(all(!(names(X$f$cgeneric$data$matrices) %in%
+                        names(Y$f$cgeneric$data$matrices))))
+      stopifnot(all(!(names(X$f$cgeneric$data$smatrices) %in%
+                        names(Y$f$cgeneric$data$smatrices))))
+    }
+
     mcall <- match.call()
     if(is.null(mcall$debug)) {
       debug <-
         max(X$f$cgeneric$debug,
-        Y$f$cgeneric$debug)
+            Y$f$cgeneric$debug)
     } else {
       debug <- eval(mcall$debug)
       stopifnot(is.logical(debug))
     }
-
-    n1 <- as.integer(X$f$n)
-    n2 <- as.integer(Y$f$n)
-    N <- as.integer(n1 * n2)
-
-    ij1 <- cgeneric_get(
-      cgeneric_model = X,
-      cmd = "graph",
-      optimize = TRUE
-    )
-    idx <- which(ij1[[1]]<=ij1[[2]])
-    ij1 <- list(
-      i = ij1[[1]][idx],
-      j = ij1[[2]][idx]
-    )
-    M1 <- length(ij1[[1]])
-
-    ij2 <- cgeneric_get(
-      cgeneric_model = Y,
-      cmd = "graph",
-      optimize = TRUE
-    )
-    idx <- which(ij2[[1]]<=ij2[[2]])
-    ij2 <- list(
-      i = ij2[[1]][idx],
-      j = ij2[[2]][idx]
-    )
-    M2 <- length(ij2[[1]])
-
-    idx2e <- which(ij2$i < ij2$j)
-    stopifnot(length(idx2e) == (M2-n2))
-    M2e <- M2 + length(idx2e)
-
-    ii <- rep(ij1$i * n2, each = M2e) +
-      c(ij2$i, ij2$j[idx2e])
-    jj <- rep(ij1$j * n2, each = M2e) +
-      c(ij2$j, ij2$i[idx2e])
-    iiord <- order(ii)
-    ijs <- which(ii[iiord] <= jj[iiord])
-    ije <- list(
-      ii = ii[iiord[ijs]],
-      jj = jj[iiord[ijs]],
-      ord = iiord[ijs]
-    )
-    M <- length(ijs)
-
-    ne1 <- (M1-n1)
-    ne2 <- (M2-n2)
-    nnz1 <- n1 + ne1*2
-    nnz2 <- n2 + ne2*2
-    NNZ <- nnz1 * nnz2
-    NNZu <- (NNZ - n1*n2)/2 + n1*n2
-
-    stopifnot(M == NNZu)
 
     if(is.null(mcall$useINLAprecomp)) {
       useINLAprecomp = FALSE
@@ -91,19 +53,94 @@ setMethod(
       }
     }
 
-    ndata1 <- sapply(
-      X$f$cgeneric$data,
-      length)
-    ndata2 <- sapply(
-      Y$f$cgeneric$data,
-      length)
+    n1 <- as.integer(X$f$n)
+    n2 <- as.integer(Y$f$n)
+    N <- as.integer(n1 * n2)
 
+    if(debug) {
+      cat('n1:', n1, "n2:", n2, "n:", N, "")
+    }
+
+    ## index for the Q = Q1 (x) Q2 matrix
+    ij1 <- cgeneric_get(
+      cgeneric_model = X,
+      cmd = "graph",
+      optimize = TRUE
+    )
+    idx <- which(ij1[[1]]<=ij1[[2]])
+    ij1 <- list(
+      i = ij1[[1]][idx],
+      j = ij1[[2]][idx]
+    )
+    M1 <- length(ij1[[1]])
+    if(debug) {
+      cat('M1:', M1, "")
+    }
+
+    ij2 <- cgeneric_get(
+      cgeneric_model = Y,
+      cmd = "graph",
+      optimize = TRUE
+    )
+    idx <- which(ij2[[1]]<=ij2[[2]])
+    ij2 <- list(
+      i = ij2[[1]][idx],
+      j = ij2[[2]][idx]
+    )
+    M2 <- length(ij2[[1]])
+    if(debug) {
+      cat('M2:', M2, "")
+    }
+
+    idx2e <- which(ij2$i < ij2$j)
+    stopifnot(length(idx2e) == (M2-n2))
+    M2e <- M2 + length(idx2e)
+
+    ii <- rep(ij1$i * n2, each = M2e) +
+      c(ij2$i, ij2$j[idx2e])
+    jj <- rep(ij1$j * n2, each = M2e) +
+      c(ij2$j, ij2$i[idx2e])
+    iiord <- order(ii)
+    ijs <- which(ii[iiord] <= jj[iiord])
+    ije <- list(
+      ii = ii[iiord[ijs]],
+      jj = jj[iiord[ijs]],
+      ord = iiord[ijs]
+    )
+    if(debug) {
+      print(str(ije))
+    }
+    M <- length(ijs)
+    if(debug) {
+      cat('M:', M, "\n")
+    }
+
+    ne1 <- (M1-n1)
+    ne2 <- (M2-n2)
+    nnz1 <- n1 + ne1*2
+    nnz2 <- n2 + ne2*2
+    NNZ <- nnz1 * nnz2
+    NNZu <- (NNZ - n1*n2)/2 + n1*n2
+
+    stopifnot(M == NNZu)
+
+    if(debug) {
+      cat("ne1:", ne1, "ne2:", ne2,
+          "nnz1:", nnz1, "nnz2:", nnz2,
+          "nnz:", NNZ, "NNZu:", NNZu, "\n")
+    }
+
+
+    ## intial data
     ret <- list(
       f = list(
         model = "cgeneric",
         n = as.integer(N),
         cgeneric = list(
-          model = "inla_cgeneric_kronecker",
+          model = ifelse(
+            old,
+            "inla_cgeneric_kronecker_old",
+            "inla_cgeneric_kronecker"),
           shlib = libpath,
           n = as.integer(N),
           debug = as.integer(debug),
@@ -112,25 +149,55 @@ setMethod(
       )
     )
 
-    ints <- list(
-      n = as.integer(
-        c(N, M,
-          n1, M1, ndata1,
-          n2, M2, ndata2
-        )
-      ),
-      debug = debug
-    )
+    ## data size for each model
+    ndata1 <- sapply(
+      X$f$cgeneric$data,
+      length)
+    ndata2 <- sapply(
+      Y$f$cgeneric$data,
+      length)
 
-    ret$f$cgeneric$data$ints <-
-      c(
-        ints,
-        X$f$cgeneric$data$ints[-(1:2)],
-        Y$f$cgeneric$data$ints[-(1:2)],
-        list(
-          idx2e = as.integer(idx2e - 1)
+    ### n and the data size info
+    if(old) {
+      ints <- list(
+        n = as.integer(
+          c(N, M,
+            n1, M1, ndata1,
+            n2, M2, ndata2
+          )
+        ),
+        debug = debug
+      )
+      ret$f$cgeneric$data$ints <-
+        c(
+          ints,
+          X$f$cgeneric$data$ints[-(1:2)],
+          Y$f$cgeneric$data$ints[-(1:2)],
+          list(
+            idx2e = as.integer(idx2e - 1)
+          )
+        )
+    } else {
+      ints <- list(
+        n = as.integer(
+          c(n1, ndata1, M1,
+                ndata2, M2, N, M)
         )
       )
+      if(debug) {
+        cat(ints$n, "\n")
+      }
+      ret$f$cgeneric$data$ints <-
+        c(
+          ints,
+          ### concatenate ints from each model
+          X$f$cgeneric$data$ints[-1], ## n for model 1 is already there
+          Y$f$cgeneric$data$ints,
+          list(
+            idx2e = as.integer(idx2e - 1)
+          )
+        )
+    }
 
     ret$f$cgeneric$data$doubles <-
       c(
@@ -172,7 +239,7 @@ setMethod(
 
     if(is.null(X$f$extraconstr)) {
       if(is.null(Y$f$extraconstr)) {
-        if(verbose)
+        if(debug)
           cat("No extraconstr!\n")
       } else {
         c2 <- Y$f$extraconstr
@@ -301,7 +368,7 @@ setMethod(
 
     }
 
-    ### this follows INLA:::inla.rgeneric.define() but no assign env
+### follows INLA:::inla.rgeneric.define() but no assign env
     rmodel <- list(
       f = list(
         model = "rgeneric",
@@ -418,7 +485,7 @@ setMethod(
 
     }
 
-    ### this follows INLA:::inla.rgeneric.define() but no assign env
+### follows INLA:::inla.rgeneric.define() but no assign env
     rmodel <- list(
       f = list(
         model = "rgeneric",
