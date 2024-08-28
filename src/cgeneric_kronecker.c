@@ -403,8 +403,10 @@ double *inla_cgeneric_kronecker_old(inla_cgeneric_cmd_tp cmd, double *theta, inl
   dataM1->smats = Calloc(dataM1->n_smats, inla_cgeneric_smat_tp *);
   dataM2->smats = Calloc(dataM2->n_smats, inla_cgeneric_smat_tp *);
 
-  for(i=0; i<6; i++) {
-    printf("%d %s \n", i, &data->chars[i]->chars[0]);
+  if(debug) {
+    for(i=0; i<6; i++) {
+      printf("%d %s \n", i, &data->chars[i]->chars[0]);
+    }
   }
 
   // copy ints for M1
@@ -444,7 +446,8 @@ double *inla_cgeneric_kronecker_old(inla_cgeneric_cmd_tp cmd, double *theta, inl
     dataM2->ints[i]->name = data->ints[i]->name;
     dataM2->ints[i]->len = 1;
     dataM2->ints[i]->ints = Calloc(1, int);
-    printf(" %d, ", i);
+    if(debug)
+      printf(" %d, ", i);
   }
   dataM2->ints[0]->ints[0] = n2;
   dataM2->ints[1]->ints[0] = data->ints[1]->ints[0];

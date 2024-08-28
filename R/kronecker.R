@@ -7,7 +7,10 @@ setMethod(
   c(X="inla.cgeneric", Y = "inla.cgeneric"),
   function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
 
-    old = FALSE
+    old <- X$old | Y$old
+    print(old)
+    if(length(old) == 0)
+      old <- FALSE
     if(old) { ## not need to check! (because list(a=1,b=2,a=3,b=4) is ok)
       ## Check for duplicated data names
       ## TO DO: allow it
@@ -40,6 +43,10 @@ setMethod(
       libpath <- NULL
     }
 
+    model <- ifelse(
+      old,
+      "inla_cgeneric_kronecker_old",
+      "inla_cgeneric_kronecker")
     if (is.null(libpath)) {
       if (useINLAprecomp) {
         libpath <- INLA::inla.external.lib("corGraphs")
@@ -137,10 +144,7 @@ setMethod(
         model = "cgeneric",
         n = as.integer(N),
         cgeneric = list(
-          model = ifelse(
-            old,
-            "inla_cgeneric_kronecker_old",
-            "inla_cgeneric_kronecker"),
+          model = model,
           shlib = libpath,
           n = as.integer(N),
           debug = as.integer(debug),
@@ -208,7 +212,7 @@ setMethod(
     ret$f$cgeneric$data$characters <-
       c(
         list(
-          model = "inla_cgeneric_kronecker",
+          model = model,
           shlib = libpath
         ),
         X$f$cgeneric$data$characters,
