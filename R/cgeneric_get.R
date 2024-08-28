@@ -31,6 +31,7 @@ cgeneric_get <- function(cgeneric_model,
 
   if(is.null(theta) &
      any(cmd == c("Q", "log_prior"))) {
+    cat('here\n')
     theta <- .Call(
       "cgeneric_element_get",
       "initial",
@@ -42,6 +43,7 @@ cgeneric_get <- function(cgeneric_model,
       cgdata$smatrices,
       PACKAGE = "corGraphs"
       )
+    print(c(theta = theta))
     if((length(cmd) == 1) & (cmd == "initial")) {
       return(theta)
     }
@@ -65,8 +67,8 @@ cgeneric_get <- function(cgeneric_model,
     if(cmd == "graph") {
       ij <- ret
       ret <- rep(1, length(ij[[1]]))
-      print(str(list(ij=ij, ret=ret, cmd = cmd)))
-      print(sapply(list(ij=ij, ret=ret, cmd = cmd), summary))
+      ##print(str(list(ij=ij, ret=ret, cmd = cmd)))
+      ##print(sapply(list(ij=ij, ret=ret, cmd = cmd), summary))
     } else {
       ij <- .Call(
         "cgeneric_element_get",
@@ -79,7 +81,7 @@ cgeneric_get <- function(cgeneric_model,
         cgdata$smatrices,
         PACKAGE = "corGraphs"
       )
-      print(str(list(ij=ij, ret=ret, e=2)))
+      ##print(str(list(ij=ij, ret=ret, e=2)))
     }
     idx <- which(ij[[1]] <= ij[[2]])
     if(length(idx)>0) {

@@ -1,7 +1,7 @@
 
 /* cgeneric_get.c
  *
- * Copyright (C) 2024 Elias Krainski
+ * Copyright (C) 2024 Elias T Krainski
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,14 +90,12 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
 
   // get initial info
   char *CMD = (char*)CHAR(STRING_ELT(Rcmd, 0));
-  int i, n, debug;
-  n = asInteger(VECTOR_ELT(ints, 0));
+  int i, debug;
+  //n = asInteger(VECTOR_ELT(ints, 0));
   debug = asInteger(VECTOR_ELT(ints, 1));
   if(debug>0) {
-    Rprintf("Rcmd is %s\n", CMD);
-    Rprintf("n = %d, debug = %d\n", n, debug);
-  }
-  if(debug>0) {
+    Rprintf("Rcmd is %s, debug = %d\n", CMD, debug);
+    //Rprintf("n = %d, debug = %d\n", n, debug);
     Rprintf("ni = %d, nd = %d, nc = %d, nm = %d, nsm = %d\n", ni, nd, nc, nm, nsm);
   }
 
@@ -340,14 +338,20 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
     ret = model_func(INLA_CGENERIC_INITIAL, theta, cgeneric_data);
     nout = (int)ret[0];
     if(debug>0) {
-      Rprintf("intial with %d elements\n", nout);
+      Rprintf("intial: %d elements (%f)\n", nout, ret[0]);
+      if(nout>0) {
+        for(i=0; i<nout; i++)
+          Rprintf("theta[%d] = %f\n", i, ret[1 + i]);
+      }
     }
-    Rret = PROTECT(allocVector(REALSXP, nout));
-    daux = REAL(Rret);
-    for(i = 0; i < nout; i++) {
-      daux[i] = ret[1 + i];
+    if(nout>0) {
+      Rret = PROTECT(allocVector(REALSXP, nout));
+      daux = REAL(Rret);
+      for(i = 0; i < nout; i++) {
+        daux[i] = ret[1 + i];
+      }
+      UNPROTECT(1);
     }
-    UNPROTECT(1);
   }
 
   if(strcmp(CMD, "log_prior") == 0) {
