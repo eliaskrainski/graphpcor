@@ -1,11 +1,5 @@
 library(spdep)
-library(INLA)
 library(corGraphs)
-
-inla.setOption(
-    num.threads = 1L,
-    safe = FALSE
-)
 
 ## Model 1: Besag over a grid
 nxy <- c(40, 50)
@@ -16,11 +10,11 @@ n <- length(nnb)
 nb.graph <- sparseMatrix(
     i = rep(1:n, nnb),
     j = unlist(nb[nnb>0]),
-    x = 1,
-    dims = c(n, n)
+    dims = c(n, n),
+    repr = "T"
 )
 
-R0 <- inla.as.sparse(Diagonal(n, 1+nnb) - nb.graph)
+R0 <- Diagonal(n, 1 + nnb) - nb.graph
 R0[1:min(5, n), 1:min(20, n)]
 
 ## m1 definition
@@ -28,10 +22,12 @@ m1 <- cgeneric_generic0(
     debug = FALSE,
     R = R0,
     scale = FALSE,
-    param = c(1, 0.5) ## to fix it at this value
+    param = c(1, 0.5) 
 )
 
+cgeneric_get(m1, "initial")
 cgeneric_get(m1, "log.prior", theta = -1.0)
+cgeneric_get(m1, "log.prior")
 cgeneric_get(m1, "log.prior", theta = +1.0)
 
 (theta1 <- cgeneric_get(m1, "initial"))
@@ -64,6 +60,9 @@ cov2cor(solve(Q2))
 
 Q12 <- kronecker(Q1, Q2)
 Q21 <- kronecker(Q2, Q1)
+
+ijo <- order(rep(1:n2, n))
+all.equal(Q12[ijo, ijo], Q21)
 
 ## The M1 (x) M2 Kronecker product model definition
 m1o <- m1; m1o$old = TRUE

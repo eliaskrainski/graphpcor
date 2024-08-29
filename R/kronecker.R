@@ -8,7 +8,6 @@ setMethod(
   function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
 
     old <- X$old | Y$old
-    print(old)
     if(length(old) == 0)
       old <- FALSE
     if(old) { ## not need to check! (because list(a=1,b=2,a=3,b=4) is ok)

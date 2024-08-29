@@ -1,4 +1,3 @@
-#' Build the objects to implement the model using the
 #' cgeneric method in `INLA` from a list of expressions
 #' defining a Direct Cyclic Graph - DCG correlation model
 #' to be used as a model in a `INLA` `f()` model component.
@@ -13,6 +12,7 @@
 #' shared object pre-compiled by INLA. It is not considered if
 #' libpath is provided.
 #' @param libpath string to the shared object. Default is NULL.
+#' @importFrom INLA inla.cgeneric.define
 #' @details
 #'  The correlation prior as in the paper depends on the lambda value.
 #'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
@@ -106,6 +106,7 @@ cgeneric0_dcg_model <-
 #' shared object pre-compiled by INLA. It is not considered if
 #' libpath is provided.
 #' @param libpath string to the shared object. Default is NULL.
+#' @importFrom INLA inla.cgeneric.define
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
 dcg_model <-

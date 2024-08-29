@@ -92,13 +92,12 @@ cgeneric_get <- function(cgeneric_model,
       ret <- ret[idx]
     }
     return(
-      INLA::inla.as.sparse(
-        sparseMatrix(
-          i = ij[[1]] + 1L,
-          j = ij[[2]] + 1L,
-          x = ret,
-          symmetric = TRUE
-        )
+      sparseMatrix(
+        i = ij[[1]] + 1L,
+        j = ij[[2]] + 1L,
+        x = ret,
+        symmetric = TRUE,
+        repr = "T"
       )
     )
   }
@@ -124,6 +123,16 @@ cgeneric_get <- function(cgeneric_model,
      return(ret)
   }
 
+  if(any(cmd == "graph")) {
+    ret$graph <-
+      sparseMatrix(
+        i = ret$graph[[1]] + 1L,
+        j = ret$graph[[2]] + 1L,
+        symmetric = TRUE,
+        repr = "T"
+      )
+  }
+
   if(any(cmd == "Q")) {
     if(any(cmd == "graph")) {
       ij <- ret$graph
@@ -139,25 +148,17 @@ cgeneric_get <- function(cgeneric_model,
         cgdata$smatrices,
         PACKAGE = "corGraphs"
       )
-    }
-    ret$Q <- INLA::inla.as.sparse(
-      sparseMatrix(
+      ij <- sparseMatrix(
         i = ij[[1]] + 1L,
         j = ij[[2]] + 1L,
-        x = ret$Q,
-        symmetric = TRUE
+        symmetric = TRUE,
+        repr = "T"
       )
-    )
+    }
+    ij@x <- ret$Q
+    ret$Q <- ij
   }
-  if(any(cmd == "graph")) {
-    ret$graph <- INLA::inla.as.sparse(
-      sparseMatrix(
-        i = ret$graph[[1]] + 1L,
-        j = ret$graph[[2]] + 1L,
-        x = 1
-      )
-    )
-  }
+
   return(ret)
 
 }
