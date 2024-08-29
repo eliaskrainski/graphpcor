@@ -5,12 +5,12 @@ inla.setOption(
     safe = FALSE
 )
 
-## Model 1: Besag over a grid
+## Model 1 graph
 graph <- sparseMatrix(
     i = c(2, 3, 1, 4, 1, 4, 5, 2, 3, 3),
     j = c(1, 1, 2, 2, 3, 3, 3, 4, 4, 5)
 )
-graph
+graph ## <- Diagonal(5)
 (n <- nrow(graph))
 
 Q1 <- inla.as.sparse(
@@ -35,7 +35,8 @@ cov2cor(solve(Q2))
 Q21 <- inla.as.sparse(kronecker(Q2, Q1))
 Q21
 
-(theta0 <- c(0, -1+2/(1+exp(-rho))))
+(theta0 <- c(0 + log(1 - rho^2),
+             log((1+rho)/(1-rho))))
 
 cfam <- list(
     hyper = list(
