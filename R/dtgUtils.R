@@ -1,4 +1,5 @@
 #' Directed Tree Graph - DTG.
+setClass("dtg")
 #' Set as a graph with nodes representing two kind of
 #' variables: children and parent. See details.
 #' @param ... a list of formula used as relationship
@@ -20,15 +21,25 @@
 #' g1 <- dtg(p1 ~ c1 + c2 - c3)
 #' g1
 #' summary(g1)
+#' plot(g1)
+#' precision(g1)
+#' precision(g1, theta = 0)
+#'
 #' g2 <- dtg(p1 ~ c1 + c2 + p2,
 #'           p2 ~ c3 - c4)
 #' g2
 #' summary(g2)
+#' plot(g2)
+#' precision(g2)
+#' precision(g2, theta = c(0, 0))
+#'
 #' g3 <- dtg(p1 ~ -p2 + c1 + c2,
 #'           p2 ~ c3)
 #' g3
 #' summary(g3)
-
+#' plot(g3)
+#' precision(g3)
+#' precision(g3, theta = c(0,0))
 dtg <- function(...) {
 
   fch <- as.character(match.call())[-1]
@@ -170,30 +181,103 @@ summary.dtg <- function(object, ...) {
 }
 
 #' @export
+nm <- function(x, ...) {
+  UseMethod("nm")
+}
+
+#' @export
+nm.default <- function(x, ...) {
+  return(length(x))
+}
+
+#' @export
+nm.dtg <- function(x, ...) {
+  trm <- attr(x, "relations")
+  m <- ncol(trm)
+  c(nrow(trm) - m + 1, m)
+}
+
+#' @export
+setMethod(
+  "drop",
+  "dtg",
+  function(x) {
+    stopifnot((m <- length(x))>1)
+    trm0 <- attr(x, "relations")
+    stopifnot(ncol(trm0) == m)
+    ilast <- which(rownames(trm0) == (colnames(trm0)[m]))
+    trm <- trm0[-ilast, 1:(m-1), drop = FALSE]
+
+    args <- lapply(1:(m-1), function(i) {
+      j <- trm[, i] !=0
+      s <- ifelse(trm[j, i] < 0, "-", "+")
+      if(s[1] == "+") s[1] <- ""
+      e <- paste(
+        colnames(trm)[i],
+        "~",
+        paste(s, rownames(trm)[j], collapse = "")
+      )
+      update(y ~ x, e)
+    }
+    )
+    do.call(
+      "dtg",
+      args)
+  }
+)
+
+#' @export
+setMethod(
+  "edges",
+  "dtg",
+  function(object, which, ...) {
+
+    trm <- attr(object, "relations")
+    m <- ncol(trm)
+    n <- nrow(trm)-m+1
+
+    edgl <- vector("list", m + n)
+    names(edgl) <- c(paste0("p", 1:m),
+                     paste0("c", 1:n))
+    for(i in 1:m) {
+      w1 <- trm[, i] != 0
+      edgl[[i]] <- list(
+        n = sum(w1),
+        edges = rownames(trm)[w1],
+        weights = trm[w1, i]
+      )
+      edgl[[i]]$term <- edgl$edges
+      edgl[[i]]$parent <- substr(edgl[[i]]$edges, 1, 1) == "p"
+      edgl[[i]]$id <- as.integer(substring(edgl[[i]]$edges, 2))
+      edgl[[i]]$signal <- edgl[[i]]$weights
+    }
+    return(edgl)
+  }
+)
+
+#' @export
 setMethod(
   "plot",
   "dtg",
   function(x, y, ...) {
 
-    trm <- attr(x, "relations")
-    m <- ncol(trm)
-    n <- nrow(trm)-m+1
-
-    nodes <- unique(c(colnames(trm), rownames(trm)))
-    edgl <- vector("list", m + n)
-    names(edgl) <- c(paste0("p", 1:m), paste0("c", 1:n))
-    for(i in 1:m) {
-      edgl[[i]] <- list(edges = rownames(trm)[trm[, i] != 0])
-    }
+    ## the graph
+    edgl <- edges(x)
+    nodes <- names(edgl)
     gr <- graph::graphNEL(
       nodes = nodes,
       edgeL = edgl,
       edgemode='directed')
 
+    trm <- attr(x, "relations")
+    m <- ncol(trm)
+    n <- nrow(trm)-m+1
+
     mc <- lapply(
       match.call(expand.dots = TRUE)[-1],
       eval)
     nargs <- names(mc)
+
     nattr <- lapply(
       list(
         color =  {
@@ -252,3 +336,126 @@ setMethod(
 
   }
 )
+
+#' @export
+variance <- function(x, ...) {
+  UseMethod("variance")
+}
+
+#' @export
+variance.default <- function(x, ...) {
+  return(var(x))
+}
+
+#' @export
+precision <- function(x, ...) {
+  UseMethod("precision")
+}
+
+#' @export
+precision.default <- function(x, ...) {
+  v <- variance(x, ...)
+  return(
+    forwardsolve(
+      backsolve(
+        chol(x)
+        )
+      )
+    )
+}
+
+#' @export
+precision.dtg <- function(x, ...) {
+  edgl <- edges(x)
+  q.el <- edtg2precision(
+    edgl[1:length(x)])
+  mc <- lapply(
+    match.call(
+      expand.dots = TRUE)[-1],
+    eval)
+  nargs <- names(mc)
+  Q <- q.el$q
+  if(any(nargs == "theta")) {
+    nc <- q.el$nc
+    Q[q.el$iq2th] <- Q[q.el$iq2th] +
+      exp(-2 * mc$theta[q.el$i2th])
+    Q[q.el$iq1th] <- -1.0 * q.el$sth *
+      exp(-mc$theta[q.el$i1th])
+  }
+  rownames(Q) <- colnames(Q) <- names(edgl)
+  return(Q)
+}
+
+#' Function to build the precision elements from
+#' the elements extracted from the dcg tree.
+#' @return the elements to build the precision matrix.
+edtg2precision <- function(d.el) {
+  stopifnot(all(substr(names(d.el), 1, 1) == "p"))
+  stopifnot(length(d.el) == length(unique(names(d.el))))
+  ip <- as.integer(substring(names(d.el), 2))
+  np <- length(ip)
+  stopifnot(np == length(unique(ip)))
+  nc <- sum(sapply(d.el, function(x) sum(!x$parent)))
+  p.nc <- sapply(d.el, function(x) x$n)
+  dd <- c(rep(1, nc), p.nc)
+  stopifnot((nc + np) == length(dd))
+  q0 <- diag(x = dd, nrow = nc + np, ncol = nc + np)
+  ij <- matrix(1:((nc+np)^2), nc+np, nc+np)
+  iq1th <- integer(2 * (np - 1))
+  sch <- iq1ch <- integer(2*nc)
+  sth <- i1th <- integer(np-1)
+  iq2th <- i2th <- integer(np)
+  k0 <- 0
+  k2 <- k1 <- 0
+  for(i in 1:np) {
+    i0 <- which(!d.el[[i]]$parent)
+    nci <- length(i0)
+    if(nci>0) {
+      j <- d.el[[i]]$id[i0]
+      sch[k0 + 1:nci] <- d.el[[i]]$signal[i0]
+      iq1ch[k0 + 1:nci] <- ij[(col(ij) == (nc+i)) & (row(ij) %in% j)]
+      k0 <- k0 + nci
+      sch[k0 + 1:nci] <- d.el[[i]]$signal[i0]
+      iq1ch[k0 + 1:nci] <- ij[(row(ij) == (nc+i)) & (col(ij) %in% j)]
+      k0 <- k0 + nci
+      q0[j, nc+i] <- -d.el[[i]]$signal[i0]
+      q0[nc+i, j] <- -d.el[[i]]$signal[i0]
+    }
+    i2th[k1 + 1] <- i
+    iq2th[k1 + 1] <- ij[(col(ij) == (nc+i)) & (row(ij) == (nc+i))]
+    k1 <- k1 + 1
+    i0 <- which(d.el[[i]]$parent)
+    nj <- length(i0)
+    if(nj>0) {
+      j0 <- d.el[[i]]$id[i0]
+      i1th[k2 + 1:nj] <- j0
+      sth[k2 + 1:nj] <- d.el[[i]]$signal[i0] ## carry on the signal
+      j <- nc + j0
+      iq1th[k2 + 1:nj] <- ij[, nc+i][j]
+      k2 <- k2 + nj
+      i1th[k2 + 1:nj] <- j0
+      sth[k2 + 1:nj] <- d.el[[i]]$signal[i0] ## carry on the signal
+      iq1th[k2 + 1:nj] <- ij[nc+i, ][j]
+      k2 <- k2 + nj
+      q0[j, nc+i] <- -d.el[[i]]$signal[i0]
+      q0[nc+i, j] <- -d.el[[i]]$signal[i0]
+    }
+  }
+  stopifnot(k1 == np)
+  stopifnot(k2 == (2*(np-1)))
+  return(list(
+    nc = as.integer(nc),
+    np = as.integer(np),
+    i2th = as.integer(i2th),
+    iq2th = as.integer(iq2th),
+    i1th = as.integer(i1th),
+    iq1th = as.integer(iq1th),
+    iq1ch = as.integer(iq1ch),
+    sch = as.double(sch),
+    sth = as.double(sth),
+    q = q0
+  ))
+}
+
+
+
