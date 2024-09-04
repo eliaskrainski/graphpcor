@@ -175,6 +175,8 @@ dcg_e2precision <- function(d.el) {
       sth[k2 + 1:nj] <- d.el[[i]]$signal[i0] ## carry on the signal
       iq1th[k2 + 1:nj] <- ij[nc+i, ][j]
       k2 <- k2 + nj
+      q0[j, nc+i] <- -d.el[[i]]$signal[i0]
+      q0[nc+i, j] <- -d.el[[i]]$signal[i0]
     }
   }
   stopifnot(k1 == np)
