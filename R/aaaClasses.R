@@ -2,15 +2,6 @@
 #'
 
 setClass(
-  "extraconstr",
-  slots = c("A", "e"),
-  validity = function(object) {
-    all(c("A", "e", "n") %in% names(object)) &&
-      (ncol(object$A) == length(object$e))
-  }
-)
-
-setClass(
   "inla.cgeneric",
   slots = "f",
   validity = function(object) {
