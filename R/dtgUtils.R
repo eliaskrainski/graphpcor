@@ -181,17 +181,7 @@ summary.dtg <- function(object, ...) {
 }
 
 #' @export
-nm <- function(x, ...) {
-  UseMethod("nm")
-}
-
-#' @export
-nm.default <- function(x, ...) {
-  return(length(x))
-}
-
-#' @export
-nm.dtg <- function(x, ...) {
+dim.dtg <- function(x, ...) {
   trm <- attr(x, "relations")
   m <- ncol(trm)
   c(nrow(trm) - m + 1, m)
@@ -358,7 +348,7 @@ precision.default <- function(x, ...) {
   return(
     forwardsolve(
       backsolve(
-        chol(x)
+        chol(v)
         )
       )
     )
@@ -386,9 +376,9 @@ precision.dtg <- function(x, ...) {
   return(Q)
 }
 
-#' Function to build the precision elements from
-#' the elements extracted from the dcg tree.
-#' @return the elements to build the precision matrix.
+#' Internal function to extract elements to
+#' build the precision from the DTG edges.
+#' @param d.el the list of the first n edges of a DTG.
 edtg2precision <- function(d.el) {
   stopifnot(all(substr(names(d.el), 1, 1) == "p"))
   stopifnot(length(d.el) == length(unique(names(d.el))))
@@ -457,5 +447,65 @@ edtg2precision <- function(d.el) {
   ))
 }
 
+#' @export
+variance.dtg <- function(x, ...) {
+  mc <- lapply(
+    match.call(
+      expand.dots = TRUE)[-1],
+    eval)
+  nargs <- names(mc)
+  nm <- dim(x)
+  edgl <- edges(x)
+  ij <- edtg2variance(edgl[1:nm[2]])
+  np <- length(ij$iv)
+  nc <- length(ij$iparent)
+  stopifnot(all(c(nc, np) == nm))
+  if(any(nargs == "theta")) {
+    vi <- sapply(ij$iv, function(i)
+      sum(exp(2 * mc$theta[i])))
+  } else {
+    vi <- sapply(ij$iv, function(i) length(i))
+  }
+  vv <- diag(nc) + vi[ij$itop]
+  rownames(vv) <- colnames(vv) <- names(edgl)[np + 1:nc]
+  return(t(vv * ij$schildren) * ij$schildren)
+}
 
+#' Internal function to extract elements to
+#' build the covariance matrix from the DTG edges.
+#' @param d.el the list of the first n edges of a DTG.
+edtg2variance <- function(d.el) {
+  np <- length(d.el)
+  iv <- lapply(1:np, function(i) i)
+  for(i in 1:np) {
+    ip <- which(d.el[[i]]$parent)
+    if(length(ip)>0) {
+      jj <- d.el[[i]]$id[ip]
+      for(j in jj) {
+        iv[[j]] <- c(iv[[j]], iv[[i]])
+      }
+    }
+  }
+  NC <- sum(sapply(d.el, function(s) sum(!s$parent)))
+  sch <- integer(NC)
+  iP <- integer(NC)
+  for(i in 1:np) {
+    ic <- which(!d.el[[i]]$parent)
+    if(length(ic)>0) {
+      sch[d.el[[i]]$id[ic]] <-
+        d.el[[i]]$signal[ic]
+      for(j in 1:length(ic)) {
+        iP[d.el[[i]]$id[ic[j]]] <- i
+      }
+    }
+  }
+  itop <- matrix(0L, NC, NC)
+  for(i in 1:NC) {
+    for(j in 1:NC) {
+      itop[i, j] <- max(intersect(iv[[iP[i]]], iv[[iP[j]]]))
+    }
+  }
+  stopifnot(all.equal(iP,diag(itop)))
+  return(list(iparent = iP, iv = iv, itop = itop, schildren=sch))
+}
 
