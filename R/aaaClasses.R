@@ -1,17 +1,19 @@
-#' setClass
-#'
+#' Directed Tree Graph - DTG.
+setClass("dtg")
 
+#' GMRF model definition using the cgeneric in INLA
 setClass(
-  "inla.cgeneric",
+  "cgeneric",
   slots = "f",
   validity = function(object) {
-    all(c("model", "n", "rgeneric") %in%
+    all(c("model", "n", "cgeneric") %in%
           names(object$f))
   }
 )
 
+#' GMRF model definition using the rgeneric in INLA
 setClass(
-  "inla.rgeneric",
+  "rgeneric",
   slots = "f",
   validity = function(object) {
     all(c("model", "n", "rgeneric") %in%

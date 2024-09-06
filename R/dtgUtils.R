@@ -1,5 +1,3 @@
-#' Directed Tree Graph - DTG.
-setClass("dtg")
 #' Set as a graph with nodes representing two kind of
 #' variables: children and parent. See details.
 #' @param ... a list of formula used as relationship
@@ -509,3 +507,130 @@ edtg2variance <- function(d.el) {
   return(list(iparent = iP, iv = iv, itop = itop, schildren=sch))
 }
 
+#' cgeneric method in `INLA` from a list of expressions
+#' defining a Direct Tree Graph - DTG correlation model
+#' to be used as a model in a `INLA` `f()` model component.
+#'
+#' @param dtg the DTG model specification.
+#' @param sigma.prior.reference a vector with the reference values
+#' to define the prior for the standard deviation parameters.
+#' @param sigma.prior.probability a vector with the probability values
+#' to define the prior for the standard deviation parameters.
+#' @param lambda the lambda for the graph correlation prior.
+#' @param iprior integer to define with prior is going to be used
+#' for the correlation. 1 is for normal for v_i,
+#' 2 is for pc-precision and 3 is for the derived PC (see the paper).
+#' @param useINLAprecomp logical indicating if is to be used
+#' shared object pre-compiled by INLA. It is not considered if
+#' libpath is provided.
+#' @param libpath string to the shared object. Default is NULL.
+#' @details
+#'  The correlation prior as in the paper depends on the lambda value.
+#'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
+#' which can be defined from the following probability statement
+#'  P(sigma > U) = a.
+#' where "U" is a reference value and "a" is a probability.
+#' The values "U" and probabilities "a" for each \eqn{sigma_i}
+#' are passed in the `sigma.prior.reference` and `sigma.prior.probability`
+#' arguments.
+#' If a=0 then U is taken to be the fixed value of the corresponding sigma.
+#' E.g. if there are three sigmas in the model and one supply
+#'  sigma.prior.reference = c(1, 2, 3) and
+#'  sigma.prior.probability = c(0.05, 0.0, 0.01)
+#' then the sigma is fixed to 2 and not estimated.
+#' @return objects to be used in the f() formula term in INLA.
+#' @importFrom INLA inla.cgeneric.define
+#' @export
+cgeneric.dtg <-
+  function(dtg,
+           sigma.prior.reference,
+           sigma.prior.probability,
+           lambda,
+           iprior = 3,
+           debug = FALSE,
+           useINLAprecomp = !TRUE,
+           libpath = NULL) {
+
+    if (is.null(libpath)) {
+      if (useINLAprecomp) {
+        libpath <- INLA::inla.external.lib("corGraphs")
+      } else {
+        libpath <- system.file("libs", package = "corGraphs")
+        if (Sys.info()["sysname"] == "Windows") {
+          libpath <- file.path(libpath, "corGraphs.dll")
+        } else {
+          libpath <- file.path(libpath, "corGraphs.so")
+        }
+      }
+    }
+
+    dd <- dim(dtg)
+    edgl <- edges(dtg)
+    d.el <- edtg2precision(dtg[1:dd[2]])
+    ich <- unlist(lapply(d.el, function(x)
+      x$id[!x$parent]))
+    sch <- unlist(lapply(d.el, function(x)
+      x$signal[!x$parent]))
+    sch <- sch[ich]
+    if(debug) {
+      cat(c(sch = sch), "\n")
+    }
+    d.elc <- edtg2variance(d.el)
+    if(debug) {
+      print(str(d.elc))
+    }
+    np <- length(dtg)
+    nv <- sapply(d.elc$iv, length)
+    if(debug)
+      cat("np = ", np, " and nv: ", nv, "\n")
+    iiv <- rep(1:np, nv)
+    jjv <- unlist(lapply(d.elc$iv, sort))
+    itop <- d.elc$itop
+    if(debug) {
+      cat(c(iiv=iiv), "\n")
+      cat(c(jjv=jjv), "\nitop:\n")
+      print(itop)
+    }
+    nc <- nrow(itop)
+    ii <- col(itop)[!upper.tri(itop)]
+    jj <- row(itop)[!upper.tri(itop)]
+    if(debug) {
+      print(str(list(nc=nc,ii=ii,jj=jj)))
+    }
+
+    stopifnot(length(sigma.prior.reference) == nc)
+    stopifnot(length(sigma.prior.probability) == nc)
+    stopifnot(all(sigma.prior.probability>0.0))
+    stopifnot(all(sigma.prior.probability<1.0))
+    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
+
+    stopifnot(lambda>0)
+    stopifnot(iprior %in% (1L:3L))
+
+      the_model <- do.call(
+        "inla.cgeneric.define",
+        list(
+          model = "inla_cgeneric_corgraphs_sfixed",
+          shlib = libpath,
+          n = as.integer(nc),
+          debug = as.integer(debug),
+          np = as.integer(np),
+          nv = as.integer(nv),
+          ipar = as.integer(d.elc$iparent-1L),
+          iiv = as.integer(iiv-1L),
+          jjv = as.integer(jjv-1L),
+          itop = as.integer(itop-1L),
+          ii = as.integer(ii-1L),
+          jj = as.integer(jj-1L),
+          iprior = as.integer(iprior),
+          lambda = as.double(lambda),
+          slambdas = as.double(slambdas),
+          schildren = as.double(sch)
+        )
+      )
+
+    class(the_model) <- "cgeneric"
+
+    return(the_model)
+
+  }

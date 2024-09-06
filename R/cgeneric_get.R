@@ -1,3 +1,33 @@
+#' cgeneric methods
+#' @param x the model
+#' @param ... additional arguments such as 'theta'.
+#' @export
+initial <- function(x) {
+  UseMethod("initial")
+}
+#' @export
+initial.cgeneric <- function(x) {
+  cgeneric_get(x, "initial")
+}
+
+precision.cgeneric <- function(x, ...) {
+  mc <- lapply(
+    match.call(
+      expand.dots = TRUE)[-1],
+    eval)
+  nargs <- names(mc)
+  if(any(nargs) == "theta") {
+    theta <- mc$theta
+  } else {
+    theta <- initial(x)
+  }
+  if(any(nargs == "optimize")) {
+    optimize <- mc$optimize
+  } else {
+    optimize = TRUE
+  }
+  cgeneric_get(x, theta = theta, optimize = optimize)
+}
 #' Function to extract cgeneric model
 #' @param cgeneric_model an object containing the cgeneric model
 #' @param theta a numeric vector with theta.
@@ -5,7 +35,6 @@
 #' returned only the elements (if TRUE) or to be built (if FALSE).
 #' If NULL (default) will use the initial from the cgeneric model.
 #' @param cmd an string to specify which model element to get
-#' @export
 cgeneric_get <- function(cgeneric_model,
                          cmd = c("graph", "Q", "initial", "mu", "log.prior"),
                          theta = NULL,
