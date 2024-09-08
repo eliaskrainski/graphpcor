@@ -2,21 +2,37 @@
 #' @param x the model
 #' @param ... additional arguments such as 'theta'.
 #' @export
+cgeneric <- function(x, ...) {
+  UseMethod("cgeneric")
+}
+#' @export
+#' @export
+cgeneric.default <- function(x, ...) {
+  do.call(
+    "inla.cgeneric.define",
+    lapply(
+      match.call(expand.dotx = TRUE)[-1],
+      eval)
+    )
+}
+
+#' @export
 initial <- function(x) {
   UseMethod("initial")
 }
 #' @export
-initial.cgeneric <- function(x) {
+initial.inla.cgeneric <- function(x) {
   cgeneric_get(x, "initial")
 }
 
-precision.cgeneric <- function(x, ...) {
+#' @export
+precision.inla.cgeneric <- function(x, ...) {
   mc <- lapply(
     match.call(
       expand.dots = TRUE)[-1],
     eval)
   nargs <- names(mc)
-  if(any(nargs) == "theta") {
+  if(any(nargs == "theta")) {
     theta <- mc$theta
   } else {
     theta <- initial(x)

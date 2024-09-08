@@ -565,8 +565,7 @@ cgeneric.dtg <-
     }
 
     dd <- dim(dtg)
-    edgl <- edges(dtg)
-    d.el <- edtg2precision(dtg[1:dd[2]])
+    d.el <- edges(dtg)[1:dd[2]]
     ich <- unlist(lapply(d.el, function(x)
       x$id[!x$parent]))
     sch <- unlist(lapply(d.el, function(x)
@@ -629,7 +628,7 @@ cgeneric.dtg <-
         )
       )
 
-    class(the_model) <- "cgeneric"
+    class(the_model) <- "inla.cgeneric"
 
     return(the_model)
 

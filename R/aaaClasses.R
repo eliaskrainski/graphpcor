@@ -3,7 +3,7 @@ setClass("dtg")
 
 #' GMRF model definition using the cgeneric in INLA
 setClass(
-  "cgeneric",
+  "inla.cgeneric",
   slots = "f",
   validity = function(object) {
     all(c("model", "n", "cgeneric") %in%
@@ -13,7 +13,7 @@ setClass(
 
 #' GMRF model definition using the rgeneric in INLA
 setClass(
-  "rgeneric",
+  "inla.rgeneric",
   slots = "f",
   validity = function(object) {
     all(c("model", "n", "rgeneric") %in%
