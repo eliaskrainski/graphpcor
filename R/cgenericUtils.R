@@ -1,19 +1,46 @@
-#' cgeneric methods
-#' @param x the model
-#' @param ... additional arguments such as 'theta'.
+#' Define cgeneric methods
+#' @param model an object used to define the model.
+#' Its class will define which method is considered.
+#' @param debug logical indicating debug state.
+#' @param useINLAprecomp logical indicating if
+#' it is to be used the shared object within INLA.
+#' @param ... additional arguments to be treated
+#' according to each method.
 #' @export
-cgeneric <- function(x, ...) {
+cgeneric <- function(model, ...) {
   UseMethod("cgeneric")
 }
 #' @export
-#' @export
-cgeneric.default <- function(x, ...) {
-  do.call(
+#' @importFrom INLA inla.cgeneric.define
+cgeneric.default <- function(model,
+                             debug = FALSE,
+                             useINLAprecomp = TRUE,
+                             ...) {
+## it uses INLA::inla.cgeneric.define()
+  if (useINLAprecomp) {
+    shlib <- INLA::inla.external.lib("corGraphs")
+  } else {
+    libpath <- system.file("libs", package = "corGraphs")
+    if (Sys.info()["sysname"] == "Windows") {
+      shlib <- file.path(libpath, "corGraphs.dll")
+    } else {
+      shlib <- file.path(libpath, "corGraphs.so")
+    }
+  }
+
+  args <- list(...)
+  nargs <- names(args)
+  if(any(nargs == ""))
+    stop("Please name the arguments!")
+  stopifnot(any(nargs == "n"))
+  cmodel <- do.call(
     "inla.cgeneric.define",
-    lapply(
-      match.call(expand.dotx = TRUE)[-1],
-      eval)
-    )
+    c(list(model = model,
+           debug = debug,
+           shlib = shlib),
+      list(...))
+  )
+  return(cmodel)
 }
 
 #' @export
@@ -76,7 +103,6 @@ cgeneric_get <- function(cgeneric_model,
 
   if(is.null(theta) &
      any(cmd == c("Q", "log_prior"))) {
-    cat('here\n')
     theta <- .Call(
       "cgeneric_element_get",
       "initial",
@@ -88,7 +114,6 @@ cgeneric_get <- function(cgeneric_model,
       cgdata$smatrices,
       PACKAGE = "corGraphs"
       )
-    print(c(theta = theta))
     if((length(cmd) == 1) & (cmd == "initial")) {
       return(theta)
     }

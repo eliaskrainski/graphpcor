@@ -511,7 +511,7 @@ edtg2variance <- function(d.el) {
 #' defining a Direct Tree Graph - DTG correlation model
 #' to be used as a model in a `INLA` `f()` model component.
 #'
-#' @param dtg the DTG model specification.
+#' @param x the DTG model specification.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
@@ -520,10 +520,8 @@ edtg2variance <- function(d.el) {
 #' @param iprior integer to define with prior is going to be used
 #' for the correlation. 1 is for normal for v_i,
 #' 2 is for pc-precision and 3 is for the derived PC (see the paper).
-#' @param useINLAprecomp logical indicating if is to be used
-#' shared object pre-compiled by INLA. It is not considered if
-#' libpath is provided.
-#' @param libpath string to the shared object. Default is NULL.
+#' @param useINLAprecomp logical indicating if
+#' it is to be used the shared object within INLA.
 #' @details
 #'  The correlation prior as in the paper depends on the lambda value.
 #'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
@@ -539,7 +537,6 @@ edtg2variance <- function(d.el) {
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
 #' then the sigma is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
-#' @importFrom INLA inla.cgeneric.define
 #' @export
 cgeneric.dtg <-
   function(dtg,
@@ -548,21 +545,8 @@ cgeneric.dtg <-
            lambda,
            iprior = 3,
            debug = FALSE,
-           useINLAprecomp = !TRUE,
-           libpath = NULL) {
+           useINLAprecomp = !TRUE) {
 
-    if (is.null(libpath)) {
-      if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("corGraphs")
-      } else {
-        libpath <- system.file("libs", package = "corGraphs")
-        if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "corGraphs.dll")
-        } else {
-          libpath <- file.path(libpath, "corGraphs.so")
-        }
-      }
-    }
 
     dd <- dim(dtg)
     d.el <- edges(dtg)[1:dd[2]]
@@ -606,13 +590,11 @@ cgeneric.dtg <-
     stopifnot(lambda>0)
     stopifnot(iprior %in% (1L:3L))
 
-      the_model <- do.call(
-        "inla.cgeneric.define",
-        list(
+      the_model <- cgeneric.default(
           model = "inla_cgeneric_corgraphs_sfixed",
-          shlib = libpath,
+          debug = as.logical(debug),
+          useINLAprecomp = as.logical(useINLAprecomp),
           n = as.integer(nc),
-          debug = as.integer(debug),
           np = as.integer(np),
           nv = as.integer(nv),
           ipar = as.integer(d.elc$iparent-1L),
@@ -625,10 +607,7 @@ cgeneric.dtg <-
           lambda = as.double(lambda),
           slambdas = as.double(slambdas),
           schildren = as.double(sch)
-        )
       )
-
-    class(the_model) <- "inla.cgeneric"
 
     return(the_model)
 
