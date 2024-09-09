@@ -61,6 +61,8 @@ dtg <- function(...) {
     stop("Please use integer after letter 'p' for parents!")
   }
 
+  ## left side check
+
   ## order
   opp <- order(pp)
   fch <- fch[opp]
@@ -105,15 +107,20 @@ dtg <- function(...) {
       if(any(jj.i[ch.l == "p"] <= 1))
         stop("Parent id in ~ ", ch[[i]][3], " must be >", 1)
       if(any(jj.i[ch.l == "p"] > m))
-        stop("Parent id in ~ ", ch[[i]][3], " should not be >", m)
+        stop("Wrong parent id in ~ ", ch[[i]][3])
     }
     terms.l[[i]] <- ch.l
     terms.i[[i]] <- jj.i
   }
 
-##  print(terms.l)
-  ##print(terms.i)
-  ##print(terms.s)
+  rterms <- paste0(
+    unlist(terms.l),
+    unlist(terms.i))
+  urterms <- unique(rterms)
+  if(length(rterms) > length(urterms)) {
+    stop("Duplicated defintion for ",
+         unique(rterms[duplicated(rterms)]))
+  }
 
   ic <- unlist(terms.l) == "c"
   if(any(ic)) {
