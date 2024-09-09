@@ -44,20 +44,22 @@ cgeneric.default <- function(model,
 }
 
 #' @export
-initial <- function(x) {
-  UseMethod("initial")
+graph <- function(x, ...) {
+  UseMethod("graph")
 }
 #' @export
-initial.inla.cgeneric <- function(x) {
-  cgeneric_get(x, "initial")
+graph.inla.cgeneric <- function(x, ...) {
+  args <- list(...)
+  if(any(names(args) == "optimize")) {
+    return(cgeneric_get(x, "graph", ...))
+  } else {
+    return(cgeneric_get(x, "graph", optimize = FALSE))
+  }
 }
 
 #' @export
 precision.inla.cgeneric <- function(x, ...) {
-  mc <- lapply(
-    match.call(
-      expand.dots = TRUE)[-1],
-    eval)
+  mc <- list(...)
   nargs <- names(mc)
   if(any(nargs == "theta")) {
     theta <- mc$theta
@@ -67,20 +69,55 @@ precision.inla.cgeneric <- function(x, ...) {
   if(any(nargs == "optimize")) {
     optimize <- mc$optimize
   } else {
-    optimize = TRUE
+    optimize <- FALSE
   }
-  cgeneric_get(x, theta = theta, optimize = optimize)
+  stopifnot(is.logical(optimize))
+  cgeneric_get(x, cmd = "Q", theta = theta, optimize = optimize)
+}
+
+#' @export
+initial <- function(x) {
+  UseMethod("initial")
+}
+#' @export
+initial.inla.cgeneric <- function(x) {
+  cgeneric_get(x, "initial")
+}
+
+
+#' @export
+mu <- function(x) {
+  UseMethod("mu")
+}
+#' @export
+mu.inla.cgeneric <- function(x) {
+  cgeneric_get(x, "mu")
+}
+
+#' Define prior methods.
+#' @param model the model
+#' @param additional arguments
+#' @param theta a numeric vector with the model parameters.
+#' @export
+prior <- function(model, theta) {
+  UseMethod("prior")
+}
+#' Prior for the 'inla.cgeneric' model.
+#' @export
+prior.inla.cgeneric <- function(model, theta) {
+  return(cgeneric_get(cmodel = model,
+                      cmd = "log_prior",
+                      theta = theta))
 }
 #' Function to extract cgeneric model
-#' @param cgeneric_model an object containing the cgeneric model
-#' @param theta a numeric vector with theta.
+#' @param cmodel an object containing the cgeneric model
 #' @param optimize logical indicating if the graph and Q are
 #' returned only the elements (if TRUE) or to be built (if FALSE).
 #' If NULL (default) will use the initial from the cgeneric model.
 #' @param cmd an string to specify which model element to get
-cgeneric_get <- function(cgeneric_model,
-                         cmd = c("graph", "Q", "initial", "mu", "log.prior"),
-                         theta = NULL,
+cgeneric_get <- function(cmodel,
+                         cmd = c("graph", "Q", "initial", "mu", "log_prior"),
+                         theta,
                          optimize = TRUE
                          ) {
 
@@ -90,7 +127,7 @@ cgeneric_get <- function(cgeneric_model,
 
 ##  print(c(cmd = cmd))
 
-  cgdata <- cgeneric_model$f$cgeneric$data
+  cgdata <- cmodel$f$cgeneric$data
   stopifnot(!is.null(cgdata))
   stopifnot(!is.null(cgdata$ints))
   stopifnot(!is.null(cgdata$characters))
@@ -101,21 +138,11 @@ cgeneric_get <- function(cgeneric_model,
                    several.ok = TRUE)
   stopifnot(length(cmd)>0)
 
-  if(is.null(theta) &
-     any(cmd == c("Q", "log_prior"))) {
-    theta <- .Call(
-      "cgeneric_element_get",
-      "initial",
-      NULL,
-      cgdata$ints,
-      cgdata$doubles,
-      cgdata$characters,
-      cgdata$matrices,
-      cgdata$smatrices,
-      PACKAGE = "corGraphs"
-      )
-    if((length(cmd) == 1) & (cmd == "initial")) {
-      return(theta)
+  if(missing(theta)) {
+    if(cmd %in% c("Q", "log_prior")) {
+      stop("Please provide 'theta'!")
+    } else {
+      theta <- NULL
     }
   }
 
@@ -130,46 +157,34 @@ cgeneric_get <- function(cgeneric_model,
       cgdata$matrices,
       cgdata$smatrices,
       PACKAGE = "corGraphs"
-      )
-    if(optimize | any(cmd == c("mu", "log_prior"))) {
-      return(ret)
-    }
-    if(cmd == "graph") {
-      ij <- ret
-      ret <- rep(1, length(ij[[1]]))
-      ##print(str(list(ij=ij, ret=ret, cmd = cmd)))
-      ##print(sapply(list(ij=ij, ret=ret, cmd = cmd), summary))
-    } else {
-      ij <- .Call(
-        "cgeneric_element_get",
-        "graph",
-        theta,
-        cgdata$ints,
-        cgdata$doubles,
-        cgdata$characters,
-        cgdata$matrices,
-        cgdata$smatrices,
-        PACKAGE = "corGraphs"
-      )
-      ##print(str(list(ij=ij, ret=ret, e=2)))
-    }
-    idx <- which(ij[[1]] <= ij[[2]])
-    if(length(idx)>0) {
-      ij <- list(
-        ij[[1]][idx],
-        ij[[2]][idx]
-      )
-      ret <- ret[idx]
-    }
-    return(
-      sparseMatrix(
+    )
+
+    if((cmd %in% c("graph", "Q")) && (!optimize)) {
+      if(cmd == "graph") {
+        ij <- ret
+        ret <- rep(1, length(ij[[1]]))
+      } else {
+        ij <- .Call(
+          "cgeneric_element_get",
+          "graph",
+          NULL,
+          cgdata$ints,
+          cgdata$doubles,
+          cgdata$characters,
+          cgdata$matrices,
+          cgdata$smatrices,
+          PACKAGE = "corGraphs"
+        )
+      }
+      ret <- sparseMatrix(
         i = ij[[1]] + 1L,
         j = ij[[2]] + 1L,
         x = ret,
         symmetric = TRUE,
         repr = "T"
-      )
-    )
+        )
+    }
+    return(ret)
   }
 
   names(cmd) <- cmd
@@ -198,6 +213,7 @@ cgeneric_get <- function(cgeneric_model,
       sparseMatrix(
         i = ret$graph[[1]] + 1L,
         j = ret$graph[[2]] + 1L,
+        x = rep(1, length(ret$graph[[1]])),
         symmetric = TRUE,
         repr = "T"
       )

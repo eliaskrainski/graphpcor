@@ -69,7 +69,7 @@ setMethod(
 
     ## index for the Q = Q1 (x) Q2 matrix
     ij1 <- cgeneric_get(
-      cgeneric_model = X,
+      cmodel = X,
       cmd = "graph",
       optimize = TRUE
     )
@@ -84,7 +84,7 @@ setMethod(
     }
 
     ij2 <- cgeneric_get(
-      cgeneric_model = Y,
+      cmodel = Y,
       cmd = "graph",
       optimize = TRUE
     )
