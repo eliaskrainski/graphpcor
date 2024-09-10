@@ -12,7 +12,12 @@ bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, include = !FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  include = !FALSE, 
+  fig.width = 7, 
+  fig.height = 5, 
+  out.width = '0.39\\textwidth')
 chinclude <- TRUE
 library(corGraphs)
 ```
@@ -82,10 +87,6 @@ are obtainted with
 ```{r dim1}
 dim(g1)
 ```
-and we will collect the number of children:
-```{r n1}
-n1 <- dim(g1)[1]
-```
 
 This DTG can be visualized with 
 ```{r visgraph1, include = chinclude}
@@ -99,8 +100,8 @@ First, we build the precision matrix structure
 ```{r qs1, include = chinclude}
 precision(g1)
 ```
-and we can use inform the log of the precision 
-for the model parameter with
+and we can use inform the log of $\gamma_1$, 
+which is the standard error for $p_1$, with:
 ```{r q, include = chinclude}
 q1 <- precision(g1, theta = 0)
 q1
@@ -110,14 +111,18 @@ We can obtain the correlation matrix, which is our
 primarily interest, from the precision matrix. 
 However, also have a covariance method to be 
 directly applied with
+```{r v1, include = chinclude}
+variance(g1) ## assume theta = 0
+variance(g1, theta = 1)
+cov1a <- variance(g1, theta = 0) 
+cov1a
+```
+from where we obtain the desired matrix with
 ```{r c1, include = chinclude}
-cov1a <- variance(q1) 
-cov1a[1:n1, 1:n1]
-c1 <- cov2cor(cov1a[1:n1, 1:n1])
+c1 <- cov2cor(cov1a)
 round(c1, 3)
 ```
-where the first lines/columns
-are for the observation level variables.
+
 
 # Correlation matrix with two parameters
 
@@ -153,12 +158,11 @@ q2 <- precision(g2, theta = c(0, 0))
 q2
 ```
 
-The correlation matrix is then obtained with 
+The correlation matrix can be obtained with 
 ```{r c2}
-cov2 <- solve(q2)
-n2 <- dim(g2)[1]
-cov2[1:n2, 1:n2]
-c2 <- cov2cor(cov2[1:n2, 1:n2])
+cov2 <- variance(g2, theta = c(0, 0))
+cov2
+c2 <- cov2cor(cov2)
 round(c2, 3)
 ```
 
@@ -174,18 +178,22 @@ between the parents and swap it in the second equation:
 g2b <- dtg(p1 ~ -p2 + c1 + c2, 
            p2 ~ -c3 + c4)
 g2b
+summary(g2b)
 ```
+
+This gives the precision matrix as 
+```{r prec2}
+q2b <- precision(g2b, theta = c(0, 0))
+q2b
+``` 
 
 Now let us compare the covariance between children
 from this with the previous one
 ```{r cov2b}
-n2 <- dim(g2b)[1]
-q2b <- precision(g2b, theta = c(0, 0))
-q2b
-cov2b <- solve(q2b)
-cov2b[1:n2, 1:n2]
+cov2b <- variance(g2b)
+cov2b
 c2b <- cov2cor(cov2b)
-round(c2b[1:n2, 1:n2], 3)
+round(c2b, 3)
 ```
 
 Therefore, allowing flexibility in an edge of parent to another parent is not useful and will only imply more complexity.
