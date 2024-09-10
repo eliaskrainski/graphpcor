@@ -141,6 +141,11 @@ which can be visualized by
 plot(g2)
 ```
 
+We can drop the last parent with
+```{r drop1}
+drop(g2)
+```
+
 We now have two parameters and the precision matrix 
 can be obtained with:
 ```{r q2}
