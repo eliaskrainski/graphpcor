@@ -1,6 +1,6 @@
 ---
 title: "Directed tree based correlation model"
-author: "Elias T Krainski, Anna Freni-Sterrantino, Denis Rustand, Janet van Niekerk,
+author: "Elias T Krainski, Denis Rustand, Anna Freni-Sterrantino, Janet van Niekerk,
   and Håvard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
 output:
