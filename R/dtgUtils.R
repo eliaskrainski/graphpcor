@@ -3,7 +3,7 @@
 #' @param ... a list of formula used as relationship
 #' to define the Directed Tree Graph - DTG.
 #' Parent nodes shall be in the right side while children
-#' (or parents with a parent) in the left side.
+#' (or parent with a parent) in the left side.
 #' Please see the examples.
 #' @details
 #' The children variables are those with an ancestor (parent),
@@ -54,11 +54,11 @@ dtg <- function(...) {
     stop("Non-unique parent definition!")
   }
   if(!all(sapply(pp, substr, 1, 1) == "p"))
-    stop("Please use the letter 'p' for parents!")
+    stop("Please use the letter 'p' for parent!")
   if(any(is.na(as.integer(
     sapply(ch, function(x)
       substring(x[2], 2)))))) {
-    stop("Please use integer after letter 'p' for parents!")
+    stop("Please use integer after letter 'p' for parent!")
   }
 
   ## left side check
@@ -160,9 +160,9 @@ dtg <- function(...) {
   }
 
   class(fch) <- "dtg"
-  attr(fch, "childrens") <- n
-  attr(fch, "parents") <- m
-  attr(fch, "relations") <- trm
+  attr(fch, "children") <- n
+  attr(fch, "parent") <- m
+  attr(fch, "relation") <- trm
 
   return(fch)
 
@@ -171,10 +171,10 @@ dtg <- function(...) {
 #' @export
 print.dtg <- function(x, ...) {
   cat("DTG for",
-      attr(x, "childrens"),
-      "childrens with",
-      attr(x, "parents"),
-      "parents\n")
+      attr(x, "children"),
+      "children and",
+      attr(x, "parent"),
+      "parent variables\n")
   for(i in 1:length(x)) {
     cat(x[[i]], "\n")
   }
@@ -182,12 +182,12 @@ print.dtg <- function(x, ...) {
 
 #' @export
 summary.dtg <- function(object, ...) {
-  attr(object, "relations")
+  attr(object, "relation")
 }
 
 #' @export
 dim.dtg <- function(x, ...) {
-  trm <- attr(x, "relations")
+  trm <- attr(x, "relation")
   m <- ncol(trm)
   c(nrow(trm) - m + 1, m)
 }
@@ -198,7 +198,7 @@ setMethod(
   "dtg",
   function(x) {
     stopifnot((m <- length(x))>1)
-    trm0 <- attr(x, "relations")
+    trm0 <- attr(x, "relation")
     stopifnot(ncol(trm0) == m)
     ilast <- which(rownames(trm0) == (colnames(trm0)[m]))
     trm <- trm0[-ilast, 1:(m-1), drop = FALSE]
@@ -227,7 +227,7 @@ setMethod(
   "dtg",
   function(object, which, ...) {
 
-    trm <- attr(object, "relations")
+    trm <- attr(object, "relation")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
 
@@ -264,7 +264,7 @@ setMethod(
       edgeL = edgl,
       edgemode='directed')
 
-    trm <- attr(x, "relations")
+    trm <- attr(x, "relation")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
 
