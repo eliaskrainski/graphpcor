@@ -364,10 +364,7 @@ precision.dtg <- function(x, ...) {
   edgl <- edges(x)
   q.el <- edtg2precision(
     edgl[1:length(x)])
-  mc <- lapply(
-    match.call(
-      expand.dots = TRUE)[-1],
-    eval)
+  mc <- list(...)
   nargs <- names(mc)
   Q <- q.el$q
   if(any(nargs == "theta")) {
@@ -377,7 +374,9 @@ precision.dtg <- function(x, ...) {
     Q[q.el$iq1th] <- -1.0 * q.el$sth *
       exp(-mc$theta[q.el$i1th])
   }
-  rownames(Q) <- colnames(Q) <- names(edgl)
+  d <- dim(x)
+  rownames(Q) <- colnames(Q) <-
+    names(edgl)[c(d[2] + 1:d[1], 1:d[2])]
   return(Q)
 }
 
