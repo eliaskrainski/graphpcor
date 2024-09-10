@@ -1,5 +1,5 @@
 ---
-title: "Directed tree based correlation model"
+title: "Directed tree based correlation model implementation"
 author: "Elias T Krainski, Denis Rustand, Anna Freni-Sterrantino, Janet van Niekerk,
   and Håvard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
@@ -40,15 +40,15 @@ A DTG can be simple view as a tree with directed edges.
 This also impose a hierarchy on the nodes.
 
 We classify the nodes of the DTG in parent or children.
-The $n$ variables of interest, 
+The $m$ variables of interest, 
 those for we want to model their correlation,
 will be classified as children variables.
-They are labeled as $c_i$, $i\in\{1,\ldots,n\}$. 
+They are labeled as $c_i$, $i\in\{1,\ldots,m\}$. 
 The nodes in the DTG to represent children variables are
 leafs of the DTG, which are nodes with an ancestor (parent) 
 but with no children.
 Each children variable has a directed edge from its parent.
-The path between each $c_i$ goes through a set of $m$ parent variables, 
+The path between each $c_i$ goes through a set of $k$ parent variables, 
 labeled as $p_j$, $j\in\{1,\ldots,k\}$.
 The $m$ parent variables are nodes with children nodes.
 and some may have parent but will still be classified as parent 
@@ -56,11 +56,11 @@ because they have children.
 
 In the \textbf{\textsf{R}} environment we represent the parent 
 variables with the letter ``p`` along with an integer number
-(``p1``, $\ldots$, ``pn``) and the children variables with 
-the letter ``c`` along with an integer number (``c1``, $\ldots$, ``ck``).
+(``p1``, $\ldots$, ``pk``) and the children variables with 
+the letter ``c`` along with an integer number (``c1``, $\ldots$, ``cm``).
 We adopt a simple way to specify the parent children representation. 
 We consider the ``~`` (tilde) to represent the directed link and 
-``+`` (plus) or ``-`` (minus) to append the decendants to a parent.
+``+`` (plus) or ``-`` (minus) to append the descendant to a parent.
 E.g.: ``p1 ~ p2 + c1 + c2, p2 ~ c3 - c4`` .
 
 ## Intial example
@@ -112,8 +112,8 @@ primarily interest, from the precision matrix.
 However, also have a covariance method to be 
 directly applied with
 ```{r v1, include = chinclude}
-variance(g1) ## assume theta = 0
-variance(g1, theta = 1)
+variance(g1) ## assume theta = 0 (\gamma_1 = 1)
+variance(g1, theta = 0.5) # \gamma_1^2 = exp(2 * 0.5) = exp(1)
 cov1a <- variance(g1, theta = 0) 
 cov1a
 ```
@@ -151,8 +151,11 @@ We can drop the last parent with
 drop(g2)
 ```
 
-We now have two parameters and the precision matrix 
-can be obtained with:
+We now have two parameters:
+$\gamma_1^2$ the variance of $p_1$ 
+and $\gamma_2^2$ the conditional variance of $p_2$.
+For $\gamma_1 = \gamma_2 = 1$, 
+the precision matrix can be obtained with:
 ```{r q2}
 q2 <- precision(g2, theta = c(0, 0))
 q2
@@ -171,8 +174,7 @@ round(c2, 3)
 We can change the sign at any edge of the graph. 
 The change in the edge of parent to children is 
 simpler to interpret. 
-We have already seen this case in the one-parameter graph example. 
-Let us consider this second example and change the sign 
+Let us consider the second example and change the sign 
 between the parents and swap it in the second equation:
 ```{r graph2b}
 g2b <- dtg(p1 ~ -p2 + c1 + c2, 
