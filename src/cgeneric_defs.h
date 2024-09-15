@@ -66,6 +66,7 @@ inla_cgeneric_func_tp inla_cgeneric_corgraphs0;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs_sfixed;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs_sch;
 inla_cgeneric_func_tp inla_cgeneric_corgraphs_cholQ;
+inla_cgeneric_func_tp inla_cgeneric_kronecker;
 
 __END_DECLS
 #endif

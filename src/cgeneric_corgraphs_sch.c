@@ -489,6 +489,7 @@ double *inla_cgeneric_corgraphs_sch(inla_cgeneric_cmd_tp cmd, double *theta, inl
 
         // add trace of C1/C0
         k=0;
+        trc = 0.0;
         for(i=0; i<N; i++) {
           trc += C0[k];
           k += N+1;

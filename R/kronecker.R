@@ -7,10 +7,7 @@ setMethod(
   c(X="inla.cgeneric", Y = "inla.cgeneric"),
   function(X, Y, FUN = "*", make.dimnames = FALSE, ...) {
 
-    old <- X$old | Y$old
-    if(length(old) == 0)
-      old <- FALSE
-    if(old) { ## not need to check! (because list(a=1,b=2,a=3,b=4) is ok)
+    if(FALSE) { ## not need to check! (because list(a=1,b=2,a=3,b=4) is ok)
       ## Check for duplicated data names
       ## TO DO: allow it
       stopifnot(all(!(names(X$f$cgeneric$data$ints[-(1:2)]) %in%
@@ -42,10 +39,7 @@ setMethod(
       libpath <- NULL
     }
 
-    model <- ifelse(
-      old,
-      "inla_cgeneric_kronecker_old",
-      "inla_cgeneric_kronecker")
+    model <- "inla_cgeneric_kronecker"
     if (is.null(libpath)) {
       if (useINLAprecomp) {
         libpath <- INLA::inla.external.lib("corGraphs")
@@ -67,75 +61,93 @@ setMethod(
       cat('n1:', n1, "n2:", n2, "n:", N, "")
     }
 
-    ## index for the Q = Q1 (x) Q2 matrix
+    ## Q1 graph index: i,j
     ij1 <- cgeneric_get(
       cmodel = X,
       cmd = "graph",
       optimize = TRUE
     )
-    idx <- which(ij1[[1]]<=ij1[[2]])
-    ij1 <- list(
-      i = ij1[[1]][idx],
-      j = ij1[[2]][idx]
-    )
+    stopifnot(all(ij1[[1]]<=ij1[[2]]))
     M1 <- length(ij1[[1]])
     if(debug) {
       cat('M1:', M1, "")
     }
+    names(ij1) <- c("i", "j")
 
+    ## Q2 graph index: i,j
     ij2 <- cgeneric_get(
       cmodel = Y,
       cmd = "graph",
       optimize = TRUE
     )
-    idx <- which(ij2[[1]]<=ij2[[2]])
-    ij2 <- list(
-      i = ij2[[1]][idx],
-      j = ij2[[2]][idx]
-    )
+    stopifnot(all(ij2[[1]]<=ij2[[2]]))
     M2 <- length(ij2[[1]])
     if(debug) {
       cat('M2:', M2, "")
     }
+    names(ij2) <- c('i', 'j')
 
-    idx2e <- which(ij2$i < ij2$j)
-    stopifnot(length(idx2e) == (M2-n2))
-    M2e <- M2 + length(idx2e)
+    ## For Q = Q1 (x) Q2
+    ## The total number of elements in Q is
+    ##  [(M1-n1)*2+n1]*[(M2-n2)*2+n2]      =
+    ##    (2*M1 - n1) * (2*M2 - n2)        =
+    ##  n1*n2 + 4*M1*M2 -2*M1*n2 -2*M2*n1  =
+    ##  n1*n2 + 2*M1*(2*M2 - n2) - 2*M2*n1
+    ## but at the upper part is made up of
+    ## diagonal + half_of_the_off_diagonal
+    ##  n1*n2   + M1*(2*M2 - n2) - M2*n1         =
+    ##  n1*n2   + 2*M1*M2 - M1*n2 - M2*n1        =
+    ##  n1*n2   + M1*M2 + M1*M2 - M1*n2 - M2*n1  =
+    ##  n1*n2   + M1*M2 + M1*(M2-n2) - M2*n1     =
+    ##  n1*n2   + M1*(M2-n2) + M2*(M1-n1)
 
-    ii <- rep(ij1$i * n2, each = M2e) +
-      c(ij2$i, ij2$j[idx2e])
-    jj <- rep(ij1$j * n2, each = M2e) +
-      c(ij2$j, ij2$i[idx2e])
+    ## define u1 = M1-n1, u2 = M2-n2
+    ##  n1*n2 + M1*u2        + M2*u1            =
+    ##  n1*n2 + (n1 + u1)*u2 + (n2 + u2)*u1     =
+    ##  n1*n2 + n1*u2 + u1*u2 + n2*u1 + u2*u1   =
+    ##  n1*(n2 + u2)  + u1*(n2 + u2)  + u2*u1
+    ##  n1*M2         + u1*M2         + u2*u1
+    ##  (n1 + u1) * M2                + u2*u1
+    ##         M1 * M2 + u2 * u1
+    ## the j<i part from Q1
+    idx1u <- which(ij1$i < ij1$j)
+    u1 <- length(idx1u)
+    stopifnot(u1 == (M1-n1))
+    ## the j<i part from Q2
+    idx2u <- which(ij2$i < ij2$j)
+    u2 <- length(idx2u)
+    stopifnot(u2 == (M2-n2))
+
+    ## the number of non-diagonal elements
+    M <- M1 * M2 + u1 * u2
+    if(debug) {
+      cat("u1:", u1, "u2:", "u2", u2, "M:", M, "\n")
+    }
+
+    ## resulting graph index i
+    ii <- rep(ij1$i * n2, each = M2)  + ij2$i
+    ## resulting graph index j
+    jj <- rep(ij1$j * n2, each = M2)  + ij2$j
+    if((u1*u2)>0) {
+      ii <- c(
+        ii,
+        rep(ij1$i[idx1u]*n2, each=u2) + ij2$j[idx2u])
+      jj <- c(
+        jj,
+        rep(ij1$j[idx1u]*n2, each=u2) + ij2$i[idx2u]
+      )
+    }
+
+    ## check
+    stopifnot(all(ii <= jj))
+
+    ## the order of the output should use this
     iiord <- order(ii)
-    ijs <- which(ii[iiord] <= jj[iiord])
     ije <- list(
-      ii = ii[iiord[ijs]],
-      jj = jj[iiord[ijs]],
-      ord = iiord[ijs]
+      ii = ii[iiord],
+      jj = jj[iiord],
+      ord = iiord
     )
-    if(debug) {
-      print(str(ije))
-    }
-    M <- length(ijs)
-    if(debug) {
-      cat('M:', M, "\n")
-    }
-
-    ne1 <- (M1-n1)
-    ne2 <- (M2-n2)
-    nnz1 <- n1 + ne1*2
-    nnz2 <- n2 + ne2*2
-    NNZ <- nnz1 * nnz2
-    NNZu <- (NNZ - n1*n2)/2 + n1*n2
-
-    stopifnot(M == NNZu)
-
-    if(debug) {
-      cat("ne1:", ne1, "ne2:", ne2,
-          "nnz1:", nnz1, "nnz2:", nnz2,
-          "nnz:", NNZ, "NNZu:", NNZu, "\n")
-    }
-
 
     ## intial data
     ret <- list(
@@ -161,46 +173,26 @@ setMethod(
       length)
 
     ### n and the data size info
-    if(old) {
-      ints <- list(
-        n = as.integer(
-          c(N, M,
-            n1, M1, ndata1,
-            n2, M2, ndata2
-          )
-        ),
-        debug = debug
-      )
-      ret$f$cgeneric$data$ints <-
-        c(
-          ints,
-          X$f$cgeneric$data$ints[-(1:2)],
-          Y$f$cgeneric$data$ints[-(1:2)],
-          list(
-            idx2e = as.integer(idx2e - 1)
-          )
-        )
-    } else {
-      ints <- list(
+      Ndata <- list(
         n = as.integer(
           c(n1, ndata1, M1,
                 ndata2, M2, N, M)
         )
       )
       if(debug) {
-        cat(ints$n, "\n")
+        cat(Ndata$n, "\n")
       }
       ret$f$cgeneric$data$ints <-
         c(
-          ints,
+          Ndata,
           ### concatenate ints from each model
           X$f$cgeneric$data$ints[-1], ## n for model 1 is already there
           Y$f$cgeneric$data$ints,
           list(
-            idx2e = as.integer(idx2e - 1)
+            idx1u = as.integer(idx1u - 1),
+            idx2u = as.integer(idx2u - 1)
           )
         )
-    }
 
     ret$f$cgeneric$data$doubles <-
       c(

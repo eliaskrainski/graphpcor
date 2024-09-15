@@ -19,7 +19,7 @@
  *
  * The author's contact information:
  *
- *        Elias Krainski
+ *        Elias T Krainski
  *        CEMSE Division
  *        King Abdullah University of Science and Technology
  *        Thuwal 23955-6900, Saudi Arabia
@@ -203,3 +203,4 @@ void theta_parent_children_kldh(int verbose, int np, int N, int niiv, int *iiv, 
   } // end l
 
 }
+

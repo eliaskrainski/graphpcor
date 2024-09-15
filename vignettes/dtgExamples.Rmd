@@ -173,9 +173,12 @@ round(c2, 3)
 
 We can change the sign at any edge of the graph. 
 The change in the edge of parent to children is 
-simpler to interpret. 
-Let us consider the second example and change the sign 
-between the parents and swap it in the second equation:
+simpler to interpret, as we can see in the 
+covariance/correlation from the two examples.
+
+Let us consider the second example but change the sign 
+between the parents and swap the sign 
+in both terms of the second equation:
 ```{r graph2b}
 g2b <- dtg(p1 ~ -p2 + c1 + c2, 
            p2 ~ -c3 + c4)
@@ -189,20 +192,18 @@ q2b <- precision(g2b, theta = c(0, 0))
 q2b
 ``` 
 
-Now let us compare the covariance between children
-from this with the previous one
+The covariance computed from the full precision 
+(and the correlation) between children is 
+the same as before
 ```{r cov2b}
-cov2b <- variance(g2b)
-cov2b
-c2b <- cov2cor(cov2b)
-round(c2b, 3)
+all.equal(solve(q2)[1:4, 1:4], 
+          solve(q2b)[1:4, 1:4])
 ```
 
 Therefore, allowing flexibility in an edge of parent to another parent is not useful and will only imply more complexity.
-Therefore we will not consider it in the 
-`covariance` method. 
-However we will consider it in the 
-`precision`.
+Therefore we will not consider it in the `variance` method. 
+NOTE: The `variance` of a `dtg` does not takes into account 
+the sing between parent variables!
 So, please use it with care.
 
 # References
