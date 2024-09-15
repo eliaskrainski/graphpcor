@@ -230,6 +230,12 @@ setMethod(
     trm <- attr(object, "relation")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
+    if(m>1) {
+      trm <- trm[c(n+1:(m-1), 1:n), ]
+      stopifnot(all(substr(rownames(trm)[1:(m-1)],1,1) == "p"))
+    }
+    stopifnot(all(substr(rownames(trm)[m:nrow(trm)],1,1) == "c"))
+    stopifnot(all(substr(rownames(trm),1,1) %in% c("p", "c")))
 
     edgl <- vector("list", m + n)
     names(edgl) <- c(paste0("p", 1:m),
@@ -517,7 +523,7 @@ edtg2variance <- function(d.el) {
 #' defining a Direct Tree Graph - DTG correlation model
 #' to be used as a model in a `INLA` `f()` model component.
 #'
-#' @param x the DTG model specification.
+#' @param model the DTG model specification.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
@@ -545,7 +551,7 @@ edtg2variance <- function(d.el) {
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
 cgeneric.dtg <-
-  function(dtg,
+  function(model,
            sigma.prior.reference,
            sigma.prior.probability,
            lambda,
@@ -554,8 +560,8 @@ cgeneric.dtg <-
            useINLAprecomp = !TRUE) {
 
 
-    dd <- dim(dtg)
-    d.el <- edges(dtg)[1:dd[2]]
+    dd <- dim(model)
+    d.el <- edges(model)[1:dd[2]]
     ich <- unlist(lapply(d.el, function(x)
       x$id[!x$parent]))
     sch <- unlist(lapply(d.el, function(x)
@@ -564,11 +570,12 @@ cgeneric.dtg <-
     if(debug) {
       cat(c(sch = sch), "\n")
     }
-    d.elc <- edtg2variance(d.el)
+    d.elc <- edtg2variance(d.el[1:dd[2]])
     if(debug) {
       print(str(d.elc))
     }
-    np <- length(dtg)
+    dd <- dim(model)
+    np <- dd[2]
     nv <- sapply(d.elc$iv, length)
     if(debug)
       cat("np = ", np, " and nv: ", nv, "\n")
