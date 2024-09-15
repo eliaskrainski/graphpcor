@@ -2,15 +2,19 @@
 library(corGraphs)
 library(INLA)
 
-inla.setOption(safe = FALSE,
-               num.threads = 6)
+inla.setOption(
+    safe = FALSE,
+    num.threads = 6
+)
 
-dcg1 <- list(p1 ~ c1 + c2 + c3)
-np <- length(dcg1)
+g1 <- dtg(p1 ~ c1 + c2 + c3)
+d1 <- dim(g1)
+
+plot(g1)
 
 (theta.p <- -0.5)
 
-mcov0 <- dcg_covariance(dcg1, theta.p)
+mcov0 <- variance(g1, theta = theta.p)
 mcov0
 
 mcorr <- cov2cor(mcov0)
@@ -42,15 +46,8 @@ dataf$idx2 <- rep(2L, n)
 dataf$idx3 <- rep(3L, n)
 dataf$repl <- 1:n
 
-d1plot <- GraphPlot(dcg1, base=0)
-
-par(mar = c(1, 1, 1, 1))
-plot(d1plot$gr, nodeAttrs = d1plot$nAttrs)
-
-hfix <- list(prec = list(initial = 10, fixed = TRUE))
-
-gmodel <- dcg_model(
-    dcg = dcg1,
+gmodel <- cgeneric(
+    model = g1,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.05, nc),
     lambda = 2,
@@ -64,12 +61,13 @@ ff <- y ~ 0 +
     f(idx2, w1, copy = "idx1", replicate = repl) +
     f(idx3, w2, copy = "idx1", replicate = repl)
 
+cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
+
 fit <- inla(
     formula = ff, 
     data = dataf,
-    control.family = list(list(hyper = hfix)),
-##    control.mode = list(theta = rep(0, 4), restart = !FALSE, fixed = TRUE),
-    verbose = !TRUE)
+    control.family = list(cfam)
+)
 
 fit$cpu.used
 
@@ -78,7 +76,7 @@ rbind(true = c(theta.c, theta.p),
 
 plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-mcorr.fit <- cov2cor(dcg_covariance(dcg1, fit$mode$theta[nc+1:np]))
+mcorr.fit <- cov2cor(variance(g1, theta = fit$mode$theta[d1[2]+1:d1[1]]))
 
 round(100 * cor(xx))
 round(100 * mcorr.fit)

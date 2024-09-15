@@ -7,22 +7,22 @@ inla.setOption(
     num.threads = 6
 )
 
-dcg <- list(
+g <- dtg(
     p1 ~ p2 + c1 + c2,
     p2 ~ c3 + c4 + p3,
     p3 ~ c5)
-(np <- length(dcg))
+g
+d <- dim(g)
+
+nc <- d[1]
+np <- d[2]
+
+plot(g)
+
 (theta.p <- seq(1/2, -1/2, length = np))
 
-mcorr <- cov2cor(dcg_covariance(dcg, theta.p))
+mcorr <- cov2cor(variance(g, theta = theta.p))
 round(mcorr * 100)
-
-(nc <- nrow(mcorr))
-
-dgplot <- GraphPlot(dcg, base=0)
-
-par(mar = c(1, 1, 1, 1))
-plot(dgplot$gr, nodeAttrs = dgplot$nAttrs)
 
 (theta.ch <- seq(-1/2, 1/2, length = nc))
 
@@ -48,8 +48,8 @@ dataf <- data.frame(
 )
 head(dataf, 3)
 
-gmodel <- dcg_model(
-    dcg = dcg,
+gmodel <- cgeneric(
+    model = g,
     lambda = 1,
     sigma.prior.reference = rep(5, nc),
     sigma.prior.probability = rep(0.2, nc),
@@ -62,16 +62,8 @@ ff <- y ~ 0 + factor(i) +
 
 fit <- inla(
     formula = ff,
-##    family = "poisson",
     control.family = list(hyper = list(prec = list(initial = 10, fixed = TRUE))),
-    data = dataf,
-  #  control.mode = list(
-#        theta = c(theta.ch, theta.p)*0.1,
- #       restart = TRUE, fixed = !TRUE),
-##        restart = !TRUE, fixed = TRUE),
-##    verbose = TRUE,
-##    inla.call = "remote",
-    control.inla = list(int.strategy = "eb")
+    data = dataf
 ) 
 
 fit$cpu.used
@@ -84,12 +76,12 @@ plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
 tail(fit$logfile, 30)
 
-mcorr.fit <- cov2cor(dcg_covariance(
-    dcg,
-    fit$mode$theta[nc+1:np]))
+mcorr.fit <- cov2cor(variance(
+    g,
+    theta = fit$mode$theta[nc+1:np]))
 mcorr.fit
 
-q.fit <- cgeneric_get(gmodel, "Q", fit$mode$theta, FALSE)
+q.fit <- precision(gmodel, theta = fit$mode$theta)
 mcov.fit <- solve(q.fit)
 
 mcov
