@@ -1,70 +1,25 @@
-#' Define cgeneric methods
-#' @param model an object used to define the model.
-#' Its class will define which method is considered.
-#' @param debug logical indicating debug state.
-#' @param useINLAprecomp logical indicating if
-#' it is to be used the shared object within INLA.
-#' @param ... additional arguments to be treated
-#' according to each method.
+#' The graph method for cgeneric
+#' @param model the inla.cgeneric model
 #' @export
-cgeneric <- function(model, ...) {
-  UseMethod("cgeneric")
-}
-#' @export
-#' @importFrom INLA inla.cgeneric.define
-cgeneric.default <- function(model,
-                             debug = FALSE,
-                             useINLAprecomp = TRUE,
-                             ...) {
-## it uses INLA::inla.cgeneric.define()
-  if (useINLAprecomp) {
-    shlib <- INLA::inla.external.lib("corGraphs")
-  } else {
-    libpath <- system.file("libs", package = "corGraphs")
-    if (Sys.info()["sysname"] == "Windows") {
-      shlib <- file.path(libpath, "corGraphs.dll")
-    } else {
-      shlib <- file.path(libpath, "corGraphs.so")
-    }
-  }
-
-  args <- list(...)
-  nargs <- names(args)
-  if(any(nargs == ""))
-    stop("Please name the arguments!")
-  stopifnot(any(nargs == "n"))
-  cmodel <- do.call(
-    "inla.cgeneric.define",
-    c(list(model = model,
-           debug = debug,
-           shlib = shlib),
-      list(...))
-  )
-  return(cmodel)
-}
-
-#' @export
-graph <- function(x, ...) {
-  UseMethod("graph")
-}
-#' @export
-graph.inla.cgeneric <- function(x, ...) {
+graph.inla.cgeneric <- function(model, ...) {
   args <- list(...)
   if(any(names(args) == "optimize")) {
-    return(cgeneric_get(x, "graph", ...))
+    return(cgeneric_get(model, "graph", ...))
   } else {
-    return(cgeneric_get(x, "graph", optimize = FALSE))
+    return(cgeneric_get(model, "graph", optimize = FALSE))
   }
 }
 
 #' @export
-precision.inla.cgeneric <- function(x, ...) {
+precision.inla.cgeneric <- function(model, ...) {
   mc <- list(...)
   nargs <- names(mc)
   if(any(nargs == "theta")) {
     theta <- mc$theta
   } else {
-    theta <- initial(x)
+    warning("Using the 'default' initial parameter:")
+    theta <- initial(model)
+    cat(theta, '\n')
   }
   if(any(nargs == "optimize")) {
     optimize <- mc$optimize
@@ -72,36 +27,19 @@ precision.inla.cgeneric <- function(x, ...) {
     optimize <- FALSE
   }
   stopifnot(is.logical(optimize))
-  cgeneric_get(x, cmd = "Q", theta = theta, optimize = optimize)
+  cgeneric_get(model, cmd = "Q", theta = theta, optimize = optimize)
 }
 
 #' @export
-initial <- function(x) {
-  UseMethod("initial")
-}
-#' @export
-initial.inla.cgeneric <- function(x) {
-  cgeneric_get(x, "initial")
+initial.inla.cgeneric <- function(model) {
+  cgeneric_get(model, "initial")
 }
 
-
 #' @export
-mu <- function(x) {
-  UseMethod("mu")
-}
-#' @export
-mu.inla.cgeneric <- function(x) {
-  cgeneric_get(x, "mu")
+mu.inla.cgeneric <- function(model) {
+  cgeneric_get(model, "mu")
 }
 
-#' Define prior methods.
-#' @param model the model
-#' @param additional arguments
-#' @param theta a numeric vector with the model parameters.
-#' @export
-prior <- function(model, theta) {
-  UseMethod("prior")
-}
 #' Prior for the 'inla.cgeneric' model.
 #' @export
 prior.inla.cgeneric <- function(model, theta) {
@@ -176,7 +114,7 @@ cgeneric_get <- function(cmodel,
           PACKAGE = "corGraphs"
         )
       }
-      ret <- sparseMatrix(
+      ret <- Matrix::sparseMatrix(
         i = ij[[1]] + 1L,
         j = ij[[2]] + 1L,
         x = ret,
@@ -210,7 +148,7 @@ cgeneric_get <- function(cmodel,
 
   if(any(cmd == "graph")) {
     ret$graph <-
-      sparseMatrix(
+      Matrix::sparseMatrix(
         i = ret$graph[[1]] + 1L,
         j = ret$graph[[2]] + 1L,
         x = rep(1, length(ret$graph[[1]])),
@@ -234,7 +172,7 @@ cgeneric_get <- function(cmodel,
         cgdata$smatrices,
         PACKAGE = "corGraphs"
       )
-      ij <- sparseMatrix(
+      ij <- Matrix::sparseMatrix(
         i = ij[[1]] + 1L,
         j = ij[[2]] + 1L,
         symmetric = TRUE,
