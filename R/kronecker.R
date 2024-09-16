@@ -125,28 +125,32 @@ setMethod(
     }
 
     ## resulting graph index i
-    ii <- rep(ij1$i * n2, each = M2)  + ij2$i
+    ii0 <- rep(ij1$i * n2, each = M2)  + ij2$i
     ## resulting graph index j
-    jj <- rep(ij1$j * n2, each = M2)  + ij2$j
+    jj0 <- rep(ij1$j * n2, each = M2)  + ij2$j
     if((u1*u2)>0) {
       ii <- c(
-        ii,
+        ii0,
         rep(ij1$i[idx1u]*n2, each=u2) + ij2$j[idx2u])
       jj <- c(
-        jj,
+        jj0,
         rep(ij1$j[idx1u]*n2, each=u2) + ij2$i[idx2u]
       )
+    } else {
+      ii <- ii0
+      jj <- jj0
     }
 
     ## check
     stopifnot(all(ii <= jj))
 
     ## the order of the output should use this
-    iiord <- order(ii)
+    jjord <- order(jj)
+    iiord <- order(ii[jjord])
     ije <- list(
-      ii = ii[iiord],
-      jj = jj[iiord],
-      ord = iiord
+      ii = ii[jjord][iiord],
+      jj = jj[jjord][iiord],
+      ord = jjord[iiord]
     )
 
     ## intial data

@@ -47,8 +47,10 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   }
 
   int fixed = 1;
-  if(data->doubles[0]->doubles[1]>0)
+  if((data->doubles[0]->doubles[1]>0) &
+     (data->doubles[0]->doubles[1]<1)) {
     fixed = 0;
+  }
   //fprintf(stderr, "fixed = %d\n", fixed);
 
   if (theta) {

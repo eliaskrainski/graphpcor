@@ -103,6 +103,10 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
   assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
   assert(!strcasecmp(data->ints[ni1+1]->name, "debug"));	       // this will always be the case
   debug = ( data->ints[1]->ints[0] | data->ints[ni1+1]->ints[0] );
+
+  assert(!strcasecmp(data->ints[ni1+ni2]->name, "idx1u"));	       // this will always be the case
+  assert(!strcasecmp(data->ints[ni1+ni2+1]->name, "idx2u"));	       // this will always be the case
+
   assert(!strcasecmp(data->ints[nsm1+nsm2]->name, "Kgraph"));	// this will always be the case
 
   if(debug) {
@@ -213,6 +217,15 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
     double daux, daux2;
     int ox;
 
+    if(debug) {
+      for(i=0; i<M1; i++) {
+        printf("%d, %f\n", i, ret1[2+i]);
+      }
+      for(i=0; i<M2; i++) {
+        printf("%d, %f\n", i, ret2[2+i]);
+      }
+    }
+
     k=0;
     for(i=0; i<M1; i++) {
       daux = ret1[2+i];
@@ -230,6 +243,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
       }
     }
 
+    assert(k==data->smats[nsm1+nsm2]->n);
     for(k=0; k<data->smats[nsm1+nsm2]->n; k++) {
       ox = (int)data->smats[nsm1+nsm2]->x[k];
       ret[2+k] = retE[ox];
