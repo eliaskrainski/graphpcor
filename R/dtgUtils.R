@@ -337,34 +337,7 @@ setMethod(
 
   }
 )
-
-#' @export
-variance <- function(x, ...) {
-  UseMethod("variance")
-}
-
-#' @export
-variance.default <- function(x, ...) {
-  return(var(x))
-}
-
-#' @export
-precision <- function(x, ...) {
-  UseMethod("precision")
-}
-
-#' @export
-precision.default <- function(x, ...) {
-  v <- variance(x, ...)
-  return(
-    forwardsolve(
-      backsolve(
-        chol(v)
-        )
-      )
-    )
-}
-
+#' The precision method for 'dtg'
 #' @export
 precision.dtg <- function(x, ...) {
   edgl <- edges(x)
