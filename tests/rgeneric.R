@@ -4,10 +4,10 @@ rcar1 <- function(cmd = c("graph", "Q", "mu", "initial",
                            "log.prior", "quit"),
                    theta = NULL, ...) {
     graph <- function(n, theta)
-        return(data$graph)
+        return(Graph)
     Q <- function(n, theta) {
-        qq <- inla.as.sparse(
-        (data$C * exp(theta[1]) + data$G) * 1)
+        qq <- INLA::inla.as.sparse(
+        (Dmat * exp(theta[1]) + Gmat) * 1)
 ##        exp(theta[1]))
         idx <- which(qq@i <= qq@j)
         return(qq@x[idx])
@@ -27,10 +27,14 @@ rcar1 <- function(cmd = c("graph", "Q", "mu", "initial",
     return(
         do.call(
             cmd, 
-            args = list(n = data$n,
-                        theta = theta)))
+            args = 
+                list(n = n,
+                     theta = theta)
+        )
+    )
 }
 
+library(corGraphs)
 library(spdep)
 library(INLA)
 
@@ -38,134 +42,172 @@ inla.setOption(
     safe = FALSE
 )
 
-nxy <- c(5, 7)
+nxy <- c(30, 50)
 nb <- grid2nb(d = nxy)
 nnb <- card(nb)
 n <- length(nnb)
 
-m1data <- list(
-    n = n,
-    graph = Diagonal(n) +
-        sparseMatrix(
-            i = rep(1:n, nnb),
-            j = unlist(nb[nnb>0]),
-            x = 1)
-)
-m1data$C <- Diagonal(n, nnb)
-m1data$G <- m1data$C - (m1data$graph-Diagonal(n))
+graph <- sparseMatrix(
+    i = rep(1:n, nnb),
+    j = unlist(nb[nnb>0]),
+    )
 
-m1 <- inla.rgeneric.define(
+m1 <- rgeneric(
     model = rcar1,
-    optimize = TRUE,
-    data = m1data)
+    n = n,
+    Graph = graph,
+    Dmat = Diagonal(n, nnb),
+    Gmat = Diagonal(n, nnb) - graph
+)
 
-str(m1)
+initial(m1)
 
-str(inla.rgeneric.q(m1, "initial"))
 theta1 <- 0
-str(inla.rgeneric.q(m1, "mu", theta = theta1))
-str(inla.rgeneric.q(m1, "graph"))
-str(Q1 <- inla.rgeneric.q(m1, "Q", theta = theta1))
+mu(m1, theta = theta1)
 
-library(corGraphs)
+image(graph(m1))
 
-m2.graph <- list(
-    c1~c2,
-    c2~c3)
+Q1 <- precision(m1, theta = c(0))
+image(Q1)
 
-m2 <- dag_model(
-    graph = m2.graph, 
+## model 2
+m2g <- dtg(
+    p1 ~ c1 + c2 + p2,
+    p2 ~ c3
+)
+
+m2 <- cgeneric(
+    model = m2g,
     sigma.prior.reference = c(1,1,1),
     sigma.prior.probability = c(.05,.05,0.05),
     lambda = 1)
 (n2 <- m2$f$n)
 
-str(cgeneric_get(m2, "initial"))
-str(cgeneric_get(m2, "mu", theta = c(0)))
-str(cgeneric_get(m2, "graph"))
-cgeneric_get(m2, "graph", optimize = !TRUE)
-theta2 <- c(1:-1, -0.5, -0.5)
-str(cgeneric_get(m2, "Q", theta = theta2))
-Q2 <- cgeneric_get(m2, "Q", theta = theta2, optimize = !TRUE)
+initial(m2)
+mu(m2)
+graph(m2, optimize = TRUE)
+graph(m2)
+precision(m2)
+
+theta2 <- c(seq(1, -1, length = n2), -0.5, 0.0)
+Q2 <- precision(m2, theta = theta2)
 Q2
 solve(Q2)
 cov2cor(solve(Q2))
 
-kmodel12 <- kronecker(
+k12 <- kronecker(
     m1,
     m2,
     debug = !TRUE)
-str(kmodel12)
+str(k12)
 
-kmodel21 <- kronecker(
+k21 <- kronecker(
     m2,
     m1,
     debug = !TRUE)
 
-str(kmodel21)
+str(k21)
 
-str(inla.rgeneric.q(kmodel12, "initial"))
-str(inla.rgeneric.q(kmodel12, "mu", theta = c(theta1, theta2)))
-str(inla.rgeneric.q(kmodel12, "graph"))
-str(inla.rgeneric.q(kmodel12, "Q", theta = c(theta1, theta2)))
+initial(k12)
+initial(k21)
 
-str(inla.rgeneric.q(kmodel21, "initial"))
-str(inla.rgeneric.q(kmodel21, "mu", theta = c(theta2, theta1)))
-str(inla.rgeneric.q(kmodel21, "graph"))
-str(inla.rgeneric.q(kmodel21, "Q", theta = c(theta2, theta1)))
+mu(k12)
 
-image(inla.rgeneric.q(m1, "graph"))
-x11()
-image(inla.rgeneric.q(kmodel12, "graph"))
-x11()
-image(inla.rgeneric.q(kmodel21, "graph"))
+str(graph(k12))
+str(graph(k21))
 
-qq12 <- kronecker(Q1, Q2)
-Q12 <- inla.rgeneric.q(kmodel12, "Q", theta = c(theta1, theta2))
+str(precision(k12))
+str(precision(k21))
+
+image(graph(m1))
+#x11()
+image(graph(k12))
+#x11()
+image(graph(k21))
+
+qq12 <- as(kronecker(Q1, Q2), 'symmetricMatrix')
+Q12 <- as(precision(k12, theta = c(theta1, theta2)), 'symmetricMatrix')
 all.equal(qq12, Q12)
 
-qq21 <- kronecker(Q2, Q1)
-Q21 <- inla.rgeneric.q(kmodel21, "Q", theta = c(theta2, theta1))
+qq21 <- as(kronecker(Q2, Q1), 'symmetricMatrix')
+Q21 <- as(precision(k21, theta = c(theta2, theta1)), 'symmetricMatrix')
 all.equal(qq21, Q21)
+
+initial(k12)
 
 ## using Q2 (x) Q1 to sample
 x2 <- inla.qsample(n = 1, Q = Q21)[, 1]
 
+cor(t(matrix(x2, n2)))
+
 dataf <- data.frame(
     idx = 1:(n2 * n),
-    y2 = rpois(n2 * n, exp(3 + x2))
+    y2 = x2
 )
 ## reorder y2 -> y1
-dataf$y1 <- as.integer(t(matrix(dataf$y2, n)))
+dataf$y1 <- as.numeric(t(matrix(dataf$y2, n)))
 
 str(dataf)
 
+cfam <- list(hyper = list(prec = list(initial = 20, fixed = TRUE)))
+
 out12 <- inla(
-    y1 ~ f(idx, model = kmodel12), 
-    family = 'poisson',
-    data = dataf
+    y1 ~ 0 + f(idx, model = k12), 
+    data = dataf,
+    control.family = cfam,
+    control.mode = list(
+        theta = c(theta1, theta2),
+        fixed = TRUE
+    )
 )
 
 out21 <- inla(
-    y2 ~ f(idx, model = kmodel21), 
-    family = 'poisson',
-    data = dataf
+    y2 ~ 0 + f(idx, model = k21), 
+    data = dataf,
+    control.family = cfam,
+    control.mode = list(
+        theta = c(theta2, theta1),
+        fixed = TRUE)
 )
+
+all.equal(Q12, precision(out12))
+all.equal(Q21, precision(out21))
+
+out12 <- inla(
+    y1 ~ 0 + f(idx, model = k12), 
+    data = dataf,
+    control.family = cfam,
+    control.mode = list(
+        theta = c(theta1, theta2),
+        fixed = !TRUE
+    )
+)
+
+out21 <- inla(
+    y2 ~ 0 + f(idx, model = k21), 
+    data = dataf,
+    control.family = cfam,
+    control.mode = list(
+        theta = c(theta2, theta1),
+        fixed = !TRUE)
+)
+
 
 rbind(out12$cpu.used,
       out21$cpu.used)
 
-rbind(out12$summary.fix,
-      out21$summary.fix)
-
 nth1 <- length(theta1)
 nth2 <- length(theta2)
-cbind(true=c(theta1, theta2), out12$summary.hy[, c(1,2,3,5)])
-cbind(true=c(theta1, theta2),
-      out21$summary.hy[c(nth2+1, 1:nth2), c(1,2,3,5)])
+
+rbind(true=c(theta1, theta2), out12$mode$theta)
+rbind(true=c(theta2, theta1), out21$mode$theta)
 
 tail(out12$logfile, 12)
 tail(out21$logfile, 12)
 
 grep("nnz", out12$logfile, value = TRUE)
 grep("nnz", out21$logfile, value = TRUE)
+
+
+detach("package:corGraphs", unload = TRUE)
+library(corGraphs)
