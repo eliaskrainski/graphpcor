@@ -61,10 +61,14 @@ dtg <- function(...) {
     stop("Please use integer after letter 'p' for parent!")
   }
 
-  ## left side check
-
-  ## order
-  opp <- order(pp)
+  ## left side order
+  pplab <- paste0("p", 1:length(pp))
+  opp <- pmatch(pplab, pp)
+  if(any(is.na(opp))) {
+    stop(paste("Missing definition for",
+               paste(pplab[is.na(opp)],
+                     collapse = ", ")))
+  }
   fch <- fch[opp]
   ch <- ch[opp]
   pp <- pp[opp]
@@ -103,14 +107,24 @@ dtg <- function(...) {
     ##print(jj.i)
     if(any(is.na(jj.i)) | any(jj.i<1))
       stop("Invalid variable numbering in ~ ", ch[[i]][3])
-    if(any(ch.l == "p")) {
-      if(any(jj.i[ch.l == "p"] <= 1))
+    ipar <- ch.l == "p"
+    if(any(ipar)) {
+      if(any(jj.i[ipar] <= 1))
         stop("Parent id in ~ ", ch[[i]][3], " must be >", 1)
-      if(any(jj.i[ch.l == "p"] > m))
+      if(any(jj.i[ipar] > m))
         stop("Wrong parent id in ~ ", ch[[i]][3])
+      iord <- order(jj.i + ifelse(ipar, -max(jj.i+1), 0))
+    } else {
+      iord <- order(jj.i)
     }
-    terms.l[[i]] <- ch.l
-    terms.i[[i]] <- jj.i
+    terms.s[[i]] <- terms.s[[i]][iord]
+    terms.l[[i]] <- ch.l[iord]
+    terms.i[[i]] <- jj.i[iord]
+    sthi <- c(" - ", "", " + ")[2 + terms.s[[i]]]
+    fch[i] <- paste0(
+      "p", i, " ~",
+      paste0(sthi, terms.l[[i]],
+             terms.i[[i]], collapse = ""))
   }
 
   rterms <- paste0(
@@ -245,12 +259,12 @@ setMethod(
       edgl[[i]] <- list(
         n = sum(w1),
         edges = rownames(trm)[w1],
-        weights = trm[w1, i]
+        weights = new("numeric", trm[w1, i])
       )
       edgl[[i]]$term <- edgl$edges
       edgl[[i]]$parent <- substr(edgl[[i]]$edges, 1, 1) == "p"
-      edgl[[i]]$id <- as.integer(substring(edgl[[i]]$edges, 2))
-      edgl[[i]]$signal <- edgl[[i]]$weights
+      edgl[[i]]$id <- new("integer", substring(edgl[[i]]$edges, 2))
+      edgl[[i]]$signal <- ifelse(edgl[[i]]$weights<0, -1, 1)
     }
     return(edgl)
   }
@@ -340,9 +354,11 @@ setMethod(
 #' The precision method for 'dtg'
 #' @export
 precision.dtg <- function(x, ...) {
+  d <- dim(x)
+  Q <- matrix()
+  trm <- attr(x, "relation")
   edgl <- edges(x)
-  q.el <- edtg2precision(
-    edgl[1:length(x)])
+  q.el <- edtg2precision(edgl[1:d[2]])
   mc <- list(...)
   nargs <- names(mc)
   Q <- q.el$q
@@ -366,8 +382,8 @@ edtg2precision <- function(d.el) {
   stopifnot(all(substr(names(d.el), 1, 1) == "p"))
   stopifnot(length(d.el) == length(unique(names(d.el))))
   ip <- as.integer(substring(names(d.el), 2))
+  stopifnot(length(ip) == length(unique(ip)))
   np <- length(ip)
-  stopifnot(np == length(unique(ip)))
   nc <- sum(sapply(d.el, function(x) sum(!x$parent)))
   p.nc <- sapply(d.el, function(x) x$n)
   dd <- c(rep(1, nc), p.nc)

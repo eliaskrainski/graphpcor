@@ -153,7 +153,7 @@ setMethod(
       ord = jjord[iiord]
     )
 
-    ## intial data
+    ## initial data
     ret <- list(
       f = list(
         model = "cgeneric",
