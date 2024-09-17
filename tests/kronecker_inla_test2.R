@@ -1,41 +1,125 @@
+
+## Define a model with precision is Q = Q1 (x) Q2
+## Use two ways to define it and fit using inla
+## Test the cgeneric for each one testing it with
+##  the "same" model already implemented in inla
+## We set m1 as the 'generic0', with Q1 = 1 * R
+##  and Q2 from the 'ar1', group model in inla.
+## Note: the m2 model with theta = c(0, 0, x) is
+##  equal the (inla) group ar1 model with
+##    x = log((1+rho)/(1-rho)) 
+
 library(INLA)
+library(corGraphs)
 
 inla.setOption(
     num.threads = 1L,
     safe = FALSE
 )
 
-## Model 1: Besag over a grid
+## Model 1 graph
 graph <- sparseMatrix(
     i = c(2, 3, 1, 4, 1, 4, 5, 2, 3, 3),
     j = c(1, 1, 2, 2, 3, 3, 3, 4, 4, 5)
 )
-graph
+graph 
 (n <- nrow(graph))
 
-Q1 <- inla.as.sparse(
-    Diagonal(n, 1 + rowSums(graph)) - graph)
+Q1 <- as(inla.as.sparse(
+    Diagonal(n, 1 + rowSums(graph)) - graph),
+    'symmetricMatrix')
 Q1[1:min(10, n), 1:min(20, n)]
-
-n2 <- 3
-Q2 <- INLA:::inla.rw1(n2)
-Q2
-
-Q21 <- inla.as.sparse(kronecker(Q2, Q1))
-Q21
-
-(theta0 <- 0)
 
 cfam <- list(
     hyper = list(
         prec = list(
             initial = 10,
             fixed = TRUE)))
+
+out1 <- inla(
+    y ~ 0 + f(i, model = 'generic0', Cmatrix = Q1),
+    data = list(y = rep(NA, n),
+                i = 1:n),
+    control.family = cfam,
+    control.mode = list(
+        theta = c(0),
+        fixed = TRUE)
+)
+
+all.equal(Q1, precision(out1))
+
+## model 2 definition
+m2 <- dtg(
+    p1 ~ c1 - c2
+)
+m2
+dim(m2)
+summary(m2)
+
+precision(m2, theta = c(0))
+solve(precision(m2, theta = c(0)))
+variance(m2, theta = c(0))
+
+theta.p <- c(0.33)
+(V2 <- variance(m2, theta = theta.p))
+
+C2 <- cov2cor(V2)
+C2
+
+m2.cg <- cgeneric(
+    m2,
+    sigma.prior.reference = c(1, 1),
+    sigma.prior.probability = c(0.5, 0.5),
+    lambda = 1
+)
+
+(n2 <- m2.cg$f$n)
+
+theta.test <- c(seq(-1, 1, length = n2), theta.p)
+Q2test <- precision(m2.cg, theta = theta.test)
+
+solve(Q2test)
+crossprod(C2 %*% diag(exp(theta.test[1:n2])),
+          diag(exp(theta.test[1:n2])))
+
+cov2cor(solve(Q2test))
+C2
+
+theta2 <- c(0.0, 0.0, theta.p) ## unit variance
+Q2 <- precision(m2.cg, theta = theta2)
+Q2
+solve(Q2)
+
+out2 <- inla(
+    y ~ 0 + f(i, model = m2.cg),
+    data = list(y = rep(NA, n2),
+                i = 1:n2),
+    control.family = cfam,
+    control.mode = list(
+        theta = theta2,
+        fixed = TRUE)
+)
+all.equal(Q2, precision(out2))
+
+rho = C2[1, 2]
+Q2 * (1 - rho^2)
+solve(Q2 * (1 - rho^2))
+cov2cor(solve(Q2 * (1 - rho^2)))
+
+Q21 <- as(inla.as.sparse(kronecker(Q2, Q1)),
+          'symmetricMatrix')
+Q21r <- as(inla.as.sparse(kronecker(Q2 * (1 - rho^2), Q1)),
+           'symmetricMatrix')
+Q21[1:min(5, n*n2), 1:min(10, n*n2)]
+
+(theta.fixed <- c(
+     0 + log(1 - rho^2),
+     log((1+rho)/(1-rho))))
+
 cmode <- list(
-    theta = theta0,
+    theta = theta.fixed,
     fixed = TRUE,
     restart = FALSE)
-ccpt <- list(config = TRUE)
 
 dataf <- data.frame(
     y = NA,
@@ -44,28 +128,46 @@ dataf <- data.frame(
 
 ires1 <- inla(
     y ~ 0 + f(i, model = "generic0", Cmatrix = Q1, group = j,
-              control.group = list(
-                  model = 'rw1',
-                  scale.model = FALSE)),
+              control.group = list(model = 'ar1')),
     data = dataf,
     control.family = cfam,
-    control.mode = cmode,
-    control.compute = ccpt
-)
-Qinla <- inla.as.sparse(ires1$misc$config$config[[1]]$Qprior)
-
-idx.u <- which(Q21@i <= Q21@j)
-Q21u <- inla.as.sparse(
-    sparseMatrix(
-        i = Q21@i[idx.u] + 1L,
-        j = Q21@j[idx.u] + 1L,
-        x = Q21@x[idx.u]
-    )
+    control.mode = cmode
 )
 
-all.equal(Q21u, Qinla)
+Qinla1 <- precision(ires1)
 
-round(Q21, 2)
-round(Q21u, 2)
-round(Qinla, 2)
+all.equal(Q21r, Qinla1)
 
+## setup the 'cgeneric' kronecker model
+m1 <- cgeneric_generic0(
+    R = Q1,
+    scale = FALSE,
+    param = c(1, 0.0))
+
+Q1c <- precision(m1, theta = 0)
+
+all.equal(
+    precision(out1),
+    Q1c
+)
+
+k21 <- kronecker(m2.cg, m1)
+q21 <- precision(k21, theta = c(theta2))
+
+all.equal(q21, Q21)
+
+ires2 <- inla(
+    y ~ 0 + f(i, model = k21),
+    data = data.frame(y = NA, i = 1:(n * n2)),
+    control.family = cfam,
+    control.mode =
+        list(theta = c(theta2),
+             fixed = TRUE)
+)
+
+Qinla2 <- precision(ires2)
+
+all.equal(q21, Qinla2)
+
+detach("package:corGraphs", unload = TRUE)
+library(corGraphs)

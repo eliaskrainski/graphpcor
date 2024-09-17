@@ -34,14 +34,8 @@ m1 <- cgeneric_generic0(
     debug = FALSE)
 
 ## model 2 graph 
-graph2 <- sparseMatrix(
-    i = c(1, 2, 2, 3, 3, 4),
-    j = c(2, 1, 3, 2, 4, 3)
-)
-graph2
-nnb2 <- colSums(graph2)
-n2 <- length(nnb2)
-R2 <- inla.as.sparse(Diagonal(n2, nnb2) - graph2)
+n2 <- 4
+R2 <- INLA:::inla.rw1(n2)
 R2[1:min(5, n2), 1:min(20, n2)]
 
 ## model 2 cgeneric definition
