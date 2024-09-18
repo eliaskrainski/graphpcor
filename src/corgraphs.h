@@ -78,9 +78,8 @@ void dpptri_(char *uplo, int *N, double *AP,
 
 inla_cgeneric_func_tp inla_cgeneric_generic0;
 inla_cgeneric_func_tp inla_cgeneric_lkj;
-inla_cgeneric_func_tp inla_cgeneric_corgraphs_sfixed;
-inla_cgeneric_func_tp inla_cgeneric_corgraphs_sch;
-inla_cgeneric_func_tp inla_cgeneric_corgraphs_cholQ;
+inla_cgeneric_func_tp inla_cgeneric_dtg_sfixed;
+inla_cgeneric_func_tp inla_cgeneric_dag_cholQ;
 inla_cgeneric_func_tp inla_cgeneric_kronecker;
 
 void cov2cor(int verbose, int n, double *cc) ;

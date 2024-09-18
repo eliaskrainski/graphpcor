@@ -1,5 +1,5 @@
 
-/* cgeneric_corgraphs_cholQ.c
+/* cgeneric_dag_cholQ.c
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -19,7 +19,7 @@
  *
  * The author's contact information:
  *
- *        Elias Krainski
+ *        Elias T Krainski
  *        CEMSE Division
  *        King Abdullah University of Science and Technology
  *        Thuwal 23955-6900, Saudi Arabia
@@ -44,7 +44,7 @@ void fillL(int *d, int *m, int *ii, int *jj, double *x) {
   }
 }
 
-double *inla_cgeneric_corgraphs_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
+double *inla_cgeneric_dag_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
   double *ret = NULL;

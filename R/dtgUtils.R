@@ -595,7 +595,7 @@ cgeneric.dtg <-
     stopifnot(iprior %in% (1L:3L))
 
       the_model <- cgeneric.default(
-          model = "inla_cgeneric_corgraphs_sfixed",
+          model = "inla_cgeneric_dtg_sfixed",
           debug = as.logical(debug),
           useINLAprecomp = as.logical(useINLAprecomp),
           n = as.integer(nc),
