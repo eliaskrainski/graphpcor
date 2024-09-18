@@ -363,6 +363,8 @@ precision.dtg <- function(x, ...) {
   nargs <- names(mc)
   Q <- q.el$q
   if(any(nargs == "theta")) {
+    stopifnot(length(mc$theta) ==
+                max(q.el$i1th, q.el$i2th))
     nc <- q.el$nc
     Q[q.el$iq2th] <- Q[q.el$iq2th] +
       exp(-2 * mc$theta[q.el$i2th])

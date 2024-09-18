@@ -1,3 +1,5 @@
+#' Define cgeneric method for generic0 model
+#' @param model an string equal 'generic0'
 #' Implement a generic model where the precision matrix is
 #'  \deqn{Q = \tau R}
 #' where the structure matrix R is supplied by the user
@@ -17,7 +19,6 @@
 #' @param useINLAprecomp logical indicating if is to be used
 #' shared object pre-compiled by INLA. It is not considered if
 #' libpath is provided.
-#' @param libpath string to the shared object. Default is NULL.
 #' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
 #' @details
 #' If scale = TRUE the matrix \eqn{R} is scaled so that
@@ -26,17 +27,14 @@
 #'  elements of the generalized inverse of \eqn{R}.
 #' \deqn{s = \exp{\sum_i \log((R^{-})_{ii})/n}}
 #'
-#' @export
 cgeneric_generic0 <-
   function(R,
            param,
            constr = TRUE,
            scale = TRUE,
            debug = FALSE,
-           useINLAprecomp = !TRUE,
-           libpath = NULL) {
+           useINLAprecomp = !TRUE) {
 
-    if (is.null(libpath)) {
       if (useINLAprecomp) {
         libpath <- INLA::inla.external.lib("corGraphs")
       } else {
@@ -47,7 +45,6 @@ cgeneric_generic0 <-
           libpath <- file.path(libpath, "corGraphs.so")
         }
       }
-    }
 
     stopifnot(param[1]>0)
     if(is.na(param[2])) {
@@ -92,7 +89,7 @@ cgeneric_generic0 <-
           model = cmodel,
           shlib = libpath,
           n = n,
-          debug = as.integer(debug),
+          debug = as.logical(debug),
           data = list(
             ints = list(
               n = n,

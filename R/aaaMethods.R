@@ -71,6 +71,14 @@ cgeneric.default <- function(model,
   )
   return(cmodel)
 }
+#' Define a cgeneric method for when character.
+#' It call a function (if exists) with equals
+#' "cgeneric_'model'".
+#' E.g. cgeneric(model = "generic0")
+#' call cgeneric_generic0()
+cgeneric.character <- function(model, ...) {
+  do.call(paste0("cgeneric_", model), ...)
+}
 #' Define the initial model to apply for a model object
 #' @param model the model object
 #' @export
