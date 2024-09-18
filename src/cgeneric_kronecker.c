@@ -26,7 +26,7 @@
  */
 
 #include <ltdl.h>
-#include "cgeneric_defs.h"
+#include "corgraphs.h"
 
 double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data) {
   // concatenated data approach of the lists
@@ -73,26 +73,27 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
   double *ret2 = NULL; // to store output from M2.
   double *ret = NULL; // to return;
 
-  int debug, n1, n2, M1, M2, n, M;
   int i, j, k;
   int ni1, nd1, nc1, nm1, nsm1;
   int ni2, nd2, nc2, nm2, nsm2;
 
+  //int n1 = data->ints[0]->ints[0];
   ni1 = data->ints[0]->ints[1];
   nd1 = data->ints[0]->ints[2];
   nc1 = data->ints[0]->ints[3];
   nm1 = data->ints[0]->ints[4];
   nsm1 = data->ints[0]->ints[5];
-  M1 = data->ints[0]->ints[6];
+  int M1 = data->ints[0]->ints[6];
 
+  //int n2 = data->ints[ni1]->ints[0];
   ni2 = data->ints[0]->ints[7];
   nd2 = data->ints[0]->ints[8];
   nc2 = data->ints[0]->ints[9];
   nm2 = data->ints[0]->ints[10];
   nsm2 = data->ints[0]->ints[11];
-  M2 = data->ints[0]->ints[12];
-  n = data->ints[0]->ints[13];
-  M = data->ints[0]->ints[14];
+  int M2 = data->ints[0]->ints[12];
+  int n = data->ints[0]->ints[13];
+  int M = data->ints[0]->ints[14];
 
   assert(ni1>1);
   assert(ni2>1);
@@ -102,7 +103,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
   assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
   assert(!strcasecmp(data->ints[ni1+1]->name, "debug"));	       // this will always be the case
-  debug = ( data->ints[1]->ints[0] | data->ints[ni1+1]->ints[0] );
+  int debug = ( data->ints[1]->ints[0] | data->ints[ni1+1]->ints[0] );
 
   assert(!strcasecmp(data->ints[ni1+ni2]->name, "idx1u"));	       // this will always be the case
   assert(!strcasecmp(data->ints[ni1+ni2+1]->name, "idx2u"));	       // this will always be the case
@@ -132,9 +133,6 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
   dataM2->chars = &data->chars[2+nc1]; // first two is for KM!
   dataM2->mats = &data->mats[nm1];
   dataM2->smats = &data->smats[nsm1];
-
-  n1 = dataM1->ints[0]->ints[0];
-  n2 = dataM2->ints[0]->ints[0];
 
   // load libs
   static int ltdl_init = 1;
@@ -214,7 +212,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
     }
 
     double retE[M];
-    double daux, daux2;
+    double daux;
     int ox;
 
     if(debug) {

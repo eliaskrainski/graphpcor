@@ -19,13 +19,13 @@
  *
  * The author's contact information:
  *
- *        Elias Krainski
+ *        Elias T Krainski
  *        CEMSE Division
  *        King Abdullah University of Science and Technology
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "cgeneric_defs.h"
+#include "corgraphs.h"
 
 double *inla_cgeneric_corgraphs0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {

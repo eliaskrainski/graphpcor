@@ -1,5 +1,5 @@
 
-/* corgraphs_utils.h
+/* corgraphs.h
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -25,9 +25,27 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include <stdlib.h>
+
+#include <stddef.h>
 #include <stdio.h>
-#include <math.h>
+#include <assert.h>
+#include <Rmath.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include "cgeneric.h"
+
+#if !defined(Calloc)
+#define Calloc(n_, type_)  (type_ *)calloc((n_), sizeof(type_))
+#endif
+#define pow2(x) ((x)*(x))
+#define pow3(x) (pow2(x)*(x))
+#define pow4(x) (pow2(x)*pow2(x))
+#ifdef __SUPPORT_SNAN__
+#define iszero(x) (fpclassify(x) == FP_ZERO)
+#else
+#define iszero(x) (((__typeof(x))(x)) == 0)
+#endif
 
 #if __GNUC__ > 7
 typedef size_t fortran_charlen_t;
@@ -36,23 +54,37 @@ typedef int fortran_charlen_t;
 #endif
 #define F_ONE ((fortran_charlen_t)1)
 
+void dsyrk_(char *uplo, char *transa,
+            int *n, int *k, double *alpha,
+            double *a, int *lda,
+            double *beta, double *c, int *ldc, fortran_charlen_t);
+
 void dgemm_(char *transa, char *transb,
             int *m, int *n, int *k, double *alpha,
             double *a, int *lda, double *b, int *ldb,
             double *beta, double *c, int *ldc, fortran_charlen_t);
 
 void dgesv_(int *N, int *NRHS, double *A, int *LDA, int *IPIV,
-            double *B, int *LDB, int *INLFO, fortran_charlen_t);
+            double *B, int *LDB, int *INFO, fortran_charlen_t);
 
 void dpotrf_(char *uplo, int *N, double *A, int *LDA,
-             int *INLFO, fortran_charlen_t);
+             int *INFO, fortran_charlen_t);
 
 void dposv_(char *uplo, int *N, int *NRHS, double *A, int *LDA,
-            double *B, int *LDB, int *INLFO, fortran_charlen_t);
+            double *B, int *LDB, int *INFO, fortran_charlen_t);
+
+void dpptri_(char *uplo, int *N, double *AP,
+             int *INFO, fortran_charlen_t);
+
+inla_cgeneric_func_tp inla_cgeneric_generic0;
+inla_cgeneric_func_tp inla_cgeneric_lkj;
+inla_cgeneric_func_tp inla_cgeneric_corgraphs_sfixed;
+inla_cgeneric_func_tp inla_cgeneric_corgraphs_sch;
+inla_cgeneric_func_tp inla_cgeneric_corgraphs_cholQ;
+inla_cgeneric_func_tp inla_cgeneric_kronecker;
 
 void cov2cor(int verbose, int n, double *cc) ;
 double cov2kld(int verbose, int n, double *C0, double *C1);
 void covariance_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;
 void correlation_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;
 void theta_parent_children_kldh(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *theta, double hs, double *kld, double *kldd) ;
-

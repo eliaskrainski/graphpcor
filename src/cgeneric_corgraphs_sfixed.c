@@ -25,8 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "corgraphs_utils.h"
-#include "cgeneric_defs.h"
+#include "corgraphs.h"
 
 double *inla_cgeneric_corgraphs_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {

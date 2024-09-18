@@ -25,7 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "corgraphs_utils.h"
+#include "corgraphs.h"
 
 void cov2cor(int verbose, int n, double *cc) {
   double s[n];

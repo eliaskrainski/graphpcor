@@ -30,7 +30,7 @@
 #include <R_ext/Utils.h> // needed to allow user interrupts
 #include <Rdefines.h>
 #include <Rinternals.h>
-#include "cgeneric_defs.h"
+#include "corgraphs.h"
 
 SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP chars, SEXP mats, SEXP smats) {
 
