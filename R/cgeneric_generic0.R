@@ -130,3 +130,25 @@ cgeneric_generic0 <-
     return(the_model)
 
 }
+
+#' The 'iid' model uses the 'generic0' with
+#' structure matrix as the identity.
+#' @param n size of the model
+cgeneric_iid <-
+  function(n,
+           param,
+           constr = TRUE,
+           scale = TRUE,
+           debug = FALSE,
+           useINLAprecomp = !TRUE) {
+    cgeneric_generic0(
+      R = Diagonal(n = n,
+                   x = rep(1, n)),
+      param = param,
+      constr = constr,
+      scale = FALSE,
+      debug = debug,
+      useINLAprecomp = useINLAprecomp
+    )
+}
+
