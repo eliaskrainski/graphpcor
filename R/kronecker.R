@@ -42,13 +42,13 @@ setMethod(
     model <- "inla_cgeneric_kronecker"
     if (is.null(libpath)) {
       if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("corGraphs")
+        libpath <- INLA::inla.external.lib("graphpcor")
       } else {
-        libpath <- system.file("libs", package = "corGraphs")
+        libpath <- system.file("libs", package = "graphpcor")
         if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "corGraphs.dll")
+          libpath <- file.path(libpath, "graphpcor.dll")
         } else {
-          libpath <- file.path(libpath, "corGraphs.so")
+          libpath <- file.path(libpath, "graphpcor.so")
         }
       }
     }

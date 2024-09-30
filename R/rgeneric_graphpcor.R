@@ -10,9 +10,9 @@
 #' }
 #' @return the asked object
 #' @export
-corGraphs_rgeneric <- function(cmd = c("graph", "Q", "mu", "initial",
+rgeneric_graphpcor <- function(cmd = c("graph", "Q", "mu", "initial",
                                     "log.norm.const", "log.prior", "quit"),
-                             theta = NULL)
+                               theta = NULL)
 {
 
   envir <- parent.env(environment())

@@ -94,7 +94,7 @@ cgeneric_get <- function(cmodel,
       cgdata$characters,
       cgdata$matrices,
       cgdata$smatrices,
-      PACKAGE = "corGraphs"
+      PACKAGE = "graphpcor"
     )
 
     if((cmd %in% c("graph", "Q")) && (!optimize)) {
@@ -111,7 +111,7 @@ cgeneric_get <- function(cmodel,
           cgdata$characters,
           cgdata$matrices,
           cgdata$smatrices,
-          PACKAGE = "corGraphs"
+          PACKAGE = "graphpcor"
         )
       }
       ret <- Matrix::sparseMatrix(
@@ -138,7 +138,7 @@ cgeneric_get <- function(cmodel,
           cgdata$characters,
           cgdata$matrices,
           cgdata$smatrices,
-          PACKAGE = "corGraphs"
+          PACKAGE = "graphpcor"
         )
       }
     )
@@ -170,7 +170,7 @@ cgeneric_get <- function(cmodel,
         cgdata$characters,
         cgdata$matrices,
         cgdata$smatrices,
-        PACKAGE = "corGraphs"
+        PACKAGE = "graphpcor"
       )
       ij <- Matrix::sparseMatrix(
         i = ij[[1]] + 1L,

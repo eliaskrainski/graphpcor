@@ -1,9 +1,9 @@
 #' Build the objects to implement a
-#' Direct Acyclic Graph - DCG correlation model
+#' Direct Acyclic Graph - DAG correlation model
 #' to be used as a model in a `INLA` `f()` model component.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-dag_model <-
+cgeneric_dag <-
   function(graph,
            sigma.prior.reference,
            sigma.prior.probability,
@@ -14,13 +14,13 @@ dag_model <-
 
     if (is.null(libpath)) {
       if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("corGraphs")
+        libpath <- INLA::inla.external.lib("graphpcor")
       } else {
-        libpath <- system.file("libs", package = "corGraphs")
+        libpath <- system.file("libs", package = "graphpcor")
         if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "corGraphs.dll")
+          libpath <- file.path(libpath, "graphpcor.dll")
         } else {
-          libpath <- file.path(libpath, "corGraphs.so")
+          libpath <- file.path(libpath, "graphpcor.so")
         }
       }
     }
@@ -55,7 +55,7 @@ dag_model <-
     the_model <- do.call(
       "inla.cgeneric.define",
       list(
-        model = "inla_cgeneric_corgraphs_cholQ",
+        model = "inla_cgeneric_graphpcor_cholQ",
         shlib = libpath,
         n = n,
         debug = as.integer(debug),

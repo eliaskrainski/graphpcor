@@ -47,13 +47,13 @@ cgeneric.default <- function(model,
                              ...) {
   ## it uses INLA::inla.cgeneric.define()
   if (useINLAprecomp) {
-    shlib <- INLA::inla.external.lib("corGraphs")
+    shlib <- INLA::inla.external.lib("graphpcor")
   } else {
-    libpath <- system.file("libs", package = "corGraphs")
+    libpath <- system.file("libs", package = "graphpcor")
     if (Sys.info()["sysname"] == "Windows") {
-      shlib <- file.path(libpath, "corGraphs.dll")
+      shlib <- file.path(libpath, "graphpcor.dll")
     } else {
-      shlib <- file.path(libpath, "corGraphs.so")
+      shlib <- file.path(libpath, "graphpcor.so")
     }
   }
 
