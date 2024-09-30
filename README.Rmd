@@ -1,7 +1,7 @@
 ---
 output: github_document
 date: |
-  ![](vignettes/figures/graphpcor_logo){width=3in} 
+  ![](graphpcor_logo){width=3in} 
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->

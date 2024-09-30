@@ -1,4 +1,4 @@
-<img src="vignettes/figures/graphpcor_logo" style="width:3in" />
+<img src="graphpcor_logo" style="width:3in" />
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
