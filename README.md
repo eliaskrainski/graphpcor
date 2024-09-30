@@ -1,8 +1,12 @@
-<img src="graphpcor_logo" style="width:3in" />
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # The graphpcor package
+
+<figure>
+<img src="graphpcor_logo.png" style="width:3in" alt="graphpcor" />
+<figcaption aria-hidden="true">graphpcor</figcaption>
+</figure>
 
 Models for correlation matrices based on graphs.
 
