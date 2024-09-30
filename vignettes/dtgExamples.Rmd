@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
   fig.height = 5, 
   out.width = '0.39\\textwidth')
 chinclude <- TRUE
-library(corGraphs)
+library(graphpcor)
 ```
 
 # Abstract
