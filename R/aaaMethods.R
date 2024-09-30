@@ -61,7 +61,6 @@ cgeneric.default <- function(model,
   nargs <- names(args)
   if(any(nargs == ""))
     stop("Please name the arguments!")
-  stopifnot(any(nargs == "n"))
   cmodel <- do.call(
     "inla.cgeneric.define",
     c(list(model = model,
@@ -76,8 +75,10 @@ cgeneric.default <- function(model,
 #' "cgeneric_'model'".
 #' E.g. cgeneric(model = "generic0")
 #' call cgeneric_generic0()
+#' @export
 cgeneric.character <- function(model, ...) {
-  do.call(paste0("cgeneric_", model), ...)
+  do.call(what = paste0("cgeneric_", model),
+          args = list(...))
 }
 #' Define the initial model to apply for a model object
 #' @param model the model object
