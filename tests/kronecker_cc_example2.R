@@ -35,73 +35,77 @@ iRs <- inla.qinv(Rs + Diagonal(n, 1e-5), cntr)
 summary(diag(iRs))
 
 ## m1 definition
-m1 <- cgeneric_generic0(
+m1 <- cgeneric(
+    model = "generic0",
     R = Rs,
     scale = FALSE, ## scale could have been done here
     param = c(1, 0.0) ## to fix it at this value
 )
 
-cgeneric_get(m1, "log.prior", theta = -1.0)
-cgeneric_get(m1, "log.prior", theta = +1.0)
-cgeneric_get(m1, "initial")
+prior(m1, theta = -1.0)
+prior(m1, theta = +1.0)
+
+initial(m1)
 
 theta1 <- 0
-Q1 <- cgeneric_get(m1, "Q", theta = theta1, optimize = FALSE)
+Q1 <- precision(m1, theta = theta1)
 
 summary(diag(inla.qinv(Q1 + Diagonal(n, 1e-5), cntr)))
 
 ## Model 2: 
-m2.graph <- list(
+m2.graph <- dtg(
     p1 ~ c1 + c2
 )
 
-## m2 definition
-m2 <- dcg_model(
-    dcg = m2.graph, 
-    sigma.prior.reference = rep(1, 2),
-    sigma.prior.probability = rep(.5, 2), 
-    lambda = 1)
-(n2 <- m2$f$n)
+d2 <- dim(m2.graph)
+d2
+n2 <- d2[1]
 
-str(cgeneric_get(m2, "initial"))
+## m2 definition
+m2 <- cgeneric(
+    model = m2.graph, 
+    sigma.prior.reference = rep(1, n2),
+    sigma.prior.probability = rep(.5, n2), 
+    lambda = 1)
+
+str(initial(m2))
 length(theta2 <- c(0.5, 0.3, 0))
 
-
-Q2 <- cgeneric_get(m2, "Q", theta = theta2, optimize = FALSE)
+Q2 <- precision(m2, theta = theta2)
 Q2
 
 solve(Q2)
 
 cov2cor(solve(Q2))
-cov2cor(dcg_covariance(m2.graph, theta2[-(1:n2)]))
+cov2cor(variance(m2.graph, theta2[-(1:n2)]))
 
 ## The M1 (x) M2 Kronecker product model definition
-kmodel12 <- kronecker(m1, m2)
+k12 <- kronecker(m1, m2)
 
 ## The M2 (x) M1 Kronecker product model definition
-kmodel21 <- kronecker(m2, m1)
+k21 <- kronecker(m2, m1)
 
 ### two ways of getting the precision matrix
-qq12 <- kronecker(Q1, Q2)
-Q12 <- cgeneric_get(kmodel12, "Q", theta = c(theta2), optimize = FALSE)
-all.equal(qq12, Q12)
+Q12 <- kronecker(Q1, Q2)
+q12 <- precision(k12, theta = c(theta2))
+all.equal(Q12, q12)
 
-qq21 <- kronecker(Q2, Q1)
-Q21 <- cgeneric_get(kmodel21, "Q", theta = c(theta2), optimize = FALSE)
-all.equal(qq21, Q21)
+Q21 <- kronecker(Q2, Q1)
+q21 <- precision(k21, theta = c(theta2))
+all.equal(Q21, q21)
 
 ## reorder test
 ijo <- order(rep(1:n2, n))
-all.equal(qq12[ijo, ijo], qq21)
+all.equal(Q12[ijo, ijo], Q21)
 
 ijo2 <- order(rep(1:n, n2))
-all.equal(qq21[ijo2, ijo2], qq12)
+all.equal(Q21[ijo2, ijo2], Q12)
 
 ## using Q1 (x) Q2 to sample
 xx <- inla.qsample(
     n = 1,
     Q = Q12 + Diagonal(n*n2, 1e-9),
-    constr = kmodel12$f$extraconst)[, 1]
+    constr = k12$f$extraconst)[, 1]
 summary(xx)
 
 diag(solve(Q2))
@@ -156,7 +160,7 @@ out2g <- inla(
           hyper = list(theta = list(initial = -10, fixed = TRUE)),
           control.group = list(model = "iid")) +
         f(idx0, w0, model = 'iid',
-          extraconstr = kmodel12$f$extraconstr,
+          extraconstr = k12$f$extraconstr,
           hyper = list(theta = list(initial = -10, fixed = TRUE))), 
     data = dataex,
     family = rep("gaussian", 2),
@@ -167,14 +171,14 @@ out2g <- inla(
 )
 
 out12 <- inla(
-    y1 ~ f(idx, model = kmodel21), 
+    y1 ~ f(idx, model = k21), 
     data = dataf,
     control.family = cfam,
     control.mode = cmode
 )
 
 out21 <- inla(
-    y2 ~ f(idx, model = kmodel12), 
+    y2 ~ f(idx, model = k12), 
     data = dataf,
     control.family = cfam,
     control.mode = cmode
@@ -198,13 +202,13 @@ rbind(c(th = theta2),
 
 
 diag(solve(Q2))
-diag(solve(cgeneric_get(m2, "Q", out12$mode$theta, FALSE)))
-diag(solve(cgeneric_get(m2, "Q", out21$mode$theta, FALSE)))
+diag(solve(precision(m2, theta = out12$mode$theta)))
+diag(solve(precision(m2, theta = out21$mode$theta)))
 
 cov2cor(solve(Q2))
 
-cov2cor(dcg_covariance(m2.graph, out12$mode$theta[-(1:n2)]))
-cov2cor(dcg_covariance(m2.graph, out21$mode$theta[-(1:n2)]))
+cov2cor(variance(m2.graph, theta = out12$mode$theta[-(1:n2)]))
+cov2cor(variance(m2.graph, theta = out21$mode$theta[-(1:n2)]))
 
 summary(out12$summary.random$idx$mean)
 summary(out21$summary.random$idx$mean)

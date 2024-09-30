@@ -1,5 +1,4 @@
 
-library(spdep)
 library(INLA)
 library(corGraphs)
 
@@ -12,62 +11,67 @@ inla.setOption(
 n <- 100
 
 ## m1 definition
-m1 <- cgeneric_iid(
+m1 <- cgeneric(
+    model = 'iid',
     n = n, 
     param = c(1, 0.0) ## to fix it at this value
 )
 
-cgeneric_get(m1, "log.prior", theta = -1.0)
-cgeneric_get(m1, "log.prior", theta = +1.0)
-cgeneric_get(m1, "initial")
+prior(m1, theta = -1.0)
+prior(m1, theta = +1.0)
+
+initial(m1)
 
 theta1 <- 0
-Q1 <- cgeneric_get(m1, "Q", theta = theta1, optimize = FALSE)
+Q1 <- precision(m1, theta = theta1)
+if(Q1@uplo == "L")
+    Q1 <- t(Q1)
 
 ## Model 2
-m2.graph <- list(
-    p1~p2+c1-c2,
-    p2~c3+c4
+m2.graph <- dtg(
+    p1 ~ p2 + c1 - c2,
+    p2 ~ c3 + c4
 )
 
 ## m2 definition
-m2 <- dcg_model(
-    dcg = m2.graph, 
+m2 <- cgeneric(
+    model = m2.graph,
     sigma.prior.reference = c(1,1,1,1),
     sigma.prior.probability = c(.5,.5,0.5,0.5),
     lambda = 1)
 (n2 <- m2$f$n)
 
-str(cgeneric_get(m2, "initial"))
+initial(m2)
+
 length(theta2 <- c(0.7,0.5,0.2,0.6, 0, 1))
-Q2 <- cgeneric_get(m2, "Q", theta = theta2, optimize = FALSE)
+Q2 <- precision(m2, theta = theta2)
 Q2
 
 solve(Q2)
 cov2cor(solve(Q2))
 
-qq12 <- kronecker(Q1, Q2)
-qq21 <- kronecker(Q2, Q1)
+Q12 <- kronecker(Q1, Q2)
+Q21 <- kronecker(Q2, Q1)
 
 ## The M1 (x) M2 Kronecker product model definition
-kmodel12 <- kronecker(m1, m2)
+k12 <- kronecker(m1, m2)
 
 ## The M2 (x) M1 Kronecker product model definition
-kmodel21 <- kronecker(m2, m1)
+k21 <- kronecker(m2, m1)
 
 ### two ways of getting the precision matrix
-Q12 <- cgeneric_get(kmodel12, "Q", theta = c(theta2), optimize = FALSE)
-all.equal(qq12, Q12)
+q12 <- precision(k12, theta = c(theta2))
+all.equal(Q12, q12)
 
-Q21 <- cgeneric_get(kmodel21, "Q", theta = c(theta2), optimize = FALSE)
-all.equal(qq21, Q21)
+q21 <- precision(k21, theta = c(theta2))
+all.equal(Q21, q21)
 
 ## reorder test
 ijo <- order(rep(1:n2, n))
-all.equal(qq12[ijo, ijo], qq21)
+all.equal(q12[ijo, ijo], q21)
 
 ijo2 <- order(rep(1:n, n2))
-all.equal(qq21[ijo2, ijo2], qq12)
+all.equal((q21)[ijo2, ijo2], q12)
 
 ## using Q1 (x) Q2 to sample
 xx <- inla.qsample(n = 1, Q = Q12)[, 1]
@@ -110,14 +114,14 @@ out2r <- inla(
 )
 
 out12 <- inla(
-    y1 ~ f(idx, model = kmodel12), 
+    y1 ~ f(idx, model = k12), 
     data = dataf,
     control.family = cfam,
     control.mode = cmode
 )
 
 out21 <- inla(
-    y2 ~ f(idx, model = kmodel21), 
+    y2 ~ f(idx, model = k21), 
     data = dataf,
     control.family = cfam,
     control.mode = cmode
@@ -143,9 +147,6 @@ cbind(true=theta2,
       out12$summary.hy[, c(1,2,3,5)])
 cbind(true=theta2, 
       out21$summary.hy[, c(1,2,3,5)])
-
-summary(out12$summary.random$idx$mean)
-summary(out21$summary.random$idx$mean)
 
 tail(out12$logfile, 12)
 tail(out21$logfile, 12)
