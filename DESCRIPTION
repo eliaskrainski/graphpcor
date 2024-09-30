@@ -1,6 +1,6 @@
-Package: corGraphs
+Package: graphpcor
 Type: Package
-Title: Graph based models for correlation matrices
+Title: Models for correlation matrices based on graphs
 Version: 0.1-0.007
 Authors@R: c(
   person("Elias Teixeira", "Krainski", email = "eliaskrainski@gmail.com",
@@ -19,17 +19,18 @@ Authors@R: c(
          role = c("aut"),
          comment = c(ORCID = "0000-0002-0222-1881"))
   )
-Description: Tools to define, plot and prepare objects to 
-  implement correlation models defined over a specific DAG. 
-  These objects can be used for modeling multivariate outcomes, 
-  correlation in the latent level or among latent parameters. 
-  Uses of it with internal matrices objects are built 
-  in order to use the 'INLA' package (<https://www.r-inla.org>).
-  These objects contain data to for the 'cgeneric' interface in
-  'INLA', enabling fast parallel computations.
-URL: https://github.com/eliaskrainski/corGraphs
+Description: Graphs are used to represent dependency and
+  to define models for correlation matrices. 
+  The Penalized Complexity - PC prior for the graph models 
+  are used to define priors that penalizes the contraction 
+  of the correlation structure from a simpler one.
+  Models are implemented using the 'cgeneric' interface
+  in the 'INLA' package (<https://www.r-inla.org>) 
+  so that 'INLA' can be used to build and fit complex 
+  data models using these as building blocks.
+URL: https://github.com/eliaskrainski/graphpcor
 Additional_repositories: https://inla.r-inla-download.org/R/testing
-BugReports: https://github.com/eliaskrainski/corGraphs/issues
+BugReports: https://github.com/eliaskrainski/graphpcor/issues
 License: GPL (>=2) 
 Encoding: UTF-8
 RoxygenNote: 7.3.2
@@ -44,7 +45,7 @@ Depends:
 Imports:
     stats
 Suggests:
-    INLA (>= 23.10.25),
+    INLA (>= 24.06.27),
     knitr
 VignetteBuilder: knitr
 BuildVignettes: true

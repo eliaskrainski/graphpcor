@@ -15,12 +15,12 @@ knitr::opts_chunk$set(
 )
 ```
 
-# The graphpcor package
+# Models for correlation matrices based on graphs
 
 ![](graphpcor_logo.png){width=3in} 
 
 
-Models for correlation matrices based on graphs.
+
 
 The 'INLA' package is a suggested one, but you will need it 
 for actually fitting a model. You can install it with

@@ -1,11 +1,9 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# The graphpcor package
+# Models for correlation matrices based on graphs
 
 <img src="graphpcor_logo.png" style="width:3in" />
-
-Models for correlation matrices based on graphs.
 
 The ‘INLA’ package is a suggested one, but you will need it for actually
 fitting a model. You can install it with
