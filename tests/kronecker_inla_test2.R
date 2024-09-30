@@ -139,7 +139,8 @@ Qinla1 <- precision(ires1)
 all.equal(Q21r, Qinla1)
 
 ## setup the 'cgeneric' kronecker model
-m1 <- cgeneric_generic0(
+m1 <- cgeneric(
+    model = 'generic0',
     R = Q1,
     scale = FALSE,
     param = c(1, 0.0))

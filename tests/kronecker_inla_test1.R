@@ -26,7 +26,8 @@ R1 <- as(inla.as.sparse(
 R1[1:min(10, n), 1:min(20, n)]
 
 ## model 1 definition
-m1 <- cgeneric_generic0(
+m1 <- cgeneric(
+    model = 'generic0',
     R = R1,
     scale = FALSE,
     constr = FALSE,
@@ -39,7 +40,8 @@ R2 <- INLA:::inla.rw1(n2)
 R2[1:min(5, n2), 1:min(20, n2)]
 
 ## model 2 cgeneric definition
-m2 <- cgeneric_generic0(
+m2 <- cgeneric(
+    model = 'generic0',
     R = R2,
     scale = FALSE,
     constr = FALSE,
