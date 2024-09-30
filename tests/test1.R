@@ -56,6 +56,14 @@ gmodel <- cgeneric(
     debug =  0 ## bigger debug prints llllooootttttsss of details
 )
 
+initial(gmodel)
+
+prior(gmodel, theta = initial(gmodel))
+
+graph(gmodel)
+precision(gmodel, theta = initial(gmodel))
+precision(gmodel, theta = initial(gmodel), optimize = TRUE)
+
 ff <- y ~ 0 +
     f(idx1, model = gmodel, replicate = repl) +
     f(idx2, w1, copy = "idx1", replicate = repl) +
