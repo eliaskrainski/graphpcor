@@ -25,7 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "corgraphs.h"
+#include "graphpcor.h"
 
 void fillL(int *d, int *m, int *ii, int *jj, double *x) {
   // fill lower triangle

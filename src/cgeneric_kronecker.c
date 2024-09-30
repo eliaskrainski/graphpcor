@@ -26,7 +26,7 @@
  */
 
 #include <ltdl.h>
-#include "corgraphs.h"
+#include "graphpcor.h"
 
 double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data) {
   // concatenated data approach of the lists

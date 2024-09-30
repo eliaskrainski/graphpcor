@@ -1,5 +1,5 @@
 
-/* corgraphs_utils.c
+/* graphpcor_utils.c
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -25,7 +25,152 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "corgraphs.h"
+#include "graphpcor.h"
+
+void exchangeableU(int n, double r, double *cc) {
+  if(n==1) {
+
+    cc[0] = 1.0;
+
+  } else {
+
+    // upper (C), lower (Fortran)
+    int i, j, k=0;
+    for(i=0; i<n; i++) {
+      for(j=i; j<n; j++) {
+        if(i==j) {
+          cc[k++] = 1.0;
+        } else {
+          cc[k++] = r;
+        }
+      }
+    }
+
+/*
+    k=0;
+    for(i=0; i<n; i++) {
+      for(j=i; j<n; j++) {
+        printf("%f ", dlQ[k++]);
+      }
+      printf("\n");
+    }
+*/
+
+  }
+
+}
+
+void dl2Qu(int n, double *d, double *l, double *qu) {
+  assert(n>0);
+  if(n==1) {
+    qu[0] = (d[0])*(d[0]);
+  }
+  if(n==2) {
+    qu[0] = d[0]*d[0];
+    qu[1] = d[0]*l[0];
+    qu[2] = d[1]*d[1] + l[0]*l[0];
+  }
+  if(n>2) {
+    double qq[n*n];
+    dl2fullQ(n, &d[0], &l[0], &qq[0]);
+    // copy (as the upper part) to the vector 'qu'
+    int i,j,k = 0, k2 = 0;
+    for(i=0; i<n; i++) {
+      k2 = (n+1)*i;
+      for(j=i; j<n; j++) {
+        qu[k++] = qq[k2++];
+      }
+    }
+  }
+
+}
+
+void dl2fullQ(int n, double *d, double *l, double *qq) {
+
+    assert(n>0);
+    if(n==1) {
+      qq[0] = (d[0])*(d[0]);
+    }
+    if(n==2) {
+      qq[0] = d[0]*d[0];
+      qq[1] = d[0]*l[0];
+      qq[2] = qq[1];
+      qq[3] = d[1]*d[1] + l[0]*l[0];
+    }
+    if(n>2) {
+
+      double aa[n*n], bb[n*n];
+      int i,j,k=0, k2=0;
+      /*
+      for(i=0; i<(n-1); i++) {
+        k = (n+1)*i;
+        aa[k++] = d[i];
+        for(j=(i+1); j<n; j++) {
+          aa[k++] = l[k2++];
+        }
+      }
+      aa[n*n-1] = d[n-1];
+       */
+      k=0; k2=0;
+      for(i=0; i<n; i++) {
+        for(j=0; j<n; j++) {
+          if(j>i) {
+            aa[k] = l[k2];
+            bb[k] = l[k2];
+            k2++;
+          } else {
+            if(i==j) {
+              aa[k] = d[i];
+              bb[k] = d[i];
+            } else {
+              aa[k] = 0.0;
+              bb[k] = 0.0;
+            }
+          }
+          k++;
+        }
+      }
+
+/*
+      printf("\nPrinting aa:\n");
+      k=0;
+      for(i=0; i<n; i++) {
+        for(j=0; j<n; j++) {
+          printf("%f ", aa[k++]);
+        }
+        printf("\n");
+      }
+      printf("\nPrinting bb:\n");
+      k=0;
+      for(i=0; i<n; i++) {
+        for(j=0; j<n; j++) {
+          printf("%f ", bb[k++]);
+        }
+        printf("\n");
+      }
+*/
+
+      char tra = 'N'; // upper in C is lower in Fortran
+      char trb = 'T';
+      double alpha = 1, beta = 0;
+      dgemm_(&tra, &trb, &n, &n, &n,
+             &alpha, &aa[0], &n, &bb[0], &n,
+             &beta, &qq[0], &n, F_ONE);
+
+/*
+      printf("\nPrinting qq:\n");
+      k=0;
+      for(int i=0; i<n; i++) {
+        for(int j=0; j<n; j++) {
+          printf("%f ", qq[k++]);
+        }
+        printf("\n");
+      }
+*/
+
+    }
+
+}
 
 void cov2cor(int verbose, int n, double *cc) {
   double s[n];

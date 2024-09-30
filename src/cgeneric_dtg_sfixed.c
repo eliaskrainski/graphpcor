@@ -1,5 +1,5 @@
 
-/* cgeneric_corgraphs_sfixed.c
+/* cgeneric_graphpcor_sfixed.c
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -25,7 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "corgraphs.h"
+#include "graphpcor.h"
 
 double *inla_cgeneric_dtg_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
