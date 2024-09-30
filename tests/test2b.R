@@ -1,5 +1,5 @@
 
-library(corGraphs)
+library(graphpcor)
 library(INLA)
 
 inla.setOption(
@@ -94,5 +94,5 @@ round(mcorr*100)
 round(cor(xx)*100)
 round(cc.fit*100)
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

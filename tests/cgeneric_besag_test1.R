@@ -1,7 +1,7 @@
 
 library(spdep)
 library(INLA)
-library(corGraphs)
+library(graphpcor)
 
 inla.setOption(
     num.threads = 1,
@@ -32,21 +32,22 @@ m1 <- cgeneric_generic0(
 str(m1)
 str(m1$f$cgeneric$data$smatrices,1)
 
-str(cgeneric_get(m1, "initial"))
+str(initial(m1))
+
+mu(m1)
 
 theta1 <- 0
-str(cgeneric_get(m1, "mu", theta = theta1))
-str(cgeneric_get(m1, "log_prior", theta = theta1))
+prior(m1, theta = theta1)
 
-str(g1ij <- cgeneric_get(m1, "graph"))
+str(g1ij <- graph(m1, optimize = TRUE))
 str(g1ij)
 table(g1ij[[1]]<=g1ij[[2]])
 
-str(cgeneric_get(m1, "graph", optimize = FALSE))
+str(graph(m1))
 
-str(cgeneric_get(m1, "Q", theta = theta1))
+str(precision(m1, theta = theta1))
 
-Q1 <- cgeneric_get(m1, "Q", theta = theta1, optimize = FALSE)
+Q1 <- precision(m1, theta = theta1)
 str(Q1)
 
 Q1[1:min(5,n), 1:min(10,n)]
@@ -124,5 +125,5 @@ all.equal(fit.1$misc$configs$config[[1]]$Qprior,
           fit.i$misc$configs$config[[1]]$Qprior)
 
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

@@ -1,5 +1,5 @@
 library(INLA)
-library(corGraphs)
+library(graphpcor)
 
 g1 <- list(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
 G1 <- graph_Laplacian(g1)
@@ -61,5 +61,5 @@ plot(inla.read.graph(G2))
 plot(inla.read.graph(G3))
 plot(inla.read.graph(G4))
 
-detach("package:corGraphs", unload = TRUE)
-library("corGraphs")
+detach("package:graphpcor", unload = TRUE)
+library("graphpcor")

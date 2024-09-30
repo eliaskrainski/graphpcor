@@ -1,5 +1,5 @@
 
-library(corGraphs)
+library(graphpcor)
 
 dtg(p1 ~ p2)
 dtg(p1 ~ c2)
@@ -94,5 +94,5 @@ all.equal(
     solve(precision(g3, theta = c(0, 0)))[1:n3, 1:n3]
 )
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

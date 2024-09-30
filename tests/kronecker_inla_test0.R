@@ -72,7 +72,7 @@ ires1 <- inla(
     control.compute = ccpt
 )
 
-Qinla <- corGraphs::precision(ires1)
+Qinla <- graphpcor::precision(ires1)
 
 all.equal(Q21, Qinla)
 

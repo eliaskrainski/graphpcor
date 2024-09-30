@@ -34,7 +34,7 @@ rcar1 <- function(cmd = c("graph", "Q", "mu", "initial",
     )
 }
 
-library(corGraphs)
+library(graphpcor)
 library(spdep)
 library(INLA)
 
@@ -209,5 +209,5 @@ grep("nnz", out12$logfile, value = TRUE)
 grep("nnz", out21$logfile, value = TRUE)
 
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

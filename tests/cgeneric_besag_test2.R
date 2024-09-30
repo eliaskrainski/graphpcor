@@ -1,7 +1,7 @@
 
 library(spdep)
 library(INLA)
-library(corGraphs)
+library(graphpcor)
 
 inla.setOption(
     num.threads = 1,
@@ -31,7 +31,7 @@ m1 <- cgeneric_generic0(
 )
 
 theta1 <- 0
-Q1 <- cgeneric_get(m1, "Q", theta = theta1, optimize = FALSE)
+Q1 <- precision(m1, theta = theta1)
 
 Q1[1:min(5,n), 1:min(10,n)]
 
@@ -115,7 +115,7 @@ unlist(inla.zmarginal(inla.tmarginal(
 lprec.seq <- seq(-3, 5, 0.1)
 prec.seq <- exp(lprec.seq)
 cg.lprior <- sapply(lprec.seq, function(x)
-    cgeneric_get(m1, "log.prior", theta = x))
+    prior(m1, theta = x))
 
 post1 <- inla.tmarginal(
     exp, fit.1$internal.marginals.hyperpar[[1]])
@@ -138,5 +138,5 @@ lines(post1s, col = 2)
 lines(exp(-0.5*lprec.seq),
       exp(cg.lprior - 0.5 * lprec.seq), col = 4, lty = 2)
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

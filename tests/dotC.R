@@ -1,5 +1,5 @@
 library(INLA)
-library(corGraphs)
+library(graphpcor)
 
 n <- 5
 
@@ -33,17 +33,17 @@ l0
 
 l1 <- .C("fillL", as.integer(n), as.integer(length(ifi)),
          row(l0)[ifi]-1L, col(l0)[ifi]-1L, l=l0,
-   PACKAGE = "corGraphs")$l
+   PACKAGE = "graphpcor")$l
 l1
 
 g
 tcrossprod(l1)
 
 is.matrix(g)
-corGraphs:::matrix2graph(g)
-corGraphs:::graph_check(corGraphs:::matrix2graph(g))
-corGraphs:::graph_elements(
-                corGraphs:::matrix2graph(g))
+graphpcor:::matrix2graph(g)
+graphpcor:::graph_check(graphpcor:::matrix2graph(g))
+graphpcor:::graph_elements(
+                graphpcor:::matrix2graph(g))
 
 
 dm <- dag_model(g, rep(1,n), (1:n-0.5)/n, 1, debug = !TRUE)
@@ -78,5 +78,5 @@ str(
     )
 )
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

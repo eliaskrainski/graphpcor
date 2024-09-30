@@ -5,7 +5,7 @@
 ##  with Q1 = \theta * R and Q2  = 1 * R2
 
 library(INLA)
-library(corGraphs)
+library(graphpcor)
 
 inla.setOption(
     num.threads = 1L,
@@ -98,5 +98,5 @@ Qinla2 <- precision(ires2)
 
 all.equal(q21, Qinla2)
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

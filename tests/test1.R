@@ -1,5 +1,5 @@
 
-library(corGraphs)
+library(graphpcor)
 library(INLA)
 
 inla.setOption(
@@ -95,6 +95,6 @@ mcov.fit <- ss %*% mcorr.fit %*% ss
 round(cov(xx), 1)
 round(mcov.fit, 1)
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)
 

@@ -65,7 +65,7 @@ if(FALSE) { ### just to avoid having to add dependencies we don't really need
 }
 
 library(INLA)
-library(corGraphs)
+library(graphpcor)
 
 inla.setOption(
     safe = FALSE,
@@ -257,5 +257,5 @@ round(cc.fit1*100)
 round(cc.fit2*100)
 round(cc.fit3*100)
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)

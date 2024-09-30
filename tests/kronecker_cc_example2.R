@@ -1,7 +1,7 @@
 
 library(spdep)
 library(INLA)
-library(corGraphs)
+library(graphpcor)
 
 inla.setOption(
     num.threads = 1L,
@@ -225,5 +225,5 @@ grep("Number of constraints", out21$logfile, value = TRUE)
 grep("nnz", out12$logfile, value = TRUE)
 grep("nnz", out21$logfile, value = TRUE)
 
-detach("package:corGraphs", unload = TRUE)
-library(corGraphs)
+detach("package:graphpcor", unload = TRUE)
+library(graphpcor)
