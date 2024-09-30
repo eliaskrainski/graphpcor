@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 # The graphpcor package
 
-![graphpcor](graphpcor_logo.png){width=3in} 
+![](graphpcor_logo.png){width=3in} 
 
 
 Models for correlation matrices based on graphs.

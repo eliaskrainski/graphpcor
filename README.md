@@ -3,10 +3,7 @@
 
 # The graphpcor package
 
-<figure>
-<img src="graphpcor_logo.png" style="width:3in" alt="graphpcor" />
-<figcaption aria-hidden="true">graphpcor</figcaption>
-</figure>
+<img src="graphpcor_logo.png" style="width:3in" />
 
 Models for correlation matrices based on graphs.
 
