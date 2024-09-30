@@ -11,7 +11,7 @@ header-includes:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(corGraphs)
+library(graphpcor)
 ```
 
 **Extending the DAG's approach**
