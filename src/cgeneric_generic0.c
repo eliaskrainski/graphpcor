@@ -43,7 +43,7 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   int debug = data->ints[1]->ints[0];
 
   if(debug>0) {
-    fprintf(stderr, "n = %d and debug = %d\n", N, debug);
+    printf("n = %d and debug = %d\n", N, debug);
   }
 
   int fixed = 1;
@@ -56,7 +56,9 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   if (theta) {
     if(fixed) {
       prec = 1 / pow2(data->doubles[0]->doubles[0]);
-      //fprintf(stderr, "prec = %f\n", prec);
+      if(debug>9) {
+        printf("prec = %f\n", prec);
+      }
     } else {
       prec = exp(theta[0]);
     }
@@ -151,16 +153,19 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
       double u = data->doubles[0]->doubles[0];
       double a = data->doubles[0]->doubles[1];
       double l = -log(a)/u;
+      if(debug>99) {
+        printf("th %f, u %f, a %f and l %f\n", theta[0], u, a, l);
+      }
       if(u<=0) {
         ret[0] = 0.0;
       } else {
-        if(a==0) {
+        if(a<=0.0) {
           ret[0] = 0.0;
         } else {
-          if(a==1) {
+          if(a>=1.0) {
             ret[0] = 0.0;
           } else {
-            ret[0] = log(0.5 * l) -l * exp(-val) +val;
+            ret[0] = log(0.5 * l) -l * exp(-val) - val;
           }
         }
       }

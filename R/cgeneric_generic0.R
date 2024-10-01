@@ -88,12 +88,12 @@ cgeneric_generic0 <-
         cgeneric = list(
           model = cmodel,
           shlib = libpath,
-          n = n,
+          n = as.integer(n),
           debug = as.logical(debug),
           data = list(
             ints = list(
-              n = n,
-              debug = debug
+              n = as.integer(n),
+              debug = as.integer(debug)
             ),
             doubles = list(
               param = param
@@ -137,7 +137,7 @@ cgeneric_generic0 <-
 cgeneric_iid <-
   function(n,
            param,
-           constr = TRUE,
+           constr = FALSE,
            scale = TRUE,
            debug = FALSE,
            useINLAprecomp = !TRUE) {
