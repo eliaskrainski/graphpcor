@@ -21,15 +21,23 @@ knitr::opts_chunk$set(
 \centering
 ![](graphpcor_logo.png){width=3in} 
 
-Graphs are used to represent dependency and
-  to define models for correlation matrices.
-  The Penalized Complexity - PC prior for the graph models
-  are used to define priors that penalizes the contraction
-  of the correlation structure from a simpler one.
-  Models are implemented using the 'cgeneric' interface
-  in the 'INLA' package (<https://www.r-inla.org>)
-  so that 'INLA' can be used to build and fit complex
-  data models using these as building blocks.
+This package implement an approach for 
+constructing models for correlation matrices 
+with a user-defined graphical structure, 
+proposed in <https://arxiv.org/abs/2312.06289>.
+The graphical structure makes correlation matrices 
+interpretable and avoids the quadratic increase of 
+parameters as a function of the dimension. 
+We suggest an automatic approach to define a prior 
+using a natural sequence of simpler models 
+within the Penalized Complexity framework 
+for the unknown parameters in these models.
+Models are implemented in a C code template for 
+the 'cgeneric' interface with the 'INLA' package 
+(<https://www.r-inla.org>). 
+This allows one to use 'INLA' to build and fit 
+complex data models using the models in this 
+package as building blocks.
 
 ## Installing dependencies
 
