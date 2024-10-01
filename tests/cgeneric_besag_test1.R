@@ -8,7 +8,7 @@ inla.setOption(
     safe = FALSE
 )
 
-nxy <- c(5, 5)
+nxy <- c(25, 35)
 nb <- grid2nb(d = nxy, queen = FALSE)
 nnb <- card(nb)
 n <- length(nnb)
@@ -23,7 +23,8 @@ nb.graph <- sparseMatrix(
 R0 <- inla.as.sparse(Diagonal(n, nnb) - nb.graph)
 R0[1:min(n, 5), 1:min(n, 10)]
 
-m1 <- cgeneric_generic0(
+m1 <- cgeneric(
+    model = "generic0",
     R = inla.as.sparse(Diagonal(n, nnb) * 0.25 + R0),
     param = c(1, 0.5),
     constr = FALSE
@@ -118,8 +119,6 @@ c(fit.1$cpu.used["Total"] / fit.1$misc$nfunc,
   fit.i$cpu.used["Total"] / fit.i$misc$nfunc) ### ;)
 
 c(fit.1$mode$theta, fit.i$mode$theta)
-
-names(fit.1$misc$configs$config[[1]])
 
 all.equal(fit.1$misc$configs$config[[1]]$Qprior,
           fit.i$misc$configs$config[[1]]$Qprior)

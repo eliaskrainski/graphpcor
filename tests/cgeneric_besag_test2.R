@@ -8,7 +8,7 @@ inla.setOption(
     safe = FALSE
 )
 
-nxy <- c(30, 50)
+nxy <- c(3, 5)
 nb <- grid2nb(d = nxy, queen = FALSE)
 nnb <- card(nb)
 n <- length(nnb)
@@ -23,7 +23,8 @@ nb.graph <- sparseMatrix(
 R0 <- inla.as.sparse(Diagonal(n, nnb) - nb.graph)
 R0[1:min(n, 5), 1:min(n, 10)]
 
-m1 <- cgeneric_generic0(
+m1 <- cgeneric(
+    model = "generic0",
     R = inla.as.sparse(Diagonal(n, nnb) * 0.25 + R0),
     param = c(1, 0.5),
     constr = FALSE,
@@ -114,8 +115,14 @@ unlist(inla.zmarginal(inla.tmarginal(
 
 lprec.seq <- seq(-3, 5, 0.1)
 prec.seq <- exp(lprec.seq)
-cg.lprior <- sapply(lprec.seq, function(x)
+cg.lpprior <- sapply(lprec.seq, function(x)
     prior(m1, theta = x))
+cg.pprior <- inla.tmarginal(
+    fun = function(x) exp(x),
+    marginal = cbind(x=lprec.seq, y=exp(cg.lpprior)))
+cg.sprior <- inla.tmarginal(
+    fun = function(x) exp(-x/2),
+    marginal = cbind(x=lprec.seq, y=exp(cg.lpprior)))
 
 post1 <- inla.tmarginal(
     exp, fit.1$internal.marginals.hyperpar[[1]])
@@ -132,11 +139,10 @@ postis <- inla.tmarginal(
 par(mfrow = c(1, 2), mar = c(3, 3, 1.5, 0.5), mgp = c(1.5, 0.5, 0))
 plot(posti, type = "l")
 lines(post1, col = 2)
-lines(prec.seq, exp(cg.lprior - lprec.seq), col = 4, lty = 2)
+lines(cg.pprior, col = 4, lty = 2)
 plot(postis, type = "l")
 lines(post1s, col = 2)
-lines(exp(-0.5*lprec.seq),
-      exp(cg.lprior - 0.5 * lprec.seq), col = 4, lty = 2)
+lines(cg.sprior, col = 3, lty = 2)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)
