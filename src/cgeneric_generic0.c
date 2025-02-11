@@ -53,17 +53,17 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   }
   //fprintf(stderr, "fixed = %d\n", fixed);
 
-  if (theta) {
-    if(fixed) {
-      prec = 1 / pow2(data->doubles[0]->doubles[0]);
-      if(debug>9) {
-        printf("prec = %f\n", prec);
-      }
-    } else {
-      prec = exp(theta[0]);
-    }
+  if(fixed) {
+    prec = 1 / pow2(data->doubles[0]->doubles[0]);
   } else {
-    prec = NAN;
+    if (theta) {
+      prec = exp(theta[0]);
+    } else  {
+      prec = NAN;
+    }
+  }
+  if(debug>9) {
+    printf("prec = %f\n", prec);
   }
 
   // the number of neighbors at the diagonal

@@ -1,6 +1,6 @@
 ---
 title: "General framework for graph derived correlation matrices"
-author: "H. Rue et al"
+author: "H Rue, E T Krainski"
 date: "Dec, 2023"
 output:
   pdf_document: default
@@ -23,9 +23,10 @@ called the Cholesky triangle/factor of $\mathbf{Q}$.
 The elements $\mathbf{Q}_{ij}$ are given from $\mathbf{L}$ as
 \[
 \mathbf{Q}_{ij} = \sum_{k=1}^j \mathbf{L}_{ik}\mathbf{L}_{jk},
-\textrm{ for } i\geq j,
+\textrm{ for } i\geq j.
 \]
-which depends on previously computed elements of $\mathbf{L}$ at 
+This means that the element at column $j$ 
+depends on (previously computed elements) of $\mathbf{L}$ at 
 lines $i$ and $j$ from column $1$ up to column $j$.
 
 Let $\mathbf{R}$ be the lower triangle of $\mathbf{Q}$
@@ -38,12 +39,14 @@ which are equal to zero are called the fill-in elements.
 Let $n_R$ be the number of non-zero elements in $\mathbf{R}$ and $n_L$ be the 
 number of non-zero elements in $\mathbf{L}$.
 
-We parametrize $\mathbf{L}$ having its diagonal elements 
-$\mathbf{L}_{ii} = \exp(\theta_i) > 0$ for $1<i<n$ and, 
-the $n_R-n$ off-diagonal elements in $\mathbf{L}$ whose corresponding 
-non-zero elements of $\mathbf{R}$, for $i>j$, as
+Let $\mathbf{L}$ be so that its diagonal elements are 
+$\mathbf{L}_{ii} = \exp(\theta_i) > 0$ for $1<i<n$, 
+and the $n_R-n$ off-diagonal elements in $\mathbf{L}$ 
+whose corresponding non-zero elements of $\mathbf{R}$, 
+for $i>j$, as
 $\mathbf{L}_{ij} = \theta_k \in \mathbb{R}$, $k\in\{n+1,\ldots,n_R\}$.
-The remaining $n_L-n_R>0$ fill-in elements in $\mathbf{L}$ are computed with
+The remaining $n_L-n_R>0$ fill-in elements in $\mathbf{L}$ 
+are computed with
 \[
 \mathbf{L}_{ij} = -\frac{\sum_{k=1}^{j-1} \mathbf{L}_{ik}\mathbf{L}_{jk}}
 {\mathbf{L}_{jj}}
@@ -51,11 +54,14 @@ The remaining $n_L-n_R>0$ fill-in elements in $\mathbf{L}$ are computed with
 starting from the top-left fill-in element,
 line by line from left to right and from top to bottom.
 
+Thus the number of unknowns remain $n + n_R$.
+
 # Example
 
-Let a $n \times n$ SPD matrix $\mathbf{Q}$.
+Let us consider the graph shown in the 
+following figure.
 
-```{r graph, include = hrexample}
+```{r graph, echo = FALSE, include = hrexample}
 ## Example (from "idea.pdf")
 Q <- Matrix(cbind(
   c(3,0,-1,0,0,0,0,-1,0,-1),
@@ -84,26 +90,37 @@ n <- 10
 Q <- rQ(n)
 ```
 
-Check it 
-```{r Qcheck}  
-isSymmetric(Q)
-q <- Q * lower.tri(Q, diag = TRUE)
-q
-nnzq <- sum(q!=0) ## number of non-zeros in the lower triangle of Q
-nnzq
+```{r plotg, echo = FALSE, out.width="50%"}
 g <- inla.read.graph(Q)
 plot(g)
+```
+
+
+Let a $n \times n$ SPD matrix $\mathbf{Q}$
+and $\mathbf{q}$ be its lower triangle (with the diagonal).
+
+```{r Qcheck, echo = FALSE, results = 'hide'}  
+isSymmetric(Q)
+q <- Q * lower.tri(Q, diag = TRUE)
+```
+```{r q}
+q
 ```
 
 The Cholesky decomposition: $\mathbf{Q} = \mathbf{L}\mathbf{L}^T$ 
 ```{r l1}
 l <- t(chol(Q))
 l
-nnzl <- sum(l!=0) ### number of nonzeros in L
+```
+
+L has more non-zeros than Q:
+```{r nnz}
+nnzq <- sum(q!=0) ## number of non-zeros in the lower triangle of nnzl <- sum(l!=0) ### number of nonzeros in L
 c(nnzq, nnzl)
 ```
 
-Ordering
+# Ordering matters!
+
 ```{r og}
 og <- inla.qreordering(Q)
 og$ireordering

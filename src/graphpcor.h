@@ -1,4 +1,3 @@
-
 /* graphpcor.h
  *
  * Copyright (C) 2023 Elias T Krainski
