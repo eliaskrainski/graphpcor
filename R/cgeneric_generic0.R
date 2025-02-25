@@ -1,6 +1,5 @@
 #' Define cgeneric method for generic0 model
-#' @param model an string equal 'generic0'
-#' Implement a generic model where the precision matrix is
+#' with precision matrix defined as
 #'  \deqn{Q = \tau R}
 #' where the structure matrix R is supplied by the user
 #' and \eqn{\tau} is the (local, see detais) precision parameter.
@@ -13,20 +12,29 @@
 #' where \eqn{\sigma} can be interpreted as marginal standard
 #' deviation of the process if scale = TRUE. See details.
 #' @param scale logical indicating if it is to scale
-#' the R structure matrix so that the geometric mean for the
-#' marginal variances is equal to one when the precision is 1.
+#' the mnodel. See detais.
 #' @param debug logical indicating if it is to debug.
 #' @param useINLAprecomp logical indicating if is to be used
 #' shared object pre-compiled by INLA. It is not considered if
 #' libpath is provided.
-#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
+#' @param libpath string to the shared object. Default is NULL.
 #' @details
-#' If scale = TRUE the matrix \eqn{R} is scaled so that
+#' Following Sørbie & Rue (2014), if scale = TRUE
+#' the model is scaled so that
 #'  \deqn{Q = \tau s R}
 #'  where \eqn{s} is the geometric mean of the diagonal
 #'  elements of the generalized inverse of \eqn{R}.
 #' \deqn{s = \exp{\sum_i \log((R^{-})_{ii})/n}}
-#'
+#' If the model is scaled, the geometric mean of the
+#' marginal variances, the diagonal of \eqn{Q^{-1}}, is one.
+#' Therefore, when the model is scaled,
+#' \eqn{\tau} is the marginal precision,
+#' otherwise \eqn{tau} is the conditional precision.
+#' @references
+#' Sigrunn Holbek Sørbye and Håvard Rue (2014).
+#' Scaling intrinsic Gaussian Markov random field priors in
+#' spatial modelling. Spatial Statistics, vol. 8, p. 39-51.
+#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
 cgeneric_generic0 <-
   function(R,
            param,
