@@ -1,5 +1,8 @@
-#' Directed Tree Graph - DTG.
+#' Directed Tree Graph - DTG
 setClass("dtg")
+
+#' corgraph: Correlation graph model
+setClass("corgraph")
 
 #' GMRF model definition using the cgeneric in INLA
 setClass(
