@@ -1,4 +1,4 @@
-#' Set as a graph with nodes representing two kind of
+#' Set a graph whose nodes represent two kind of
 #' variables: children and parent. See details.
 #' @param ... a list of formula used as relationship
 #' to define the Directed Tree Graph - DTG.
@@ -520,15 +520,12 @@ edtg2variance <- function(d.el) {
 #' @param sigma.prior.probability a vector with the probability values
 #' to define the prior for the standard deviation parameters.
 #' @param lambda the lambda for the graph correlation prior.
-#' @param iprior integer to define with prior is going to be used
-#' for the correlation. 1 is for normal for v_i,
-#' 2 is for pc-precision and 3 is for the derived PC (see the paper).
 #' @param useINLAprecomp logical indicating if
 #' it is to be used the shared object within INLA.
 #' @details
 #'  The correlation prior as in the paper depends on the lambda value.
 #'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
-#' which can be defined from the following probability statement
+#'  which can be defined from the following probability statement
 #'  P(sigma > U) = a.
 #' where "U" is a reference value and "a" is a probability.
 #' The values "U" and probabilities "a" for each \eqn{sigma_i}
@@ -546,7 +543,6 @@ cgeneric.dtg <-
            sigma.prior.reference,
            sigma.prior.probability,
            lambda,
-           iprior = 3,
            debug = FALSE,
            useINLAprecomp = !TRUE) {
 
@@ -592,7 +588,6 @@ cgeneric.dtg <-
     slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
     stopifnot(lambda>0)
-    stopifnot(iprior %in% (1L:3L))
 
       the_model <- cgeneric.default(
           model = "inla_cgeneric_dtg_sfixed",
@@ -607,7 +602,6 @@ cgeneric.dtg <-
           itop = as.integer(itop-1L),
           ii = as.integer(ii-1L),
           jj = as.integer(jj-1L),
-          iprior = as.integer(iprior),
           lambda = as.double(lambda),
           slambdas = as.double(slambdas),
           schildren = as.double(sch)
