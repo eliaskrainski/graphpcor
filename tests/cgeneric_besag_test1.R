@@ -9,8 +9,8 @@ inla.setOption(
 )
 
 nxy <- c(25, 35)
-nb <- grid2nb(d = nxy, queen = FALSE)
-nnb <- card(nb)
+nb <- spdep::grid2nb(d = nxy, queen = FALSE)
+nnb <- spdep::card(nb)
 n <- length(nnb)
 
 nb.graph <- sparseMatrix(
@@ -82,7 +82,7 @@ fit.1 <- inla(
     formula = y ~ 0 +
         f(i, model = m1),
     data = dtest1,
-    verbose = !TRUE,
+    verbose = TRUE,
     control.family = cfam,
     control.predictor = cpred,
     control.inla = cinla,
