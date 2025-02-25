@@ -21,8 +21,7 @@ theta2L <- function(theta) {
 theta2C <- function(theta) {
 ### imput theta output C
     V <- chol2inv(t(theta2L(theta)))
-    s <- sqrt(diag(V))
-    t(V/s)/s
+    return(cov2cor(V))
 }
 #' Compute the KLD with respect to a base model
 #' @param C0 is a correlation matrix of the base model.
@@ -32,11 +31,10 @@ theta2C <- function(theta) {
 #' @examples
 #' theta2KLD(c(0,0,0))
 #' cc0 <- theta2C(c(-3,-3,-3))
-#' cc0
-#' theta2KLD(c(-1,-1,-1), cc0)
-theta2KLD <- function(theta, C0) {
-### imput theta ouptut KLD
-    C1 <- theta2C(theta)
+#' cc1 <- theta2C(c(-1,-1,-1))
+#' KLD10(cc1, cc0)
+KLD10 <- function(C1, C0) {
+### imput C1, C0 ouptut KLD
     p <- nrow(C1)
     l1 <- chol(C1)
     hld1 <- sum(log(diag(l1)))
@@ -56,7 +54,7 @@ theta2H <- function(theta) {
 ### imput theta output H, H^0.5, svd(H)
     if(missing(theta)) stop('Please provide "theta"!')
     C0 <- theta2C(theta)
-    H <- hessian(function(x) theta2KLD(x, C0),
+    H <- hessian(function(x) KLD01(theta2C(x), C0),
                  theta)
     sv <- svd(H)
     if(any(sv$d<sqrt(.Machine$double.eps) * abs(sv$d[1])))
