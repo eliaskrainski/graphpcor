@@ -78,10 +78,6 @@ double *inla_cgeneric_dtg_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
   assert(!strcasecmp(data->ints[9]->name, "jj"));     // this will always be the case
   inla_cgeneric_vec_tp *jj = data->ints[9];
 
-  assert(!strcasecmp(data->ints[10]->name, "iprior"));     // this will always be the case
-  int iprior = data->ints[10]->ints[0];
-  assert(iprior>0);
-
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
   double lambda = data->doubles[0]->doubles[0];
   assert(lambda>0);
@@ -274,25 +270,6 @@ double *inla_cgeneric_dtg_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
       ret[0] += log(lam) - lam * exp(theta[i]) + theta[i];
     }
 
-    if(iprior==1) {
-
-      // this is Gaussian(0,1) for each v_i
-      for(i = 0; i < np; i++) {
-        ret[0] += -0.5 * pow2(theta[N+i]);
-      }
-
-    }
-
-    if (iprior == 2 ) {
-      // this is pc-prec each v_i^2, lambda is the one provided
-      for(i=0; i<np; i++) {
-        ret[0] += log(lambda) -lambda * exp(theta[N+i]) +theta[N+i];
-      }
-
-    }
-
-    if(iprior == 3) {
-
 //      char uplo = 'U';
   //    int info=0, l;
     //  double hldet0, hldet1, trc, kld;
@@ -319,7 +296,6 @@ double *inla_cgeneric_dtg_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
          ret[0] += log(lambda) - lambda * d + log(dd);
        }
 
-    }
 
   }
     break;

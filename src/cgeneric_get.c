@@ -203,11 +203,11 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   // check the mandatory strings
 //  assert(cgeneric_data->chars[0]->name == "model");
   if(strcmp(cgeneric_data->chars[0]->name, "model") != 0)
-    error("'chars[[1]]' is not equal 'model'");
+    error("'chars[[1]]' name is not equal 'model'");
   cgeneric_model = cgeneric_data->chars[0]->chars;
   //assert(cgeneric_data->chars[1]->name == "shlib");
   if(strcmp(cgeneric_data->chars[1]->name, "shlib") != 0)
-    error("'chars[[2]]' is not equal 'shlib'");
+    error("'chars[[2]]' name is not equal 'shlib'");
   cgeneric_shlib = cgeneric_data->chars[1]->chars;
 
   if(nm>0) {
