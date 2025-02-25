@@ -1,0 +1,107 @@
+#' Define cgeneric method for a Wishart prior on the precision
+#' @param n the size of the precision matrix
+#' @param dof degrees of freedom model parameter
+#' @param R lower triangle of the scale matrix parameter
+#' @param debug logical indicating if it is to debug.
+#' @param useINLAprecomp logical indicating if is to be used
+#' shared object pre-compiled by INLA. It is not considered if
+#' libpath is provided.
+#' @param libpath string to the shared object. Default is NULL.
+#' @details
+#' For a random \eqn{p\times p} precision matrix \eqn{Q},
+#' given the parameters \eqn{d} and \eqn{R},
+#' respectively scalar degree of freedom and the _inverse_
+#' scale \eqn{p\times p} matrix the Wishart density is
+#' \deqn{|Q|^{(d-p-1)/2}\textrm{e}^{-tr(RQ)/2}|R|^{p/2}2^{-dp/2}\Gamma_p(n/2)^{-1}}
+#'
+#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
+#'
+cgeneric_Wishart <-
+  function(n,
+           dof,
+           R,
+           debug = FALSE,
+           useINLAprecomp = !TRUE) {
+
+      if (useINLAprecomp) {
+        libpath <- INLA::inla.external.lib("graphpcor")
+      } else {
+        libpath <- system.file("libs", package = "graphpcor")
+        if (Sys.info()["sysname"] == "Windows") {
+          libpath <- file.path(libpath, "graphpcor.dll")
+        } else {
+          libpath <- file.path(libpath, "graphpcor.so")
+        }
+      }
+    stopifnot(file.exists(libpath))
+
+    stopifnot(n>=1)
+    stopifnot(dof>(n+1))
+    stopifnot(length(R) == (n*(n+1)/2))
+    M <- as.integer(length(R))
+
+    if(debug) {
+      cat("N = ", n, ", M = ", M, "\n")
+    }
+
+    rr <- diag(R[1:n], nrow = n, ncol = n)
+    if(n>1) {
+      il <- (n+1):M
+      rr[lower.tri(rr, diag = FALSE)] <- R[il]
+      rr <- t(rr)
+      rr[lower.tri(rr, diag = FALSE)] <- R[il]
+      ur <- chol(rr)
+      hldetr <- sum(log(diag(ur)))
+    } else {
+      hldetr <- log(rr[1])
+    }
+
+    lcprior <- dof*hldetr -
+      0.5*dof*n*log(2.0) -
+      0.25*n*(n-1)*log(pi) -
+      sum(lgamma((dof+1-(1:n))/2))
+
+    if(debug) {
+      cat('hldet = ', hldetr, ', log const = ', lcprior, '\n')
+    }
+
+    cmodel = "inla_cgeneric_Wishart"
+
+    the_model <- list(
+      f = list(
+        model = "cgeneric",
+        n = as.integer(n),
+        cgeneric = list(
+          model = cmodel,
+          shlib = libpath,
+          n = as.integer(n),
+          debug = as.logical(debug),
+          data = list(
+            ints = list(
+              n = as.integer(n),
+              debug = as.integer(debug)
+            ),
+            doubles = list(
+              dof = as.numeric(dof),
+              R = as.numeric(rr),
+              lcprior = as.numeric(lcprior)
+            ),
+            characters = list(
+              model = cmodel,
+              shlib = libpath
+            ),
+            matrices = list(
+            ),
+            smatrices = list(
+              )
+            )
+          )
+        )
+      )
+
+    class(the_model) <- "inla.cgeneric"
+    class(the_model$f$cgeneric) <- "inla.cgeneric"
+
+    return(the_model)
+
+}
