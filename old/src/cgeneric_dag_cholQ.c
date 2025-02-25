@@ -27,23 +27,6 @@
 
 #include "graphpcor.h"
 
-void fillL(int *d, int *m, int *ii, int *jj, double *x) {
-  // fill lower triangle
-  int i, j, l, k, p, n = *d, nij = *m;
-  for(l=0; l<nij; l++) {
-    i = ii[l];
-    j = jj[l];
-    //  printf("%d: ", l);
-    if(j>0) {
-      p = j*n + i;
-      for(k=0; k<j; k++) {
-        //        printf("%d: i %d, j %d, k %d\n", p, i, j, k);
-        x[p] -= x[k*n+i] * x[k*n+j] / x[j*n+j];
-      }
-    }
-  }
-}
-
 double *inla_cgeneric_dag_cholQ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
