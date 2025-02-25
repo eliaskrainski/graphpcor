@@ -28,9 +28,69 @@
 
 #include <stdio.h>
 
+// element location in a matrix
+#define ij2k(_n, _i, _j) ((_n)-1)*(_j) + (_i)
+
+// element location of a lower triangle matrix (with diagonal)
+#define nij2Lk(_n, _i, _j)                                \
+if(1) {                                                   \
+  k = ( _i) + (_n)*(_j);                                 \
+  if((_j)==1) k -= 1;                                          \
+  if((_j)>1)                                   \
+    k -= ((_j)*(_j+1))/2;                                   \
+}                                                         \
+
+// print elements of a matrix
+#define printMat(_M, _nr, _nc, _msg)                           \
+if(1) {                                                        \
+  int _i, _j;                                                  \
+  printf("%s (%d x %d)\n", _msg, _nr, _nc);                    \
+  for(_i=0; _i<_nr; _i++) {                                    \
+    for(_j=0; _j<_nc; _j++) {                                  \
+      printf("%5.3f ", (_M)[(_nc) * _i + _j]);                 \
+    }                                                          \
+    printf("\n");                                              \
+  }                                                            \
+  printf("\n");                                                \
+}                                                              \
+
+// print elemnts of a (ONLY) upper triangle matrix (with diagonal)
+#define printLU(_M, _nr, _nc, _msg)                            \
+if(1) {                                                        \
+  int _i, _j, _k=0;                                                  \
+  printf("%s (%d x %d)\n", _msg, _nr, _nc);                    \
+  for(_i=0; _i<_nr; _i++) {                                    \
+    for(_j=_i; _j<_nc; _j++) {                                 \
+      printf("%5.3f ", (_M)[_k++]);                   \
+    }                                                          \
+    printf("\n");                                              \
+  }                                                            \
+  printf("\n");                                                \
+}                                                              \
+
+// print elemnts of (ONLY) a lower triangle matrix (with diagonal)
+#define printL(_M, _nr, _nc, _msg)                             \
+if(1) {                                                        \
+  int _i, _j, _k=0;                                            \
+  printf("%s (%d x %d)\n", _msg, _nr, _nc);                    \
+  for(_i=0; _i<_nr; _i++) {                                    \
+    _k = _i;                                             \
+    for(_j=0; _j<=_i; _j++) {                                         \
+      printf("%5.3f ", (_M)[_k]);                                       \
+      _k += (_nr-_j-1);                                            \
+    }                                                               \
+    printf("\n");                                              \
+  }                                                            \
+  printf("\n");                                                \
+}                                                              \
+
+void theta2Qcorrel(int n, int std, double *theta, double *Qu);
+void theta2precision(int n, double *l, double *Q);
+void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L);
 void exchangeableU(int n, double r, double *cc);
 void dl2fullQ(int n, double *d, double *l, double *q);
 void dl2Qu(int n, double *d, double *l, double *qu);
+void fillL(int *d, int *m, int *ii, int *jj, double *x);
 void cov2cor(int verbose, int n, double *cc) ;
 double cov2kld(int verbose, int n, double *C0, double *C1);
 void covariance_parent_children(int verbose, int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;

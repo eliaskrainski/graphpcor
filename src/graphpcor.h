@@ -38,6 +38,7 @@
 #if !defined(Calloc)
 #define Calloc(n_, type_)  (type_ *)calloc((n_), sizeof(type_))
 #endif
+#define SQR(x) ((x)*(x))
 #define pow2(x) ((x)*(x))
 #define pow3(x) (pow2(x)*(x))
 #define pow4(x) (pow2(x)*pow2(x))
@@ -53,6 +54,10 @@ typedef size_t fortran_charlen_t;
 typedef int fortran_charlen_t;
 #endif
 #define F_ONE ((fortran_charlen_t)1)
+
+void dgeqp3_(int *N, int *M, double *A, int *LDA, int *PIVOT,
+             double *tau, double *work, int *lwork, int *info,
+             fortran_charlen_t);
 
 void dsyrk_(char *uplo, char *transa,
             int *n, int *k, double *alpha,
@@ -87,7 +92,9 @@ void dpptri_(char *uplo, int *N, double *AP,
              int *INFO, fortran_charlen_t);
 
 inla_cgeneric_func_tp inla_cgeneric_generic0;
-inla_cgeneric_func_tp inla_cgeneric_lkj;
 inla_cgeneric_func_tp inla_cgeneric_dtg_sfixed;
-inla_cgeneric_func_tp inla_cgeneric_dag_cholQ;
 inla_cgeneric_func_tp inla_cgeneric_kronecker;
+inla_cgeneric_func_tp inla_cgeneric_LKJ;
+inla_cgeneric_func_tp inla_cgeneric_Wishart;
+inla_cgeneric_func_tp inla_cgeneric_pc_prec_correl;
+inla_cgeneric_func_tp inla_cgeneric_pcgraph;

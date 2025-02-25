@@ -27,7 +27,185 @@
 
 #include "graphpcor.h"
 
+void theta2Qcorrel(int n, int std, double *theta, double *Qcorr) {
+
+  int i, j, k, k0=0;
+
+  // build the lower triangle L_0, Q_0 = L_0(L_0')
+  for(i=0; i<n; i++) {
+    for(j=0; j<=i; j++) {
+      nij2Lk(n,i,j);
+      if(i==j) {
+        Qcorr[k] = 1.0;
+      } else {
+        Qcorr[k] = theta[k0++];
+      }
+    }
+  }
+
+  if(std) {
+    // chol2inv: to compute V = Q_0^{-1}
+    int info;
+    char uplo = 'L';
+    dpptri_(&uplo, &n, &Qcorr[0], &info, F_ONE);
+
+    // diag(V)^{1/2}
+    double si[n];
+    k = 0;
+    for(i=0; i<n; i++) {
+      si[i] = sqrt(Qcorr[k]);
+      k += n-i;
+    }
+
+    // Q = SVS :  the precision of a correlation matrix
+    for(i=0; i<n; i++) {
+      k = i;
+      for(j=0; j<=i; j++) {
+        Qcorr[k] *= 1/(si[i]*si[j]);
+        k += (n-j-1);
+      }
+    }
+  }
+
+}
+
+void theta2precision(int n, double *l, double *Q) {
+  // return Q = LL' where
+  // diag(L) = exp(l_1 ... l_n)
+  //   l_n+1 ... l_m, m = n*(n+1)/2
+  // goes in the lower triangle of L
+  // Example for n = 3
+  //      | exp(l_1)      0         0      |
+  //  L = |   l_4     exp(l_2)      0      |
+  //      |   l_5        l_6     exp(l_3)  |
+  int i;
+  double d[n];
+  for(i=0; i<n; i++) {
+    d[i] = exp(l[i]);
+  }
+  dl2fullQ(n, &d[0], &l[n], &Q[0]);
+}
+
+void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L) {
+  // hypershere decomposition, Rapisarda, Brigo and Mercurio (2007).
+  // from m=n(n-1)/2 length theta to n x n lower triangle L
+  //  for a correlation matrix R = LL'
+  // ONLY the lower triangle (with diagonal) is returned.
+  // 1. \theta[k] \in (-\infty, \infty) to x[k] \in (0, \pi])
+  //    x[k] = pi/(1+exp(-theta[k]))
+  // 2. compute cos(x[i,j]) and sin(x[i,j])
+  //  co[i,j] = cos(x[i,j])
+  //  si[i,j] = sin(x[i,j])
+  // 3. for j=1 (j=0 in C)
+  //   L[1,1] = 1;
+  //  and for i>1
+  //   L[i,j] = co[i,j]
+  // 4. compute (j>1 | j>0 in C)
+  //  si[i,j] = \prod_{k=1}^{j-1} sin(x[i,k])
+  // 5. for j>1
+  //            { co[i,j]s[i,j-1],  2 <= j <= i-1
+  //   L[i,j] = { si[i,j-1]      ,      j=i
+  //            { 0              , j+1 <= j <= n
+  assert(n>1);
+  L[0] = 1.0;
+  int i, j, k, k0, k1, n1=n-1;
+  int m = (int)(((double)n)*((double)(n1))*0.5);
+  double daux, co[m], si[m];
+
+  // x[k] = pi/(1+exp(-theta[k]));
+  // compute cos(x[k]) and sin(x[k]);
+  for(i=0; i<m; i++) {
+    daux = M_PI / ( 1 + exp(-theta[i]) );
+    co[i] = cos(daux);
+    si[i] = sin(daux);
+  }
+
+  if(n==2) {
+    L[1] = co[0];
+    L[2] = si[0];
+    hldet[0] = L[2];
+  }
+  if(n==3) {
+    L[1] = co[0];
+    L[2] = co[1];
+    L[3] = si[0];
+    L[4] = co[2]*si[1];
+    L[5] = si[1]*si[2];
+    hldet[0] = L[3] + L[5];
+
+  }
+  if(n>3) {
+    //    printL(L, n, n, "L[i,j]\n");
+    //    printL(co, n1, n1, "cos[i,j]\n");
+    //    printL(si, n1, n1, "sin[i,j]\n");
+    // s[i,j] = \prod_{k=0}^{j-1} sin(x[i,k])
+
+    for(i=1; i<n1; i++) {
+      for(j=0; j<i; j++) {
+        nij2Lk(n1,i,j);
+        k0 = k;
+        nij2Lk(n1,i,j+1);
+        k1 = k;
+        si[k1] *= si[k0]; // \prod{k=0}^{j-1} sin(x[i,k])
+      }
+    }
+
+    // build L[,1]
+    k0 = 0;
+    k1 = n;
+    for(i=1; i<n; i++) {
+      L[i] = co[i-1];       // L[, 1]
+      L[k1] = si[k0];       // diag(L)
+      k0 += n-i;
+      k1 += n-i;
+    }
+
+//    printL(si, n-1, n-1, "cum prod of sin[i,j]\n");
+// L[lower,2:n] is now just si[2:n,2:j] * co[2:n,1:j-1]
+    for(i=1; i<n1; i++) {
+      for(j=0; j<i; j++) {
+        nij2Lk(n1,i,j); // location of cum prod sin(x[i,j])
+        k0 = k;
+        nij2Lk(n1,i,j+1);  // loc of cos(x[i,j])
+        k1 = k;
+        nij2Lk(n,i+1,j+1); // loc of L[i,j]
+        L[k] = co[k1] * si[k0];
+      }
+    }
+//    printL(L, n, n, "L[i,j]\n");
+  }
+}
+
+void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc) {
+  double l[n*(n-1)/2];
+  theta2gamma2Lcorr(n, &hldet[0], &theta[0], &l[0]);
+  int i, j, k=0;
+  for(i=0; i<n; i++) {
+    cc[k] = l[k];
+    k++;
+  }
+  for(i=1; i<n; i++) {
+    for(j=0; j<=i; j++) {
+      cc[k++] = 1;
+    }
+  }
+}
+
+void l2L(int n, double *l, double *L) {
+  // l: lower triangle vector of length n(n-1)/2 l
+  // L: nxn matrix L upper(C) lower (Fortran) triangle contain l
+  int i,j,k = 0, k2 = 0;
+  for(i=0; i<n; i++) {
+    k2 = (n+1)*i;
+    for(j=i; j<n; j++) {
+      L[k2++] = l[k++];
+    }
+  }
+}
+
 void exchangeableU(int n, double r, double *cc) {
+  // build upper (C), lower (Fortran)
+  // exchangeable correlation matrix
   if(n==1) {
 
     cc[0] = 1.0;
@@ -61,6 +239,11 @@ void exchangeableU(int n, double r, double *cc) {
 }
 
 void dl2Qu(int n, double *d, double *l, double *qu) {
+  // build upper (C), lower (Fortran)
+  // precision matrix from its (Cholesky?) factorized
+  // L[full] = expand( l[lower triangle] )
+  // Q = L'L
+  // return upper(U)
   assert(n>0);
   if(n==1) {
     qu[0] = (d[0])*(d[0]);
@@ -86,7 +269,8 @@ void dl2Qu(int n, double *d, double *l, double *qu) {
 }
 
 void dl2fullQ(int n, double *d, double *l, double *qq) {
-
+  // build Q = L'L
+  // return Q
     assert(n>0);
     if(n==1) {
       qq[0] = (d[0])*(d[0]);
@@ -172,6 +356,24 @@ void dl2fullQ(int n, double *d, double *l, double *qq) {
 
 }
 
+void fillL(int *d, int *m, int *ii, int *jj, double *x) {
+  // fill-in lower triangle from graph patterned elements
+  int i, j, l, k, p, n = *d, nij = *m;
+  for(l=0; l<nij; l++) {
+    i = ii[l];
+    j = jj[l];
+    //  printf("%d: ", l);
+    if(j>0) {
+      p = j*n + i;
+      for(k=0; k<j; k++) {
+//        printf("%d: i %d, j %d, k %d ", p, i, j, k);
+  //      printf("%2.2f %2.2f %2.2f \n", x[k*n+i], x[k*n+j], x[j*n+j]);
+        x[p] -= x[k*n+i] * x[k*n+j] / x[j*n+j];
+      }
+    }
+  }
+}
+
 void cov2cor(int verbose, int n, double *cc) {
   double s[n];
   int i, j, k=0;
@@ -209,6 +411,7 @@ void cov2cor(int verbose, int n, double *cc) {
 }
 
 double covariance_kld(int verbose, int n, double *C0, double *C1) {
+  // return ( tr(C1/C0) - n - |C1| - |C0| ) / 2
   char uplo = 'U';
   int info=0, i, k, n2 = n*n;
   double hldet0=0, hldet1=0, trc = 0, kld = 0;
