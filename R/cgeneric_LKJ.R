@@ -1,0 +1,99 @@
+#' Define cgeneric method for LKG prior
+#' for the correlation matrix parametrized from the
+#' hypershere decomposition, see details.
+#' @param eta numeric greater than 1, the parameter
+#' @param n integer to define the size of the matrix
+#' @param debug logical indicating if it is to debug.
+#' @param useINLAprecomp logical indicating if is to be used
+#' shared object pre-compiled by INLA. It is not considered if
+#' libpath is provided.
+#' @param libpath string to the shared object. Default is NULL.
+#' @details
+#' The hypershere decomposition, as proposed in
+#' Rapisarda, Brigo and Mercurio (2007).
+#' consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
+#' from \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
+#' compute \eqn{x[k] = pi/(1+exp(-theta[k]))}
+#' organize it as a lower triangle of a \eqn{n \times n} matrix
+#' \deqn{         | cos(x[i,j])                           ,      j=1}
+#' \deqn{B[i,j] = | cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]),  2 <= j <= i-1}
+#' \deqn{         | prod_{k=1}^{j-1}sin(x[i,k])           ,      j=i}
+#' \deqn{         | 0                                     , j+1 <= j <= n }
+#' Result
+#' \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
+#'  \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
+#' @references
+#' Rapisarda, Brigo and Mercurio (2007).
+#'   Parameterizing correlations: a geometric interpretation.
+#'   IMA Journal of Management Mathematics (2007) 18, 55−73.
+#'   <doi 10.1093/imaman/dpl010>
+#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
+#'
+cgeneric_LKJ <-
+  function(eta,
+           n,
+           debug = FALSE,
+           useINLAprecomp = !TRUE) {
+
+      if (useINLAprecomp) {
+        libpath <- INLA::inla.external.lib("graphpcor")
+      } else {
+        libpath <- system.file("libs", package = "graphpcor")
+        if (Sys.info()["sysname"] == "Windows") {
+          libpath <- file.path(libpath, "graphpcor.dll")
+        } else {
+          libpath <- file.path(libpath, "graphpcor.so")
+        }
+      }
+
+    stopifnot(n>1)
+    stopifnot(eta>0)
+
+    k <- 1:(n-1)
+    lc <- sum((2*eta-2+n-1:n)*(n-1:n))*log(2) +
+      sum((n-k)*lbeta(eta + (n-k-1)/2,
+                      eta + (n-k-1)/2))
+
+    if(debug) {
+      cat('log C', lc, '\n')
+    }
+
+    cmodel = "inla_cgeneric_LKJ"
+
+    the_model <- list(
+      f = list(
+        model = "cgeneric",
+        n = as.integer(n),
+        cgeneric = list(
+          model = cmodel,
+          shlib = libpath,
+          n = as.integer(n),
+          debug = as.logical(debug),
+          data = list(
+            ints = list(
+              n = as.integer(n),
+              debug = as.integer(debug)
+            ),
+            doubles = list(
+              eta = as.numeric(eta),
+              lc = as.numeric(lc)
+            ),
+            characters = list(
+              model = cmodel,
+              shlib = libpath
+            ),
+            matrices = list(
+              ),
+            smatrices = list(
+              )
+            )
+          )
+        )
+      )
+
+    class(the_model) <- "inla.cgeneric"
+    class(the_model$f$cgeneric) <- "inla.cgeneric"
+
+    return(the_model)
+
+}
