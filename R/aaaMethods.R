@@ -8,7 +8,6 @@ variance <- function(x, ...) {
 variance.default <- function(x, ...) {
   return(var(x))
 }
-
 #' Define the precision method
 #' @export
 precision <- function(x, ...) {
@@ -133,4 +132,47 @@ precision.inla <- function(model, ...) {
   #  Q <- Qu
   #}
   return(Q)
+}
+#' Define the is.zero method
+#' @export
+is.zero <- function(x, ...) {
+  UseMethod("is.zero")
+}
+#' The is.zero.default definition
+#' @export
+is.zero.default <- function(x, ...) {
+  a <- abs(as.numeric(c(x)))
+  tol <- .Machine$double.eps *
+    max(sqrt(length(a))) * max(a)
+  return(a < tol)
+}
+#' The is.zero.matrix definition
+#' @export
+is.zero.matrix <- function(x, ...) {
+  stopifnot(inherits(x, "matrix"))
+  a <- abs(x)
+  tol <- .Machine$double.eps *
+    max(dim(a)) * max(a)
+  return(a < tol)
+}
+#' The Laplacian of a graph
+#' @description
+#' The (symmetric) Laplacian of a graph is a
+#' square matrix with dimention
+#' equal the number of nodes.
+#' It is defined as
+#'             |  n_i,   i=j
+#'   L_{ij} =  |   -1,   i~j
+#'             |    0,   otherwise
+#'  where i~j means that there is an edge
+#'  between nodes i and j and
+#'  n_i is the number of edges of node i.
+#' @export
+Laplacian <- function(graph) {
+  UseMethod("Laplacian")
+}
+#' The Laplacian.default method
+#' @export
+Laplacian.default <- function(graph) {
+  stop("No Laplacian for this object!")
 }
