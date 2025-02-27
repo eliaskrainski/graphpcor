@@ -1,71 +1,30 @@
-#' The graph method for cgeneric
-#' @param model the inla.cgeneric model
-#' @export
-graph.inla.cgeneric <- function(model, ...) {
-  args <- list(...)
-  if(any(names(args) == "optimize")) {
-    return(cgeneric_get(model, "graph", ...))
-  } else {
-    return(cgeneric_get(model, "graph", optimize = FALSE))
-  }
-}
-
-#' @export
-precision.inla.cgeneric <- function(model, ...) {
-  mc <- list(...)
-  nargs <- names(mc)
-  if(any(nargs == "theta")) {
-    theta <- mc$theta
-  } else {
-    warning("Using the 'default' initial parameter:")
-    theta <- initial(model)
-    cat(theta, '\n')
-  }
-  if(any(nargs == "optimize")) {
-    optimize <- mc$optimize
-  } else {
-    optimize <- FALSE
-  }
-  stopifnot(is.logical(optimize))
-  cgeneric_get(model, cmd = "Q", theta = theta, optimize = optimize)
-}
-
-#' @export
-initial.inla.cgeneric <- function(model) {
-  cgeneric_get(model, "initial")
-}
-
-#' @export
-mu.inla.cgeneric <- function(model) {
-  cgeneric_get(model, "mu")
-}
-
-#' Prior for the 'inla.cgeneric' model.
-#' @export
-prior.inla.cgeneric <- function(model, theta) {
-  return(cgeneric_get(cmodel = model,
-                      cmd = "log_prior",
-                      theta = theta))
-}
-#' Function to extract cgeneric model
-#' @param cmodel an object containing the cgeneric model
-#' @param optimize logical indicating if the graph and Q are
-#' returned only the elements (if TRUE) or to be built (if FALSE).
-#' If NULL (default) will use the initial from the cgeneric model.
+#' Methods for an `inla.cgeneric` object.
+#' @name cgeneric-methods
+#' @param model an object `inla.cgeneric` object.
 #' @param cmd an string to specify which model element to get
-cgeneric_get <- function(cmodel,
+#' @param theta numeric vector with the model parameters.
+#' If missing, the [initial()] will be used.
+#' @param optimize logical. If missing or FALSE,
+#' the graph and precision are as a sparse matrix.
+#' If TRUE, graph only return the row/col indexes and
+#' precision return only the elements as a vector.
+#' @description
+#' `cgeneric_get` is an internal function used by
+#' `graph`, `precision`, `initial`, `mu` or `prior`
+#' methods for `inla.cgeneric`
+cgeneric_get <- function(model,
                          cmd = c("graph", "Q", "initial", "mu", "log_prior"),
                          theta,
                          optimize = TRUE
-                         ) {
+) {
 
   ret <- NULL
   cmd[cmd == "log.prior"] <- "log_prior"
   cmd <- unique(cmd)
 
-##  print(c(cmd = cmd))
+  ##  print(c(cmd = cmd))
 
-  cgdata <- cmodel$f$cgeneric$data
+  cgdata <- model$f$cgeneric$data
   stopifnot(!is.null(cgdata))
   stopifnot(!is.null(cgdata$ints))
   stopifnot(!is.null(cgdata$characters))
@@ -120,7 +79,7 @@ cgeneric_get <- function(cmodel,
         x = ret,
         symmetric = TRUE,
         repr = "T"
-        )
+      )
     }
     return(ret)
   }
@@ -143,7 +102,7 @@ cgeneric_get <- function(cmodel,
       }
     )
   if(optimize) {
-     return(ret)
+    return(ret)
   }
 
   if(any(cmd == "graph")) {
@@ -185,4 +144,91 @@ cgeneric_get <- function(cmodel,
 
   return(ret)
 
+}
+#' @describeIn cgeneric-methods
+#' Retrieve the initial model parameter(s).
+#' @export
+initial <- function(model) {
+  UseMethod("initial")
+}
+#' @describeIn cgeneric-methods
+#' Retrive the initial parameter(s) of an `inla.cgeneric` model.
+#' @export
+initial.inla.cgeneric <- function(model) {
+  cgeneric_get(model, "initial")
+}
+#' @describeIn cgeneric-methods
+#' Evaluate the mean.
+#' @export
+mu <- function(model) {
+  UseMethod("mu")
+}
+#' @describeIn cgeneric-methods
+#' Evaluate the mean for an `inla.cgeneric` model.
+#' @export
+mu.inla.cgeneric <- function(model) {
+  cgeneric_get(model, "mu")
+}
+#' @describeIn cgeneric-methods
+#' Evaluate the log-prior.
+#' @export
+prior <- function(model, theta) {
+  UseMethod("prior")
+}
+#' @describeIn cgeneric-methods
+#' Evaluate the prior for an `inla.cgeneric` model
+#' @export
+prior.inla.cgeneric <- function(model, theta) {
+  return(cgeneric_get(model = model,
+                      cmd = "log_prior",
+                      theta = theta))
+}
+#' @describeIn cgeneric-methods
+#' Retrieve the graph.
+#' @param ... additional arguments passed on.
+#' @export
+graph <- function(model, ...) {
+  UseMethod("graph")
+}
+#' @describeIn cgeneric-methods
+#' Retrieve the graph of an `inla.cgeneric` object
+#' @export
+graph.inla.cgeneric <- function(model, ...) {
+  mc <- list(...)
+  nargs <- names(mc)
+  if(any(nargs == "optimize")) {
+    optimize <- mc$optimize
+  } else {
+    optimize <- FALSE
+  }
+  stopifnot(is.logical(optimize))
+  return(cgeneric_get(
+    model, "graph",
+    optimize = optimize))
+}
+#' @describeIn cgeneric-methods
+#' Evaluate [precision()] on a model
+Q <- function(model, ...) {
+  UseMethod("precision")
+}
+#' @describeIn cgeneric-methods
+#' Evaluate [precision()] on an `inla.cgeneric` object
+#' @export
+precision.inla.cgeneric <- function(model, ...) {
+  mc <- list(...)
+  nargs <- names(mc)
+  if(any(nargs == "theta")) {
+    theta <- mc$theta
+  } else {
+    warning("Using the 'default' initial parameter:")
+    theta <- initial(model)
+    cat(theta, '\n')
+  }
+  if(any(nargs == "optimize")) {
+    optimize <- mc$optimize
+  } else {
+    optimize <- FALSE
+  }
+  stopifnot(is.logical(optimize))
+  cgeneric_get(model, cmd = "Q", theta = theta, optimize = optimize)
 }

@@ -18,6 +18,12 @@
 #' the marginal variance parameters.
 #' #' to make the prior for each marginal standard deviation using
 #' P(sigma < `sigma.prior.reference') = p
+#' @param param.id integer vector to specify common
+#' parameter values. Example: with 8 parameters,
+#' where the first 4 are standard deviations and the remaining 3
+#' are related to partial correlations, by setting
+#' param.id = c(1,1,2,3, 4,5,5,6) the first two standard deviations
+#' are common and the second and third partial correlations as well.
 #' @param debug logical indicating if it is to debug.
 #' @param useINLAprecomp logical indicating if is to be used
 #' shared object pre-compiled by INLA. It is not considered if
@@ -31,6 +37,7 @@ cgeneric_pcgraph <-
            base,
            sigma.prior.reference,
            sigma.prior.probability,
+           param.id,
            debug = FALSE,
            useINLAprecomp = !TRUE,
            libpath = NULL) {
@@ -80,6 +87,18 @@ cgeneric_pcgraph <-
     nEdges <- length(qij$ii)
     nnz <- n + nEdges
     nfi <- length(qij$ifil)
+
+    if(missing(param.id)) {
+      param.id <- 1:nnz
+    } else {
+      stopifnot(length(param.id)==nnz)
+      stopifnot(all(param.id %in% (1:nnz)))
+      if(all(sort(param.id)==param.id)) {
+        param.id <- sort(param.id)
+        warning("Sorting 'param.id' as")
+        cat(param.id, "\n")
+      }
+    }
 
     ii <- c(1:n, qij$ii)
     jj <- c(1:n, qij$jj)

@@ -1,20 +1,13 @@
 #' Directed Tree Graph - DTG
+#' @rdname dtg
 setClass("dtg")
 
-#' corgraph: Correlation graph model
+#' corgraph: Correlation graph mode
+#' @rdname corgraph
 setClass("corgraph")
 
-#' GMRF model definition using the cgeneric in INLA
-setClass(
-  "inla.cgeneric",
-  slots = "f",
-  validity = function(object) {
-    all(c("model", "n", "cgeneric") %in%
-          names(object$f))
-  }
-)
-
 #' GMRF model definition using the rgeneric in INLA
+#' @rdname rgeneric
 setClass(
   "inla.rgeneric",
   slots = "f",

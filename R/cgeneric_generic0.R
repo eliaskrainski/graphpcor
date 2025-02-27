@@ -13,11 +13,6 @@
 #' deviation of the process if scale = TRUE. See details.
 #' @param scale logical indicating if it is to scale
 #' the mnodel. See detais.
-#' @param debug logical indicating if it is to debug.
-#' @param useINLAprecomp logical indicating if is to be used
-#' shared object pre-compiled by INLA. It is not considered if
-#' libpath is provided.
-#' @param libpath string to the shared object. Default is NULL.
 #' @details
 #' Following Sørbie & Rue (2014), if scale = TRUE
 #' the model is scaled so that
@@ -43,16 +38,16 @@ cgeneric_generic0 <-
            debug = FALSE,
            useINLAprecomp = !TRUE) {
 
-      if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("graphpcor")
+    if (useINLAprecomp) {
+      libpath <- INLA::inla.external.lib("graphpcor")
+    } else {
+      libpath <- system.file("libs", package = "graphpcor")
+      if (Sys.info()["sysname"] == "Windows") {
+        libpath <- file.path(libpath, "graphpcor.dll")
       } else {
-        libpath <- system.file("libs", package = "graphpcor")
-        if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "graphpcor.dll")
-        } else {
-          libpath <- file.path(libpath, "graphpcor.so")
-        }
+        libpath <- file.path(libpath, "graphpcor.so")
       }
+    }
 
     stopifnot(param[1]>0)
     if(is.na(param[2])) {
@@ -137,8 +132,8 @@ cgeneric_generic0 <-
 
     return(the_model)
 
-}
-
+  }
+#' @describeIn cgeneric_generic0
 #' The 'iid' model uses the 'generic0' with
 #' structure matrix as the identity.
 #' @param n size of the model

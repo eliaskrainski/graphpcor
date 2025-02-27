@@ -11,8 +11,8 @@ graph2H(graph, base, method = c("eigen", "svd", "chol"))
 \item{graph}{model definition of a graphical model.
 This can be either a matrix or a 'corgraph'.}
 
-\item{base}{reference correlation matrix
-or lower triangular parameters of a 'corgraph' model.}
+\item{base}{either a reference correlation matrix
+or as a parameter reference for as 'corgraph' model.}
 
 \item{method}{the decomposition method used to
 compute H^0.5 and H^(1/2).}

@@ -2,6 +2,7 @@
 % Please edit documentation in R/cgeneric_generic0.R
 \name{cgeneric_generic0}
 \alias{cgeneric_generic0}
+\alias{cgeneric_iid}
 \title{Define cgeneric method for generic0 model
 with precision matrix defined as
 \deqn{Q = \tau R}
@@ -14,6 +15,15 @@ cgeneric_generic0(
   R,
   param,
   constr = TRUE,
+  scale = TRUE,
+  debug = FALSE,
+  useINLAprecomp = !TRUE
+)
+
+cgeneric_iid(
+  n,
+  param,
+  constr = FALSE,
   scale = TRUE,
   debug = FALSE,
   useINLAprecomp = !TRUE
@@ -31,13 +41,7 @@ deviation of the process if scale = TRUE. See details.}
 \item{scale}{logical indicating if it is to scale
 the mnodel. See detais.}
 
-\item{debug}{logical indicating if it is to debug.}
-
-\item{useINLAprecomp}{logical indicating if is to be used
-shared object pre-compiled by INLA. It is not considered if
-libpath is provided.}
-
-\item{libpath}{string to the shared object. Default is NULL.}
+\item{n}{size of the model}
 }
 \value{
 a \link{inla.cgeneric} object to be used in the f() formula term in INLA.
@@ -64,6 +68,12 @@ Therefore, when the model is scaled,
 \eqn{\tau} is the marginal precision,
 otherwise \eqn{tau} is the conditional precision.
 }
+\section{Functions}{
+\itemize{
+\item \code{cgeneric_iid()}: The 'iid' model uses the 'generic0' with
+structure matrix as the identity.
+
+}}
 \references{
 Sigrunn Holbek Sørbye and Håvard Rue (2014).
 Scaling intrinsic Gaussian Markov random field priors in

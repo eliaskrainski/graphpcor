@@ -2,9 +2,9 @@
 % Please edit documentation in R/dtgUtils.R
 \name{cgeneric.dtg}
 \alias{cgeneric.dtg}
-\title{cgeneric method in \code{INLA} from a list of expressions
-defining a Direct Tree Graph - DTG correlation model
-to be used as a model in a \code{INLA} \code{f()} model component.}
+\title{Defines a \code{inla.cgeneric} object
+from a DTG model used to define a
+Direct Tree Graph - DTG correlation model.}
 \usage{
 \method{cgeneric}{dtg}(
   model,
@@ -33,9 +33,9 @@ it is to be used the shared object within INLA.}
 objects to be used in the f() formula term in INLA.
 }
 \description{
-cgeneric method in \code{INLA} from a list of expressions
-defining a Direct Tree Graph - DTG correlation model
-to be used as a model in a \code{INLA} \code{f()} model component.
+Defines a \code{inla.cgeneric} object
+from a DTG model used to define a
+Direct Tree Graph - DTG correlation model.
 }
 \details{
 The correlation prior as in the paper depends on the lambda value.
@@ -51,4 +51,7 @@ E.g. if there are three sigmas in the model and one supply
 sigma.prior.reference = c(1, 2, 3) and
 sigma.prior.probability = c(0.05, 0.0, 0.01)
 then the sigma is fixed to 2 and not estimated.
+}
+\seealso{
+\code{\link[=dtg]{dtg()}}, \code{\link[=cgeneric]{cgeneric()}} and \code{\link[=cgeneric-methods]{cgeneric-methods()}}
 }

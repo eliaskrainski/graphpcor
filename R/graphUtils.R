@@ -194,8 +194,8 @@ is.zero.corgraph <- function(graph) {
 #' around a base model.
 #' @param graph model definition of a graphical model.
 #' This can be either a matrix or a 'corgraph'.
-#' @param base reference correlation matrix
-#' or lower triangular parameters of a 'corgraph' model.
+#' @param base either a reference correlation matrix
+#' or as a parameter reference for as 'corgraph' model.
 #' @param method the decomposition method used to
 #' compute H^0.5 and H^(1/2).
 #' @return list containing the hessian,
@@ -233,11 +233,16 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
   l1 <- t(chol(Q0 + diag(1.0, n, n)))
   if(inherits(base, "matrix")) {
     ## maybe optim() to get theta.base that
-    ## give graph2C(theta.base) close to C0
-    ## for now take L elements from C0
+    ## give graph2C(theta.base) close to C0?
+    ## For now check the elements of L from C0^{-1}
     C0 <- cov2cor(base)
     qq0 <- chol2inv(chol(C0))
     ll0 <- t(chol(qq0))
+    c0.ok <- all(which(abs(ll0)>sqrt(.Machine$double.eps)) %in%
+                 which(abs(l1)>0))
+    if(!c0.ok) {
+      stop("Provided base correlation not in the graph model class!")
+    }
     for(i in 1:nrow(C0))
       ll0[i, ] <- ll0[i, ]/ll0[i, i]
     base <- ll0[lower.tri(ll0) & (!z0)]

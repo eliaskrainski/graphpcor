@@ -11,10 +11,9 @@ The (symmetric) Laplacian of a graph is a
 square matrix with dimention
 equal the number of nodes.
 It is defined as
-|  n_i,   i=j
-L_{ij} =  |   -1,   i~j
-|    0,   otherwise
+\deqn{L_{ij} = n_i \textrm{ if } i=j, -1 \textrm{ if } i\sim j, 0 \textrm{ otherwise}}{%
+      Lij = ni if i=j, -1 if i~j or 0 otherwise}
 where i~j means that there is an edge
 between nodes i and j and
-n_i is the number of edges of node i.
+n_i is the number of edges including node i.
 }
