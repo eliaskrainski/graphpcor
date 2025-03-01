@@ -1,17 +1,35 @@
-#' Set a graph where each node represent a variable
-#' and the edges its conditional distribution. See details.
+#' The `dag` is a graph where each node represents
+#' a variable and each edge indicates a conditional distribution.
 #' @param ... list of formula used to define the edges.
 #' @details
 #' The terms in the formula do represent the nodes.
 #' The `~` is taken as link.
 #' @export
 #' @examples
-#' g1 <- corgraph(x ~ y, y ~ v, v ~ z, z ~ x)
+#' g1 <- dag(x ~ y, y ~ v, v ~ z, z ~ x)
 #' g1
 #' summary(g1)
 #' plot(g1)
 #' precision(g1)
-corgraph <- function(...) {
+dag <- function(...) {
+  if(inherits(list(...)[[1]], "matrix")) {
+    x <- list(...)[[1]]
+    stopifnot(all.equal(x, t(x)))
+    ne <- c(nrow(x), NA)
+    iz <- is.zero(x)
+    ne[2] <- (sum(!iz)-ne[1])/2
+    vnams <- rownames(x)
+    if(is.null(vnams)) {
+      vnams <- letters[1:ne[1]]
+    }
+    argl <- lapply(1:(ne[1]-1), function(i) {
+      jj <- intersect((i+1):ne[1], which(!iz[i, ]))
+      paste(vnams[i], "~",
+            paste(vnams[jj], collapse = " + "))
+    })
+    return(do.call(what = 'dag',
+                   args = lapply(argl, as.formula)))
+  }
   fch <- as.character(match.call())[-1]
   if(length(fch)<1)
     stop("Please provide a graph argument!")
@@ -41,29 +59,29 @@ corgraph <- function(...) {
     jj <- pmatch(terms.r[[i]], nodesR)
     graph[i, jj] <- 1
   }
-  class(fch) <- 'corgraph'
+  class(fch) <- 'dag'
   attr(fch, 'nodes') <- nodes
   attr(fch, 'graph') <- graph
   return(fch)
 }
 #' @export
-print.corgraph <- function(x, ...) {
-  cat("Model corgraph for",
+print.dag <- function(x, ...) {
+  cat("Model dag for",
       length(attr(x, 'nodes')), "variables",
       "using", sum(attr(x, 'graph')), "edges.\n")
 }
 #' @export
-summary.corgraph <- function(object, ...) {
+summary.dag <- function(object, ...) {
   attr(object, "graph")
 }
 #' @export
-dim.corgraph <- function(x, ...) {
+dim.dag <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
     edges=sum(attr(x, 'graph')))
 }
 setMethod(
   "edges",
-  "corgraph",
+  "dag",
   function(object, which, ...) {
     nodes <- attr(object, "nodes")
     stopifnot(!is.null(nodes))
@@ -90,7 +108,7 @@ setMethod(
 #' @export
 setMethod(
   "plot",
-  "corgraph",
+  "dag",
   function(x, y, ...) {
     edgl <- edges(x)
     nodes <- names(edgl)
@@ -98,7 +116,6 @@ setMethod(
       nodes = nodes,
       edgeL = edgl,
       edgemode='directed')
-    print(gr)
     plot(gr, ...)
   }
 )
@@ -114,16 +131,16 @@ Laplacian.matrix <- function(graph) {
     Laplacian.default(graph)
   }
 }
-#' The Laplacian method for 'corgraph'
+#' The Laplacian method for 'dag'
 #' @export
-Laplacian.corgraph <- function(graph) {
+Laplacian.dag <- function(graph) {
   ne <- dim(graph)
   nodes <- attr(graph, "nodes")
   graph <- attr(graph, "graph")
   L <- matrix(
     0.0, ne[1], ne[1],
     dimnames = list(nodes, nodes)
-    )
+  )
   for(i in 1:nrow(graph)) {
     ii <- pmatch(rownames(graph)[i], nodes)
     jj <- pmatch(colnames(graph)[graph[i, ]!=0], nodes)
@@ -133,32 +150,70 @@ Laplacian.corgraph <- function(graph) {
   diag(L) <- -rowSums(L)
   return(L)
 }
-#' The precision method for 'corgraph'
-#' @export
-precision.corgraph <- function(x, ...) {
-  Q <- Laplacian(x)
-  n <- ncol(Q)
-  mc <- list(...)
-  nargs <- names(mc)
-  if(any(nargs == "theta")) {
-    theta <- mc$theta
-    ij <- which(lower.tri(Q) & !is.zero(Q))
-    L <- diag(exp(theta[1:n]))
-    L[ij] <- theta[-(1:n)]
-    ll <- t(chol(Q + diag(1.0, n, n)))
-    ifill <- which(is.zero(Q) & (!is.zero(ll)))
+#' Build the unite diagonal lower triangle matrix
+#' @rdname dag
+setMethod(
+  "chol",
+  "dag",
+  function(x, ...) {
+    ne <- dim(x)
+    G <- Laplacian(x)
+    idx <- which(lower.tri(G) & (!is.zero(G)))
+    L <- diag(ne[1])
+    stopifnot(length(idx)==ne[2])
+    args <- list(...)
+    stopifnot(length(args$theta)==ne[2])
+    L[idx] <- args$theta
+    ll <- t(chol(G + diag(ne[1])))
+    ifill <- which(is.zero(G) & (!is.zero(ll)))
     if(length(ifill)>0) {
       L <- fiL(L, ifill)
     }
-    Q <- tcrossprod(L)
+    return(t(L))
+  }
+)
+#' The variance method for 'dag'
+#' @export
+variance.dag <- function(x, ...) {
+  mc <- list(...)
+  nargs <- names(mc)
+  if(!any(nargs == "theta")) {
+    stop("Please provide 'theta'!")
+  }
+  theta <- mc$theta
+  if(length(theta)==ne[2]) {
+    theta <- c(rep(0.0, ne[1]), theta)
+  } else {
+    stopifnot(length(theta)==sum(ne))
+  }
+  ne <- dim(x)
+  Q <- Laplacian(x)
+  stopifnot(ne[1]==nrow(Q))
+  stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
+  L <- getMethod('chol', 'dag')(
+    x, theta = theta[-(1:ne[1])])
+  V <- chol2inv(L)
+  si <- exp(theta[1:ne[1]]) / sqrt(diag(V))
+  V <- diag(si) %*% V %*% diag(si)
+  return(V)
+}
+#' The precision method for 'dag'
+#' @export
+precision.dag <- function(x, ...) {
+  ne <- dim(x)
+  Q <- Laplacian(x)
+  stopifnot(ne[1]==nrow(Q))
+  stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
+  mc <- list(...)
+  nargs <- names(mc)
+  if(any(nargs == "theta")) {
+    return(chol2inv(chol(
+      variance(x, ...))
+    ))
+  } else {
+    warning("missing `theta`, returning Laplacian!")
   }
   return(Q)
-}
-#' The variance method for corgraph
-#' @export
-variance.corgraph <- function(x, ...) {
-  Q <- precision(x, ...)
-  return(chol2inv(chol(Q)))
 }
 #' Function to fill-in a Cholesky matrix
 #' @param L the lower triangle of the Cholesky decomposition
@@ -183,26 +238,26 @@ fiL <- function(L, lfi) {
   }
   return(L)
 }
-#' The is.zero.corgraph method
+#' The is.zero.dag method
 #' @export
-is.zero.corgraph <- function(graph) {
+is.zero.dag <- function(graph) {
   if(inherits(graph, "matrix"))
-  Q <- precision(graph)
+    Q <- precision(graph)
   is.zero.default(Q)
 }
 #' Evaluate the hessian of the KLD for graph model
 #' around a base model.
 #' @param graph model definition of a graphical model.
-#' This can be either a matrix or a 'corgraph'.
+#' This can be either a matrix or a 'dag'.
 #' @param base either a reference correlation matrix
-#' or as a parameter reference for as 'corgraph' model.
+#' or as a parameter reference for as 'dag' model.
 #' @param method the decomposition method used to
 #' compute H^0.5 and H^(1/2).
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used
 #' @examples
-#' g <- corgraph(x ~ y+z, y ~ v, v ~ z)
+#' g <- dag(x ~ y+z, y ~ v, v ~ z)
 #' ne <- dim(g)
 #' gH0 <- graph2H(g, rep(-1, ne[2]))
 #' ## alternatively
@@ -212,25 +267,14 @@ is.zero.corgraph <- function(graph) {
 #' @export
 graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
   method <- match.arg(method)
-  graph2L <- function(theta) {
-    L <- diag(n)
-    L[lower.tri(L) & (!z0)] <- theta
-    ifill <- which((!is.zero(l1)) & z0)
-    if(length(ifill)>0) {
-      L <- fiL(L, ifill)
-    }
-    return(L)
-  }
-  graph2C <- function(theta) {
-    lQ <- graph2L(theta)
-    V <- chol2inv(t(lQ))
-    return(cov2cor(V))
-  }
   Q0 <- Laplacian(graph)
   nEdges <- sum((!is.zero(Q0)) & lower.tri(Q0))
   z0 <- is.zero(Q0)
   n <- nrow(Q0)
   l1 <- t(chol(Q0 + diag(1.0, n, n)))
+  if(inherits(graph, "matrix")) {
+    graph <- dag(graph)
+  }
   if(inherits(base, "matrix")) {
     ## maybe optim() to get theta.base that
     ## give graph2C(theta.base) close to C0?
@@ -239,7 +283,7 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
     qq0 <- chol2inv(chol(C0))
     ll0 <- t(chol(qq0))
     c0.ok <- all(which(abs(ll0)>sqrt(.Machine$double.eps)) %in%
-                 which(abs(l1)>0))
+                   which(abs(l1)>0))
     if(!c0.ok) {
       stop("Provided base correlation not in the graph model class!")
     }
@@ -248,11 +292,12 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
     base <- ll0[lower.tri(ll0) & (!z0)]
   } else {
     stopifnot(length(base) == nEdges)
-    C0 <- graph2C(base)
+    C0 <- variance(graph, theta =base)
   }
   ## hessian uses graphpcor:::KLD10
-  H <- hessian(function(x) KLD10(graph2C(x), C0),
-               base)
+  H <- hessian(function(x)
+    KLD10(variance(graph, theta = x), C0),
+    base)
   ## next bit follows mvtnorm:::rmvnorm()
   t0 <- sqrt(.Machine$double.eps)
   if(method == "eigen") {
@@ -279,8 +324,19 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
     hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
   }
   stopifnot(all.equal(H, tcrossprod(h.5)))
-  list(H = H,
+  list(theta.base = base,
+       H = H,
        h.5 = h.5,
        hneg.5 = hneg.5,
        Hdecomposition = Hd)
+}
+#' The `cgeneric` method for `dag` uses [cgeneric_pcdag()]
+#' @rdname dag
+#' @export
+cgeneric.dag <- function(...) {
+  args <- list(...)
+  args$graph <- args$model
+  args$model <- NULL
+  do.call(what = 'cgeneric_pcdag',
+          args = args)
 }
