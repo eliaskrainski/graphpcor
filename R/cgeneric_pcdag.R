@@ -1,7 +1,13 @@
-#' Define the cgeneric model with a PC prior for a
-#' Direct Acyclic Graph - DAG correlation model
-#' to be used as a model in a `INLA` `f()` model component.
-#' @param graph the model graph to define the model structure.
+#' Build an `inla.cgeneric` for a DAG based correlation model.
+#' @description
+#' From either a `dag` (see [dag()]) or
+#' a square matrix (used as a graph),
+#' creates an `inla.cgeneric` (see [cgeneric()])
+#' to implement the Penalized Complexity prior using the
+#' Kullback–Leibler divergence - KLD from a base model.
+#' @param graph  a `dag` (see [dag()]) or
+#' a square matrix (used as a graph)
+#' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
 #' the radius of the sphere, see details.
 #' @param base numeric vector or matrix with the reference
@@ -31,7 +37,7 @@
 #' @param libpath string to the shared object. Default is NULL.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-cgeneric_pcgraph <-
+cgeneric_pcdag <-
   function(graph,
            lambda,
            base,
@@ -57,10 +63,18 @@ cgeneric_pcgraph <-
 
     Q0 <- Laplacian(graph)
     n <- nrow(Q0)
+    stopifnot(n>0)
     if(debug>99) {
       cat("the 'n ='", n, "graph Laplacian is\n")
       print(Q0)
     }
+    stopifnot(all(lambda>0))
+    stopifnot(length(sigma.prior.reference) == n)
+    stopifnot(length(sigma.prior.probability) == n)
+    stopifnot(all(sigma.prior.probability>0.0))
+    stopifnot(all(sigma.prior.probability<1.0))
+    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
+
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
     qij <- list(
@@ -69,20 +83,12 @@ cgeneric_pcgraph <-
       iq = which(Q0!=0))
     qij$ilq <- which(qnz & lower.tri(Q0, diag = TRUE))
     qij$iuq <- which(qnz & upper.tri(Q0, diag = TRUE))
+    qij$ilqpac <- which(qnz[lower.tri(Q0, diag = TRUE)])
     ll <- t(chol(Q0 + diag(n)))
     qij$ifil <- setdiff(which(ll!=0), qij$ilq)
     if(debug>99) {
       print(qij)
     }
-    n <- nrow(Q0)
-    stopifnot(n>0)
-
-    stopifnot(all(lambda>0))
-    stopifnot(length(sigma.prior.reference) == n)
-    stopifnot(length(sigma.prior.probability) == n)
-    stopifnot(all(sigma.prior.probability>0.0))
-    stopifnot(all(sigma.prior.probability<1.0))
-    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
     nEdges <- length(qij$ii)
     nnz <- n + nEdges
@@ -106,7 +112,7 @@ cgeneric_pcgraph <-
     jj <- jj[order(jj)]
 
     iuq <- qij$ilq  ## mem order
-    ilq <- matrix(1:(n*n), n, n, byrow = TRUE)[qij$ilq]
+    iuqpac <- qij$ilqpac
 
     ifi <- row(Q0)[qij$ifil]
     jfi <- col(Q0)[qij$ifil]
@@ -119,22 +125,25 @@ cgeneric_pcgraph <-
       base <- rep(0, nEdges)
     }
 
-    H.el <- graph2H(graph, base, method = "eigen")
+    Ibase <- graph2H(graph, base, method = "eigen")
     if(debug) {
-      cat("H elements\n")
-      print(str(H.el))
+      cat("I(base model) elements\n")
+      print(str(Ibase))
     }
+    stopifnot(all(dim(Ibase$H) == c(nEdges, nEdges)))
+    ## this is I(\theta_0)^{-0.5} * \theta_0
+    thetabasescaled <- drop(Ibase$hneg.5 %*% Ibase$theta.base)
 
     ## constant
     lc <- log(lambda) -(nEdges-1)*log(pi) - log(2)
-    lc <- lc - sum(log(H.el$Hd$values))
+    lc <- lc - sum(log(Ibase$Hd$values))
 
     if(debug) {
       cat('log C', lc, '\n')
     }
 
     m_args <- list(
-      model = "inla_cgeneric_pcgraph",
+      model = "inla_cgeneric_pcdag",
       shlib = libpath,
       n = as.integer(n),
       debug = as.integer(debug),
@@ -143,13 +152,16 @@ cgeneric_pcgraph <-
       nfi = as.integer(nfi),
       ii = as.integer(jj-1),
       jj = as.integer(ii-1),
-      ilq = as.integer(ilq-1),
       iuq = as.integer(iuq-1),
+      iuqpac = as.integer(iuqpac-1),
       ifi = as.integer(ifi-1),
       jfi = as.integer(jfi-1),
       lambda = as.numeric(lambda),
       slambdas = as.numeric(slambdas),
-      lconst = as.numeric(lc)
+      lconst = as.numeric(lc),
+      thetabasescaled = as.numeric(thetabasescaled),
+      hHneg = matrix(Ibase$hneg.5,
+                     nEdges, nEdges)
     )
 
     if(debug>9) {
@@ -163,4 +175,4 @@ cgeneric_pcgraph <-
 
     return(the_model)
 
-}
+  }
