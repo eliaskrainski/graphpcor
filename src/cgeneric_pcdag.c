@@ -370,7 +370,7 @@ double *inla_cgeneric_pcdag(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgener
     // the log prior:
     // lconst should be equal to
     //    log(lambda) -(m-1)*log(pi)-log(2)-log(|H|)
-    ret[0] = 0.0;//lconst;
+    ret[0] = lconst;
 
     // PC prior for M precision
     double lam, val, pparams[ne];
@@ -379,7 +379,7 @@ double *inla_cgeneric_pcdag(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgener
       ret[0] += pclogsigma(theta[i], lam);
     }
 
-    if(1) {
+    if(0) {
 
       for(i=N; i<M; i++) {
         ret[0] += dnorm(theta[i], 0.0, 3.0, TRUE);
