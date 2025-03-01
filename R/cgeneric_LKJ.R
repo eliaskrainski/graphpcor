@@ -1,6 +1,5 @@
-#' Define cgeneric method for LKG prior
-#' for the correlation matrix parametrized from the
-#' hypershere decomposition, see details.
+#' build an `inla.cgeneric` to implement the LKG prior
+#' for the correlation matrix.
 #' @param eta numeric greater than 1, the parameter
 #' @param n integer to define the size of the matrix
 #' @param debug logical indicating if it is to debug.
@@ -9,7 +8,8 @@
 #' libpath is provided.
 #' @param libpath string to the shared object. Default is NULL.
 #' @details
-#' The hypershere decomposition, as proposed in
+#' The parametrization uses the
+#' hypershere decomposition, as proposed in
 #' Rapisarda, Brigo and Mercurio (2007).
 #' consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
 #' from \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
@@ -27,7 +27,7 @@
 #'   Parameterizing correlations: a geometric interpretation.
 #'   IMA Journal of Management Mathematics (2007) 18, 55−73.
 #'   <doi 10.1093/imaman/dpl010>
-#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
+#' @return a [cgeneric()] object to be used in the f() formula term in INLA.
 #'
 cgeneric_LKJ <-
   function(eta,

@@ -63,7 +63,7 @@ setMethod(
 
     ## Q1 graph index: i,j
     ij1 <- cgeneric_get(
-      cmodel = X,
+      model = X,
       cmd = "graph",
       optimize = TRUE
     )
@@ -76,7 +76,7 @@ setMethod(
 
     ## Q2 graph index: i,j
     ij2 <- cgeneric_get(
-      cmodel = Y,
+      model = Y,
       cmd = "graph",
       optimize = TRUE
     )

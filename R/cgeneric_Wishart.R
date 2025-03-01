@@ -1,4 +1,5 @@
-#' Define cgeneric method for a Wishart prior on the precision
+#' Build an `inla.cgeneric` to implement the Wishart
+#' prior for a precision matrix.
 #' @param n the size of the precision matrix
 #' @param dof degrees of freedom model parameter
 #' @param R lower triangle of the scale matrix parameter
@@ -14,7 +15,7 @@
 #' scale \eqn{p\times p} matrix the Wishart density is
 #' \deqn{|Q|^{(d-p-1)/2}\textrm{e}^{-tr(RQ)/2}|R|^{p/2}2^{-dp/2}\Gamma_p(n/2)^{-1}}
 #'
-#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
+#' @return a [cgeneric()] object to be used in the f() formula term in INLA.
 #'
 cgeneric_Wishart <-
   function(n,

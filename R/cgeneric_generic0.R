@@ -1,5 +1,5 @@
-#' Define cgeneric method for generic0 model
-#' with precision matrix defined as
+#' Build an `inla.cgeneric` to implement a generic0 model
+#' with has a precision matrix defined as
 #'  \deqn{Q = \tau R}
 #' where the structure matrix R is supplied by the user
 #' and \eqn{\tau} is the (local, see detais) precision parameter.
@@ -29,7 +29,7 @@
 #' Sigrunn Holbek Sørbye and Håvard Rue (2014).
 #' Scaling intrinsic Gaussian Markov random field priors in
 #' spatial modelling. Spatial Statistics, vol. 8, p. 39-51.
-#' @return a [inla.cgeneric] object to be used in the f() formula term in INLA.
+#' @return a [cgeneric()] object to be used in the f() formula term in INLA.
 cgeneric_generic0 <-
   function(R,
            param,
@@ -134,7 +134,7 @@ cgeneric_generic0 <-
 
   }
 #' @describeIn cgeneric_generic0
-#' The 'iid' model uses the 'generic0' with
+#' The [cgeneric_iid()] uses the 'generic0' with
 #' structure matrix as the identity.
 #' @param n size of the model
 cgeneric_iid <-
