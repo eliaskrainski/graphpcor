@@ -56,6 +56,7 @@ precision.inla <- function(x, ...) {
 }
 #' The variance method
 #' @rdname variance
+#' @export
 variance <- function(x, ...) {
   UseMethod("variance")
 }
