@@ -54,7 +54,7 @@ theta2H <- function(theta) {
 ### imput theta output H, H^0.5, svd(H)
     if(missing(theta)) stop('Please provide "theta"!')
     C0 <- theta2C(theta)
-    H <- hessian(function(x) KLD01(theta2C(x), C0),
+    H <- hessian(function(x) KLD10(theta2C(x), C0),
                  theta)
     sv <- svd(H)
     if(any(sv$d<sqrt(.Machine$double.eps) * abs(sv$d[1])))
