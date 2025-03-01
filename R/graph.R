@@ -1,4 +1,4 @@
-#' The `dag` is a graph where each node represents
+#' The `graph` is a graph where each node represents
 #' a variable and each edge indicates a conditional distribution.
 #' @param ... list of formula used to define the edges.
 #' @details
@@ -6,12 +6,12 @@
 #' The `~` is taken as link.
 #' @export
 #' @examples
-#' g1 <- dag(x ~ y, y ~ v, v ~ z, z ~ x)
+#' g1 <- graph(x ~ y, y ~ v, v ~ z, z ~ x)
 #' g1
 #' summary(g1)
 #' plot(g1)
 #' precision(g1)
-dag <- function(...) {
+graph <- function(...) {
   if(inherits(list(...)[[1]], "matrix")) {
     x <- list(...)[[1]]
     stopifnot(all.equal(x, t(x)))
@@ -27,7 +27,7 @@ dag <- function(...) {
       paste(vnams[i], "~",
             paste(vnams[jj], collapse = " + "))
     })
-    return(do.call(what = 'dag',
+    return(do.call(what = 'graph',
                    args = lapply(argl, as.formula)))
   }
   fch <- as.character(match.call())[-1]
@@ -59,29 +59,29 @@ dag <- function(...) {
     jj <- pmatch(terms.r[[i]], nodesR)
     graph[i, jj] <- 1
   }
-  class(fch) <- 'dag'
+  class(fch) <- 'graph'
   attr(fch, 'nodes') <- nodes
   attr(fch, 'graph') <- graph
   return(fch)
 }
 #' @export
-print.dag <- function(x, ...) {
-  cat("Model dag for",
+print.graph <- function(x, ...) {
+  cat("Model graph for",
       length(attr(x, 'nodes')), "variables",
       "using", sum(attr(x, 'graph')), "edges.\n")
 }
 #' @export
-summary.dag <- function(object, ...) {
+summary.graph <- function(object, ...) {
   attr(object, "graph")
 }
 #' @export
-dim.dag <- function(x, ...) {
+dim.graph <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
     edges=sum(attr(x, 'graph')))
 }
 setMethod(
   "edges",
-  "dag",
+  "graph",
   function(object, which, ...) {
     nodes <- attr(object, "nodes")
     stopifnot(!is.null(nodes))
@@ -108,7 +108,7 @@ setMethod(
 #' @export
 setMethod(
   "plot",
-  "dag",
+  "graph",
   function(x, y, ...) {
     edgl <- edges(x)
     nodes <- names(edgl)
@@ -131,9 +131,9 @@ Laplacian.matrix <- function(graph) {
     Laplacian.default(graph)
   }
 }
-#' The Laplacian method for 'dag'
+#' The Laplacian method for 'graph'
 #' @export
-Laplacian.dag <- function(graph) {
+Laplacian.graph <- function(graph) {
   ne <- dim(graph)
   nodes <- attr(graph, "nodes")
   graph <- attr(graph, "graph")
@@ -151,10 +151,10 @@ Laplacian.dag <- function(graph) {
   return(L)
 }
 #' Build the unite diagonal lower triangle matrix
-#' @rdname dag
+#' @rdname graph
 setMethod(
   "chol",
-  "dag",
+  "graph",
   function(x, ...) {
     ne <- dim(x)
     G <- Laplacian(x)
@@ -172,34 +172,34 @@ setMethod(
     return(t(L))
   }
 )
-#' The variance method for 'dag'
+#' The variance method for 'graph'
 #' @export
-variance.dag <- function(x, ...) {
+variance.graph <- function(x, ...) {
   mc <- list(...)
   nargs <- names(mc)
   if(!any(nargs == "theta")) {
     stop("Please provide 'theta'!")
   }
   theta <- mc$theta
+  ne <- dim(x)
+  Q <- Laplacian(x)
+  stopifnot(ne[1]==nrow(Q))
+  stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
   if(length(theta)==ne[2]) {
     theta <- c(rep(0.0, ne[1]), theta)
   } else {
     stopifnot(length(theta)==sum(ne))
   }
-  ne <- dim(x)
-  Q <- Laplacian(x)
-  stopifnot(ne[1]==nrow(Q))
-  stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
-  L <- getMethod('chol', 'dag')(
+  L <- getMethod('chol', 'graph')(
     x, theta = theta[-(1:ne[1])])
   V <- chol2inv(L)
   si <- exp(theta[1:ne[1]]) / sqrt(diag(V))
   V <- diag(si) %*% V %*% diag(si)
   return(V)
 }
-#' The precision method for 'dag'
+#' The precision method for 'graph'
 #' @export
-precision.dag <- function(x, ...) {
+precision.graph <- function(x, ...) {
   ne <- dim(x)
   Q <- Laplacian(x)
   stopifnot(ne[1]==nrow(Q))
@@ -238,9 +238,9 @@ fiL <- function(L, lfi) {
   }
   return(L)
 }
-#' The is.zero.dag method
+#' The is.zero.graph method
 #' @export
-is.zero.dag <- function(graph) {
+is.zero.graph <- function(graph) {
   if(inherits(graph, "matrix"))
     Q <- precision(graph)
   is.zero.default(Q)
@@ -248,16 +248,16 @@ is.zero.dag <- function(graph) {
 #' Evaluate the hessian of the KLD for graph model
 #' around a base model.
 #' @param graph model definition of a graphical model.
-#' This can be either a matrix or a 'dag'.
+#' This can be either a matrix or a 'graph'.
 #' @param base either a reference correlation matrix
-#' or as a parameter reference for as 'dag' model.
+#' or as a parameter reference for as 'graph' model.
 #' @param method the decomposition method used to
 #' compute H^0.5 and H^(1/2).
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used
 #' @examples
-#' g <- dag(x ~ y+z, y ~ v, v ~ z)
+#' g <- graph(x ~ y+z, y ~ v, v ~ z)
 #' ne <- dim(g)
 #' gH0 <- graph2H(g, rep(-1, ne[2]))
 #' ## alternatively
@@ -273,7 +273,7 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
   n <- nrow(Q0)
   l1 <- t(chol(Q0 + diag(1.0, n, n)))
   if(inherits(graph, "matrix")) {
-    graph <- dag(graph)
+    graph <- graph(graph)
   }
   if(inherits(base, "matrix")) {
     ## maybe optim() to get theta.base that
@@ -330,13 +330,13 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
        hneg.5 = hneg.5,
        Hdecomposition = Hd)
 }
-#' The `cgeneric` method for `dag` uses [cgeneric_pcdag()]
-#' @rdname dag
+#' The `cgeneric` method for `graph` uses [cgeneric_pcgraph()]
+#' @rdname graph
 #' @export
-cgeneric.dag <- function(...) {
+cgeneric.graph <- function(...) {
   args <- list(...)
   args$graph <- args$model
   args$model <- NULL
-  do.call(what = 'cgeneric_pcdag',
+  do.call(what = 'cgeneric_pcgraph',
           args = args)
 }

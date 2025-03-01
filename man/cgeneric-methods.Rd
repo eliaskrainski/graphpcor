@@ -34,9 +34,9 @@ prior(model, theta)
 
 \method{prior}{inla.cgeneric}(model, theta)
 
-graph(model, ...)
+graph(...)
 
-\method{graph}{inla.cgeneric}(model, ...)
+graph.inla.cgeneric(model, ...)
 
 Q(model, ...)
 
@@ -78,7 +78,7 @@ methods for \code{inla.cgeneric}
 
 \item \code{graph()}: Retrieve the graph.
 
-\item \code{graph(inla.cgeneric)}: Retrieve the graph of an \code{inla.cgeneric} object
+\item \code{graph.inla.cgeneric()}: Retrieve the graph of an \code{inla.cgeneric} object
 
 \item \code{Q()}: Evaluate \code{\link[=precision]{precision()}} on a model
 

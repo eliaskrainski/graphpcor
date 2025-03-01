@@ -1,11 +1,11 @@
-#' Build an `inla.cgeneric` for a DAG based correlation model.
+#' Build an `inla.cgeneric` for a graph, see [graph()]
 #' @description
-#' From either a `dag` (see [dag()]) or
+#' From either a `graph` (see [graph()]) or
 #' a square matrix (used as a graph),
 #' creates an `inla.cgeneric` (see [cgeneric()])
 #' to implement the Penalized Complexity prior using the
 #' Kullback–Leibler divergence - KLD from a base model.
-#' @param graph  a `dag` (see [dag()]) or
+#' @param graph  a `graph` (see [graph()]) or
 #' a square matrix (used as a graph)
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
@@ -37,7 +37,7 @@
 #' @param libpath string to the shared object. Default is NULL.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-cgeneric_pcdag <-
+cgeneric_pcgraph <-
   function(graph,
            lambda,
            base,
@@ -143,7 +143,7 @@ cgeneric_pcdag <-
     }
 
     m_args <- list(
-      model = "inla_cgeneric_pcdag",
+      model = "inla_cgeneric_pcgraph",
       shlib = libpath,
       n = as.integer(n),
       debug = as.integer(debug),

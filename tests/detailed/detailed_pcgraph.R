@@ -1,7 +1,7 @@
 library(graphpcor)
 
 ## graph in Example 2.6 of the GMRF book
-g <- dag(x1~x2+x3, x2~x4, x3~x4)
+g <- graph(x1~x2+x3, x2~x4, x3~x4)
 (ne <- dim(g))
 
 ## Laplacian
@@ -77,9 +77,9 @@ round(chol(V1), 4)
 ## [4,]  0.0 0.0000 0.0000 0.5196
 
 ## build the cgeneric model
-## Note: here 'model' is a 'dag' 
+## Note: here 'model' is a 'graph' 
 cmodel <- cgeneric(
-    model = g, ## use the dag
+    model = g, ## use the graph
     lambda = 1,
     base = theta0l,
     sigma.prior.reference = rep(1, ne[1]),

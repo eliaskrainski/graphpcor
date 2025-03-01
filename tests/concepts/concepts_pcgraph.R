@@ -1,6 +1,6 @@
 library(graphpcor)
 
-g <- dag(x ~ y, y ~ v, v ~ z, z ~ x)
+g <- graph(x ~ y, y ~ v, v ~ z, z ~ x)
 
 class(g)
 
@@ -17,17 +17,17 @@ G
 
 ## alternatively
 all.equal(G,
-          Laplacian(dag(x~y+z,y~v,v~z)))
+          Laplacian(graph(x~y+z,y~v,v~z)))
 
 ## compact, but different ordering 
-Laplacian(dag(x~y+z,v~y+z))
+Laplacian(graph(x~y+z,v~y+z))
 
-g <- dag(x1~x2+x3, x2~x4, x3~x4) ## compact ordered
+g <- graph(x1~x2+x3, x2~x4, x3~x4) ## compact ordered
 (G <- Laplacian(g)) ## the graph in Example 2.6 of the GMRF book
 
-dag(G) ## dag from a matrix
+graph(G) ## dag from a matrix
 
-all.equal(dag(G), g) ## TRUE if compact ordered
+all.equal(graph(G), g) ## TRUE if compact ordered
 
 ## base model (theta for L)
 theta0l <- rep(-0.5, ne[2])
@@ -46,7 +46,7 @@ C0 <- solve(Q0)
 C0
 
 all.equal(C0, 
-          variance(g, theta = theta0l)) ## variance method for dag
+          variance(g, theta = theta0l)) ## variance method for graph
 
 ## the 'iid' case would be
 variance(g, theta = rep(0, ne[2]))
@@ -59,9 +59,9 @@ variance(g, theta = c(log(sigmas), rep(-1, ne[2])))
 variance(g, theta = c(log(sigmas), rep(1, ne[2]))) ## no edge 2~3 but high covariance!!!
 
 ## build the cgeneric model
-## Note: here 'model' is a 'dag' 
+## Note: here 'model' is a 'graph' 
 cmodel <- cgeneric(
-    model = g, ## use the dag
+    model = g, ## use the graph
     lambda = 1,
     base = theta0l,
     sigma.prior.reference = rep(1, ne[1]),
@@ -71,7 +71,7 @@ cmodel <- cgeneric(
 all.equal(
     cmodel,
     cgeneric(
-        model = "pcdag", ## as character
+        model = "pcgraph", ## as character
         graph = G, ## using G as the 'corgraph' model
         lambda = 1,
         base = theta0l,
@@ -83,7 +83,7 @@ all.equal(
 all.equal(
     cmodel,
     cgeneric(
-        model = "pcdag",
+        model = "pcgraph",
         graph = G!=0, ## any binary matrix works
         lambda = 1,
         base = theta0l,

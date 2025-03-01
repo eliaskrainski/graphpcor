@@ -2,9 +2,9 @@
 #' @rdname dtg
 setClass("dtg")
 
-#' Direct Acyclic Graph - DTG
-#' @rdname dag
-setClass("dag")
+#' Set the graph class 
+#' @rdname graph
+setClass("graph")
 
 #' `inla.rgeneric` class, short `rgeneric`,
 #' to define a [INLA::rgeneric()] latent model

@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for correlation matrices based on graphs
-Version: 0.1-0.007
+Version: 0.1-0.008
 Authors@R: c(
   person("Elias Teixeira", "Krainski", email = "eliaskrainski@gmail.com",
          role = c("cre", "aut", "cph"), 

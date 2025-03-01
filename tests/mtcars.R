@@ -115,7 +115,6 @@ ff0
 pprc <- list(prec = list(initial = 10, fixed = TRUE))
 fit0 <- inla(
     formula = ff0,
-    ##    family = "poisson",
     control.family=list(hyper = pprc),
     data = data0,
     control.inla = list(int.strategy = "eb"),
@@ -141,7 +140,7 @@ summary(data1)
 ff1 <- y ~ iv + f(i, model = gmodel, replicate = r, vb.correct = FALSE)
 ff1
 
-## dag to plot 
+## graph to plot 
 mtcd1 <- list(
     p1 ~ p2 + p3 + c1,
     p2 ~ p4 + c4,
