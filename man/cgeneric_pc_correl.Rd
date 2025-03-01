@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_pc_correl.R
 \name{cgeneric_pc_correl}
 \alias{cgeneric_pc_correl}
-\title{Define cgeneric method for the PC prior,
+\title{Build an \code{inla.cgeneric} to implement the PC prior,
 proposed on Simpson et. al. (2007),
 for the correlation matrix parametrized from the
 hypershere decomposition, see details.}
@@ -23,10 +23,10 @@ libpath is provided.}
 \item{libpath}{string to the shared object. Default is NULL.}
 }
 \value{
-a \link{inla.cgeneric} object to be used in the f() formula term in INLA.
+a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
 }
 \description{
-Define cgeneric method for the PC prior,
+Build an \code{inla.cgeneric} to implement the PC prior,
 proposed on Simpson et. al. (2007),
 for the correlation matrix parametrized from the
 hypershere decomposition, see details.
@@ -47,7 +47,7 @@ Result
 }
 \references{
 Daniel Simpson, H{\\aa}vard Rue, Andrea Riebler, Thiago G.
-Martins and Sigrunn H. S{\o{}}rbye (2017).
+Martins and Sigrunn H. S{\\o{}}rbye (2017).
 Penalising Model Component Complexity:
 A Principled, Practical Approach to Constructing Priors
 Statistical Science 2017, Vol. 32, No. 1, 1–28.

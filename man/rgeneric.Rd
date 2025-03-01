@@ -4,7 +4,8 @@
 \name{inla.rgeneric-class}
 \alias{inla.rgeneric-class}
 \alias{rgeneric}
-\title{GMRF model definition using the rgeneric in INLA}
+\title{\code{inla.rgeneric} class, short \code{rgeneric},
+to define a \code{\link[INLA:rgeneric]{INLA::rgeneric()}} latent model}
 \usage{
 rgeneric(model, debug = FALSE, compile = TRUE, optimize = TRUE, ...)
 }
@@ -23,7 +24,8 @@ of the precision matrix are returned.}
 for the model, for example, additional data.}
 }
 \description{
-GMRF model definition using the rgeneric in INLA
+\code{inla.rgeneric} class, short \code{rgeneric},
+to define a \code{\link[INLA:rgeneric]{INLA::rgeneric()}} latent model
 
 Define rgeneric methods
 }

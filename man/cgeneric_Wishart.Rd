@@ -2,7 +2,8 @@
 % Please edit documentation in R/cgeneric_Wishart.R
 \name{cgeneric_Wishart}
 \alias{cgeneric_Wishart}
-\title{Define cgeneric method for a Wishart prior on the precision}
+\title{Build an \code{inla.cgeneric} to implement the Wishart
+prior for a precision matrix.}
 \usage{
 cgeneric_Wishart(n, dof, R, debug = FALSE, useINLAprecomp = !TRUE)
 }
@@ -22,10 +23,11 @@ libpath is provided.}
 \item{libpath}{string to the shared object. Default is NULL.}
 }
 \value{
-a \link{inla.cgeneric} object to be used in the f() formula term in INLA.
+a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
 }
 \description{
-Define cgeneric method for a Wishart prior on the precision
+Build an \code{inla.cgeneric} to implement the Wishart
+prior for a precision matrix.
 }
 \details{
 For a random \eqn{p\times p} precision matrix \eqn{Q},

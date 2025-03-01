@@ -2,9 +2,8 @@
 % Please edit documentation in R/cgeneric_LKJ.R
 \name{cgeneric_LKJ}
 \alias{cgeneric_LKJ}
-\title{Define cgeneric method for LKG prior
-for the correlation matrix parametrized from the
-hypershere decomposition, see details.}
+\title{build an \code{inla.cgeneric} to implement the LKG prior
+for the correlation matrix.}
 \usage{
 cgeneric_LKJ(eta, n, debug = FALSE, useINLAprecomp = !TRUE)
 }
@@ -22,15 +21,15 @@ libpath is provided.}
 \item{libpath}{string to the shared object. Default is NULL.}
 }
 \value{
-a \link{inla.cgeneric} object to be used in the f() formula term in INLA.
+a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
 }
 \description{
-Define cgeneric method for LKG prior
-for the correlation matrix parametrized from the
-hypershere decomposition, see details.
+build an \code{inla.cgeneric} to implement the LKG prior
+for the correlation matrix.
 }
 \details{
-The hypershere decomposition, as proposed in
+The parametrization uses the
+hypershere decomposition, as proposed in
 Rapisarda, Brigo and Mercurio (2007).
 consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
 from \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}

@@ -2,8 +2,8 @@
 % Please edit documentation in R/cgeneric_pc_prec_correl.R
 \name{cgeneric_pc_prec_correl}
 \alias{cgeneric_pc_prec_correl}
-\title{Define cgeneric method for the PC prior of a
-Precision matrix as inverse of a correlation matrix.}
+\title{Build an \code{inla.cgeneric} to implement the PC-prior of a
+precision matrix as inverse of a correlation matrix.}
 \usage{
 cgeneric_pc_prec_correl(
   n,
@@ -30,11 +30,11 @@ libpath is provided.}
 \item{libpath}{string to the shared object. Default is NULL.}
 }
 \value{
-a \link{inla.cgeneric} object to be used in the f() formula term in INLA.
+a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
 }
 \description{
-Define cgeneric method for the PC prior of a
-Precision matrix as inverse of a correlation matrix.
+Build an \code{inla.cgeneric} to implement the PC-prior of a
+precision matrix as inverse of a correlation matrix.
 }
 \details{
 The precision matrix parametrization
@@ -74,7 +74,7 @@ Result
 }
 \references{
 Daniel Simpson, H{\\aa}vard Rue, Andrea Riebler, Thiago G.
-Martins and Sigrunn H. S{\o{}}rbye (2017).
+Martins and Sigrunn H. S{\\o{}}rbye (2017).
 Penalising Model Component Complexity:
 A Principled, Practical Approach to Constructing Priors
 Statistical Science 2017, Vol. 32, No. 1, 1–28.

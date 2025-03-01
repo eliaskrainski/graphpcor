@@ -3,8 +3,8 @@
 \name{cgeneric_generic0}
 \alias{cgeneric_generic0}
 \alias{cgeneric_iid}
-\title{Define cgeneric method for generic0 model
-with precision matrix defined as
+\title{Build an \code{inla.cgeneric} to implement a generic0 model
+with has a precision matrix defined as
 \deqn{Q = \tau R}
 where the structure matrix R is supplied by the user
 and \eqn{\tau} is the (local, see detais) precision parameter.
@@ -44,11 +44,11 @@ the mnodel. See detais.}
 \item{n}{size of the model}
 }
 \value{
-a \link{inla.cgeneric} object to be used in the f() formula term in INLA.
+a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
 }
 \description{
-Define cgeneric method for generic0 model
-with precision matrix defined as
+Build an \code{inla.cgeneric} to implement a generic0 model
+with has a precision matrix defined as
 \deqn{Q = \tau R}
 where the structure matrix R is supplied by the user
 and \eqn{\tau} is the (local, see detais) precision parameter.
@@ -70,7 +70,7 @@ otherwise \eqn{tau} is the conditional precision.
 }
 \section{Functions}{
 \itemize{
-\item \code{cgeneric_iid()}: The 'iid' model uses the 'generic0' with
+\item \code{cgeneric_iid()}: The \code{\link[=cgeneric_iid]{cgeneric_iid()}} uses the 'generic0' with
 structure matrix as the identity.
 
 }}
