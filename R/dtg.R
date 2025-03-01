@@ -6,7 +6,6 @@
 #' to define the Directed Tree Graph - DTG.
 #' Parent nodes shall be in the right side while children
 #' (or parent with a parent) in the left side.
-#' @seealso [dtg-methods()]
 #' @details
 #' The children variables are those with an ancestor (parent),
 #' and are identified as `c1`, ..., `cn`, where `n` is the
@@ -82,10 +81,10 @@ dtg <- function(...) {
   terms.s <- vector("list", m)
   for(i in 1:m) {
     x <- gsub(" ", "", ch[[i]][3])
-##    print(c(x = x))
+    ##    print(c(x = x))
     if(substr(x, 1, 1) != "-")
       x <- paste0("+", x)
-  ##  print(c(x = x))
+    ##  print(c(x = x))
     i0 <- gregexpr("-", x, fixed = TRUE)[[1]]
     i1 <- gregexpr("+", x, fixed = TRUE)[[1]]
     si <- integer(max(i0, i1))
@@ -96,9 +95,9 @@ dtg <- function(...) {
     ##print(si)
     terms.s[[i]] <- si[si != 0]
     schi <- strsplit(x, "-", fixed = TRUE)[[1]]
-##    print(schi)
+    ##    print(schi)
     schi <- unlist(strsplit(schi, "+", fixed = TRUE))
-  ##  print(schi)
+    ##  print(schi)
     if(schi[1]=="") schi <- schi[-1]
     ch.l <- substr(schi, 1, 1)
     ##print(c(ch.l))
@@ -182,10 +181,7 @@ dtg <- function(...) {
   return(fch)
 
 }
-#' @name dtg-methods
-#' @title Methods for an output of [dtg()].
-#' @seealso [dtg()]
-#' The print method for a dtg
+#' @rdname dtg
 #' @export
 print.dtg <- function(x, ...) {
   cat("DTG for",
@@ -197,22 +193,19 @@ print.dtg <- function(x, ...) {
     cat(x[[i]], "\n")
   }
 }
-#' @describeIn dtg-methods
-#' The summary method for a DTG
+#' @rdname dtg
 #' @export
 summary.dtg <- function(object, ...) {
   attr(object, "relation")
 }
-#' @describeIn dtg-methods
-#' The dim method for a DTG
+#' @rdname dtg
 #' @export
 dim.dtg <- function(x, ...) {
   trm <- attr(x, "relation")
   m <- ncol(trm)
   c(nrow(trm) - m + 1, m)
 }
-#' @describeIn dtg-methods
-#' The drop method for a DTG
+#' @rdname dtg
 #' @export
 setMethod(
   "drop",
@@ -241,8 +234,7 @@ setMethod(
       args)
   }
 )
-#' @describeIn dtg-methods
-#' The edges method for a DTG
+#' @rdname dtg
 #' @export
 setMethod(
   "edges",
@@ -277,8 +269,7 @@ setMethod(
     return(edgl)
   }
 )
-#' @describeIn dtg-methods
-#' The plot method for a DTG
+#' @rdname dtg
 #' @export
 setMethod(
   "plot",
@@ -309,18 +300,18 @@ setMethod(
             mc$color[1:2]
           else
             c("red", "blue")
-          },
+        },
         fillcolor = {
           if(any(nargs == "fillcolor"))
             mc$fillcolor[1:2]
           else
             c("lightsalmon", "lightblue")
-          },
+        },
         shape = {
           if(any(nargs == "shape"))
-             mc$shape[1:2]
-           else
-             c("box", "circle")
+            mc$shape[1:2]
+          else
+            c("box", "circle")
         },
         height = {
           if(any(nargs == "height"))
@@ -360,8 +351,7 @@ setMethod(
 
   }
 )
-#' @describeIn precision
-#' The precision method for a DTG
+#' @rdname dtg
 #' @export
 precision.dtg <- function(x, ...) {
   d <- dim(x)
@@ -386,7 +376,6 @@ precision.dtg <- function(x, ...) {
     names(edgl)[c(d[2] + 1:d[1], 1:d[2])]
   return(Q)
 }
-
 #' Internal function to extract elements to
 #' build the precision from the DTG edges.
 #' @param d.el the list of the first n edges of a DTG.
@@ -457,8 +446,7 @@ edtg2precision <- function(d.el) {
     q = q0
   ))
 }
-#' @describeIn variance
-#' The variance method for a DTG
+#' @rdname dtg
 #' @export
 variance.dtg <- function(x, ...) {
   mc <- lapply(
@@ -519,9 +507,7 @@ edtg2variance <- function(d.el) {
   stopifnot(all.equal(iP,diag(itop)))
   return(list(iparent = iP, iv = iv, itop = itop, schildren=sch))
 }
-#' Defines a `inla.cgeneric` object
-#' from a DTG model used to define a
-#' Direct Tree Graph - DTG correlation model.
+#' The `cgeneric` method for a DTG (see [dtg()])
 #' @param model the DTG model specification.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
