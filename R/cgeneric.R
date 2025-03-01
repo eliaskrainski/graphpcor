@@ -1,14 +1,3 @@
-#' The `inla.cgeneric` class to specify a
-#' `cgeneric` model for `INLA`.
-#' @name cgeneric
-setClass(
-  "inla.cgeneric",
-  slots = "f",
-  validity = function(object) {
-    all(c("model", "n", "cgeneric") %in%
-          names(object$f))
-  }
-)
 #' Define a `inla.cgeneric' object used to define a
 #' latent GMRF model using the C interface for `INLA`.
 #' @rdname cgeneric
