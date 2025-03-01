@@ -27,6 +27,13 @@
 
 #include "graphpcor.h"
 
+double pclogsigma(double lsigma, double lam) {
+  // return log of the PC-prior density for the log of the
+  // standard deviation parameter.
+  // See Simpson et. al. (2017) for this prior definition
+  return log(lam) + lsigma - lam * exp(lsigma);
+}
+
 void theta2Qcorrel(int n, int std, double *theta, double *Qcorr) {
 
   int i, j, k, k0=0;

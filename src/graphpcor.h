@@ -64,6 +64,9 @@ void dsyrk_(char *uplo, char *transa,
             double *a, int *lda,
             double *beta, double *c, int *ldc, fortran_charlen_t);
 
+void dgemv_(char *trans, int *M, int *N, double *alpha,
+            double *A, int *LDA, double*x, int *incx,
+            double *beta, double *y, int *incy, fortran_charlen_t);
 void dsymm_(char *side, char *uplo,
             int *m, int *n, double *alpha,
             double *a, int *lda, double *b, int *ldb,
@@ -90,6 +93,8 @@ void dpptrf_(char *uplo, int *N, double *AP,
              int *INFO, fortran_charlen_t);
 void dpptri_(char *uplo, int *N, double *AP,
              int *INFO, fortran_charlen_t);
+void dpftrf_(char *transr, char *uplo, int *n,
+             double *A, int *info, fortran_charlen_t);
 
 inla_cgeneric_func_tp inla_cgeneric_generic0;
 inla_cgeneric_func_tp inla_cgeneric_dtg_sfixed;
@@ -97,4 +102,4 @@ inla_cgeneric_func_tp inla_cgeneric_kronecker;
 inla_cgeneric_func_tp inla_cgeneric_LKJ;
 inla_cgeneric_func_tp inla_cgeneric_Wishart;
 inla_cgeneric_func_tp inla_cgeneric_pc_prec_correl;
-inla_cgeneric_func_tp inla_cgeneric_pcgraph;
+inla_cgeneric_func_tp inla_cgeneric_pcdag;

@@ -84,6 +84,7 @@ if(1) {                                                        \
   printf("\n");                                                \
 }                                                              \
 
+double pclogsigma(double lsigma, double lam);
 void theta2Qcorrel(int n, int std, double *theta, double *Qu);
 void theta2precision(int n, double *l, double *Q);
 void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L);
