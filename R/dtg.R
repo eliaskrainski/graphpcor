@@ -203,7 +203,7 @@ summary.dtg <- function(object, ...) {
 dim.dtg <- function(x, ...) {
   trm <- attr(x, "relation")
   m <- ncol(trm)
-  c(nrow(trm) - m + 1, m)
+  c(children = nrow(trm) - m + 1, parent = m)
 }
 #' @rdname dtg
 #' @export

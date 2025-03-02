@@ -10,26 +10,40 @@
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
 #' the radius of the sphere, see details.
-#' @param base numeric vector or matrix with the reference
+#' @param base numeric vector with length `m`, `m` is the
+#' number of edges in the graph, or matrix with the reference
 #' correlation model against what the KLD will be evaluated.
-#' If it is a matrix, is used as is.
 #' If it is a vector, a correlation matrix is defined
 #' considering the graph model and this vector as
 #' the parameters in the lower triangle matrix L.
-#' @param sigma.prior.reference numeric vector with the reference
-#' standard deviation to define the PC priors for each one of
-#' the marginal variance parameters.
-#' @param sigma.prior.probability numeric vector with a probability p
-#' to define the PC priors for each one of
-#' the marginal variance parameters.
-#' #' to make the prior for each marginal standard deviation using
-#' P(sigma < `sigma.prior.reference') = p
-#' @param param.id integer vector to specify common
-#' parameter values. Example: with 8 parameters,
-#' where the first 4 are standard deviations and the remaining 3
-#' are related to partial correlations, by setting
-#' param.id = c(1,1,2,3, 4,5,5,6) the first two standard deviations
-#' are common and the second and third partial correlations as well.
+#' If it is a matrix, it will be checked if the graph model
+#' can generates this.
+#' @param sigma.prior.reference numeric vector with length `n`,
+#' `n` is the number of nodes (variables) in the graph, as the
+#' reference  standard deviation to define the PC prior for each
+#' marginal variance parameters.
+#' @param sigma.prior.probability numeric vector with length `n`
+#' to set the probability statement of the PC prior for each
+#' marginal variance parameters. The probability statement is
+#' P(sigma < `sigma.prior.reference') = p.
+#' If a probability is NA, 0 or 1, the corresponding
+#' `sigma.prior.reference` would be taken as fixed.
+#' @param params.id integer vector with length `n+m` to specify
+#' common parameter values. The first `n` are index to the
+#' standard deviations and the remaining `m`
+#' are related to partial correlations.
+#' Example: By setting params.id = c(1,1,2,3, 4,5,5,6),
+#' the first two standard deviations are common and the
+#' second and third partial correlations are common as well,
+#' giving 6 unknown parameters in the model.
+#' @param low.params.fixed logical vector of length `m`
+#' to provide the value at which the parameters in the lower
+#' of the L matrix are to be fixed. NA indicates not fixed.
+#' Example: with low.params.fixed = c(NA, -1, NA, 1) the first
+#' and the third of these parameters will be estimated while
+#' the second is fixed and equal to -1 and the forth is fixed
+#' and equal to 1. NOTE: `params.id` will be applied here as
+#' low.params.fixed[params.id[n+1:m]-n]
 #' @param debug logical indicating if it is to debug.
 #' @param useINLAprecomp logical indicating if is to be used
 #' shared object pre-compiled by INLA. It is not considered if
@@ -43,7 +57,8 @@ cgeneric_pcgraph <-
            base,
            sigma.prior.reference,
            sigma.prior.probability,
-           param.id,
+           params.id,
+           low.params.fixed,
            debug = FALSE,
            useINLAprecomp = !TRUE,
            libpath = NULL) {
@@ -74,8 +89,11 @@ cgeneric_pcgraph <-
     stopifnot(all(lambda>0))
     stopifnot(length(sigma.prior.reference) == n)
     stopifnot(length(sigma.prior.probability) == n)
-    stopifnot(all(sigma.prior.probability>0.0))
-    stopifnot(all(sigma.prior.probability<1.0))
+    sigma.prior.probability[is.na(sigma.prior.probability)] <- 0
+    stopifnot(all(sigma.prior.probability>=0.0))
+    stopifnot(all(sigma.prior.probability<=1.0))
+    sigma.fixed <- is.zero(sigma.prior.probability) |
+      is.zero(1-sigma.prior.probability)
     slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
@@ -97,17 +115,21 @@ cgeneric_pcgraph <-
     nnz <- n + nEdges
     nfi <- length(qij$ifil)
 
-    if(missing(param.id)) {
-      param.id <- 1:nnz
+    if(missing(params.id)) {
+      params.id <- 1:nnz
     } else {
-      stopifnot(length(param.id)==nnz)
-      stopifnot(all(param.id %in% (1:nnz)))
-      if(all(sort(param.id)==param.id)) {
-        param.id <- sort(param.id)
-        warning("Sorting 'param.id' as")
-        cat(param.id, "\n")
-      }
+      stopifnot(length(params.id)==nnz)
+      stopifnot(all(params.id %in% (1:nnz)))
     }
+    if(params.id[nnz]<nnz) stop("WORK IN PROGRESS!")
+
+    if(missing(low.params.fixed)) {
+      low.params.fixed <- rep(NA, nEdges)
+    } else {
+      stopfinot(length(low.params.fixed)==nEdges)
+    }
+    low.params.fixed[params.id[n+1:nEdges]-n]
+    if(any(!is.na(low.params.fixed)))  stop("WORK IN PROGRESS!")
 
     ii <- c(1:n, qij$ii)
     jj <- c(1:n, qij$jj)
@@ -152,7 +174,6 @@ cgeneric_pcgraph <-
       n = as.integer(n),
       debug = as.integer(debug),
       ne = as.integer(nEdges),
-      nnz = as.integer(nnz),
       nfi = as.integer(nfi),
       ii = as.integer(jj-1),
       jj = as.integer(ii-1),
@@ -160,6 +181,7 @@ cgeneric_pcgraph <-
       iuqpac = as.integer(iuqpac-1),
       ifi = as.integer(ifi-1),
       jfi = as.integer(jfi-1),
+      itheta = as.integer(params.id -1),
       lambda = as.numeric(lambda),
       slambdas = as.numeric(slambdas),
       lconst = as.numeric(lc),

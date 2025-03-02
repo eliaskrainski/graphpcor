@@ -19,17 +19,21 @@ Authors@R: c(
          role = c("aut"),
          comment = c(ORCID = "0000-0002-0222-1881"))
   )
-Description: This package implement an approach for 
-  constructing models for correlation matrices 
-  with a user-defined graphical structure, 
+Description: This package implement two approachs for 
+  modeling correlation matrices 
+  with a user-defined graphical structure.
+  One use the latent parent variable framework as
   proposed in <https://arxiv.org/abs/2312.06289>.
+  The other uses a graph to specify conditional 
+  relations between the variables.
   The graphical structure makes correlation matrices 
   interpretable and avoids the quadratic increase of 
   parameters as a function of the dimension. 
-  We suggest an automatic approach to define a prior 
-  using a natural sequence of simpler models 
-  within the Penalized Complexity framework 
-  for the unknown parameters in these models.
+  These two modeling classes are then used as prior for
+  latent model parameters. 
+  In the first approach a natural sequence of simpler 
+  models along with a complexity penalization is used.
+  The second penalizes deviations from a base model.
   Models are implemented in a C code template for 
   the 'cgeneric' interface with the 'INLA' package 
   (<https://www.r-inla.org>). 

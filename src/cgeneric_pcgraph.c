@@ -31,7 +31,7 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 {
 
   double *ret = NULL;
-  int i, j, k, N, M, nparam;
+  int i, j, k, N, M;
 
   // the size of the model
   assert(data->n_ints > 1);
@@ -45,39 +45,42 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
   assert(!strcasecmp(data->ints[2]->name, "ne"));     // this will always be the case
   int ne = data->ints[2]->ints[0];
   assert(ne > 0);
-  nparam = N + ne;
   M = N + ne;
 
-  assert(!strcasecmp(data->ints[3]->name, "nnz"));	       // this will always be the case
-  int nnz = data->ints[3]->ints[0];
-  assert(M == nnz);
+  assert(!strcasecmp(data->ints[3]->name, "nfi"));	       // this will always be the case
+  int nfi = data->ints[3]->ints[0];
 
-  assert(!strcasecmp(data->ints[4]->name, "nfi"));	       // this will always be the case
-  int nfi = data->ints[4]->ints[0];
-
-  assert(!strcasecmp(data->ints[5]->name, "ii"));     // this will always be the case
-  inla_cgeneric_vec_tp *ii = data->ints[5];
+  assert(!strcasecmp(data->ints[4]->name, "ii"));     // this will always be the case
+  inla_cgeneric_vec_tp *ii = data->ints[4];
   assert(M == ii->len);
 
-  assert(!strcasecmp(data->ints[6]->name, "jj"));     // this will always be the case
-  inla_cgeneric_vec_tp *jj = data->ints[6];
+  assert(!strcasecmp(data->ints[5]->name, "jj"));     // this will always be the case
+  inla_cgeneric_vec_tp *jj = data->ints[5];
   assert(M == jj->len);
 
-  assert(!strcasecmp(data->ints[7]->name, "iuq"));     // this will always be the case
-  inla_cgeneric_vec_tp *iuq = data->ints[7];
+  assert(!strcasecmp(data->ints[6]->name, "iuq"));     // this will always be the case
+  inla_cgeneric_vec_tp *iuq = data->ints[6];
   assert(M == iuq->len);
 
-  assert(!strcasecmp(data->ints[8]->name, "iuqpac"));     // this will always be the case
-  inla_cgeneric_vec_tp *iuqpac = data->ints[8];
+  assert(!strcasecmp(data->ints[7]->name, "iuqpac"));     // this will always be the case
+  inla_cgeneric_vec_tp *iuqpac = data->ints[7];
   assert(M == iuqpac->len);
 
-  assert(!strcasecmp(data->ints[9]->name, "ifi"));     // this will always be the case
-  inla_cgeneric_vec_tp *ifi = data->ints[9];
+  assert(!strcasecmp(data->ints[8]->name, "ifi"));     // this will always be the case
+  inla_cgeneric_vec_tp *ifi = data->ints[8];
   assert(nfi == ifi->len);
 
-  assert(!strcasecmp(data->ints[10]->name, "jfi"));     // this will always be the case
-  inla_cgeneric_vec_tp *jfi = data->ints[10];
+  assert(!strcasecmp(data->ints[9]->name, "jfi"));     // this will always be the case
+  inla_cgeneric_vec_tp *jfi = data->ints[9];
   assert(nfi == jfi->len);
+
+  assert(!strcasecmp(data->ints[10]->name, "itheta"));     // this will always be the case
+  inla_cgeneric_vec_tp *itheta = data->ints[10];
+  assert(M == itheta->len);
+  int nparams[3];
+  nparams[0] = itheta->ints[N-1]+1;
+  nparams[2] = itheta->ints[M-1]+1;
+  nparams[1] = nparams[2]-nparams[0];
 
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
   double lambda = data->doubles[0]->doubles[0];
@@ -98,45 +101,11 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
   assert(data->mats[0]->nrow==ne);
   assert(data->mats[0]->ncol==ne);
 
-  int iprint = 0;
-  if((debug>9) & (iprint<1)) {
-    printf("iprint\n");
-    iprint++;
-    printf("(N = %d, M = %d, ne = %d)\n", N, M, ne) ;
-
-    printf("\n ii:\n");
-    for(i=0; i<ii->len; i++) {
-      printf("%d ", ii->ints[i]);
-    }
-    printf("\n jj:\n");
-    for(i=0; i<jj->len; i++) {
-      printf("%d ", jj->ints[i]);
-    }
-    printf("\n iuq:\n");
-    for(i=0; i<iuq->len; i++) {
-      printf("%d ", iuq->ints[i]);
-    }
-    printf("\n iuqpac:\n");
-    for(i=0; i<iuqpac->len; i++) {
-      printf("%d ", iuqpac->ints[i]);
-    }
-    printf("\n ifi:\n");
-    for(i=0; i<ifi->len; i++) {
-      printf("%d ", ifi->ints[i]);
-    }
-    printf("\n jfi:\n");
-    for(i=0; i<jfi->len; i++) {
-      printf("%d ", jfi->ints[i]);
-    }
-
-  }
-
-  double thetat[ne];
+  double lowtheta[ne], thetat[ne];
   double sigmas[N];
   if(theta) {
-    k=0;
     for(i=0; i<N; i++) {
-      sigmas[i] = exp(theta[i]);
+      sigmas[i] = exp(theta[itheta->ints[i]]);
     }
     if(debug>99) {
       printMat(sigmas,1,N,"sigmas\n");
@@ -144,9 +113,11 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
     // this is I(\theta_0)^{-0.5} \theta_0
     for(i=0; i<ne; i++) {
       thetat[i] = data->doubles[3]->doubles[i];
+      lowtheta[i] = theta[itheta->ints[N+i]];
     }
     if(debug>99){
       printMat(thetat, 1, ne, "thetat:\n");
+      printMat(lowtheta, 1, ne, "lowtheta:\n");
       printMat(data->mats[0]->x, ne, ne, "hHneg\n");
     }
     int one=1;
@@ -155,24 +126,18 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
     // (complete) thetat: I(\theta_0)^{-0.5} ( \theta - \theta_0)
     dgemv_(&trans, &ne, &ne, &alpha,
            &data->mats[0]->x[0], &ne,
-           &theta[N], &one,
+           &lowtheta[0], &one,
            &beta, &thetat[0], &one, F_ONE);
     if(debug>99) {
-      printMat(sigmas,1,N,"sigmas\n");
-      printMat(thetat, 1, ne, "thetat:\n");
-      printMat(data->mats[0]->x, ne, ne, "hHneg\n");
+      printMat(thetat, 1, ne, "actual thetat:\n");
     }
   } else {
     for(i=0; i<N; i++) {
       sigmas[i] = NAN;
     }
     for(i=0; i<ne; i++) {
-      thetat[i] = NAN;
+      lowtheta[i] = NAN;
     }
-  }
-
-  if(debug>99) {
-    printMat(sigmas,1,N,"sigmas\n");
   }
 
   switch (cmd) {
@@ -221,8 +186,7 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
     k=0;
     for(i=0; i<M; i++) {
       if(ii->ints[i]!=jj->ints[i]) {
-        ll[iuq->ints[i]] = theta[N+k];
-        k++;
+        ll[iuq->ints[i]] = lowtheta[k++];
       }
     }
     if(debug>99) {
@@ -355,10 +319,10 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
   {
     // return c(P, initials)
     // where P is the number of hyperparameters
-    ret = Calloc(nparam + 1, double);
-    ret[0] = nparam;
-    for(i = 0; i < M; i++) {
-      ret[1+i] = 1.0;
+    ret = Calloc(nparams[2] + 1, double);
+    ret[0] = nparams[2];
+    for(i = 0; i < nparams[2]; i++) {
+      ret[1+i] = 0.0;
     }
   }
     break;
@@ -374,43 +338,34 @@ double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 
     // PC prior for M precision
     double lam, val, pparams[ne];
-    for(i = 0; i < N; i++) {
+    for(i = 0; i < nparams[0]; i++) {
       lam = slambdas->doubles[i];
       ret[0] += pclogsigma(theta[i], lam);
     }
 
-    if(0) {
-
-      for(i=N; i<M; i++) {
-        ret[0] += dnorm(theta[i], 0.0, 3.0, TRUE);
-      }
-
-    } else {
-
-      pparams[ne-1] = atan2(thetat[ne-1], theta[ne-2]);
-      if(pparams[ne-1]<0) {
-        pparams[ne-1] += 2.0*M_PI;
-      }
-      val = SQR(thetat[ne-1]) + SQR(thetat[ne-2]);
-      for(i=(ne-2); i>=0; i--) {
-        pparams[i] = atan2(sqrt(val), thetat[i-1]);
-        val += SQR(thetat[i-1]);
-      }
-      // (\theta-\theta_0)I(\theta_0)(\theta -\theta_0)
-      pparams[0] = sqrt(val); // the approx. KLD
-
-      double ldJacobian;
-      ldJacobian = ((double)(ne-1)) * log(pparams[0]);
-      for(i=1; i<(ne-1); i++) { // not the last one
-        ldJacobian += ((double)(ne-1-i)) * log(sin(pparams[i]));
-      }
-      if(debug>999) {
-        printf("log det Jacobian = %2.7f\n", ldJacobian);
-      }
-
-      ret[0] += ldJacobian - lambda * pparams[0];
-
+    // TO BE FIXED when nparams[2]<ne?
+    pparams[ne-1] = atan2(thetat[ne-1], theta[ne-2]);
+    if(pparams[ne-1]<0) {
+      pparams[ne-1] += 2.0*M_PI;
     }
+    val = SQR(thetat[ne-1]) + SQR(thetat[ne-2]);
+    for(i=(ne-2); i>=0; i--) {
+      pparams[i] = atan2(sqrt(val), thetat[i-1]);
+      val += SQR(thetat[i-1]);
+    }
+    // (\theta-\theta_0)I(\theta_0)(\theta -\theta_0)
+    pparams[0] = sqrt(val); // the approx. KLD
+
+    double ldJacobian;
+    ldJacobian = ((double)(ne-1)) * log(pparams[0]);
+    for(i=1; i<(ne-1); i++) { // not the last one
+      ldJacobian += ((double)(ne-1-i)) * log(sin(pparams[i]));
+    }
+    if(debug>999) {
+      printf("log det Jacobian = %2.7f\n", ldJacobian);
+    }
+
+    ret[0] += ldJacobian - lambda * pparams[0];
 
   }
     break;

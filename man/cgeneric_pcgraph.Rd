@@ -10,7 +10,8 @@ cgeneric_pcgraph(
   base,
   sigma.prior.reference,
   sigma.prior.probability,
-  param.id,
+  params.id,
+  low.params.fixed,
   debug = FALSE,
   useINLAprecomp = !TRUE,
   libpath = NULL
@@ -24,29 +25,42 @@ to define the precision structure of the model.}
 \item{lambda}{the parameter for the exponential prior on
 the radius of the sphere, see details.}
 
-\item{base}{numeric vector or matrix with the reference
+\item{base}{numeric vector with length \code{m}, \code{m} is the
+number of edges in the graph, or matrix with the reference
 correlation model against what the KLD will be evaluated.
-If it is a matrix, is used as is.
 If it is a vector, a correlation matrix is defined
 considering the graph model and this vector as
-the parameters in the lower triangle matrix L.}
+the parameters in the lower triangle matrix L.
+If it is a matrix, it will be checked if the graph model
+can generates this.}
 
-\item{sigma.prior.reference}{numeric vector with the reference
-standard deviation to define the PC priors for each one of
-the marginal variance parameters.}
+\item{sigma.prior.reference}{numeric vector with length \code{n},
+\code{n} is the number of nodes (variables) in the graph, as the
+reference  standard deviation to define the PC prior for each
+marginal variance parameters.}
 
-\item{sigma.prior.probability}{numeric vector with a probability p
-to define the PC priors for each one of
-the marginal variance parameters.
-#' to make the prior for each marginal standard deviation using
-P(sigma < `sigma.prior.reference') = p}
+\item{sigma.prior.probability}{numeric vector with length \code{n}
+to set the probability statement of the PC prior for each
+marginal variance parameters. The probability statement is
+P(sigma < \verb{sigma.prior.reference') = p. If a probability is NA, 0 or 1, the corresponding }sigma.prior.reference` would be taken as fixed.}
 
-\item{param.id}{integer vector to specify common
-parameter values. Example: with 8 parameters,
-where the first 4 are standard deviations and the remaining 3
-are related to partial correlations, by setting
-param.id = c(1,1,2,3, 4,5,5,6) the first two standard deviations
-are common and the second and third partial correlations as well.}
+\item{params.id}{integer vector with length \code{n+m} to specify
+common parameter values. The first \code{n} are index to the
+standard deviations and the remaining \code{m}
+are related to partial correlations.
+Example: By setting params.id = c(1,1,2,3, 4,5,5,6),
+the first two standard deviations are common and the
+second and third partial correlations are common as well,
+giving 6 unknown parameters in the model.}
+
+\item{low.params.fixed}{logical vector of length \code{m}
+to provide the value at which the parameters in the lower
+of the L matrix are to be fixed. NA indicates not fixed.
+Example: with low.params.fixed = c(NA, -1, NA, 1) the first
+and the third of these parameters will be estimated while
+the second is fixed and equal to -1 and the forth is fixed
+and equal to 1. NOTE: \code{params.id} will be applied here as
+low.params.fixed[params.id\link{n+1:m}-n]}
 
 \item{debug}{logical indicating if it is to debug.}
 
