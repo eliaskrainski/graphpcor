@@ -1,7 +1,7 @@
 #' Define a `inla.cgeneric' object used to define a
 #' latent GMRF model using the C interface for `INLA`.
 #' @rdname cgeneric
-#' @seealso [cgeneric-methods()], [INLA::cgeneric()]
+#' @seealso [INLA::cgeneric()]
 #' @description
 #' This organize data needed on the C interface
 #' for building latent models, which are characterized

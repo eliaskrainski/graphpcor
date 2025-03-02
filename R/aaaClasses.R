@@ -1,9 +1,7 @@
 #' Directed Tree Graph - DTG
-#' @rdname dtg
 setClass("dtg")
 
-#' Set the graph class 
-#' @rdname graph
+#' Set the graph class
 setClass("graph")
 
 #' `inla.rgeneric` class, short `rgeneric`,

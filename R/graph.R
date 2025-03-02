@@ -1,3 +1,4 @@
+#' @describeIn graph
 #' The `graph` is a graph where each node represents
 #' a variable and each edge indicates a conditional distribution.
 #' @param ... list of formula used to define the edges.
@@ -11,25 +12,7 @@
 #' summary(g1)
 #' plot(g1)
 #' precision(g1)
-graph <- function(...) {
-  if(inherits(list(...)[[1]], "matrix")) {
-    x <- list(...)[[1]]
-    stopifnot(all.equal(x, t(x)))
-    ne <- c(nrow(x), NA)
-    iz <- is.zero(x)
-    ne[2] <- (sum(!iz)-ne[1])/2
-    vnams <- rownames(x)
-    if(is.null(vnams)) {
-      vnams <- letters[1:ne[1]]
-    }
-    argl <- lapply(1:(ne[1]-1), function(i) {
-      jj <- intersect((i+1):ne[1], which(!iz[i, ]))
-      paste(vnams[i], "~",
-            paste(vnams[jj], collapse = " + "))
-    })
-    return(do.call(what = 'graph',
-                   args = lapply(argl, as.formula)))
-  }
+graph.formula <- function(...) {
   fch <- as.character(match.call())[-1]
   if(length(fch)<1)
     stop("Please provide a graph argument!")
@@ -64,21 +47,51 @@ graph <- function(...) {
   attr(fch, 'graph') <- graph
   return(fch)
 }
+#' @describeIn graph
+#' Build a graph from a matrix
+#' @export
+graph.matrix <- function(x) {
+  #  if(inherits(list(...)[[1]], "matrix")) {
+  #    x <- list(...)[[1]]
+  stopifnot(all.equal(x, t(x)))
+  ne <- c(nrow(x), NA)
+  iz <- is.zero(x)
+  ne[2] <- (sum(!iz)-ne[1])/2
+  vnams <- rownames(x)
+  if(is.null(vnams)) {
+    vnams <- letters[1:ne[1]]
+  }
+  argl <- lapply(1:(ne[1]-1), function(i) {
+    jj <- intersect((i+1):ne[1], which(!iz[i, ]))
+    paste(vnams[i], "~",
+          paste(vnams[jj], collapse = " + "))
+  })
+  return(do.call(what = 'graph',
+                 args = lapply(argl, as.formula)))
+}
+#' @describeIn graph
+#' The print method for `graph`
 #' @export
 print.graph <- function(x, ...) {
   cat("Model graph for",
       length(attr(x, 'nodes')), "variables",
       "using", sum(attr(x, 'graph')), "edges.\n")
 }
+#' @describeIn graph
+#' The summary method for `graph`
 #' @export
 summary.graph <- function(object, ...) {
   attr(object, "graph")
 }
+#' @describeIn graph
+#' The dim method for `graph`
 #' @export
 dim.graph <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
     edges=sum(attr(x, 'graph')))
 }
+#' @describeIn graph
+#' The edges method for `graph`
 setMethod(
   "edges",
   "graph",
@@ -105,6 +118,8 @@ setMethod(
     return(edgl)
   }
 )
+#' @describeIn graph
+#' The plot method for `graph`
 #' @export
 setMethod(
   "plot",
@@ -119,6 +134,7 @@ setMethod(
     plot(gr, ...)
   }
 )
+#' @describeIn Laplacian
 #' The Laplacian of a matrix
 #' @export
 Laplacian.matrix <- function(graph) {
@@ -131,7 +147,8 @@ Laplacian.matrix <- function(graph) {
     Laplacian.default(graph)
   }
 }
-#' The Laplacian method for 'graph'
+#' @describeIn graph
+#' The Laplacian method for `graph`
 #' @export
 Laplacian.graph <- function(graph) {
   ne <- dim(graph)
@@ -150,8 +167,8 @@ Laplacian.graph <- function(graph) {
   diag(L) <- -rowSums(L)
   return(L)
 }
+#' @describeIn graph
 #' Build the unite diagonal lower triangle matrix
-#' @rdname graph
 setMethod(
   "chol",
   "graph",
@@ -172,6 +189,7 @@ setMethod(
     return(t(L))
   }
 )
+#' @describeIn graph
 #' The variance method for 'graph'
 #' @export
 variance.graph <- function(x, ...) {
@@ -197,6 +215,7 @@ variance.graph <- function(x, ...) {
   V <- diag(si) %*% V %*% diag(si)
   return(V)
 }
+#' @describeIn graph
 #' The precision method for 'graph'
 #' @export
 precision.graph <- function(x, ...) {
@@ -238,6 +257,7 @@ fiL <- function(L, lfi) {
   }
   return(L)
 }
+#' @describeIn is.zero
 #' The is.zero.graph method
 #' @export
 is.zero.graph <- function(graph) {
@@ -251,30 +271,28 @@ is.zero.graph <- function(graph) {
 #' This can be either a matrix or a 'graph'.
 #' @param base either a reference correlation matrix
 #' or as a parameter reference for as 'graph' model.
-#' @param method the decomposition method used to
-#' compute H^0.5 and H^(1/2).
+#' @param decomposition character to specify which
+#' decomposition method to use to compute H^0.5 and H^(1/2).
+#' @param ... additional arguments passed to [numDeriv::hessian()]
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used
 #' @examples
 #' g <- graph(x ~ y+z, y ~ v, v ~ z)
 #' ne <- dim(g)
-#' gH0 <- graph2H(g, rep(-1, ne[2]))
+#' gH0 <- hessian(g, rep(-1, ne[2]))
 #' ## alternatively
 #' Q0 <- precision(g, theta = rep(c(0,-1), ne))
 #' C0 <- cov2cor(solve(Q0))
-#' all.equal(graph2H(g, C0), gH0)
+#' all.equal(hessian(g, C0), gH0)
 #' @export
-graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
-  method <- match.arg(method)
+hessian.graph <- function(graph, base, decomposition = c("eigen", "svd", "chol"), ...) {
+  decomposition <- match.arg(decomposition)
   Q0 <- Laplacian(graph)
   nEdges <- sum((!is.zero(Q0)) & lower.tri(Q0))
   z0 <- is.zero(Q0)
   n <- nrow(Q0)
   l1 <- t(chol(Q0 + diag(1.0, n, n)))
-  if(inherits(graph, "matrix")) {
-    graph <- graph(graph)
-  }
   if(inherits(base, "matrix")) {
     ## maybe optim() to get theta.base that
     ## give graph2C(theta.base) close to C0?
@@ -295,12 +313,12 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
     C0 <- variance(graph, theta =base)
   }
   ## hessian uses graphpcor:::KLD10
-  H <- hessian(function(x)
-    KLD10(variance(graph, theta = x), C0),
-    base)
+  H <- numDeriv::hessian(
+    function(x) KLD10(variance(graph, theta = x), C0),
+    base, ...)
   ## next bit follows mvtnorm:::rmvnorm()
   t0 <- sqrt(.Machine$double.eps)
-  if(method == "eigen") {
+  if(decomposition == "eigen") {
     Hd <- eigen(H)
     if(!all(Hd$values >= (t0 * abs(Hd$values[1]))))
       warning("'H' is numerically not positive semidefinite")
@@ -308,7 +326,7 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
     h.5 <- t(Hd$vectors %*% (t(Hd$vectors) * s))
     hneg.5 <- t(Hd$vectors %*% (t(Hd$vectors) / s))
   }
-  if(method == "svd") {
+  if(decomposition == "svd") {
     Hd <- svd(H)
     if(any(Hd$d<(t0 * abs(Hd$d[1]))))
       warning("'H' is numerically not positive semidefinite")
@@ -316,7 +334,7 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
     h.5 <- t(Hd$v %*% (t(Hd$u) * s))
     hneg.5 <- t(Hd$v %*% (t(Hd$u) / s))
   }
-  if(method == "chol") {
+  if(decomposition == "chol") {
     Hd <- chol(H, pivot = TRUE)
     h.5 <- matrix(Hd[, order(attr(Hd, "pivot")), ], nrow(H))
     hn <- chol2inv(chol(H))
@@ -324,14 +342,14 @@ graph2H <- function(graph, base, method = c("eigen", "svd", "chol")) {
     hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
   }
   stopifnot(all.equal(H, tcrossprod(h.5)))
-  list(theta.base = base,
-       H = H,
-       h.5 = h.5,
-       hneg.5 = hneg.5,
-       Hdecomposition = Hd)
+  attr(H, "base") <- base
+  attr(H, "h.5") < h.5
+  attr(H, "hneg.5") <- hneg.5
+  attr(H, "decomposition") <- Hd
+  return(H)
 }
+#' @describeIn cgeneric
 #' The `cgeneric` method for `graph` uses [cgeneric_pcgraph()]
-#' @rdname graph
 #' @export
 cgeneric.graph <- function(...) {
   args <- list(...)

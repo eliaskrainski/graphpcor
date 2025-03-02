@@ -1,5 +1,7 @@
-#' Methods for an `inla.cgeneric` object.
-#' @name cgeneric-methods
+#' @describeIn cgeneric
+#' `cgeneric_get` is an internal function used by
+#' `graph`, `precision`, `initial`, `mu` or `prior`
+#' methods for `inla.cgeneric`
 #' @param model an object `inla.cgeneric` object.
 #' @param cmd an string to specify which model element to get
 #' @param theta numeric vector with the model parameters.
@@ -8,10 +10,6 @@
 #' the graph and precision are as a sparse matrix.
 #' If TRUE, graph only return the row/col indexes and
 #' precision return only the elements as a vector.
-#' @description
-#' `cgeneric_get` is an internal function used by
-#' `graph`, `precision`, `initial`, `mu` or `prior`
-#' methods for `inla.cgeneric`
 cgeneric_get <- function(model,
                          cmd = c("graph", "Q", "initial", "mu", "log_prior"),
                          theta,
@@ -145,37 +143,37 @@ cgeneric_get <- function(model,
   return(ret)
 
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Retrieve the initial model parameter(s).
 #' @export
 initial <- function(model) {
   UseMethod("initial")
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Retrive the initial parameter(s) of an `inla.cgeneric` model.
 #' @export
 initial.inla.cgeneric <- function(model) {
   cgeneric_get(model, "initial")
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Evaluate the mean.
 #' @export
 mu <- function(model) {
   UseMethod("mu")
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Evaluate the mean for an `inla.cgeneric` model.
 #' @export
 mu.inla.cgeneric <- function(model) {
   cgeneric_get(model, "mu")
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Evaluate the log-prior.
 #' @export
 prior <- function(model, theta) {
   UseMethod("prior")
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Evaluate the prior for an `inla.cgeneric` model
 #' @export
 prior.inla.cgeneric <- function(model, theta) {
@@ -183,14 +181,7 @@ prior.inla.cgeneric <- function(model, theta) {
                       cmd = "log_prior",
                       theta = theta))
 }
-#' @describeIn cgeneric-methods
-#' Retrieve the graph.
-#' @param ... additional arguments passed on.
-#' @export
-graph <- function(model, ...) {
-  UseMethod("graph")
-}
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Retrieve the graph of an `inla.cgeneric` object
 #' @export
 graph.inla.cgeneric <- function(model, ...) {
@@ -206,12 +197,12 @@ graph.inla.cgeneric <- function(model, ...) {
     model, "graph",
     optimize = optimize))
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Evaluate [precision()] on a model
 Q <- function(model, ...) {
   UseMethod("precision")
 }
-#' @describeIn cgeneric-methods
+#' @describeIn cgeneric
 #' Evaluate [precision()] on an `inla.cgeneric` object
 #' @export
 precision.inla.cgeneric <- function(model, ...) {

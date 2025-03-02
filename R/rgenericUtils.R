@@ -1,4 +1,5 @@
-#' Define rgeneric methods
+#' Define rgeneric methods.
+#' @rdname rgeneric
 #' @param model an object used to define the model.
 #' Its class will define which method is considered.
 #' @param debug logical indicating debug state.
@@ -16,6 +17,7 @@ rgeneric <- function(model,
   UseMethod("rgeneric")
 }
 #' The rgeneric default method.
+#' @rdname rgeneric
 #' @param model the model defined as a function.
 #' See the 'rgeneric' vignette from the INLA package.
 #' @export

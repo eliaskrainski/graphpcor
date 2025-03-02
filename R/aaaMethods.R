@@ -1,16 +1,21 @@
-#' Compute the precision matrix
+#' The `graph` method
+#' @param model model object
+#' ... additional arguments passed on
+#' @export
+graph <- function(model, ...) {
+  UseMethod("graph")
+}
+#' The `precision` method
+#' @rdname precision-methods
 #' @param x object or model
 #' @param ... additional arguments passed on
-#' for some methods.
-#' @export
-#' @rdname precision
 #' @export
 precision <- function(x, ...) {
   UseMethod("precision")
 }
-#' The default method for precision
-#' compute the inverse of the [variance()]
-#' @rdname precision
+#' The default precision method
+#' computes the inverse of the [variance()]
+#' @rdname precision-methods
 #' @seealso [variance()]
 #' @export
 precision.default <- function(x, ...) {
@@ -23,7 +28,7 @@ precision.default <- function(x, ...) {
     )
   )
 }
-#' @describeIn precision
+#' @describeIn precision-methods
 #' Define the precision method for an inla output object
 #' @export
 precision.inla <- function(x, ...) {
@@ -55,7 +60,9 @@ precision.inla <- function(x, ...) {
   return(Q)
 }
 #' The variance method
-#' @rdname variance
+#' @rdname variance-methods
+#' @param x model object
+#' @param ... additional arguments passed on
 #' @export
 variance <- function(x, ...) {
   UseMethod("variance")
@@ -89,6 +96,7 @@ is.zero.matrix <- function(x, ...) {
   return(a < tol)
 }
 #' The Laplacian of a graph
+#' @rdname Laplacian
 #' @description
 #' The (symmetric) Laplacian of a graph is a
 #' square matrix with dimention

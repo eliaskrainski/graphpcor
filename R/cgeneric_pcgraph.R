@@ -61,6 +61,9 @@ cgeneric_pcgraph <-
       }
     }
 
+    if(inherits(graph, "matrix")) {
+      graph <- graph(graph)
+    }
     Q0 <- Laplacian(graph)
     n <- nrow(Q0)
     stopifnot(n>0)
@@ -125,18 +128,19 @@ cgeneric_pcgraph <-
       base <- rep(0, nEdges)
     }
 
-    Ibase <- graph2H(graph, base, method = "eigen")
+    Ibase <- hessian(graph, base, decomposition = "eigen")
     if(debug) {
       cat("I(base model) elements\n")
       print(str(Ibase))
     }
-    stopifnot(all(dim(Ibase$H) == c(nEdges, nEdges)))
+    stopifnot(all(dim(Ibase) == c(nEdges, nEdges)))
     ## this is I(\theta_0)^{-0.5} * \theta_0
-    thetabasescaled <- drop(Ibase$hneg.5 %*% Ibase$theta.base)
+    thetabasescaled <- drop(attr(Ibase, "hneg.5") %*%
+                              attr(Ibase, "base"))
 
     ## constant
     lc <- log(lambda) -(nEdges-1)*log(pi) - log(2)
-    lc <- lc - sum(log(Ibase$Hd$values))
+    lc <- lc - sum(log(attr(Ibase, "decomposition")$values))
 
     if(debug) {
       cat('log C', lc, '\n')
@@ -160,8 +164,7 @@ cgeneric_pcgraph <-
       slambdas = as.numeric(slambdas),
       lconst = as.numeric(lc),
       thetabasescaled = as.numeric(thetabasescaled),
-      hHneg = matrix(Ibase$hneg.5,
-                     nEdges, nEdges)
+      hHneg = attr(Ibase, "hneg.5")
     )
 
     if(debug>9) {
