@@ -22,6 +22,9 @@ all.equal(G,
 ## compact, but different ordering 
 Laplacian(graph(x~y+z,v~y+z))
 
+graph(x1~x2+x3, x4~x2+x3)
+Laplacian(graph(x1~x2+x3, x4~x2+x3))
+
 g <- graph(x1~x2+x3, x2~x4, x3~x4) ## compact ordered
 (G <- Laplacian(g)) ## the graph in Example 2.6 of the GMRF book
 
@@ -45,18 +48,47 @@ Q0
 C0 <- solve(Q0)
 C0
 
-all.equal(C0, 
-          variance(g, theta = theta0l)) ## variance method for graph
+## the Hese matrix around a base model
+## using numDeriv::hessian
+hessian(function(x) graphpcor:::KLD10(variance(g, theta=x), C0), x = theta0l)
+
+## using hessian.graph (that reeturns more stuff)
+hessian(g, base = theta0l)
+
+## using different ways to specify base model and different decomposition 
+all.equal(
+    hessian(g, base = theta0l, decomposition = 'svd'),
+    hessian(g, base = C0, decomposition = 'svd')
+)
+
+## variance method for graph computes the correlation
+##  if only theta for lower of L is provided
+all.equal(
+    C0, 
+    variance(g, theta = theta0l) 
+)
+
+variance(g, theta = theta0l)
+variance(g, theta = c(log(c(2,1,4,0.5)), theta0l))
 
 ## the 'iid' case would be
 variance(g, theta = rep(0, ne[2]))
+variance(g, theta = rep(0, sum(ne)))
 
-## define full variance
+## marginal variance specified throught standard errors
 sigmas <- c(0.3, 0.7, 1.2, 0.5)
 
+variance(g, theta = c(log(sigmas), theta0l))
 variance(g, theta = c(log(sigmas), rep(0, ne[2])))
 variance(g, theta = c(log(sigmas), rep(-1, ne[2])))
+all.equal(variance(g, theta =  rep(-1, ne[2])),
+          cov2cor(variance(g, theta = c(log(sigmas), rep(-1, ne[2])))))
+
+variance(g, theta = rep(1, ne[2])) ## no edge 2~3 but high covariance!!!
 variance(g, theta = c(log(sigmas), rep(1, ne[2]))) ## no edge 2~3 but high covariance!!!
+
+variance(g, theta = c(-.5,-.5,-.5,.5))
+variance(g, theta = c(-5,-5,-5,5))
 
 ## build the cgeneric model
 ## Note: here 'model' is a 'graph' 
