@@ -4,14 +4,17 @@
 \name{inla.rgeneric-class}
 \alias{inla.rgeneric-class}
 \alias{rgeneric}
+\alias{rgeneric.default}
 \title{\code{inla.rgeneric} class, short \code{rgeneric},
 to define a \code{\link[INLA:rgeneric]{INLA::rgeneric()}} latent model}
 \usage{
 rgeneric(model, debug = FALSE, compile = TRUE, optimize = TRUE, ...)
+
+\method{rgeneric}{default}(model, debug = FALSE, compile = TRUE, optimize = TRUE, ...)
 }
 \arguments{
-\item{model}{an object used to define the model.
-Its class will define which method is considered.}
+\item{model}{the model defined as a function.
+See the 'rgeneric' vignette from the INLA package.}
 
 \item{debug}{logical indicating debug state.}
 
@@ -27,5 +30,7 @@ for the model, for example, additional data.}
 \code{inla.rgeneric} class, short \code{rgeneric},
 to define a \code{\link[INLA:rgeneric]{INLA::rgeneric()}} latent model
 
-Define rgeneric methods
+Define rgeneric methods.
+
+The rgeneric default method.
 }
