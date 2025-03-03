@@ -68,7 +68,7 @@ void theta2Qcorrel(int n, int std, double *theta, double *Qcorr) {
     for(i=0; i<n; i++) {
       k = i;
       for(j=0; j<=i; j++) {
-        Qcorr[k] *= 1/(si[i]*si[j]);
+        Qcorr[k] /= (si[i]*si[j]);
         k += (n-j-1);
       }
     }

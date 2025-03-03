@@ -110,7 +110,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
     ret[1] = M;				       /* REQUIRED */
 
     double hld;
-    theta2gamma2Lcorr(N, &hld, &theta[0], &ret[2]);
+    theta2gamma2Lcorr(N, &hld, &theta[0], &ret[offset]);
 
     if(debug>999) {
       printf("L:\n");
