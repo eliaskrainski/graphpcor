@@ -1,12 +1,12 @@
 library(INLA)
 library(graphpcor)
 
-### for concepts: test/concepts/pcgraph.R
-### for details: tests/check/check_pcgraph.R
-### for details: tests/detailed/detailed_pcgraph.R
+### for concepts: test/concepts/concepts_corgraph.R
+### for details: tests/check/check_corgraph.R
+### for details: tests/detailed/detailed_corgraph.R
 
 ## the graph in Example 2.6 of the GMRF book
-g <- graph(x1 ~ x2+x3, x2~x4, x3~x4)
+g <- corgraph(x1 ~ x2+x3, x2~x4, x3~x4)
 class(g)
 g
 summary(g)
@@ -14,7 +14,7 @@ Laplacian(g)
 
 (ne <- dim(g))
 
-## define the cgeneric model (see test/concepts/pcgraph.R for other options)
+## define the cgeneric model (see test/concepts/corgraph.R for other options)
 theta.base <- rep(-1, ne[2])
 cmodel <- cgeneric(
     model = g,
@@ -60,7 +60,7 @@ grep("function evaluations =", fit$logfile, value = TRUE)
 grep("fn-calls=", fit$logfile, value = TRUE)
 
 rbind(true = c(theta.y, theta1),
-      fit = fit$mode$theta) 
+      fit = fit$mode$theta)
 fit$mode$theta - c(theta.y, theta1)
 
 precision(cmodel, theta = fit$mode$theta[-1])

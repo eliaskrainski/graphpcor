@@ -1,15 +1,15 @@
 library(INLA)
 library(graphpcor)
 
-g1 <- graph(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
+g1 <- corgraph(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
 G1 <- Laplacian(g1)
 G1
 
-g2 <- graph(c1~c2+c6, c2~c3, c3~c4, c4~c5, c5~c6)
+g2 <- corgraph(c1~c2+c6, c2~c3, c3~c4, c4~c5, c5~c6)
 G2 <- Laplacian(g2)
 G2
 
-g3 <- graph(c1~c2+c3+c4+c5+c6)
+g3 <- corgraph(c1~c2+c3+c4+c5+c6)
 G3 <- Laplacian(g3)
 G3
 
@@ -17,7 +17,7 @@ g3o <- inla.qreordering(G3)
 G3.reord <- G3[g3o$reo, g3o$reo]
 G3.reord
 
-g4 <- graph(c1~c3, c2~c3, c3~c5, c4~c5, c5~c6)
+g4 <- corgraph(c1~c3, c2~c3, c3~c5, c4~c5, c5~c6)
 G4 <- Laplacian(g4)
 G4
 

@@ -99,21 +99,22 @@ setMethod(
     ne <- dim(object)
     nodes <- attr(object, "nodes")
     stopifnot(!is.null(nodes))
-    grel <- attr(object, "relationship")
-    stopifnot(!is.null(relationship))
+    stopifnot(ne[1]==length(nodes))
+    L <- Laplacian(object)
     edgl <- vector("list", ne[2])
-    er <- lapply(1:ncol(grel), function(i)
-      colnames(grel)[grel[i, ]!=0])
-    names(edgl) <- paste0(
-      rownames(grel), "~",
-      sapply(er, paste, collapse = "+"))
-    for(i in 1:ne[2]) {
-      edgl[[i]] <- list(
-        n = sum(graph[i,]!=0),
-        edges = er[[i]],
-        weights = rep(1, length(er[[i]]))
-      )
-      edgl[[i]]$term <- edgl$edges
+    k <- 1
+    for(i in 1:ne[1]) {
+      jj <- intersect(which(!is.zero(L[i, ])), 2:ne[1])
+      if(length(jj)>0) {
+        for(j in jj) {
+          edgl[[k]] <- list(
+            n = 1L,
+            edges = nodes[j],
+            weights = 1.0)
+          edgl[[k]]$term <- j
+          k <- k+1
+        }
+      }
     }
     return(edgl)
   }

@@ -1,6 +1,6 @@
 library(graphpcor)
 
-g <- graph(x ~ y, y ~ v, v ~ z, z ~ x)
+g <- corgraph(x ~ y, y ~ v, v ~ z, z ~ x)
 
 class(g)
 
@@ -17,20 +17,20 @@ G
 
 ## alternatively
 all.equal(G,
-          Laplacian(graph(x~y+z,y~v,v~z)))
+          Laplacian(corgraph(x~y+z,y~v,v~z)))
 
-## compact, but different ordering 
-Laplacian(graph(x~y+z,v~y+z))
+## compact, but different ordering
+Laplacian(corgraph(x~y+z,v~y+z))
 
-graph(x1~x2+x3, x4~x2+x3)
-Laplacian(graph(x1~x2+x3, x4~x2+x3))
+corgraph(x1~x2+x3, x4~x2+x3)
+Laplacian(corgraph(x1~x2+x3, x4~x2+x3))
 
-g <- graph(x1~x2+x3, x2~x4, x3~x4) ## compact ordered
+g <- corgraph(x1~x2+x3, x2~x4, x3~x4) ## compact ordered
 (G <- Laplacian(g)) ## the graph in Example 2.6 of the GMRF book
 
-graph(G) ## dag from a matrix
+corgraph(G) ## dag from a matrix
 
-all.equal(graph(G), g) ## TRUE if compact ordered
+all.equal(corgraph(G), g) ## TRUE if compact ordered
 
 ## base model (theta for L)
 theta0l <- rep(-0.5, ne[2])
@@ -52,20 +52,20 @@ C0
 ## using numDeriv::hessian
 hessian(function(x) graphpcor:::KLD10(variance(g, theta=x), C0), x = theta0l)
 
-## using hessian.graph (that reeturns more stuff)
+## using hessian for a `corgtraph` returns more stuff:
 hessian(g, base = theta0l)
 
-## using different ways to specify base model and different decomposition 
+## using different ways to specify base model and different decomposition
 all.equal(
     hessian(g, base = theta0l, decomposition = 'svd'),
     hessian(g, base = C0, decomposition = 'svd')
 )
 
-## variance method for graph computes the correlation
+## variance method for corgraph computes the correlation
 ##  if only theta for lower of L is provided
 all.equal(
-    C0, 
-    variance(g, theta = theta0l) 
+    C0,
+    variance(g, theta = theta0l)
 )
 
 variance(g, theta = theta0l)
@@ -91,9 +91,9 @@ variance(g, theta = c(-.5,-.5,-.5,.5))
 variance(g, theta = c(-5,-5,-5,5))
 
 ## build the cgeneric model
-## Note: here 'model' is a 'graph' 
+## Note: here 'model' is a 'corgraph'
 cmodel <- cgeneric(
-    model = g, ## use the graph
+    model = g, ## a `corgraph` in model argument
     lambda = 1,
     base = theta0l,
     sigma.prior.reference = rep(1, ne[1]),
@@ -103,8 +103,8 @@ cmodel <- cgeneric(
 all.equal(
     cmodel,
     cgeneric(
-        model = "pcgraph", ## as character
-        graph = G, ## using G as the 'corgraph' model
+        model = "corgraph", ## model now is acharacter
+        graph = G, ## using G as a graph
         lambda = 1,
         base = theta0l,
         sigma.prior.reference = rep(1, ne[1]),
@@ -115,7 +115,7 @@ all.equal(
 all.equal(
     cmodel,
     cgeneric(
-        model = "pcgraph",
+        model = "corgraph",
         graph = G!=0, ## any binary matrix works
         lambda = 1,
         base = theta0l,
@@ -127,9 +127,9 @@ all.equal(
 all.equal(
     cmodel,
     cgeneric(
-        model = g,  
+        model = g,
         lambda = 1,
-        base = C0, 
+        base = C0,
         sigma.prior.reference = rep(1, ne[1]),
         sigma.prior.probability = rep(0.5, ne[1]))
 )
@@ -154,7 +154,7 @@ all.equal(cmodel,
           cgeneric(
               model = g,
               lambda = 1,
-              base = Cc, 
+              base = Cc,
               sigma.prior.reference = rep(1, ne[1]),
               sigma.prior.probability = rep(0.5, ne[1])))
 
@@ -170,7 +170,7 @@ if(FALSE) { ## this give an error because Ci is not compatible
     cgeneric(
         model = g,
         lambda = 1,
-        base = Ci, 
+        base = Ci,
         sigma.prior.reference = rep(1, ne[1]),
         sigma.prior.probability = rep(0.5, ne[1]))
 }
@@ -179,7 +179,7 @@ graph(cmodel)
 
 ## define some model
 theta1 <- c(
-    d = log(sigmas), 
+    d = log(sigmas),
     l = rep(-1, ne[2])
 )
 
