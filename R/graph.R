@@ -353,8 +353,6 @@ hessian.graph <- function(graph, base, decomposition = c("eigen", "svd", "chol")
 #' @export
 cgeneric.graph <- function(...) {
   args <- list(...)
-  args$graph <- args$model
-  args$model <- NULL
   do.call(what = 'cgeneric_pcgraph',
           args = args)
 }

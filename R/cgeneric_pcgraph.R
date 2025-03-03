@@ -5,7 +5,7 @@
 #' creates an `inla.cgeneric` (see [cgeneric()])
 #' to implement the Penalized Complexity prior using the
 #' Kullback–Leibler divergence - KLD from a base model.
-#' @param graph  a `graph` (see [graph()]) or
+#' @param model  a `graph` (see [graph()]) or
 #' a square matrix (used as a graph)
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
@@ -52,7 +52,7 @@
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
 cgeneric_pcgraph <-
-  function(graph,
+  function(model,
            lambda,
            base,
            sigma.prior.reference,
@@ -76,10 +76,10 @@ cgeneric_pcgraph <-
       }
     }
 
-    if(inherits(graph, "matrix")) {
-      graph <- graph(graph)
+    if(inherits(model, "matrix")) {
+      model <- graph(model)
     }
-    Q0 <- Laplacian(graph)
+    Q0 <- Laplacian(model)
     n <- nrow(Q0)
     stopifnot(n>0)
     if(debug>99) {
@@ -150,7 +150,7 @@ cgeneric_pcgraph <-
       base <- rep(0, nEdges)
     }
 
-    Ibase <- hessian(graph, base, decomposition = "eigen")
+    Ibase <- hessian(model, base, decomposition = "eigen")
     if(debug) {
       cat("I(base model) elements\n")
       print(str(Ibase))
