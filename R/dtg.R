@@ -215,10 +215,12 @@ setMethod(
     trm0 <- attr(x, "relationship")
     stopifnot(ncol(trm0) == m)
     ilast <- which(rownames(trm0) == (colnames(trm0)[m]))
+    iplast <- which(!is.zero(trm0[ilast, ]))
+    trm0[, iplast] <- trm0[, iplast] + trm0[, m]
     trm <- trm0[-ilast, 1:(m-1), drop = FALSE]
 
     args <- lapply(1:(m-1), function(i) {
-      j <- trm[, i] !=0
+      j <- !is.zero(trm[, i])
       s <- ifelse(trm[j, i] < 0, "-", "+")
       if(s[1] == "+") s[1] <- ""
       e <- paste(
@@ -226,7 +228,7 @@ setMethod(
         "~",
         paste(s, rownames(trm)[j], collapse = "")
       )
-      update(y ~ x, e)
+      e
     }
     )
     do.call(
@@ -240,7 +242,6 @@ setMethod(
   "edges",
   "dtg",
   function(object, which, ...) {
-
     trm <- attr(object, "relationship")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
@@ -264,7 +265,7 @@ setMethod(
       edgl[[i]]$term <- edgl$edges
       edgl[[i]]$parent <- substr(edgl[[i]]$edges, 1, 1) == "p"
       edgl[[i]]$id <- new("integer", substring(edgl[[i]]$edges, 2))
-      edgl[[i]]$signal <- ifelse(edgl[[i]]$weights<0, -1, 1)
+      edgl[[i]]$sign <- ifelse(edgl[[i]]$weights<0, -1, 1)
     }
     return(edgl)
   }
@@ -275,14 +276,12 @@ setMethod(
   "plot",
   "dtg",
   function(x, y, ...) {
-
-    ## the graph
     edgl <- edges(x)
     nodes <- names(edgl)
     gr <- graph::graphNEL(
       nodes = nodes,
       edgeL = edgl,
-      edgemode='directed')
+      edgemode = 'directed')
 
     trm <- attr(x, "relationship")
     m <- ncol(trm)
@@ -293,61 +292,62 @@ setMethod(
       eval)
     nargs <- names(mc)
 
+    ppars <- list(
+      color =  {
+        if(any(nargs == "color"))
+          mc$color[1:2]
+        else
+          c("red", "blue")
+      },
+      fillcolor = {
+        if(any(nargs == "fillcolor"))
+          mc$fillcolor[1:2]
+        else
+          c("lightsalmon", "lightblue")
+      },
+      shape = {
+        if(any(nargs == "shape"))
+          mc$shape[1:2]
+        else
+          c("box", "circle")
+      },
+      height = {
+        if(any(nargs == "height"))
+          mc$height[1:2]
+        else
+          c(0.5, 0.5)
+      },
+      width = {
+        if(any(nargs == "width"))
+          mc$width[1:2]
+        else
+          c(0.75, 0.75)
+      },
+      fontsize = {
+        if(any(nargs == "fontsize"))
+          mc$fontsize
+        else
+          c(14, 14)
+      }
+    )
     nattr <- lapply(
-      list(
-        color =  {
-          if(any(nargs == "color"))
-            mc$color[1:2]
-          else
-            c("red", "blue")
-        },
-        fillcolor = {
-          if(any(nargs == "fillcolor"))
-            mc$fillcolor[1:2]
-          else
-            c("lightsalmon", "lightblue")
-        },
-        shape = {
-          if(any(nargs == "shape"))
-            mc$shape[1:2]
-          else
-            c("box", "circle")
-        },
-        height = {
-          if(any(nargs == "height"))
-            mc$height[1:2]
-          else
-            c(0.5, 0.5)
-        },
-        width = {
-          if(any(nargs == "width"))
-            mc$width[1:2]
-          else
-            c(0.75, 0.75)
-        },
-        fontsize = {
-          if(any(nargs == "fontsize"))
-            mc$fontsize
-          else
-            c(14, 14)
-        }
-      ), rep, times = c(m, n))
+      ppars, rep, times = c(m, n))
     for(i in 1:length(nattr))
       names(nattr[[i]]) <- nodes
 
-    # eattr <- buildEdgeList(gr)
-    # for(i in 1:m) {
-    #   j <- which(trm[, i] != 0)
-    #   for(k in 1:length(j)) {
-    #     nam <- paste0(colnames(trm), "~", rownames(trm)[j[k]])
-    #     l <- which(names(eattr) == nam)
-    #     eattr[[l]]@attrs$weight <- paste(trm[j[k], i])
-    #   }
-    # }
-    plot(gr,
-         nodeAttrs = nattr,
-         ##edgeAttrs = eattr,
-         ...)
+    ag <- agopen(gr, "", nodeAttrs = nattr)
+
+    for(k in 1:length(ag@AgEdge)) {
+      i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
+      j <- pmatch(ag@AgEdge[[k]]@head,
+                  edgl[[i]]$edges)
+      ag@AgEdge[[k]]@color <- c(
+        "red", "black", "blue")[edgl[[i]]$weights[j]+2]
+      if(any(nargs == "lwd"))
+        ag@AgEdge[[k]]@lwd <- mc$lwd[1]
+    }
+
+    plot(ag)
 
   }
 )
@@ -402,14 +402,14 @@ edtg2precision <- function(d.el) {
     nci <- length(i0)
     if(nci>0) {
       j <- d.el[[i]]$id[i0]
-      sch[k0 + 1:nci] <- d.el[[i]]$signal[i0]
+      sch[k0 + 1:nci] <- d.el[[i]]$sign[i0]
       iq1ch[k0 + 1:nci] <- ij[(col(ij) == (nc+i)) & (row(ij) %in% j)]
       k0 <- k0 + nci
-      sch[k0 + 1:nci] <- d.el[[i]]$signal[i0]
+      sch[k0 + 1:nci] <- d.el[[i]]$sign[i0]
       iq1ch[k0 + 1:nci] <- ij[(row(ij) == (nc+i)) & (col(ij) %in% j)]
       k0 <- k0 + nci
-      q0[j, nc+i] <- -d.el[[i]]$signal[i0]
-      q0[nc+i, j] <- -d.el[[i]]$signal[i0]
+      q0[j, nc+i] <- -d.el[[i]]$sign[i0]
+      q0[nc+i, j] <- -d.el[[i]]$sign[i0]
     }
     i2th[k1 + 1] <- i
     iq2th[k1 + 1] <- ij[(col(ij) == (nc+i)) & (row(ij) == (nc+i))]
@@ -419,16 +419,16 @@ edtg2precision <- function(d.el) {
     if(nj>0) {
       j0 <- d.el[[i]]$id[i0]
       i1th[k2 + 1:nj] <- j0
-      sth[k2 + 1:nj] <- d.el[[i]]$signal[i0] ## carry on the signal
+      sth[k2 + 1:nj] <- d.el[[i]]$sign[i0] ## carry on the sign
       j <- nc + j0
       iq1th[k2 + 1:nj] <- ij[, nc+i][j]
       k2 <- k2 + nj
       i1th[k2 + 1:nj] <- j0
-      sth[k2 + 1:nj] <- d.el[[i]]$signal[i0] ## carry on the signal
+      sth[k2 + 1:nj] <- d.el[[i]]$sign[i0] ## carry on the sign
       iq1th[k2 + 1:nj] <- ij[nc+i, ][j]
       k2 <- k2 + nj
-      q0[j, nc+i] <- -d.el[[i]]$signal[i0]
-      q0[nc+i, j] <- -d.el[[i]]$signal[i0]
+      q0[j, nc+i] <- -d.el[[i]]$sign[i0]
+      q0[nc+i, j] <- -d.el[[i]]$sign[i0]
     }
   }
   stopifnot(k1 == np)
@@ -492,7 +492,7 @@ edtg2variance <- function(d.el) {
     ic <- which(!d.el[[i]]$parent)
     if(length(ic)>0) {
       sch[d.el[[i]]$id[ic]] <-
-        d.el[[i]]$signal[ic]
+        d.el[[i]]$sign[ic]
       for(j in 1:length(ic)) {
         iP[d.el[[i]]$id[ic[j]]] <- i
       }

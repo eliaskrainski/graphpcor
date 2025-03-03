@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_dtg.R
 \name{cgeneric_dtg}
 \alias{cgeneric_dtg}
-\title{The \code{cgeneric} method for a DTG (see \code{\link[=dtg]{dtg()}})}
+\title{Build an \code{cgeneric} for DTG, see \code{\link[=dtg]{dtg()}})}
 \usage{
 cgeneric_dtg(
   model,
@@ -31,7 +31,10 @@ it is to be used the shared object within INLA.}
 objects to be used in the f() formula term in INLA.
 }
 \description{
-The \code{cgeneric} method for a DTG (see \code{\link[=dtg]{dtg()}})
+This set the necessary data to implement the penalized
+complexity prior for a correlation matrix considering
+a directed three graph - DTG as proposed in
+\href{https://arxiv.org/abs/2312.06289}{Sterrantino et. al. 2025}
 }
 \details{
 The correlation prior as in the paper depends on the lambda value.
@@ -49,5 +52,5 @@ sigma.prior.probability = c(0.05, 0.0, 0.01)
 then the sigma is fixed to 2 and not estimated.
 }
 \seealso{
-\code{\link[=dtg]{dtg()}}, \code{\link[=cgeneric]{cgeneric()}} and \code{\link[=cgeneric-methods]{cgeneric-methods()}}
+\code{\link[=dtg]{dtg()}} and \code{\link[=cgeneric]{cgeneric()}}
 }

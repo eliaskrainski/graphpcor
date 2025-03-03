@@ -9,7 +9,11 @@ g <- dtg(
 
 g
 
-plot(g)
+summary(g)
+
+drop(g)
+
+plot(g, lwd = 3)
 
 d <- dim(g)
 d

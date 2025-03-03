@@ -8,7 +8,6 @@
 \alias{print.corgraph}
 \alias{summary.corgraph}
 \alias{dim.corgraph}
-\alias{edges,corgraph-method}
 \alias{plot,corgraph,ANY-method}
 \alias{Laplacian.corgraph}
 \alias{chol,corgraph-method}
@@ -16,17 +15,15 @@
 \alias{precision.corgraph}
 \title{An object class used to model correlation matrices}
 \usage{
-corgraph.formula(...)
+\method{corgraph}{formula}(...)
 
-corgraph.matrix(x)
+\method{corgraph}{matrix}(x)
 
 \method{print}{corgraph}(x, ...)
 
 \method{summary}{corgraph}(object, ...)
 
 \method{dim}{corgraph}(x, ...)
-
-\S4method{edges}{corgraph}(object, which, ...)
 
 \S4method{plot}{corgraph,ANY}(x, y, ...)
 
@@ -50,8 +47,6 @@ The \code{~} is taken as link.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{edges(corgraph)}: The edges method for \code{corgraph}
-
 \item \code{plot(x = corgraph, y = ANY)}: The plot method for \code{corgraph}
 
 \item \code{chol(corgraph)}: Build the unite diagonal lower triangle matrix
@@ -59,10 +54,10 @@ The \code{~} is taken as link.
 }}
 \section{Functions}{
 \itemize{
-\item \code{corgraph.formula()}: The \code{corgraph} is a corgraph where each node represents
+\item \code{corgraph(formula)}: The \code{corgraph} is a corgraph where each node represents
 a variable and each edge indicates a conditional distribution.
 
-\item \code{corgraph.matrix()}: Build a \code{corgraph} from a matrix
+\item \code{corgraph(matrix)}: Build a \code{corgraph} from a matrix
 
 \item \code{print(corgraph)}: The print method for \code{corgraph}
 

@@ -1,4 +1,9 @@
-#' The `cgeneric` method for a DTG (see [dtg()])
+#' Build an `cgeneric` for DTG, see [dtg()])
+#' @description
+#' This set the necessary data to implement the penalized
+#' complexity prior for a correlation matrix considering
+#' a directed three graph - DTG as proposed in
+#' [Sterrantino et. al. 2025](https://arxiv.org/abs/2312.06289)
 #' @param model the DTG model specification.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
@@ -22,7 +27,7 @@
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
 #' then the sigma is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
-#' @seealso [dtg()], [cgeneric()] and [cgeneric-methods()]
+#' @seealso [dtg()] and [cgeneric()]
 #' @useDynLib graphpcor, .registration = TRUE
 #' @export
 cgeneric_dtg <-
@@ -39,7 +44,7 @@ cgeneric_dtg <-
     ich <- unlist(lapply(d.el, function(x)
       x$id[!x$parent]))
     sch <- unlist(lapply(d.el, function(x)
-      x$signal[!x$parent]))
+      x$sign[!x$parent]))
     sch <- sch[ich]
     if(debug) {
       cat(c(sch = sch), "\n")

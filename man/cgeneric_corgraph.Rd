@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_corgraph.R
 \name{cgeneric_corgraph}
 \alias{cgeneric_corgraph}
-\title{Build an \code{inla.cgeneric} for a graph, see \code{\link[=graph]{graph()}}}
+\title{Build an \code{inla.cgeneric} for a graph, see \code{\link[=corgraph]{corgraph()}}}
 \usage{
 cgeneric_corgraph(
   model,
@@ -60,7 +60,7 @@ Example: with low.params.fixed = c(NA, -1, NA, 1) the first
 and the third of these parameters will be estimated while
 the second is fixed and equal to -1 and the forth is fixed
 and equal to 1. NOTE: \code{params.id} will be applied here as
-low.params.fixed[params.id\link{n+1:m}-n]}
+\code{low.params.fixed[params.id[n+1:m]-n]}}
 
 \item{debug}{logical indicating if it is to debug.}
 

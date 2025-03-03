@@ -1,3 +1,8 @@
+#' The `corgraph` method
+#' @export
+corgraph <- function(...) {
+  UseMethod("corgraph")
+}
 #' The `precision` method
 #' @rdname precision-methods
 #' @param x object or model

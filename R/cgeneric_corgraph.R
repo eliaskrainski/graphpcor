@@ -1,4 +1,4 @@
-#' Build an `inla.cgeneric` for a graph, see [graph()]
+#' Build an `inla.cgeneric` for a graph, see [corgraph()]
 #' @description
 #' From either a `graph` (see [graph()]) or
 #' a square matrix (used as a graph),
@@ -43,7 +43,7 @@
 #' and the third of these parameters will be estimated while
 #' the second is fixed and equal to -1 and the forth is fixed
 #' and equal to 1. NOTE: `params.id` will be applied here as
-#' low.params.fixed[params.id[n+1:m]-n]
+#' `low.params.fixed[params.id[n+1:m]-n]`
 #' @param debug logical indicating if it is to debug.
 #' @param useINLAprecomp logical indicating if is to be used
 #' shared object pre-compiled by INLA. It is not considered if

@@ -40,11 +40,11 @@ corgraph.formula <- function(...) {
     dimnames = list(nodesL, nodesR))
   for(i in 1:m) {
     jj <- pmatch(terms.r[[i]], nodesR)
-    trm[i, jj] <- 1
+    grel[i, jj] <- 1
   }
   class(fch) <- 'corgraph'
   attr(fch, 'nodes') <- nodes
-  attr(fch, 'relationhip') <- grel
+  attr(fch, 'relationship') <- grel
   return(fch)
 }
 #' @describeIn corgraph
@@ -91,47 +91,34 @@ dim.corgraph <- function(x, ...) {
     edges=sum(attr(x, 'relationship')))
 }
 #' @describeIn corgraph
-#' The edges method for `corgraph`
-setMethod(
-  "edges",
-  "corgraph",
-  function(object, which, ...) {
-    ne <- dim(object)
-    nodes <- attr(object, "nodes")
-    stopifnot(!is.null(nodes))
-    stopifnot(ne[1]==length(nodes))
-    L <- Laplacian(object)
-    edgl <- vector("list", ne[2])
-    k <- 1
-    for(i in 1:ne[1]) {
-      jj <- intersect(which(!is.zero(L[i, ])), 2:ne[1])
-      if(length(jj)>0) {
-        for(j in jj) {
-          edgl[[k]] <- list(
-            n = 1L,
-            edges = nodes[j],
-            weights = 1.0)
-          edgl[[k]]$term <- j
-          k <- k+1
-        }
-      }
-    }
-    return(edgl)
-  }
-)
-#' @describeIn corgraph
 #' The plot method for `corgraph`
 #' @export
 setMethod(
   "plot",
   "corgraph",
   function(x, y, ...) {
-    edgl <- edges(x)
-    nodes <- names(edgl)
+    ne <- dim(x)
+    nodes <- attr(x, "nodes")
+    stopifnot(!is.null(nodes))
+    stopifnot(ne[1]==length(nodes))
+    L <- Laplacian(x)
+    edgl <- vector("list", ne[1])
+    for(i in 1:ne[1]) {
+      jj <- setdiff(which(!is.zero(L[i, ])), i)
+      ni <- length(jj)
+      if(ni>0) {
+        edgl[[i]] <- list(
+          n = ni,
+          edges = nodes[jj],
+          weights = rep(1.0, ni))
+        edgl[[i]]$term <- jj
+      }
+    }
+    names(edgl) <- nodes
     gr <- graph::graphNEL(
       nodes = nodes,
       edgeL = edgl,
-      edgemode='directed')
+      edgemode = 'undirected')
     plot(gr, ...)
   }
 )
@@ -161,7 +148,7 @@ Laplacian.corgraph <- function(graph) {
   )
   for(i in 1:nrow(grel)) {
     ii <- pmatch(rownames(grel)[i], nodes)
-    jj <- pmatch(colnames(grel)[graph[i, ]!=0], nodes)
+    jj <- pmatch(colnames(grel)[grel[i, ]!=0], nodes)
     L[i, jj] <- (-1)
   }
   L <- L + t(L)
