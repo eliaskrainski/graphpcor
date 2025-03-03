@@ -19,9 +19,9 @@ Authors@R: c(
          role = c("aut"),
          comment = c(ORCID = "0000-0002-0222-1881"))
   )
-Description: This package implement two approachs for 
-  modeling correlation matrices 
-  with a user-defined graphical structure.
+Description: This package implement distributions for 
+  correlation/covariance matrices including two approachs 
+  to model correlation matrices from a graphical structure.
   One use the latent parent variable framework as
   proposed in <https://arxiv.org/abs/2312.06289>.
   The other uses a graph to specify conditional 
@@ -49,15 +49,19 @@ RoxygenNote: 7.3.2
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Depends:
-    R (>= 3.6),
+    R (>= 4.4),
     Matrix,
     graph,
     Rgraphviz,
     numDeriv
 Imports:
-    stats
+    graphics,
+    grDevices,
+    methods,
+    stats,
+    utils
 Suggests:
-    INLA (>= 24.06.27),
+    INLA (>= 24.02.09),
     knitr
 VignetteBuilder: knitr
 BuildVignettes: true
