@@ -5,7 +5,7 @@
 \title{Build an \code{inla.cgeneric} for a graph, see \code{\link[=graph]{graph()}}}
 \usage{
 cgeneric_pcgraph(
-  graph,
+  model,
   lambda,
   base,
   sigma.prior.reference,
@@ -18,7 +18,7 @@ cgeneric_pcgraph(
 )
 }
 \arguments{
-\item{graph}{a \code{graph} (see \code{\link[=graph]{graph()}}) or
+\item{model}{a \code{graph} (see \code{\link[=graph]{graph()}}) or
 a square matrix (used as a graph)
 to define the precision structure of the model.}
 
