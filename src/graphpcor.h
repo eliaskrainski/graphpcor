@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <cgeneric.h>
+#include "cgeneric.h"
 #include "graphpcor_utils.h"
 
 #if !defined(Calloc)
