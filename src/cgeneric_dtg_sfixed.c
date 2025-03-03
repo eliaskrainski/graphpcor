@@ -1,5 +1,5 @@
 
-/* cgeneric_graphpcor_sfixed.c
+/* cgeneric_dtg_sfixed.c
  *
  * Copyright (C) 2023 Elias Krainski
  *

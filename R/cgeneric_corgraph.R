@@ -51,7 +51,7 @@
 #' @param libpath string to the shared object. Default is NULL.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-cgeneric_pcgraph <-
+cgeneric_corgraph <-
   function(model,
            lambda,
            base,
@@ -77,7 +77,7 @@ cgeneric_pcgraph <-
     }
 
     if(inherits(model, "matrix")) {
-      model <- graph(model)
+      model <- corgraph(model)
     }
     Q0 <- Laplacian(model)
     n <- nrow(Q0)
@@ -169,7 +169,7 @@ cgeneric_pcgraph <-
     }
 
     m_args <- list(
-      model = "inla_cgeneric_pcgraph",
+      model = "inla_cgeneric_corgraph",
       shlib = libpath,
       n = as.integer(n),
       debug = as.integer(debug),

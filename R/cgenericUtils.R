@@ -182,6 +182,12 @@ prior.inla.cgeneric <- function(model, theta) {
                       theta = theta))
 }
 #' @describeIn cgeneric
+#' Retrieve the graph
+#' @export
+graph <- function(model, ...) {
+  UseMethod("graph")
+}
+#' @describeIn cgeneric
 #' Retrieve the graph of an `inla.cgeneric` object
 #' @export
 graph.inla.cgeneric <- function(model, ...) {

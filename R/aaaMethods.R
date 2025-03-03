@@ -1,10 +1,3 @@
-#' The `graph` method
-#' @param model model object
-#' ... additional arguments passed on
-#' @export
-graph <- function(model, ...) {
-  UseMethod("graph")
-}
 #' The `precision` method
 #' @rdname precision-methods
 #' @param x object or model

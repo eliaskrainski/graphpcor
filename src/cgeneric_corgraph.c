@@ -1,5 +1,5 @@
 
-/* cgeneric_pc_graph.c
+/* cgeneric_corgraph.c
  *
  * Copyright (C) 2025 Elias Krainski
  *
@@ -27,7 +27,7 @@
 
 #include "graphpcor.h"
 
-double *inla_cgeneric_pcgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
+double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
   double *ret = NULL;

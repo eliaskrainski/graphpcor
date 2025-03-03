@@ -1,8 +1,8 @@
 #' Directed Tree Graph - DTG
 setClass("dtg")
 
-#' Set the graph class
-setClass("graph")
+#' An object class used to model correlation matrices
+setClass("corgraph")
 
 #' `inla.rgeneric` class, short `rgeneric`,
 #' to define a [INLA::rgeneric()] latent model

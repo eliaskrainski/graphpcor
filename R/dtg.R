@@ -176,7 +176,7 @@ dtg <- function(...) {
   class(fch) <- "dtg"
   attr(fch, "children") <- n
   attr(fch, "parent") <- m
-  attr(fch, "relation") <- trm
+  attr(fch, "relationship") <- trm
 
   return(fch)
 
@@ -196,12 +196,12 @@ print.dtg <- function(x, ...) {
 #' @rdname dtg
 #' @export
 summary.dtg <- function(object, ...) {
-  attr(object, "relation")
+  attr(object, "relationship")
 }
 #' @rdname dtg
 #' @export
 dim.dtg <- function(x, ...) {
-  trm <- attr(x, "relation")
+  trm <- attr(x, "relationship")
   m <- ncol(trm)
   c(children = nrow(trm) - m + 1, parent = m)
 }
@@ -212,7 +212,7 @@ setMethod(
   "dtg",
   function(x) {
     stopifnot((m <- length(x))>1)
-    trm0 <- attr(x, "relation")
+    trm0 <- attr(x, "relationship")
     stopifnot(ncol(trm0) == m)
     ilast <- which(rownames(trm0) == (colnames(trm0)[m]))
     trm <- trm0[-ilast, 1:(m-1), drop = FALSE]
@@ -241,7 +241,7 @@ setMethod(
   "dtg",
   function(object, which, ...) {
 
-    trm <- attr(object, "relation")
+    trm <- attr(object, "relationship")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
     if(m>1) {
@@ -284,7 +284,7 @@ setMethod(
       edgeL = edgl,
       edgemode='directed')
 
-    trm <- attr(x, "relation")
+    trm <- attr(x, "relationship")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
 
@@ -356,7 +356,7 @@ setMethod(
 precision.dtg <- function(x, ...) {
   d <- dim(x)
   Q <- matrix()
-  trm <- attr(x, "relation")
+  trm <- attr(x, "relationship")
   edgl <- edges(x)
   q.el <- edtg2precision(edgl[1:d[2]])
   mc <- list(...)
