@@ -37,10 +37,11 @@
 #' consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
 #' compute \eqn{x[k] = pi/(1+exp(-theta[k]))}
 #' organize it as a lower triangle of a \eqn{n \times n} matrix
-#' \deqn{         | cos(x[i,j])                           ,      j=1}
-#' \deqn{B[i,j] = | cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]),  2 <= j <= i-1}
-#' \deqn{         | prod_{k=1}^{j-1}sin(x[i,k])           ,      j=i}
-#' \deqn{         | 0                                     , j+1 <= j <= n }
+#' \deqn{B[i,j] = \left\{\begin{array}{cc}
+#' cos(x[i,j]) & j=1 \\
+#' cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]) &  2 <= j <= i-1 \\
+#' prod_{k=1}^{j-1}sin(x[i,k])  & j=i \\
+#' 0 &  j+1 <= j <= n \end{array}\right.}
 #' Result
 #' \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
 #'  \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}

@@ -48,7 +48,7 @@ P(sigma < \verb{sigma.prior.reference') = p. If a probability is NA, 0 or 1, the
 common parameter values. The first \code{n} are index to the
 standard deviations and the remaining \code{m}
 are related to partial correlations.
-Example: By setting params.id = c(1,1,2,3, 4,5,5,6),
+Example: By setting \code{params.id = c(1,1,2,3, 4,5,5,6)},
 the first two standard deviations are common and the
 second and third partial correlations are common as well,
 giving 6 unknown parameters in the model.}
@@ -56,7 +56,7 @@ giving 6 unknown parameters in the model.}
 \item{low.params.fixed}{logical vector of length \code{m}
 to provide the value at which the parameters in the lower
 of the L matrix are to be fixed. NA indicates not fixed.
-Example: with low.params.fixed = c(NA, -1, NA, 1) the first
+Example: with \code{low.params.fixed = c(NA, -1, NA, 1)} the first
 and the third of these parameters will be estimated while
 the second is fixed and equal to -1 and the forth is fixed
 and equal to 1. NOTE: \code{params.id} will be applied here as
