@@ -38,6 +38,13 @@ cgeneric_get <- function(model,
       stop("Please provide 'theta'!")
     } else {
       theta <- NULL
+      ntheta = 0L
+    }
+  } else {
+    if(inherits(theta, "matrix")) {
+      ntheta <- as.integer(ncol(theta))
+    } else {
+      ntheta <- 1L
     }
   }
 
@@ -46,6 +53,7 @@ cgeneric_get <- function(model,
       "cgeneric_element_get",
       cmd,
       theta,
+      as.integer(ntheta),
       cgdata$ints,
       cgdata$doubles,
       cgdata$characters,
@@ -63,6 +71,7 @@ cgeneric_get <- function(model,
           "cgeneric_element_get",
           "graph",
           NULL,
+          as.integer(ntheta),
           cgdata$ints,
           cgdata$doubles,
           cgdata$characters,
@@ -90,6 +99,7 @@ cgeneric_get <- function(model,
           "cgeneric_element_get",
           x,
           theta,
+          as.integer(ntheta),
           cgdata$ints,
           cgdata$doubles,
           cgdata$characters,
@@ -122,6 +132,7 @@ cgeneric_get <- function(model,
         "cgeneric_element_get",
         "graph",
         theta,
+        as.integer(ntheta),
         cgdata$ints,
         cgdata$doubles,
         cgdata$characters,

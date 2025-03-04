@@ -32,9 +32,18 @@
 #include <Rinternals.h>
 #include "graphpcor.h"
 
-SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP chars, SEXP mats, SEXP smats) {
+SEXP cgeneric_element_get(
+    SEXP Rcmd, SEXP Stheta, SEXP Sntheta, SEXP ints,
+    SEXP doubles, SEXP chars, SEXP mats, SEXP smats) {
 
-  int ni=0, nd=0, nc=0, nm=0, nsm=0;
+  int ni=0, nd=0, nc=0, nm=0, nsm=0, nout=0;
+  int i, j, debug;
+  int *ntheta = INTEGER(Sntheta);
+  int nth = length(Stheta);
+  if(ntheta[0]>0) {
+    nth /= ntheta[0];
+  }
+
   // initial check: mandatory arguments
   if(isNewList(ints)) {
     ni = length(ints);
@@ -90,28 +99,38 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
 
   // get initial info
   char *CMD = (char*)CHAR(STRING_ELT(Rcmd, 0));
-  int i, debug;
   //n = asInteger(VECTOR_ELT(ints, 0));
   debug = asInteger(VECTOR_ELT(ints, 1));
   if(debug>0) {
     Rprintf("Rcmd is %s, debug = %d\n", CMD, debug);
     //Rprintf("n = %d, debug = %d\n", n, debug);
-    Rprintf("ni = %d, nd = %d, nc = %d, nm = %d, nsm = %d\n", ni, nd, nc, nm, nsm);
+    Rprintf("ni = %d, nd = %d, nc = %d, nm = %d, nsm = %d, ntheta = %d, nth = %d\n",
+            ni, nd, nc, nm, nsm, ntheta[0], nth);
   }
 
   double *theta = NULL;
-  if(!isNull(Stheta))
+  if(!isNull(Stheta)) {
     theta = REAL(Stheta);
-  if(debug) {
-    Rprintf("theta: ");
-    for(i=0; i<length(Stheta); i++) {
-      Rprintf("%f ", theta[i]);
+    if(debug) {
+      Rprintf("theta: ");
+      if((ntheta[0])<2) {
+        for(i=0; i<nth; i++) {
+          Rprintf("%f ", theta[i]);
+        }
+        Rprintf("\n");
+      } else {
+        for(j=0; j<(ntheta[0]); j++) {
+          for(i=0; i<nth; i++) {
+            Rprintf("%f ", theta[i]);
+          }
+          Rprintf("\n");
+        }
+      }
     }
-    Rprintf("\n");
   }
 
   // define objects
-  int j, ilen[ni], clen[nc];
+  int ilen[ni], clen[nc];
   lt_dlhandle handle;
   inla_cgeneric_func_tp *model_func = NULL;
   inla_cgeneric_data_tp *cgeneric_data = Calloc(1, inla_cgeneric_data_tp);
@@ -288,7 +307,6 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   handle = lt_dlopen(cgeneric_shlib);
   model_func = (inla_cgeneric_func_tp *) lt_dlsym(handle, cgeneric_model);
 
-  int nout = 0;
   SEXP Rret = R_NilValue;
 
   if(strcmp(CMD, "graph") == 0) {
@@ -355,9 +373,12 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP ints, SEXP doubles, SEXP 
   }
 
   if(strcmp(CMD, "log_prior") == 0) {
-    ret = model_func(INLA_CGENERIC_LOG_PRIOR, theta, cgeneric_data);
-    Rret = PROTECT(allocVector(REALSXP, 1));
-    REAL(Rret)[0] = ret[0];
+    Rret = PROTECT(allocVector(REALSXP, ntheta[0]));
+    for(j=0; j<(ntheta[0]); j++) {
+      ret = model_func(INLA_CGENERIC_LOG_PRIOR,
+                          &theta[j*nth], cgeneric_data);
+      REAL(Rret)[j] = ret[0];
+    }
     UNPROTECT(1);
   }
 
