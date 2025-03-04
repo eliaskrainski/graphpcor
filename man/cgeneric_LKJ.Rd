@@ -5,12 +5,12 @@
 \title{build an \code{inla.cgeneric} to implement the LKG prior
 for the correlation matrix.}
 \usage{
-cgeneric_LKJ(eta, n, debug = FALSE, useINLAprecomp = !TRUE)
+cgeneric_LKJ(n, eta, debug = FALSE, useINLAprecomp = !TRUE)
 }
 \arguments{
-\item{eta}{numeric greater than 1, the parameter}
-
 \item{n}{integer to define the size of the matrix}
+
+\item{eta}{numeric greater than 1, the parameter}
 
 \item{debug}{logical indicating if it is to debug.}
 

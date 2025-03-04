@@ -1,7 +1,7 @@
 #' build an `inla.cgeneric` to implement the LKG prior
 #' for the correlation matrix.
-#' @param eta numeric greater than 1, the parameter
 #' @param n integer to define the size of the matrix
+#' @param eta numeric greater than 1, the parameter
 #' @param debug logical indicating if it is to debug.
 #' @param useINLAprecomp logical indicating if is to be used
 #' shared object pre-compiled by INLA. It is not considered if
@@ -30,8 +30,8 @@
 #' @return a [cgeneric()] object to be used in the f() formula term in INLA.
 #'
 cgeneric_LKJ <-
-  function(eta,
-           n,
+  function(n,
+           eta,
            debug = FALSE,
            useINLAprecomp = !TRUE) {
 

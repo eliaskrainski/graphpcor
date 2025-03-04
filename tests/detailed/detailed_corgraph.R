@@ -86,11 +86,18 @@ cmodel <- cgeneric(
     sigma.prior.probability = rep(0.5, ne[1]),
     debug = 1e9)
 
+prior(cmodel, theta = theta0l)
+
+mu(cmodel)
+
+initial(cmodel)
+
 graph(cmodel) ## the structure of the precision
 
 cmodel$f$cgeneric$data$doubles$thetabasescaled
 ## [1] -0.2190589 -0.2256071 -0.2690858 -0.2829668
 drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta0l)
+## [1] -0.2190589 -0.2256071 -0.2690858 -0.2829668
 
 round(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]), 3)
 ##        [,1]   [,2]   [,3]   [,4]

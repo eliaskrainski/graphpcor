@@ -95,7 +95,7 @@ variance(g, theta = c(-5,-5,-5,5))
 cmodel <- cgeneric(
     model = g, ## a `corgraph` in model argument
     lambda = 1,
-    base = theta0l,
+    base = theta0l, 
     sigma.prior.reference = rep(1, ne[1]),
     sigma.prior.probability = rep(0.5, ne[1]))
 
