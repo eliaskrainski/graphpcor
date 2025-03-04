@@ -5,24 +5,24 @@
 \title{Build an \code{cgeneric} for DTG, see \code{\link[=dtg]{dtg()}})}
 \usage{
 cgeneric_dtg(
-  model,
+  graph,
+  lambda,
   sigma.prior.reference,
   sigma.prior.probability,
-  lambda,
   debug = FALSE,
   useINLAprecomp = !TRUE
 )
 }
 \arguments{
-\item{model}{the DTG model specification.}
+\item{graph}{the DTG model specification.}
+
+\item{lambda}{the lambda for the graph correlation prior.}
 
 \item{sigma.prior.reference}{a vector with the reference values
 to define the prior for the standard deviation parameters.}
 
 \item{sigma.prior.probability}{a vector with the probability values
 to define the prior for the standard deviation parameters.}
-
-\item{lambda}{the lambda for the graph correlation prior.}
 
 \item{useINLAprecomp}{logical indicating if
 it is to be used the shared object within INLA.}

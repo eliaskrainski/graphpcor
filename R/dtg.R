@@ -512,6 +512,8 @@ edtg2variance <- function(d.el) {
 #' @export
 cgeneric.dtg <- function(...) {
   args <- list(...)
+  args$graph <- args$model
+  args$model <- NULL
   do.call(what = 'cgeneric_dtg',
           args = args)
 }

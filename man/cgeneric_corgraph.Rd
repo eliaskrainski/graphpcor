@@ -5,7 +5,7 @@
 \title{Build an \code{inla.cgeneric} for a graph, see \code{\link[=corgraph]{corgraph()}}}
 \usage{
 cgeneric_corgraph(
-  model,
+  graph,
   lambda,
   base,
   sigma.prior.reference,
@@ -18,8 +18,8 @@ cgeneric_corgraph(
 )
 }
 \arguments{
-\item{model}{a \code{graph} (see \code{\link[=graph]{graph()}}) or
-a square matrix (used as a graph)
+\item{graph}{a \code{corgraph} (see \code{\link[=corgraph]{corgraph()}}) or
+a square matrix (to be used as a graph)
 to define the precision structure of the model.}
 
 \item{lambda}{the parameter for the exponential prior on
@@ -78,5 +78,5 @@ From either a \code{graph} (see \code{\link[=graph]{graph()}}) or
 a square matrix (used as a graph),
 creates an \code{inla.cgeneric} (see \code{\link[=cgeneric]{cgeneric()}})
 to implement the Penalized Complexity prior using the
-Kullback–Leibler divergence - KLD from a base model.
+Kullback–Leibler divergence - KLD from a base corgraph.
 }

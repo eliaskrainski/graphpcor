@@ -4,9 +4,9 @@
 #' a square matrix (used as a graph),
 #' creates an `inla.cgeneric` (see [cgeneric()])
 #' to implement the Penalized Complexity prior using the
-#' Kullback–Leibler divergence - KLD from a base model.
-#' @param model  a `graph` (see [graph()]) or
-#' a square matrix (used as a graph)
+#' Kullback–Leibler divergence - KLD from a base corgraph.
+#' @param graph  a `corgraph` (see [corgraph()]) or
+#' a square matrix (to be used as a graph)
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
 #' the radius of the sphere, see details.
@@ -52,7 +52,7 @@
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
 cgeneric_corgraph <-
-  function(model,
+  function(graph,
            lambda,
            base,
            sigma.prior.reference,
@@ -76,10 +76,10 @@ cgeneric_corgraph <-
       }
     }
 
-    if(inherits(model, "matrix")) {
-      model <- corgraph(model)
+    if(inherits(graph, "matrix")) {
+      graph <- corgraph(graph)
     }
-    Q0 <- Laplacian(model)
+    Q0 <- Laplacian(graph)
     n <- nrow(Q0)
     stopifnot(n>0)
     if(debug>99) {
@@ -150,7 +150,7 @@ cgeneric_corgraph <-
       base <- rep(0, nEdges)
     }
 
-    Ibase <- hessian(model, base, decomposition = "eigen")
+    Ibase <- hessian(graph, base, decomposition = "eigen")
     if(debug) {
       cat("I(base model) elements\n")
       print(str(Ibase))

@@ -333,6 +333,8 @@ hessian.corgraph <- function(corgraph, base, decomposition = c("eigen", "svd", "
 #' @export
 cgeneric.corgraph <- function(...) {
   args <- list(...)
+  args$graph <- args$model
+  args$model <- NULL
   do.call(what = 'cgeneric_corgraph',
           args = args)
 }
