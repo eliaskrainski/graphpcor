@@ -4,25 +4,31 @@ library(graphpcor)
 
 n <- 4
 (m <- n*(n-1)/2)
+
 eta <- 10
 
-model <- cgeneric(
+cmodel <- cgeneric(
     model = "LKJ", 
     n = n,
-    eta = eta)
+    eta = eta
+)
 
-graph(model, optimize = TRUE)
+graph(cmodel, optimize = TRUE)
 
-graph(model)
+graph(cmodel)
 
-round(ith <- initial(model), 4)
+initial(cmodel)
 
 theta1 <- rnorm(m)
 
-(qq <- precision(model, theta = theta1))
+(qq <- precision(cmodel, theta = theta1))
 
 (vv <- solve(qq))
 
+all.equal(as.matrix(vv),
+          tcrossprod(graphpcor:::theta2gamma2L(theta1)))
+
+## fake data
 dat1 <- data.frame(    
     i = 1:n,
     y = rep(NA, n)
@@ -33,7 +39,7 @@ cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 cmode <- list(theta = theta1, fixed = TRUE)
 
 fit <- inla(
-    y ~ 0 + f(i, model = model),
+    y ~ 0 + f(i, model = cmodel),
     data = dat1,
     control.family = cfam,
     control.inla = cinla,
@@ -55,7 +61,7 @@ dat2 <- data.frame(
 str(dat2)
 
 fitr <- inla(
-    y ~ 0 + f(i, model = model, replicate = r),
+    y ~ 0 + f(i, model = cmodel, replicate = r),
     data = dat2,
     control.family = cfam,
     control.inla = cinla,
