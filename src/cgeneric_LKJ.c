@@ -156,18 +156,38 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
     // precomp constant
     ret[0] = lc;
 
-    double daux;
-    // add the Jacobian of theta[i] -> gamma[i]
+    double daux, gammas[nth];
+    // add Jacobian of theta[i] -> gammas[i]
     for(i=0; i<nth; i++) {
       daux = exp(-theta[i]);
+      gammas[i] = M_PI/(1.0 + daux);
       if(debug>9999)
-        printf("theta[%d] = %2.5f, J = %2.5f\n",
-               i, theta[i], M_PI * daux / SQR(1.0 + daux));
+        printf("theta[%d] = %2.5f, gammas[%d] = %2.5f, J = %2.5f\n",
+               i, theta[i], i, gammas[i], M_PI * daux / SQR(1.0 + daux));
       ret[0] += M_PI * daux / SQR(1.0 + daux);
     }
     if(debug>99) {
-      printf("Jacobian = %2.3f, %2.3f ",
+      printf("Jacobian1 = %2.3f, %2.3f ",
              ret[0]-lc, ret[0]);
+    }
+    // add Jacobian gammas -> (r, psi_1, ..., psi_m)
+    if(nth>1) {
+      double hparams[nth];
+      hparams[nth-1] = atan2(gammas[nth-1], gammas[nth-2]);
+      daux = SQR(gammas[nth-1]) + SQR(gammas[nth-2]);
+      for(i=(nth-2); i>=0; i--) {
+        hparams[i] = atan2(sqrt(daux), gammas[i-1]);
+        daux += SQR(gammas[i-1]);
+      }
+      hparams[0] = sqrt(daux);
+      daux = ((double)(nth-1)) * log(sin(hparams[0]));
+      for(i=1; i<(nth-1); i++) {
+        daux += ((double)(nth-1-i)) * log(sin(hparams[i]));
+      }
+      ret[0] += daux;
+      if(debug>99) {
+        printf("Jacobian 2 = %2.3f, %2.5f\n", daux, ret[0]);
+      }
     }
     // log determinant
     double ll[M];
@@ -178,8 +198,8 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
       daux *= 2.0;
     }
     if(debug>99) {
-      printf("eta-1 = %2.3f, eta-1.0 = %2.3f, |R| = %2.5f, lc+(eta-1)|R| = %2.5f, %2.5f\n",
-             eta-1, eta-1.0, daux, lc+(eta-1)*daux, daux * (eta-1.0));
+      printf("|R| = %2.5f, lc+(eta-1)|R| = %2.5f\n",
+             daux, lc+(eta-1)*daux);
     }
     ret[0] += daux * (eta-1.0);
 
