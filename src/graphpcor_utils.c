@@ -130,7 +130,7 @@ void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L) {
   if(n==2) {
     L[1] = co[0];
     L[2] = si[0];
-    hldet[0] = L[2];
+    hldet[0] = log(L[2]);
   }
   if(n==3) {
     L[1] = co[0];
@@ -138,13 +138,12 @@ void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L) {
     L[3] = si[0];
     L[4] = co[2]*si[1];
     L[5] = si[1]*si[2];
-    hldet[0] = L[3] + L[5];
-
+    hldet[0] = log(L[3]) + log(L[5]);
   }
   if(n>3) {
-    //    printL(L, n, n, "L[i,j]\n");
     //    printL(co, n1, n1, "cos[i,j]\n");
     //    printL(si, n1, n1, "sin[i,j]\n");
+    //    printL(L, n, n, "L[i,j]\n");
     // s[i,j] = \prod_{k=0}^{j-1} sin(x[i,k])
 
     for(i=1; i<n1; i++) {
@@ -156,16 +155,21 @@ void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L) {
         si[k1] *= si[k0]; // \prod{k=0}^{j-1} sin(x[i,k])
       }
     }
+    //printL(si, n1, n1, "sin[i,j]\n");
 
     // build L[,1]
     k0 = 0;
     k1 = n;
+    hldet[0] = 0.0;
     for(i=1; i<n; i++) {
       L[i] = co[i-1];       // L[, 1]
       L[k1] = si[k0];       // diag(L)
+//      printf("L[%d,%d] = %2.5f ", i, i, L[k1]);
+      hldet[0] += log(L[k1]);
       k0 += n-i;
       k1 += n-i;
     }
+    //printL(L, n, n, "L[i,j]\n");
 
 //    printL(si, n-1, n-1, "cum prod of sin[i,j]\n");
 // L[lower,2:n] is now just si[2:n,2:j] * co[2:n,1:j-1]

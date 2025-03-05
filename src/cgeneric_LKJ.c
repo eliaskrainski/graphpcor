@@ -156,15 +156,32 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
     // precomp constant
     ret[0] = lc;
 
-    double daux, ll[nth];
-    // Jacobian
-    for(i=0; i<N; i++) {
+    double daux;
+    // add the Jacobian of theta[i] -> gamma[i]
+    for(i=0; i<nth; i++) {
       daux = exp(-theta[i]);
+      if(debug>9999)
+        printf("theta[%d] = %2.5f, J = %2.5f\n",
+               i, theta[i], M_PI * daux / SQR(1.0 + daux));
       ret[0] += M_PI * daux / SQR(1.0 + daux);
     }
+    if(debug>99) {
+      printf("Jacobian = %2.3f, %2.3f ",
+             ret[0]-lc, ret[0]);
+    }
     // log determinant
+    double ll[M];
     theta2gamma2Lcorr(N, &daux, &theta[0], &ll[0]);
-    ret[0] += daux * 2.0 * (eta-1.0);
+    if(daux<0) {
+      daux *= -2.0;
+    } else {
+      daux *= 2.0;
+    }
+    if(debug>99) {
+      printf("eta-1 = %2.3f, eta-1.0 = %2.3f, |R| = %2.5f, lc+(eta-1)|R| = %2.5f, %2.5f\n",
+             eta-1, eta-1.0, daux, lc+(eta-1)*daux, daux * (eta-1.0));
+    }
+    ret[0] += daux * (eta-1.0);
 
   }
     break;

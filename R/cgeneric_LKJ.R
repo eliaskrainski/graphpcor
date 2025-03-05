@@ -50,9 +50,9 @@ cgeneric_LKJ <-
     stopifnot(eta>0)
 
     k <- 1:(n-1)
-    lc <- sum((2*eta-2+n-1:n)*(n-1:n))*log(2) +
-      sum((n-k)*lbeta(eta + (n-k-1)/2,
-                      eta + (n-k-1)/2))
+    lc <- sum((2*eta-2+n-k)*(n-k))*log(2) +
+      sum(lbeta(eta + (n-k-1)/2,
+                eta + (n-k-1)/2)*(n-k))
 
     if(debug) {
       cat('log C', lc, '\n')
@@ -75,8 +75,8 @@ cgeneric_LKJ <-
               debug = as.integer(debug)
             ),
             doubles = list(
-              eta = as.numeric(eta),
-              lc = as.numeric(lc)
+              eta = as.double(eta),
+              lc = as.double(lc)
             ),
             characters = list(
               model = cmodel,
