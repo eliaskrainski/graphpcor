@@ -82,20 +82,32 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   nparams[2] = itheta->ints[M-1]+1;
   nparams[1] = nparams[2]-nparams[0];
 
+  assert(!strcasecmp(data->ints[11]->name, "sfixed"));     // this will always be the case
+  assert(N == data->ints[11]->len);
+  int sfixed[N];
+  for(i=0; i<N; i++) {
+    sfixed[i] = data->ints[11]->ints[i];
+  }
+
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
   double lambda = data->doubles[0]->doubles[0];
-  assert(lambda>0);
+  assert(lambda>0.0);
 
-  assert(!strcasecmp(data->doubles[1]->name, "slambdas"));
-  inla_cgeneric_vec_tp *slambdas = data->doubles[1];
-  assert(slambdas->len>0);
-  assert(slambdas->len == N);
+  assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
+  inla_cgeneric_vec_tp *sigmaref = data->doubles[1];
+  assert(sigmaref->len>0);
+  assert(sigmaref->len == N);
 
-  assert(!strcasecmp(data->doubles[2]->name, "lconst"));
-  double lconst = data->doubles[2]->doubles[0];
+  assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
+  inla_cgeneric_vec_tp *sigmaprob = data->doubles[2];
+  assert(sigmaprob->len>0);
+  assert(sigmaprob->len == N);
 
-  assert(!strcasecmp(data->doubles[3]->name, "thetabasescaled"));
-  assert(data->doubles[3]->length==ne);
+  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
+  double lconst = data->doubles[3]->doubles[0];
+
+  assert(!strcasecmp(data->doubles[4]->name, "thetabasescaled"));
+  assert(data->doubles[4]->length==ne);
 
   assert(!strcasecmp(data->mats[0]->name, "hHneg"));
   assert(data->mats[0]->nrow==ne);
@@ -103,16 +115,25 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 
   double lowtheta[ne], thetat[ne];
   double sigmas[N];
+  int nsu = 0;
   if(theta) {
     for(i=0; i<N; i++) {
-      sigmas[i] = exp(theta[itheta->ints[i]]);
+      assert(sigmaref->doubles[i]>0);
+      if(sfixed[i]) {
+        sigmas[i] = sigmaref->doubles[itheta->ints[i]];
+      } else {
+        sigmas[i] = exp(theta[itheta->ints[i]]);
+        nsu++;
+      }
     }
     if(debug>99) {
+      printf("n sigma to be estimated = %d", nsu);
+      printMat(sfixed,1,N,"sfixed\n");
       printMat(sigmas,1,N,"sigmas\n");
     }
     // this is I(\theta_0)^{-0.5} \theta_0
     for(i=0; i<ne; i++) {
-      thetat[i] = data->doubles[3]->doubles[i];
+      thetat[i] = data->doubles[4]->doubles[i];
       lowtheta[i] = theta[itheta->ints[N+i]];
     }
     if(debug>99){
@@ -336,11 +357,16 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     //    log(lambda) -(m-1)*log(pi)-log(2)-log(|H|)
     ret[0] = lconst;
 
-    // PC prior for M precision
+    // PC prior for sigma[i]
     double lam, val, pparams[ne];
     for(i = 0; i < nparams[0]; i++) {
-      lam = slambdas->doubles[i];
-      ret[0] += pclogsigma(theta[i], lam);
+      if(sfixed[i]>0) {
+        lam = -log(sigmaprob->doubles[i]) / sigmaref->doubles[i];
+        ret[0] += pclogsigma(log(sigmas[i]), lam);
+        if(debug>999) {
+          printf("lamb[%d] = %2.3f, p %2.3f \n", i, lam, ret[0]);
+        }
+      }
     }
 
     // TO BE FIXED when nparams[2]<ne?
@@ -358,8 +384,10 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 
     double ldJacobian;
     ldJacobian = ((double)(ne-1)) * log(pparams[0]);
-    for(i=1; i<(ne-1); i++) { // not the last one
-      ldJacobian += ((double)(ne-1-i)) * log(sin(pparams[i]));
+    if(ne>2) {
+      for(i=1; i<(ne-1); i++) { // not the last one
+        ldJacobian += ((double)(ne-1-i)) * log(sin(pparams[i]));
+      }
     }
     if(debug>999) {
       printf("log det Jacobian = %2.7f\n", ldJacobian);

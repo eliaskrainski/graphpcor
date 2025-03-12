@@ -14,7 +14,8 @@ dlkj <- function(R, eta, verbose = FALSE) {
     p2 <- sum((2*eta -2 + d - k)*(d-k))
     if(verbose) print(p2)
     if(verbose) print(sum(lbk) + p2*log(2))
-    sum(lbk) + p2*log(2) + (eta-1)*abs(ldR)
+    o <- sum(lbk) + p2*log(2) + (eta-1)*ldR
+    return(o)
 }
 
 ################################################################
@@ -48,10 +49,22 @@ log(attr(lR, 'determinant'))
 
 dlkj(R, eta, TRUE)
 
-pi*exp(-theta1)/((1+exp(-theta1))^2)
+j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+j2fn <- function(x) {
+    m <- length(x)
+    r <- 0
+    if(m>1) {
+        r <- (m-1) * log(x[1])
+        for(i in 1:(m-1)) {
+            r <- r + (m-i-1) * log(sin(x[i+1]))
+        }
+    }
+    return(r)
+}
+j2 <- j2fn(graphpcor:::x2rphi(pi/(1+exp(-theta1))))
+c(j1 = j1, j2 = j2)
 
-all.equal(p2, dlkj(R, eta) +
-              sum(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+all.equal(p2, dlkj(R, eta) + j1 + j2)
 
 ################################################################
 ## n = 3
@@ -98,14 +111,42 @@ cmodel <- cgeneric(
 
 str(cmodel)
 
+precision(cmodel)
+solve(precision(cmodel))
+solve(precision(cmodel, theta = theta1))
+
+precision(cmodel, theta = theta1)
+(Q1 <- chol2inv(t(graphpcor:::theta2gamma2L(theta1))))
+
+itest <- inla(y ~ 0 + f(i, model = cmodel),
+     data = list(y = rep(NA, n), i = 1:n),
+     control.family = list(
+         hyper = list(prec = list(initial = 10, fixed = TRUE))
+     ),
+     control.mode = list(theta = theta1, fixed = TRUE),
+     control.compute = list(config = TRUE),
+     verbose = !TRUE)
+
+itest$mode$theta
+solve(precision(itest))
+solve(Q1)
+
 p3 <- prior(cmodel, theta = theta1)
 p3
 
-log(attr(lR, 'determinant'))
-dlkj(R, eta, TRUE)
+gamma1
 pi*exp(-theta1)/((1+exp(-theta1))^2)
 
-all.equal(p3, dlkj(R, eta) + sum(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+rphi <- graphpcor:::x2rphi(pi/(1+exp(-theta1)))
+c(rphi=rphi)
+j2 <- j2fn(rphi)
+c(j1 = j1, j2 = j2)
+
+dlkj(R, eta) + c(no=0, ok=j1 + j2)
+p3
+
+all.equal(p3, dlkj(R, eta) + j1 + j2)
 
 ################################################################
 ## n = 4
@@ -156,16 +197,20 @@ str(cmodel)
 p4 <- prior(cmodel, theta = theta1)
 p4
 
-log(attr(lR, 'determinant'))
-dlkj(R, eta, TRUE)
-
+gamma1
 pi*exp(-theta1)/((1+exp(-theta1))^2)
-sum(pi*exp(-theta1)/((1+exp(-theta1))^2))
 
-dlkj(R, eta)
-dlkj(R, eta) + sum(pi*exp(-theta1)/((1+exp(-theta1))^2))
+j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+rphi <- graphpcor:::x2rphi(pi/(1+exp(-theta1)))
+c(rphi=rphi)
+j2 <- j2fn(rphi)
+c(j1 = j1, j2 = j2)
 
-all.equal(p4, dlkj(R, eta) + sum(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+dlkj(R, eta) + c(no=0, ok=j1 + j2)
+p4
+
+all.equal(p4, dlkj(R, eta) + j1 + j2)
+
 
 #######################################################################
 ### n = 5
@@ -188,7 +233,20 @@ cmodel <- cgeneric(
 p5 <- prior(cmodel, theta = theta1)
 p5
 
-all.equal(p5, dlkj(R, eta) + sum(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+gamma1
+pi*exp(-theta1)/((1+exp(-theta1))^2)
+
+j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
+rphi <- graphpcor:::x2rphi(pi/(1+exp(-theta1)))
+c(rphi=rphi)
+j2 <- j2fn(rphi)
+c(j1 = j1, j2 = j2)
+
+dlkj(R, eta) + c(no=0, ok=j1 + j2)
+p5
+
+all.equal(p5, dlkj(R, eta) + j1 + j2)
+
 
 ## other tests
 graph(cmodel, optimize = TRUE)

@@ -15,10 +15,10 @@ Laplacian(g)
 (ne <- dim(g))
 
 ## define the cgeneric model (see test/concepts/corgraph.R for other options)
-theta.base <- rep(-1, ne[2])
+theta.base <- rep(0, ne[2])
 cmodel <- cgeneric(
     model = g,
-    lambda = 1,
+    lambda = 10,
     base = theta.base,
     sigma.prior.reference = rep(1, ne[1]),
     sigma.prior.probability = rep(0.5, ne[1]))
@@ -42,7 +42,7 @@ nd <- nrep * ne[1]
 xx <- matrix(rnorm(nd), nrep) %*% chol(Vg)
 cov(xx)
 
-theta.y <- log(5)
+theta.y <- log(10)
 datar <- data.frame(
     r = rep(1:nrep, ne[1]),
     i = rep(1:ne[1], each = nrep),
@@ -52,22 +52,22 @@ datar <- data.frame(
 m1 <- y ~ f(i, model = cmodel, replicate = r)
 fit <- inla(
     formula = m1,
-    data = datar
+    data = datar,
+    control.family = list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 )
 fit$cpu.used
 
 grep("function evaluations =", fit$logfile, value = TRUE)
 grep("fn-calls=", fit$logfile, value = TRUE)
 
-rbind(true = c(theta.y, theta1),
+rbind(true = c(theta1),
       fit = fit$mode$theta)
-fit$mode$theta - c(theta.y, theta1)
+fit$mode$theta - c(theta1)
 
-precision(cmodel, theta = fit$mode$theta[-1])
+precision(cmodel, theta = fit$mode$theta)
 
-round(Vfit <- variance(g, theta = fit$mode$theta[-1]), 2)
 round(Vg, 2)
-round(cov(xx), 2)
 
-cor(xx)
-cov2cor(Vfit)
+round(variance(g, theta = thetaL), 2)
+round(cor(xx), 2)
+round(Vfit <- variance(g, theta = fit$mode$theta[5:8]), 2)

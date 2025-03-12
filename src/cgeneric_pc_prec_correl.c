@@ -69,7 +69,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
   assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
   int debug = data->ints[1]->ints[0];
 
-  printf("debug = %d\n", debug);
+//  printf("debug = %d\n", debug);
 
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
   double lambda = data->doubles[0]->doubles[0];
@@ -190,8 +190,10 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
     double ldJacobian;
 
     ldJacobian = ((double)(nth-1)) * log(param[0]);
-    for(i=1; i<(nth-1); i++) {
-      ldJacobian += ((double)(nth-1-i)) * log(sin(param[i]));
+    if(nth>2) {
+      for(i=1; i<(nth-1); i++) {
+        ldJacobian += ((double)(nth-1-i)) * log(sin(param[i]));
+      }
     }
 
     if(debug>999) {

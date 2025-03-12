@@ -99,6 +99,7 @@ x2rphi <- function(x) {
         }
       }
     } else {
+      r2 <- x^2
       phi <- NULL
     }
     return(c(sqrt(r2), phi))

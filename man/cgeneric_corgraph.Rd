@@ -37,15 +37,18 @@ can generates this.}
 \item{sigma.prior.reference}{numeric vector with length \code{n},
 \code{n} is the number of nodes (variables) in the graph, as the
 reference  standard deviation to define the PC prior for each
-marginal variance parameters.}
+marginal variance parameters.
+NOTE: \code{params.id} will be applied here as
+\code{sigma.prior.reference[params.id[1:n]]}.}
 
 \item{sigma.prior.probability}{numeric vector with length \code{n}
 to set the probability statement of the PC prior for each
 marginal variance parameters. The probability statement is
-P(sigma < \verb{sigma.prior.reference') = p. If a probability is NA, 0 or 1, the corresponding }sigma.prior.reference` would be taken as fixed.}
+P(sigma < \verb{sigma.prior.reference') = p. If a probability is NA, 0 or 1, the corresponding }sigma.prior.reference\verb{would be taken as fixed. NOTE:}params.id\verb{will be applied here as}sigma.prior.probability[params.id\link{1:n}]`.}
 
 \item{params.id}{integer vector with length \code{n+m} to specify
-common parameter values. The first \code{n} are index to the
+common parameter values. Default is \code{1:(n+m)}.
+The first \code{n} are index to the
 standard deviations and the remaining \code{m}
 are related to partial correlations.
 Example: By setting \code{params.id = c(1,1,2,3, 4,5,5,6)},
@@ -53,14 +56,17 @@ the first two standard deviations are common and the
 second and third partial correlations are common as well,
 giving 6 unknown parameters in the model.}
 
-\item{low.params.fixed}{logical vector of length \code{m}
-to provide the value at which the parameters in the lower
-of the L matrix are to be fixed. NA indicates not fixed.
+\item{low.params.fixed}{numeric vector of length \code{m}
+providing the value(s) at which the lower parameter(s)
+of the L matrix to be fixed and not estimated.
+NA indicates not fixed and all are set to be estimated by default.
 Example: with \code{low.params.fixed = c(NA, -1, NA, 1)} the first
 and the third of these parameters will be estimated while
 the second is fixed and equal to -1 and the forth is fixed
 and equal to 1. NOTE: \code{params.id} will be applied here as
-\code{low.params.fixed[params.id[n+1:m]-n]}}
+\code{low.params.fixed[params.id[n+1:m]-n+1]}, thus the provided
+examples give \verb{NA -1 -1 NA} and so the second and third low L
+parameters are fixed to \code{-1}.}
 
 \item{debug}{logical indicating if it is to debug.}
 

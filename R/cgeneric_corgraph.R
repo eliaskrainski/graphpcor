@@ -22,28 +22,36 @@
 #' `n` is the number of nodes (variables) in the graph, as the
 #' reference  standard deviation to define the PC prior for each
 #' marginal variance parameters.
+#' NOTE: `params.id` will be applied here as
+#' `sigma.prior.reference[params.id[1:n]]`.
 #' @param sigma.prior.probability numeric vector with length `n`
 #' to set the probability statement of the PC prior for each
 #' marginal variance parameters. The probability statement is
 #' P(sigma < `sigma.prior.reference') = p.
 #' If a probability is NA, 0 or 1, the corresponding
 #' `sigma.prior.reference` would be taken as fixed.
+#' NOTE: `params.id` will be applied here as
+#' `sigma.prior.probability[params.id[1:n]]`.
 #' @param params.id integer vector with length `n+m` to specify
-#' common parameter values. The first `n` are index to the
+#' common parameter values. Default is `1:(n+m)`.
+#' The first `n` are index to the
 #' standard deviations and the remaining `m`
 #' are related to partial correlations.
 #' Example: By setting `params.id = c(1,1,2,3, 4,5,5,6)`,
 #' the first two standard deviations are common and the
 #' second and third partial correlations are common as well,
 #' giving 6 unknown parameters in the model.
-#' @param low.params.fixed logical vector of length `m`
-#' to provide the value at which the parameters in the lower
-#' of the L matrix are to be fixed. NA indicates not fixed.
+#' @param low.params.fixed numeric vector of length `m`
+#' providing the value(s) at which the lower parameter(s)
+#' of the L matrix to be fixed and not estimated.
+#' NA indicates not fixed and all are set to be estimated by default.
 #' Example: with `low.params.fixed = c(NA, -1, NA, 1)` the first
 #' and the third of these parameters will be estimated while
 #' the second is fixed and equal to -1 and the forth is fixed
 #' and equal to 1. NOTE: `params.id` will be applied here as
-#' `low.params.fixed[params.id[n+1:m]-n]`
+#' `low.params.fixed[params.id[n+1:m]-n+1]`, thus the provided
+#' examples give `NA -1 -1 NA` and so the second and third low L
+#' parameters are fixed to `-1`.
 #' @param debug logical indicating if it is to debug.
 #' @param useINLAprecomp logical indicating if is to be used
 #' shared object pre-compiled by INLA. It is not considered if
@@ -89,12 +97,12 @@ cgeneric_corgraph <-
     stopifnot(all(lambda>0))
     stopifnot(length(sigma.prior.reference) == n)
     stopifnot(length(sigma.prior.probability) == n)
+    stopifnot(all(sigma.prior.reference>0))
     sigma.prior.probability[is.na(sigma.prior.probability)] <- 0
     stopifnot(all(sigma.prior.probability>=0.0))
     stopifnot(all(sigma.prior.probability<=1.0))
     sigma.fixed <- is.zero(sigma.prior.probability) |
       is.zero(1-sigma.prior.probability)
-    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
@@ -182,8 +190,10 @@ cgeneric_corgraph <-
       ifi = as.integer(ifi-1),
       jfi = as.integer(jfi-1),
       itheta = as.integer(params.id -1),
+      sfixed = as.integer(sigma.fixed),
       lambda = as.numeric(lambda),
-      slambdas = as.numeric(slambdas),
+      sigmaref = as.numeric(sigma.prior.reference),
+      sigmaprob = as.numeric(sigma.prior.probability),
       lconst = as.numeric(lc),
       thetabasescaled = as.numeric(thetabasescaled),
       hHneg = attr(Ibase, "hneg.5")

@@ -8,7 +8,7 @@
 
 library(graphpcor)
 
-nrepl <- 1000
+nrepl <- 5000
 table(replicate(nrepl, {
     th1 <- pi/(1 + exp(rnorm(10)))
     all.equal(tcrossprod(graphpcor:::theta2gamma2L(th1, fromR=FALSE)),
@@ -49,11 +49,11 @@ fCsummary <- function(m) {
     c(out, mean = mean(m), rmin = min(m), rmax = max(m), r = m)
 }
 
-s5 <- t(replicate(nrepl, fCsummary(rcorrel(5))))
-s25 <- t(replicate(nrepl, fCsummary(rcorrel(25))))
+system.time(s5 <- t(replicate(nrepl, fCsummary(rcorrel(5)))))
+system.time(s25 <- t(replicate(nrepl, fCsummary(rcorrel(25)))))
 
 apply(s5, 2, summary)
-apply(s25, 2, summary)
+## apply(s25, 2, summary)
 
 stem(s5[,1])
 stem(s5[,2])

@@ -48,6 +48,17 @@ fit <- inla(
 
 all.equal(qq, precision(fit))
 
+fit$summary.hy
+
+par(mfrow = c(1,1), mar = c(4,4,1,1), mgp = c(2,0.5,0))
+plot(fit$internal.marginals.hyperpar[[1]],
+     type = 'n', bty = 'n',
+     xlab = '', ylab = '', main = '')
+for(i in 1:6) {
+    lines(fit$internal.marginals.hyperpar[[i]], col = i)
+    abline(v=theta1[i], col = i, lwd = 2)
+}
+
 ### fit some data
 nrep <- 200
 xx <- matrix(rnorm(nrep * n), nrep) %*% as.matrix(chol(vv))

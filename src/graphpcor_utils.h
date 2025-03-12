@@ -88,6 +88,7 @@ double pclogsigma(double lsigma, double lam);
 void theta2Qcorrel(int n, int std, double *theta, double *Qu);
 void theta2precision(int n, double *l, double *Q);
 void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L);
+void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc);
 void exchangeableU(int n, double r, double *cc);
 void dl2fullQ(int n, double *d, double *l, double *q);
 void dl2Qu(int n, double *d, double *l, double *qu);

@@ -1,5 +1,7 @@
 library(numDeriv)
 
+nrepl <- 5000
+
 theta2L <- function(theta) {
 ### imput theta output L such Q = LL'
     m <- length(theta)
@@ -99,10 +101,10 @@ rtheta <- function(n, lambda=1, R, mu0) {
 }
 
 ## sample correlation matrices around C0 with lambda = 1
-s1 <- t(replicate(10000, theta2C(rtheta(3, 1, h0$hneg.5, theta0))[lower.tri(diag(3))]))
+s1 <- t(replicate(nrepl, theta2C(rtheta(3, 1, h0$hneg.5, theta0))[lower.tri(diag(3))]))
 
 ## sample correlation matrices around C0 with lambda = 100
-s10 <- t(replicate(100000, theta2C(rtheta(3, 10, h0$h.5, theta0))[lower.tri(diag(3))]))
+s10 <- t(replicate(nrepl, theta2C(rtheta(3, 10, h0$h.5, theta0))[lower.tri(diag(3))]))
 
 ### compare the samples with C0
 cc0[lower.tri(diag(3))]
@@ -133,7 +135,7 @@ x2rphi <- function(x) {
     return(c(sqrt(r2), phi))
 }
 
-c1c2 <- t(replicate(1000, {
+c1c2 <- t(replicate(nrepl, {
     rphi <- c(rexp(1,1), runif(6-2, 0, pi), runif(1, 0, 2*pi))
     x <- rphi2x(rphi)
     c1 <- all.equal(x, rphi2x(rphi))
@@ -165,7 +167,7 @@ dtheta <- function(theta, lambda, theta0, H) {
 
 par(mfrow = c(2, 4), mar = c(4,4,2,1), mgp = c(3,1,0), bty = 'n')
 for(l in c(0.5, 1, 2, 10)) {
-    theta.samples <- t(replicate(1000, rtheta(3, lambda = l, h0$h.5, theta0)))
+    theta.samples <- t(replicate(nrepl, rtheta(3, lambda = l, h0$h.5, theta0)))
     thetas.d <- apply(theta.samples, 1, dtheta, lambda = l, theta0 = theta0, H=h0)
     plot(rowSums(theta.samples^2), thetas.d)
     title(main = substitute(lambda == l, list(l = l)))
