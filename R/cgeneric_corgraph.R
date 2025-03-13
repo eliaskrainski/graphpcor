@@ -20,26 +20,31 @@
 #' can generates this.
 #' @param sigma.prior.reference numeric vector with length `n`,
 #' `n` is the number of nodes (variables) in the graph, as the
-#' reference  standard deviation to define the PC prior for each
-#' marginal variance parameters.
+#' reference standard deviation to define the PC prior for each
+#' marginal variance parameters. If missing, the model will be
+#' assumed for a correlation. If a length `n` vector is given
+#' and `sigma.prior.reference` is missing, it will be used as
+#' known square root of the variances.
 #' NOTE: `params.id` will be applied here as
-#' `sigma.prior.reference[params.id[1:n]]`.
+#' `sigma.prior.reference[params.id[(1:n)]]`.
 #' @param sigma.prior.probability numeric vector with length `n`
 #' to set the probability statement of the PC prior for each
 #' marginal variance parameters. The probability statement is
-#' P(sigma < `sigma.prior.reference') = p.
-#' If a probability is NA, 0 or 1, the corresponding
-#' `sigma.prior.reference` would be taken as fixed.
+#' P(sigma < `sigma.prior.reference') = p. If missing, all the
+#' marginal variances are considered as known, as described in
+#' `sigma.prior.reference`.
+#' If a vector is given and a probability is NA, 0 or 1, the
+#' corresponding `sigma.prior.reference` will be used as fixed.
 #' NOTE: `params.id` will be applied here as
-#' `sigma.prior.probability[params.id[1:n]]`.
-#' @param params.id integer vector with length `n+m` to specify
-#' common parameter values. Default is `1:(n+m)`.
-#' The first `n` are index to the
-#' standard deviations and the remaining `m`
-#' are related to partial correlations.
+#' `sigma.prior.probability[params.id[(1:n)]]`.
+#' @param params.id integer ordered vector with length equals
+#' to `n+m` to specify common parameter values. If missing it
+#' is assumed `1:(n+m)` and all parameters are assumed distinct.
+#' The first `n` indexes the square root of the marginal
+#' variances and the remaining indexes the edges parameters.
 #' Example: By setting `params.id = c(1,1,2,3, 4,5,5,6)`,
 #' the first two standard deviations are common and the
-#' second and third partial correlations are common as well,
+#' second and third edges parameters are common as well,
 #' giving 6 unknown parameters in the model.
 #' @param low.params.fixed numeric vector of length `m`
 #' providing the value(s) at which the lower parameter(s)
@@ -49,7 +54,7 @@
 #' and the third of these parameters will be estimated while
 #' the second is fixed and equal to -1 and the forth is fixed
 #' and equal to 1. NOTE: `params.id` will be applied here as
-#' `low.params.fixed[params.id[n+1:m]-n+1]`, thus the provided
+#' `low.params.fixed[params.id[(n+1:m)]-n+1]`, thus the provided
 #' examples give `NA -1 -1 NA` and so the second and third low L
 #' parameters are fixed to `-1`.
 #' @param debug logical indicating if it is to debug.
@@ -91,10 +96,23 @@ cgeneric_corgraph <-
     n <- nrow(Q0)
     stopifnot(n>0)
     if(debug>99) {
-      cat("the 'n ='", n, "graph Laplacian is\n")
+      print(graph)
+      cat("Laplacian is\n")
       print(Q0)
     }
     stopifnot(all(lambda>0))
+    if(missing(sigma.prior.reference)) {
+       sigma.prior.reference <- rep(1, n)
+    }
+    if(length(sigma.prior.reference)==1) {
+      sigma.prior.reference <- rep(sigma.prior.reference, n)
+    }
+    if(missing(sigma.prior.probability)) {
+      sigma.prior.probability <- rep(0, n)
+    }
+    if(length(sigma.prior.probability)==1) {
+      sigma.prior.probability <- rep(sigma.prior.probability, n)
+    }
     stopifnot(length(sigma.prior.reference) == n)
     stopifnot(length(sigma.prior.probability) == n)
     stopifnot(all(sigma.prior.reference>0))
@@ -103,6 +121,12 @@ cgeneric_corgraph <-
     stopifnot(all(sigma.prior.probability<=1.0))
     sigma.fixed <- is.zero(sigma.prior.probability) |
       is.zero(1-sigma.prior.probability)
+
+    if(debug) {
+      print(list(sigmaref = sigma.prior.reference,
+                 sigmaprob = sigma.prior.probability,
+                 sfixed = sigma.fixed))
+    }
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
@@ -128,8 +152,13 @@ cgeneric_corgraph <-
     } else {
       stopifnot(length(params.id)==nnz)
       stopifnot(all(params.id %in% (1:nnz)))
+      stopifnot(all(diff(sort(params.id))>0))
     }
-    if(params.id[nnz]<nnz) stop("WORK IN PROGRESS!")
+    ## update sigmas.prior.*
+    sigma.prior.reference <- sigma.prior.reference[params.id[(1:n)]]
+    sigma.prior.probability <- sigma.prior.probability[params.id[(1:n)]]
+    sigma.fixed <- sigma.fixed[params.id[(1:n)]]
+    nUnkSigmas <- length(sigma.prior.reference)
 
     if(missing(low.params.fixed)) {
       low.params.fixed <- rep(NA, nEdges)

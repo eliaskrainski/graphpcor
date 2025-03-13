@@ -30,13 +30,20 @@
 double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
+  // theta : vector of unknown parameters
+  // actualtheta : vector of n+m model parameters
+  //   actualtheta = { log(sigmas), low.L.theta }
+  //   sigmas[i] = exp(actualtheta[i])
+  //   lowtheta[1:m] = H^{-1/2}(actualtheta[n+1:m] - base[1:m])
+  //                 = H^{-1/2} actualtheta[n+1:m] - thetabasescaled
+
   double *ret = NULL;
-  int i, j, k, N, M;
+  int i, j, k;
 
   // the size of the model
   assert(data->n_ints > 1);
   assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
-  N = data->ints[0]->ints[0];
+  int N = data->ints[0]->ints[0];
   assert(N > 0);
 
   assert(!strcasecmp(data->ints[1]->name, "debug"));	       // this will always be the case
@@ -45,7 +52,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   assert(!strcasecmp(data->ints[2]->name, "ne"));     // this will always be the case
   int ne = data->ints[2]->ints[0];
   assert(ne > 0);
-  M = N + ne;
+  int M = N + ne;
 
   assert(!strcasecmp(data->ints[3]->name, "nfi"));	       // this will always be the case
   int nfi = data->ints[3]->ints[0];
@@ -77,17 +84,21 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   assert(!strcasecmp(data->ints[10]->name, "itheta"));     // this will always be the case
   inla_cgeneric_vec_tp *itheta = data->ints[10];
   assert(M == itheta->len);
-  int nparams[3];
+  int nparams[3], nUnkPar[3];
   nparams[0] = itheta->ints[N-1]+1;
   nparams[2] = itheta->ints[M-1]+1;
   nparams[1] = nparams[2]-nparams[0];
 
   assert(!strcasecmp(data->ints[11]->name, "sfixed"));     // this will always be the case
-  assert(N == data->ints[11]->len);
-  int sfixed[N];
-  for(i=0; i<N; i++) {
+  int nsigmas = data->ints[11]->len;
+  int nsfixed = 0, sfixed[nsigmas];
+  for(i=0; i<nsigmas; i++) {
     sfixed[i] = data->ints[11]->ints[i];
+    nsfixed += sfixed[i];
   }
+  nUnkPar[0] = nparams[0]-nsfixed;
+  nUnkPar[2] = nparams[2]-nsfixed; // to do lowparamfix
+  nUnkPar[1] = nparams[1]-nsfixed;
 
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
   double lambda = data->doubles[0]->doubles[0];
@@ -96,12 +107,14 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
   inla_cgeneric_vec_tp *sigmaref = data->doubles[1];
   assert(sigmaref->len>0);
-  assert(sigmaref->len == N);
-
+  assert(nsigmas == sigmaref->len);
+  for(i=0; i<nsigmas; i++) {
+    assert(sigmaref->doubles[i]>0);
+  }
   assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
   inla_cgeneric_vec_tp *sigmaprob = data->doubles[2];
   assert(sigmaprob->len>0);
-  assert(sigmaprob->len == N);
+  assert(nsigmas == sigmaprob->len);
 
   assert(!strcasecmp(data->doubles[3]->name, "lconst"));
   double lconst = data->doubles[3]->doubles[0];
@@ -113,23 +126,23 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   assert(data->mats[0]->nrow==ne);
   assert(data->mats[0]->ncol==ne);
 
-  double lowtheta[ne], thetat[ne];
+  double actualtheta[M];
   double sigmas[N];
-  int nsu = 0;
+  double lowtheta[ne], thetat[ne];
   if(theta) {
+    k=0;
     for(i=0; i<N; i++) {
-      assert(sigmaref->doubles[i]>0);
       if(sfixed[i]) {
-        sigmas[i] = sigmaref->doubles[itheta->ints[i]];
+        actualtheta[i] = log(sigmaref->doubles[itheta->ints[i]]);
       } else {
-        sigmas[i] = exp(theta[itheta->ints[i]]);
-        nsu++;
+        actualtheta[i] = theta[k++];
       }
+      sigmas[i] = exp(actualtheta[i]);
     }
     if(debug>99) {
-      printf("n sigma to be estimated = %d", nsu);
-      printMat(sfixed,1,N,"sfixed\n");
-      printMat(sigmas,1,N,"sigmas\n");
+      printf("n fixed sigma = %d\n", nsfixed);
+      for(i=0;i<N;i++) printf("%d ", sfixed[i]);
+      printMat(sigmas,1,N,"\nsigmas\n");
     }
     // this is I(\theta_0)^{-0.5} \theta_0
     for(i=0; i<ne; i++) {
@@ -154,9 +167,11 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     }
   } else {
     for(i=0; i<N; i++) {
+      actualtheta[i] = NAN;
       sigmas[i] = NAN;
     }
     for(i=0; i<ne; i++) {
+      actualtheta[i] = NAN;
       lowtheta[i] = NAN;
     }
   }
@@ -341,8 +356,8 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     // return c(P, initials)
     // where P is the number of hyperparameters
     ret = Calloc(nparams[2] + 1, double);
-    ret[0] = nparams[2];
-    for(i = 0; i < nparams[2]; i++) {
+    ret[0] = nUnkPar[2];
+    for(i = 0; i < nUnkPar[2]; i++) {
       ret[1+i] = 0.0;
     }
   }
@@ -359,13 +374,11 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 
     // PC prior for sigma[i]
     double lam, val, pparams[ne];
-    for(i = 0; i < nparams[0]; i++) {
-      if(sfixed[i]>0) {
-        lam = -log(sigmaprob->doubles[i]) / sigmaref->doubles[i];
-        ret[0] += pclogsigma(log(sigmas[i]), lam);
-        if(debug>999) {
-          printf("lamb[%d] = %2.3f, p %2.3f \n", i, lam, ret[0]);
-        }
+    for(i = 0; i < nsigmas; i++) {
+      lam = -log(sigmaprob->doubles[i]) / sigmaref->doubles[i];
+      ret[0] += pclogsigma(theta[i], lam);
+      if(debug>999) {
+        printf("lamb[%d] = %2.3f, p %2.3f \n", i, lam, ret[0]);
       }
     }
 

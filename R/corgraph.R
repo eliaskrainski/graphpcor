@@ -75,7 +75,7 @@ corgraph.matrix <- function(x) {
 print.corgraph <- function(x, ...) {
   cat("A corgraph for",
       length(attr(x, 'nodes')), "variables",
-      "using", sum(attr(x, 'relationship')), "edges.\n")
+      "with", sum(attr(x, 'relationship')), "edges.\n")
 }
 #' @describeIn corgraph
 #' The summary method for `corgraph`
