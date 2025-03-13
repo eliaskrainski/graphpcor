@@ -36,24 +36,27 @@ can generates this.}
 
 \item{sigma.prior.reference}{numeric vector with length \code{n},
 \code{n} is the number of nodes (variables) in the graph, as the
-reference  standard deviation to define the PC prior for each
-marginal variance parameters.
+reference standard deviation to define the PC prior for each
+marginal variance parameters. If missing, the model will be
+assumed for a correlation. If a length \code{n} vector is given
+and \code{sigma.prior.reference} is missing, it will be used as
+known square root of the variances.
 NOTE: \code{params.id} will be applied here as
-\code{sigma.prior.reference[params.id[1:n]]}.}
+\code{sigma.prior.reference[params.id[(1:n)]]}.}
 
 \item{sigma.prior.probability}{numeric vector with length \code{n}
 to set the probability statement of the PC prior for each
 marginal variance parameters. The probability statement is
-P(sigma < \verb{sigma.prior.reference') = p. If a probability is NA, 0 or 1, the corresponding }sigma.prior.reference\verb{would be taken as fixed. NOTE:}params.id\verb{will be applied here as}sigma.prior.probability[params.id\link{1:n}]`.}
+P(sigma < \verb{sigma.prior.reference') = p. If missing, all the marginal variances are considered as known, as described in }sigma.prior.reference\verb{. If a vector is given and a probability is NA, 0 or 1, the corresponding }sigma.prior.reference\verb{will be used as fixed. NOTE:}params.id\verb{will be applied here as}sigma.prior.probability[params.id\link{(1:n)}]`.}
 
-\item{params.id}{integer vector with length \code{n+m} to specify
-common parameter values. Default is \code{1:(n+m)}.
-The first \code{n} are index to the
-standard deviations and the remaining \code{m}
-are related to partial correlations.
+\item{params.id}{integer ordered vector with length equals
+to \code{n+m} to specify common parameter values. If missing it
+is assumed \code{1:(n+m)} and all parameters are assumed distinct.
+The first \code{n} indexes the square root of the marginal
+variances and the remaining indexes the edges parameters.
 Example: By setting \code{params.id = c(1,1,2,3, 4,5,5,6)},
 the first two standard deviations are common and the
-second and third partial correlations are common as well,
+second and third edges parameters are common as well,
 giving 6 unknown parameters in the model.}
 
 \item{low.params.fixed}{numeric vector of length \code{m}
@@ -64,7 +67,7 @@ Example: with \code{low.params.fixed = c(NA, -1, NA, 1)} the first
 and the third of these parameters will be estimated while
 the second is fixed and equal to -1 and the forth is fixed
 and equal to 1. NOTE: \code{params.id} will be applied here as
-\code{low.params.fixed[params.id[n+1:m]-n+1]}, thus the provided
+\code{low.params.fixed[params.id[(n+1:m)]-n+1]}, thus the provided
 examples give \verb{NA -1 -1 NA} and so the second and third low L
 parameters are fixed to \code{-1}.}
 
