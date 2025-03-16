@@ -13,7 +13,7 @@
 \alias{chol,corgraph-method}
 \alias{variance.corgraph}
 \alias{precision.corgraph}
-\title{An object class used to model correlation matrices}
+\title{Set class for objects to model correlation matrices}
 \usage{
 \method{corgraph}{formula}(...)
 
@@ -39,7 +39,7 @@
 \item{...}{list of formula used to define the edges.}
 }
 \description{
-An object class used to model correlation matrices
+Set class for objects to model correlation matrices
 }
 \details{
 The terms in the formula do represent the nodes.

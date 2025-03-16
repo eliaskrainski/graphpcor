@@ -1,5 +1,5 @@
 
-/* cgeneric_dtg_sfixed.c
+/* cgeneric_cortree.c
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -27,7 +27,7 @@
 
 #include "graphpcor.h"
 
-double *inla_cgeneric_dtg_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
+double *inla_cgeneric_cortree(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
   double *ret = NULL;
@@ -165,7 +165,7 @@ double *inla_cgeneric_dtg_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
           }
         }
 
-        correlation_parent_children(debug, np, N, iiv->len, &iiv->ints[0], &jjv->ints[0], &ipar->ints[0], &itop->ints[0], &sch->doubles[0], &v2[0], &mcov[0]);
+        correlation_parent_children(np, N, iiv->len, &iiv->ints[0], &jjv->ints[0], &ipar->ints[0], &itop->ints[0], &sch->doubles[0], &v2[0], &mcov[0]);
 
         k=0;
         for(i=0; i<N; i++) {
@@ -279,7 +279,7 @@ double *inla_cgeneric_dtg_sfixed(inla_cgeneric_cmd_tp cmd, double *theta, inla_c
       double d, dh, dd, hs = 0.005, kld[np], kldh[np];
 
       theta_parent_children_kldh(
-        debug, np, N, iiv->len,
+        np, N, iiv->len,
         &iiv->ints[0], &jjv->ints[0], &ipar->ints[0],
         &itop->ints[0], &sch->doubles[0],
         &theta[N], hs, &kld[0], &kldh[0]);

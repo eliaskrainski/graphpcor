@@ -1,11 +1,11 @@
-#' Build an `cgeneric` for DTG, see [dtg()])
+#' Build an `cgeneric` for [cortree()])
 #' @description
 #' This set the necessary data to implement the penalized
 #' complexity prior for a correlation matrix considering
-#' a directed three graph - DTG as proposed in
+#' a three as proposed in
 #' [Sterrantino et. al. 2025](https://arxiv.org/abs/2312.06289)
-#' @param graph the DTG model specification.
-#' @param lambda the lambda for the graph correlation prior.
+#' @param graph object of class `cortree` for the model specification.
+#' @param lambda the lambda parameter for the graph correlation prior.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
@@ -27,10 +27,10 @@
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
 #' then the sigma is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
-#' @seealso [dtg()] and [cgeneric()]
+#' @seealso [cortree()] and [cgeneric()]
 #' @useDynLib graphpcor, .registration = TRUE
 #' @export
-cgeneric_dtg <-
+cgeneric_cortree <-
   function(graph,
            lambda,
            sigma.prior.reference,
@@ -49,7 +49,7 @@ cgeneric_dtg <-
     if(debug) {
       cat(c(sch = sch), "\n")
     }
-    d.elc <- edtg2variance(d.el[1:dd[2]])
+    d.elc <- ecortree2variance(d.el[1:dd[2]])
     if(debug) {
       print(str(d.elc))
     }
@@ -82,7 +82,7 @@ cgeneric_dtg <-
     stopifnot(lambda>0)
 
     the_model <- cgeneric.default(
-      model = "inla_cgeneric_dtg_sfixed",
+      model = "inla_cgeneric_cortree",
       debug = as.logical(debug),
       useINLAprecomp = as.logical(useINLAprecomp),
       n = as.integer(nc),

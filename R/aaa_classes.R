@@ -1,7 +1,7 @@
-#' Directed Tree Graph - DTG
-setClass("dtg")
+#' Set class for objects to model correlation matrices over tree
+setClass("cortree")
 
-#' An object class used to model correlation matrices
+#' Set class for objects to model correlation matrices
 setClass("corgraph")
 
 #' `inla.rgeneric` class, short `rgeneric`,
