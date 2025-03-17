@@ -27,6 +27,7 @@
 
 
 #include <stdio.h>
+#include "graphpcor.h"
 
 // element location in a matrix
 #define ij2k(_n, _i, _j) ((_n)-1)*(_j) + (_i)
@@ -85,14 +86,18 @@ if(1) {                                                        \
 }                                                              \
 
 double pclogsigma(double lsigma, double lam);
+
+void exchangeableU(int n, double r, double *cc);
+
 void theta2Qcorrel(int n, int std, double *theta, double *Qu);
 void theta2precision(int n, double *l, double *Q);
+void l2L(int n, double *l, double *L);
 void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L);
 void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc);
-void exchangeableU(int n, double r, double *cc);
 void dl2fullQ(int n, double *d, double *l, double *q);
 void dl2Qu(int n, double *d, double *l, double *qu);
 void fillL(int *d, int *m, int *ii, int *jj, double *x);
+
 void cov2cor(int n, double *cc) ;
 double cov2kld(int n, double *C0, double *C1);
 void covariance_parent_children(int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC) ;

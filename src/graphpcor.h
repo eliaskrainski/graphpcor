@@ -33,7 +33,6 @@
 #include <string.h>
 #include <strings.h>
 #include "cgeneric.h"
-#include "graphpcor_utils.h"
 
 #if !defined(Calloc)
 #define Calloc(n_, type_)  (type_ *)calloc((n_), sizeof(type_))
@@ -55,6 +54,13 @@ typedef int fortran_charlen_t;
 #endif
 #define F_ONE ((fortran_charlen_t)1)
 
+double ddot_(int *n, double *dx, int *incx,
+             double *dy, int *incy, fortran_charlen_t);
+
+void dspr_(char *uplo, int *N, double *alpha,
+           double *X, int *incx, double *AP,
+           fortran_charlen_t);
+
 void dgeqp3_(int *N, int *M, double *A, int *LDA, int *PIVOT,
              double *tau, double *work, int *lwork, int *info,
              fortran_charlen_t);
@@ -67,6 +73,17 @@ void dsyrk_(char *uplo, char *transa,
 void dgemv_(char *trans, int *M, int *N, double *alpha,
             double *A, int *LDA, double*x, int *incx,
             double *beta, double *y, int *incy, fortran_charlen_t);
+
+void dtpttr_(char *uplo, int *n, double *ap, double *a,
+             int *lda, int *info, fortran_charlen_t);
+void dlauum_(char *uplo, int *n, double *a, int *lda,
+             int *info, fortran_charlen_t);
+void dlauu2_(char *uplo, int *n, double *a, int *lda,
+             int *info, fortran_charlen_t);
+
+void dtrmm_(char *side, char *uplo, char *transa, char *diag,
+            int* m, int *n, double *alpha, double *a,
+            int *lda, double *b, int *ldb, fortran_charlen_t);
 void dsymm_(char *side, char *uplo,
             int *m, int *n, double *alpha,
             double *a, int *lda, double *b, int *ldb,
