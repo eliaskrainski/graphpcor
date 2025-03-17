@@ -25,7 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "graphpcor.h"
+#include "graphpcor_utils.h"
 
 double pclogsigma(double lsigma, double lam) {
   // return log of the PC-prior density for the log of the
@@ -187,29 +187,48 @@ void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L) {
   }
 }
 
-void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc) {
-  double l[n*(n-1)/2];
-  theta2gamma2Lcorr(n, &hldet[0], &theta[0], &l[0]);
-  int i, j, k=0;
-  for(i=0; i<n; i++) {
-    cc[k] = l[k];
-    k++;
-  }
-  for(i=1; i<n; i++) {
-    for(j=0; j<=i; j++) {
-      cc[k++] = 1;
-    }
-  }
-}
-
 void l2L(int n, double *l, double *L) {
   // l: lower triangle vector of length n(n-1)/2 l
   // L: nxn matrix L upper(C) lower (Fortran) triangle contain l
   int i,j,k = 0, k2 = 0;
-  for(i=0; i<n; i++) {
-    k2 = (n+1)*i;
-    for(j=i; j<n; j++) {
-      L[k2++] = l[k++];
+  if(n>1) {
+    for(i=0; i<n; i++) {
+      for(j=0; j<n; j++) {
+        if(j>=i) {
+          L[k2++] = l[k++];
+        } else {
+          L[k2++] = 0.0;
+        }
+      }
+    }
+  } else {
+    L[0] = l[0];
+  }
+}
+
+void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc) {
+  assert(n>1);
+  double l[n*(n-1)/2];
+  theta2gamma2Lcorr(n, &hldet[0], &theta[0], &l[0]);
+  printL(l, n, n, "l\n");
+  double L[n*n];
+  l2L(n, &l[0], &L[0]);
+  printMat(L,n,n,"L:\n");
+  printf("OK until here\n");
+  int i;
+  for(i=0; i<(n-1); i++) {
+    cc[i] = l[i+1];
+  }
+  printf("OK until here\n");
+  if(n>2) {
+    int nij, j, k = n-1;
+    for(i=2; i<n; i++) {
+      printf("i = %d: ", i);
+      for(j=1; j<i; j++) {
+        nij = i-j+1;
+        printf("(%d, %d) : %d \n", i, j, nij);
+        cc[k++] = ddot_(&nij, &L[i], &n, &L[j], &n, F_ONE);
+      }
     }
   }
 }
@@ -234,19 +253,7 @@ void exchangeableU(int n, double r, double *cc) {
         }
       }
     }
-
-/*
-    k=0;
-    for(i=0; i<n; i++) {
-      for(j=i; j<n; j++) {
-        printf("%f ", dlQ[k++]);
-      }
-      printf("\n");
-    }
-*/
-
   }
-
 }
 
 void dl2Qu(int n, double *d, double *l, double *qu) {
@@ -276,8 +283,8 @@ void dl2Qu(int n, double *d, double *l, double *qu) {
       }
     }
   }
-
 }
+
 
 void dl2fullQ(int n, double *d, double *l, double *qq) {
   // build Q = L'L
@@ -296,16 +303,6 @@ void dl2fullQ(int n, double *d, double *l, double *qq) {
 
       double aa[n*n], bb[n*n];
       int i,j,k=0, k2=0;
-      /*
-      for(i=0; i<(n-1); i++) {
-        k = (n+1)*i;
-        aa[k++] = d[i];
-        for(j=(i+1); j<n; j++) {
-          aa[k++] = l[k2++];
-        }
-      }
-      aa[n*n-1] = d[n-1];
-       */
       k=0; k2=0;
       for(i=0; i<n; i++) {
         for(j=0; j<n; j++) {
@@ -325,25 +322,6 @@ void dl2fullQ(int n, double *d, double *l, double *qq) {
           k++;
         }
       }
-
-/*
-      printf("\nPrinting aa:\n");
-      k=0;
-      for(i=0; i<n; i++) {
-        for(j=0; j<n; j++) {
-          printf("%f ", aa[k++]);
-        }
-        printf("\n");
-      }
-      printf("\nPrinting bb:\n");
-      k=0;
-      for(i=0; i<n; i++) {
-        for(j=0; j<n; j++) {
-          printf("%f ", bb[k++]);
-        }
-        printf("\n");
-      }
-*/
 
       char tra = 'N'; // upper in C is lower in Fortran
       char trb = 'T';
