@@ -28,10 +28,7 @@
 // this file contains inla_generic:
 // inla_cgeneric_Wishart          for precision matrix
 
-<<<<<<< HEAD
-=======
 #include "graphpcor.h"
->>>>>>> refs/remotes/origin/main
 #include "graphpcor_utils.h"
 
 double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)

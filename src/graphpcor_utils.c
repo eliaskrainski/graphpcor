@@ -25,6 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
+#include "graphpcor.h"
 #include "graphpcor_utils.h"
 
 double pclogsigma(double lsigma, double lam) {
