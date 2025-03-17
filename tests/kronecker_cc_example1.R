@@ -28,7 +28,7 @@ if(Q1@uplo == "L")
     Q1 <- t(Q1)
 
 ## Model 2
-m2.graph <- dtg(
+m2.graph <- cortree(
     p1 ~ p2 + c1 - c2,
     p2 ~ c3 + c4
 )

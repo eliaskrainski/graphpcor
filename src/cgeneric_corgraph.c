@@ -25,14 +25,15 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "graphpcor.h"
+#include "graphpcor_utils.h"
 
 double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
   // theta : vector of unknown parameters
+  //    0 <= length(theta) <= n + m
   // actualtheta : vector of n+m model parameters
-  //   actualtheta = { log(sigmas), low.L.theta }
+  //   actualtheta = { log(sigmas), lowtheta }
   //   sigmas[i] = exp(actualtheta[i])
   //   lowtheta[1:m] = H^{-1/2}(actualtheta[n+1:m] - base[1:m])
   //                 = H^{-1/2} actualtheta[n+1:m] - thetabasescaled
@@ -84,10 +85,6 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   assert(!strcasecmp(data->ints[10]->name, "itheta"));     // this will always be the case
   inla_cgeneric_vec_tp *itheta = data->ints[10];
   assert(M == itheta->len);
-  int nparams[3], nUnkPar[3];
-  nparams[0] = itheta->ints[N-1]+1;
-  nparams[2] = itheta->ints[M-1]+1;
-  nparams[1] = nparams[2]-nparams[0];
 
   assert(!strcasecmp(data->ints[11]->name, "sfixed"));     // this will always be the case
   int nsigmas = data->ints[11]->len;
@@ -96,9 +93,10 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     sfixed[i] = data->ints[11]->ints[i];
     nsfixed += sfixed[i];
   }
-  nUnkPar[0] = nparams[0]-nsfixed;
-  nUnkPar[2] = nparams[2]-nsfixed; // to do lowparamfix
-  nUnkPar[1] = nparams[1]-nsfixed;
+  int nunkparams[3];
+  nunkparams[0] = nsigmas - nsfixed;
+  nunkparams[1] = ne; // to do lowparamfix
+  nunkparams[2] = nunkparams[0] + nunkparams[1];
 
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
   double lambda = data->doubles[0]->doubles[0];
@@ -120,7 +118,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   double lconst = data->doubles[3]->doubles[0];
 
   assert(!strcasecmp(data->doubles[4]->name, "thetabasescaled"));
-  assert(data->doubles[4]->length==ne);
+  assert(data->doubles[4]->len==ne);
 
   assert(!strcasecmp(data->mats[0]->name, "hHneg"));
   assert(data->mats[0]->nrow==ne);
@@ -355,10 +353,13 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
   {
     // return c(P, initials)
     // where P is the number of hyperparameters
-    ret = Calloc(nparams[2] + 1, double);
-    ret[0] = nUnkPar[2];
-    for(i = 0; i < nUnkPar[2]; i++) {
+    ret = Calloc(nunkparams[2] + 1, double);
+    ret[0] = nunkparams[2];
+    for(i = 0; i < nunkparams[0]; i++) {
       ret[1+i] = 0.0;
+    }
+    for(i = nunkparams[0]; i < nunkparams[2]; i++) {
+      ret[1+i] = -1.0;
     }
   }
     break;
@@ -373,16 +374,19 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     ret[0] = lconst;
 
     // PC prior for sigma[i]
-    double lam, val, pparams[ne];
-    for(i = 0; i < nsigmas; i++) {
-      lam = -log(sigmaprob->doubles[i]) / sigmaref->doubles[i];
+    double lam;
+    for(i = 0; i < nunkparams[0]; i++) {
+      k = itheta->ints[i];
+      lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
       ret[0] += pclogsigma(theta[i], lam);
       if(debug>999) {
-        printf("lamb[%d] = %2.3f, p %2.3f \n", i, lam, ret[0]);
+        printf("theta[%d], %2.3f, lamb[%d] = %2.3f : %2.3f \n",
+               i, theta[i], i, lam, ret[0]);
       }
     }
 
-    // TO BE FIXED when nparams[2]<ne?
+    // the low L params Jacobian
+    double val, pparams[ne];
     pparams[ne-1] = atan2(thetat[ne-1], theta[ne-2]);
     if(pparams[ne-1]<0) {
       pparams[ne-1] += 2.0*M_PI;
