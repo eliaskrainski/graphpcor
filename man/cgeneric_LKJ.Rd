@@ -2,8 +2,8 @@
 % Please edit documentation in R/cgeneric_LKJ.R
 \name{cgeneric_LKJ}
 \alias{cgeneric_LKJ}
-\title{build an \code{inla.cgeneric} to implement the LKG prior
-for the correlation matrix.}
+\title{Build an \code{inla.cgeneric} object to implement the
+LKG prior for the correlation matrix.}
 \usage{
 cgeneric_LKJ(n, eta, debug = FALSE, useINLAprecomp = !TRUE)
 }
@@ -24,8 +24,8 @@ libpath is provided.}
 a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
 }
 \description{
-build an \code{inla.cgeneric} to implement the LKG prior
-for the correlation matrix.
+Build an \code{inla.cgeneric} object to implement the
+LKG prior for the correlation matrix.
 }
 \details{
 The parametrization uses the

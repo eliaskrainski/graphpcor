@@ -58,10 +58,12 @@ myJ <- function(l, h = 0.005, verbose = FALSE) {
 }
 
 myJ(rnorm(length(R)), verbose = TRUE)
+
+prior(W, theta = theta1)
 myJ(theta1, 1e-3, verbose = TRUE)
 myJ(theta1, 1e-5, verbose = TRUE)
 
-prior(W, theta = theta1)
+precision(W, theta = theta1)
 
 theta2iidkd <- function(th, old = FALSE, covar = TRUE, corr = FALSE) {
     m <- length(th)
@@ -154,6 +156,7 @@ dat1 <- data.frame(
 cinla <- list(int.strategy = 'eb')
 cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 cmode <- list(theta = theta1, fixed = TRUE)
+ccomp <- list(config = TRUE)
 
 fit0 <- inla(
     y ~ 0 + f(i, model = 'iid3d', order = n, n = n*1),
@@ -169,7 +172,8 @@ fit1 <- inla(
     data = dat1,
     control.family = cfam,
     control.inla = cinla,
-    control.mode = cmode
+    control.mode = cmode,
+    control.compute = ccomp
 )
 
 fit2 <- inla(
@@ -177,28 +181,25 @@ fit2 <- inla(
     data = dat1,
     control.family = cfam,
     control.inla = cinla,
-    control.mode = cmode
+    control.mode = cmode,
+    control.compute = ccomp
 )
 
-pp3 <- list(precision(fit0),
-            precision(fit1),
-            precision(fit2))
-
-all.equal(pp3[[1]], pp3[[2]])
-all.equal(pp3[[1]], pp3[[3]])
-pp3[[2]]
+c(all.equal(Q, as.matrix(precision(fit0))),
+  all.equal(precision(fit0),
+            precision(fit1)),
+  all.equal(precision(fit0),
+            precision(fit2)))
 
 cbind(fit0$mlik, fit1$mlik, fit2$mlik)
 
 ### 
-nrep <- 3
-xx <- matrix(rnorm(nrep * n), nrep) %*% lV
-str(xx)
+nrep <- 2
 
 dat2 <- data.frame(
     i = rep(1:n, each = nrep),
     r = rep(1:nrep, n),
-    y = as.vector(xx)
+    y = NA
 )
 str(dat2)
 
@@ -207,7 +208,7 @@ fit0r <- inla(
     data = dat2,
     control.family = cfam,
     control.inla = cinla,
-    control.mode = list(theta = theta0)
+    control.mode = list(theta = theta0, fixed = TRUE)
 )
 
 fit1r <- inla(
@@ -217,7 +218,7 @@ fit1r <- inla(
     data = dat2,
     control.family = cfam,
     control.inla = cinla,
-    control.mode = list(theta = theta1)
+    control.mode = list(theta = theta1, fixed = TRUE)
 )
 
 fit2r <- inla(
@@ -225,9 +226,10 @@ fit2r <- inla(
     data = dat2,
     control.family = cfam,
     control.inla = cinla, ##verbose =T,
-    control.mode = list(theta = theta1)
+    control.mode = list(theta = theta1, fixed = TRUE)
 )
 
+Q
 round(precision(fit0r), 3)
 round(precision(fit1r), 3)
 round(precision(fit2r), 3)

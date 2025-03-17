@@ -28,7 +28,7 @@
 // this file contains inla_generic:
 // inla_cgeneric_Wishart          for precision matrix
 
-#include "graphpcor.h"
+#include "graphpcor_utils.h"
 
 double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
@@ -300,22 +300,22 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
     double work[lwork], tau[M];
     dgeqp3_(&M, &M, &J[0], &M, &pivot[0], &tau[0],
             &work[0], &lwork, &info, F_ONE);
-    double dJacobian = 1.0;
+    double ldJacobian = 0.0;
     for(i=0; i<M; i++) {
-      dJacobian *= J[i*M+i];
+      ldJacobian += log(fabs(J[i*M+i]));
     }
     if(debug>99) {
-      printf("\ndet Jacobian = %f\n", dJacobian);
+      printf("\ndet Jacobian = %f\n", ldJacobian);
     }
-    if(dJacobian<0) {
-      dJacobian *= -1.0;
+    if(ldJacobian<0) {
+      ldJacobian *= -1.0;
     }
 
     // the log-prior
     ret[0] = lcprior;  // constant part
     ret[0] += (dof - ((double)N) - 1.0) * halfldetQ;
     ret[0] -= 0.5 * qrtrace;
-    ret[0] += log(dJacobian);
+    ret[0] += ldJacobian;
 
   }
 

@@ -25,7 +25,7 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include "graphpcor.h"
+#include "graphpcor_utils.h"
 
 double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
@@ -68,15 +68,6 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
     printf("N=%d, nth=%d, M=%d, eta=%f, lc=%f\n", N, nth, M, eta, lc);
   }
 
-  double gammas[nth];
-  if(theta) {
-    for(i = 1; i<nth; i++)
-      gammas[i] = M_PI / (1 + exp(-theta[i]));
-  } else {
-    for(i = 1; i<nth; i++)
-      gammas[i] = NAN;
-  }
-
   switch (cmd) {
   case INLA_CGENERIC_GRAPH:
   {
@@ -117,6 +108,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
     ret[1] = M;				       /* REQUIRED */
 
     double hld;
+    // build L that factorize C giving C = LL'
     theta2gamma2Lcorr(N, &hld, &theta[0], &ret[2]);
 
     if(debug>999) {
@@ -131,7 +123,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
       }
     }
 
-    // chol2inv
+    // chol2inv: Q = C^{-1} computed from L
     int info;
     char uplo = 'L';
     dpptri_(&uplo, &N, &ret[offset], &info, F_ONE);
@@ -162,71 +154,59 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
   {
     ret = Calloc(1, double);
 
-    // precomp constant
-    ret[0] = lc;
-
-    double daux;
+    int kj, k2=0;
+    double lhdetC;
+    printf("%d %d", (N-1)*(N-1), nth*nth);
     // log determinant
-    double ll[M];
-    theta2gamma2Lcorr(N, &daux, &theta[0], &ll[0]);
+    double cc[(N-1)*(N-1)];
+    theta2gamma2Ucorrel(N, &lhdetC, &theta[0], &cc[0]);
     if(debug>99) {
       printf("|R| = %2.5f, lc+(eta-1)|R| = %2.5f\n",
-             2.0*daux, lc + 2.0*(eta-1)*daux);
-    }
-    ret[0] += 2.0 * daux * (eta-1.0);
-
-//    if(0){
-    // add Jacobian of theta[i] -> gammas[i]
-    for(i=0; i<nth; i++) {
-      daux = exp(-theta[i]);
-      gammas[i] = M_PI/(1.0 + daux);
-      if(debug>9999)
-        printf("theta[%d] = %2.5f, gammas[%d] = %2.5f, J = %2.5f\n",
-               i, theta[i], i, gammas[i], M_PI * daux / SQR(1.0 + daux));
-      ret[0] += log(M_PI * daux / SQR(1.0 + daux));
+             2.0*lhdetC, lc + 2.0*(eta-1)*lhdetC);
     }
     if(debug>99) {
-      printf("Jacobian1 = %2.3f, %2.3f \n",
-             ret[0]-lc, ret[0]);
+      printL(cc, N-1, N-1, "R[.]:\n");
     }
-    // add Jacobian gammas -> (r, psi_1, ..., psi_m)
-    if(nth>1) {
-      double hparams[nth];
-      hparams[nth-1] = atan2(gammas[nth-1], gammas[nth-2]);
-      if(debug>999) {
-        printf("phi[%d] = %2.3f \n", nth-1, hparams[nth-1]);
-      }
-      if(hparams[nth-1]<0) {
-        hparams[nth-1] += 2.0*M_PI;
-        if(debug>999) {
-          printf(" fixed to phi[%d] = %2.3f \n", nth-1, hparams[nth-1]);
-        }
-      }
-      daux = SQR(gammas[nth-1]) + SQR(gammas[nth-2]);
-      if(nth>2) {
-        for(i=(nth-2); i>0; i--) {
-          hparams[i] = atan2(sqrt(daux), gammas[i-1]);
-          daux += SQR(gammas[i-1]);
-        }
-      }
-      hparams[0] = sqrt(daux);
-      if(debug>999) {
-        for(i=0; i<nth; i++) {
-          printf("rphi[%d] = %2.3f \n", i, hparams[i]);
-        }
-      }
-      daux = ((double)(nth-1)) * log(hparams[0]); // (m-1)log(r)
-      if(nth>2) {
-        for(i=1; i<(nth-1); i++) {
-          daux += ((double)(nth-1-i)) * log(sin(hparams[i]));
-        }
-      }
-      ret[0] += daux;
-      if(debug>99) {
-        printf("Jacobian 2 = %2.3f, %2.5f\n", daux, ret[0]);
+
+    // compute the Jacobian[nth*nth]
+    double ldtmp, daux, h = 0.0005;
+    double h2 = 2.0*h;
+    double cc2[(N-1)*(N-1)], mJacobian[nth*nth];
+    for(kj=0; kj<nth; kj++) {
+      daux = theta[kj];
+      theta[kj] = daux-h;
+      theta2gamma2Ucorrel(N, &ldtmp, &theta[0], &cc[0]);
+      theta[kj] = daux+h;
+      theta2gamma2Ucorrel(N, &ldtmp, &theta[0], &cc2[0]);
+      theta[kj] = daux;
+      // store derivatives
+      for(k=0; k<nth; k++) {
+        daux = (cc2[k] -cc[k])/h2;
+        mJacobian[k2++] = daux;
       }
     }
-//    }
+    if(debug>99) {
+      printMat(mJacobian, nth, nth, "matrix Jacobian\n");
+    }
+    int info, pivot[nth], lwork=2*nth+nth+1;
+    double work[lwork], tau[nth];
+    dgeqp3_(&nth, &nth, &mJacobian[0], &nth, &pivot[0], &tau[0],
+            &work[0], &lwork, &info, F_ONE);
+    double ldJacobian = 0.0;
+    for(i=0; i<nth; i++) {
+      ldJacobian += log(fabs(mJacobian[i*nth+i]));
+    }
+    if(debug>99) {
+      printf("\ndet Jacobian = %f\n", ldJacobian);
+    }
+    if(ldJacobian<0) {
+      ldJacobian *= -1.0;
+    }
+
+    // store the log-prior
+    // 'lc' is a pre-computed constant
+    ret[0] = lc + 2.0 * lhdetC * (eta-1.0);
+    ret[0] += ldJacobian;
 
   }
     break;

@@ -1,5 +1,24 @@
-#' build an `inla.cgeneric` to implement the LKG prior
-#' for the correlation matrix.
+#' The LKJ density for a correlation matrix
+#' @param R correlation matrix
+#' @param eta numeric, the prior parameter
+#' @param log logical indicating if the log of the density
+#' is to be returned, default = FALSE
+#' @export
+dLKJ <- function(R, eta, log = FALSE) {
+  lR <- chol(R)
+  ldR <- 2*sum(log(diag(lR)))
+  d <- ncol(R)
+  k <- 1:(d-1)
+  lbk <- lbeta(eta + (d-k-1)/2,
+               eta + (d-k-1)/2) * (d-k)
+  p2 <- sum((2*eta -2 + d - k)*(d-k))
+  o <- sum(lbk) + p2*log(2) + (eta-1)*ldR
+  if(!log)
+    o <- exp(o)
+  return(o)
+}
+#' Build an `inla.cgeneric` object to implement the
+#' LKG prior for the correlation matrix.
 #' @param n integer to define the size of the matrix
 #' @param eta numeric greater than 1, the parameter
 #' @param debug logical indicating if it is to debug.
@@ -96,23 +115,4 @@ cgeneric_LKJ <-
 
     return(the_model)
 
-}
-#' The LKJ density for a correlation matrix
-#' @param R correlation matrix
-#' @param eta numeric, the prior parameter
-#' @param log logical indicating if the log of the density
-#' is to be returned, default = FALSE
-#' @export
-dLKJ <- function(R, eta, log = FALSE) {
-  lR <- chol(R)
-  ldR <- 2*sum(log(diag(lR)))
-  d <- ncol(R)
-  k <- 1:(d-1)
-  lbk <- lbeta(eta + (d-k-1)/2,
-               eta + (d-k-1)/2) * (d-k)
-  p2 <- sum((2*eta -2 + d - k)*(d-k))
-  o <- sum(lbk) + p2*log(2) + (eta-1)*ldR
-  if(!log)
-    o <- exp(o)
-  return(o)
 }
