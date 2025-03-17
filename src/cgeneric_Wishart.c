@@ -29,6 +29,7 @@
 // inla_cgeneric_Wishart          for precision matrix
 
 #include "graphpcor.h"
+#include "graphpcor_utils.h"
 
 double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
