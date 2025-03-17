@@ -25,6 +25,10 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
+<<<<<<< HEAD
+=======
+#include "graphpcor.h"
+>>>>>>> refs/remotes/origin/main
 #include "graphpcor_utils.h"
 
 double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
