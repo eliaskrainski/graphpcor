@@ -119,7 +119,48 @@ setMethod(
       nodes = nodes,
       edgeL = edgl,
       edgemode = 'undirected')
-    plot(gr, ...)
+
+    mc <- lapply(
+      match.call(expand.dots = TRUE)[-1],
+      eval)
+    nargs <- names(mc)
+    nattr <- list(color = {
+      if(any(nargs=="color")) mc$color
+      else rep("blue", ne[1])
+    },
+    fillcolor = {
+      if(any(nargs == "fillcolor"))
+        mc$fillcolor
+      else rep("lightsalmon", ne[1])
+    },
+    shape = {
+      if(any(nargs == "shape"))
+        mc$shape
+      else
+        rep("circle", ne[1])
+    },
+    height = {
+      if(any(nargs == "height"))
+        mc$height
+      else
+        rep(0.5, ne[1])
+    },
+    width = {
+      if(any(nargs == "width"))
+        mc$width
+      else
+        rep(0.75, ne[1])
+    },
+    fontsize = {
+      if(any(nargs == "fontsize"))
+        mc$fontsize
+      else
+        rep(14, ne[1])
+    }
+    )
+    for(i in 1:length(nattr))
+      names(nattr[[i]]) <- nodes
+    getMethod("plot", "graph")(gr, nodeAttrs = nattr, ...)
   }
 )
 #' @describeIn Laplacian

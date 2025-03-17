@@ -336,7 +336,6 @@ setMethod(
       names(nattr[[i]]) <- nodes
 
     ag <- agopen(gr, "", nodeAttrs = nattr)
-
     for(k in 1:length(ag@AgEdge)) {
       i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
       j <- pmatch(ag@AgEdge[[k]]@head,
@@ -347,9 +346,8 @@ setMethod(
         ag@AgEdge[[k]]@lwd <- mc$lwd[1]
     }
 
-    plot(ag)
-
-  }
+    getMethod("plot", "Ragraph")(ag)
+}
 )
 #' @rdname cortree
 #' @export
