@@ -72,14 +72,14 @@ ires1 <- inla(
     control.mode = cmode
 )
 
-Qinla1 <- precision(ires1)
+Qinla1 <- prec(ires1)
 
 all.equal(Q21, Qinla1)
 
 ## kronecker model
 k21 <- kronecker(m2, m1)
 
-q21 <- precision(k21, theta = c(theta.fixed))
+q21 <- prec(k21, theta = c(theta.fixed))
 
 all.equal(q21, Q21)
           
@@ -94,7 +94,7 @@ ires2 <- inla(
              fixed = TRUE)
 )
 
-Qinla2 <- precision(ires2)
+Qinla2 <- prec(ires2)
 
 all.equal(q21, Qinla2)
 

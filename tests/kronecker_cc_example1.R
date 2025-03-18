@@ -23,7 +23,7 @@ prior(m1, theta = +1.0)
 initial(m1)
 
 theta1 <- 0
-Q1 <- precision(m1, theta = theta1)
+Q1 <- prec(m1, theta = theta1)
 if(Q1@uplo == "L")
     Q1 <- t(Q1)
 
@@ -32,6 +32,11 @@ m2.graph <- treepcor(
     p1 ~ p2 + c1 - c2,
     p2 ~ c3 + c4
 )
+
+theta.p <- c(-0.5, -1)
+prec(m2.graph, theta = theta.p)
+vcov(m2.graph, theta = theta.p)
+chol2inv(chol(prec(m2.graph, theta = theta.p)))
 
 ## m2 definition
 m2 <- cgeneric(
@@ -44,7 +49,7 @@ m2 <- cgeneric(
 initial(m2)
 
 length(theta2 <- c(0.7,0.5,0.2,0.6, 0, 1))
-Q2 <- precision(m2, theta = theta2)
+Q2 <- prec(m2, theta = theta2)
 Q2
 
 solve(Q2)
@@ -60,10 +65,10 @@ k12 <- kronecker(m1, m2)
 k21 <- kronecker(m2, m1)
 
 ### two ways of getting the precision matrix
-q12 <- precision(k12, theta = c(theta2))
+q12 <- prec(k12, theta = c(theta2))
 all.equal(Q12, q12)
 
-q21 <- precision(k21, theta = c(theta2))
+q21 <- prec(k21, theta = c(theta2))
 all.equal(Q21, q21)
 
 ## reorder test

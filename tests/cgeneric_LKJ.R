@@ -21,7 +21,7 @@ initial(cmodel)
 
 theta1 <- rnorm(m)
 
-(qq <- precision(cmodel, theta = theta1))
+(qq <- prec(cmodel, theta = theta1))
 
 (vv <- solve(qq))
 
@@ -46,7 +46,7 @@ fit <- inla(
     control.mode = cmode
 )
 
-all.equal(qq, precision(fit))
+all.equal(qq, prec(fit))
 
 fit$summary.hy
 

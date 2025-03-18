@@ -67,7 +67,7 @@ mu(m1, theta = theta1)
 
 image(graph(m1))
 
-Q1 <- precision(m1, theta = c(0))
+Q1 <- prec(m1, theta = c(0))
 image(Q1)
 
 ## model 2
@@ -87,10 +87,10 @@ initial(m2)
 mu(m2)
 graph(m2, optimize = TRUE)
 graph(m2)
-precision(m2)
+prec(m2)
 
 theta2 <- c(seq(1, -1, length = n2), -0.5, 0.0)
-Q2 <- precision(m2, theta = theta2)
+Q2 <- prec(m2, theta = theta2)
 Q2
 solve(Q2)
 cov2cor(solve(Q2))
@@ -116,8 +116,8 @@ mu(k12)
 str(graph(k12))
 str(graph(k21))
 
-str(precision(k12))
-str(precision(k21))
+str(prec(k12))
+str(prec(k21))
 
 image(graph(m1))
 #x11()
@@ -126,11 +126,11 @@ image(graph(k12))
 image(graph(k21))
 
 qq12 <- as(kronecker(Q1, Q2), 'symmetricMatrix')
-Q12 <- as(precision(k12, theta = c(theta1, theta2)), 'symmetricMatrix')
+Q12 <- as(prec(k12, theta = c(theta1, theta2)), 'symmetricMatrix')
 all.equal(qq12, Q12)
 
 qq21 <- as(kronecker(Q2, Q1), 'symmetricMatrix')
-Q21 <- as(precision(k21, theta = c(theta2, theta1)), 'symmetricMatrix')
+Q21 <- as(prec(k21, theta = c(theta2, theta1)), 'symmetricMatrix')
 all.equal(qq21, Q21)
 
 initial(k12)
@@ -170,8 +170,8 @@ out21 <- inla(
         fixed = TRUE)
 )
 
-all.equal(Q12, precision(out12))
-all.equal(Q21, precision(out21))
+all.equal(Q12, prec(out12))
+all.equal(Q21, prec(out21))
 
 out12 <- inla(
     y1 ~ 0 + f(idx, model = k12), 

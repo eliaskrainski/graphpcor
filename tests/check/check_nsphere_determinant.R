@@ -36,7 +36,7 @@ qcmodel <- cgeneric(
 
 prior(qcmodel, theta = x)
 
-Qx <- precision(qcmodel, theta = x)
+Qx <- prec(qcmodel, theta = x)
 n <- ncol(Qx)
 Qx
 
@@ -56,7 +56,7 @@ fit0 <- inla(
 
 (x - fit0$mode$theta)
 
-q.fit0 <- precision(fit0)
+q.fit0 <- prec(fit0)
 
 all.equal(Qx, q.fit0)
 
@@ -86,7 +86,7 @@ fit <- inla(
 
 x-fit$mode$theta
 
-Q1 <- precision(qcmodel, theta = fit$mode$theta)
+Q1 <- prec(qcmodel, theta = fit$mode$theta)
 Q1
 
 cc

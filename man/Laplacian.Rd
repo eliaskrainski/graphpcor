@@ -2,10 +2,13 @@
 % Please edit documentation in R/aaa_methods.R, R/graphpcor.R
 \name{Laplacian}
 \alias{Laplacian}
+\alias{Laplacian.default}
 \alias{Laplacian.matrix}
 \title{The Laplacian of a graph}
 \usage{
 Laplacian(graph)
+
+\method{Laplacian}{default}(graph)
 
 \method{Laplacian}{matrix}(graph)
 }

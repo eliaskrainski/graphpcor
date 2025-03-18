@@ -63,7 +63,7 @@ prior(W, theta = theta1)
 myJ(theta1, 1e-3, verbose = TRUE)
 myJ(theta1, 1e-5, verbose = TRUE)
 
-precision(W, theta = theta1)
+prec(W, theta = theta1)
 
 theta2iidkd <- function(th, old = FALSE, covar = TRUE, corr = FALSE) {
     m <- length(th)
@@ -98,7 +98,7 @@ theta2iidkd <- function(th, old = FALSE, covar = TRUE, corr = FALSE) {
 V
 theta2iidkd(theta0, old = TRUE)
 theta2iidkd(theta1, old = FALSE)
-solve(precision(W, theta = theta1))
+solve(prec(W, theta = theta1))
 
 theta2iidkd(theta0, old = TRUE, covar = FALSE)
 theta2iidkd(theta1, old = FALSE, covar = FALSE)
@@ -185,11 +185,11 @@ fit2 <- inla(
     control.compute = ccomp
 )
 
-c(all.equal(Q, as.matrix(precision(fit0))),
-  all.equal(precision(fit0),
-            precision(fit1)),
-  all.equal(precision(fit0),
-            precision(fit2)))
+c(all.equal(Q, as.matrix(prec(fit0))),
+  all.equal(prec(fit0),
+            prec(fit1)),
+  all.equal(prec(fit0),
+            prec(fit2)))
 
 cbind(fit0$mlik, fit1$mlik, fit2$mlik)
 
@@ -230,9 +230,9 @@ fit2r <- inla(
 )
 
 Q
-round(precision(fit0r), 3)
-round(precision(fit1r), 3)
-round(precision(fit2r), 3)
+round(prec(fit0r), 3)
+round(prec(fit1r), 3)
+round(prec(fit2r), 3)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)

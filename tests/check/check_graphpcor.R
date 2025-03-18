@@ -110,7 +110,7 @@ drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta.low) -
     cmodel$f$cgeneric$data$doubles$thetabase
 ## [1] -0.5111374 -0.5264165 -0.6278668 -0.6602559
 
-Q1c <- precision(cmodel, theta = theta1)
+Q1c <- prec(cmodel, theta = theta1)
 
 round(Q1c, 4)
 round(Q1 <- chol2inv(chol(V1)), 4)
@@ -139,5 +139,5 @@ fit1 <- inla(
     control.mode = list(theta = theta1, fixed = TRUE)
 )
 
-all.equal(Q1c, precision(fit1))
+all.equal(Q1c, prec(fit1))
 

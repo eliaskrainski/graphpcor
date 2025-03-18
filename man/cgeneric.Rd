@@ -17,7 +17,7 @@
 \alias{graph}
 \alias{graph.inla.cgeneric}
 \alias{Q}
-\alias{precision.inla.cgeneric}
+\alias{prec.inla.cgeneric}
 \alias{cgeneric.graphpcor}
 \alias{cgeneric.treepcor}
 \title{\code{inla.cgeneric} class, short \code{cgeneric},
@@ -54,7 +54,7 @@ graph(model, ...)
 
 Q(model, ...)
 
-\method{precision}{inla.cgeneric}(model, ...)
+\method{prec}{inla.cgeneric}(model, ...)
 
 \method{cgeneric}{graphpcor}(...)
 
@@ -126,7 +126,7 @@ calls \link{cgeneric_generic0}
 \section{Functions}{
 \itemize{
 \item \code{cgeneric_get()}: \code{cgeneric_get} is an internal function used by
-\code{graph}, \code{precision}, \code{initial}, \code{mu} or \code{prior}
+\code{graph}, \code{prec}, \code{initial}, \code{mu} or \code{prior}
 methods for \code{inla.cgeneric}
 
 \item \code{initial()}: Retrieve the initial model parameter(s).
@@ -145,9 +145,9 @@ methods for \code{inla.cgeneric}
 
 \item \code{graph(inla.cgeneric)}: Retrieve the graph of an \code{inla.cgeneric} object
 
-\item \code{Q()}: Evaluate \code{\link[=precision]{precision()}} on a model
+\item \code{Q()}: Evaluate \code{\link[=prec]{prec()}} on a model
 
-\item \code{precision(inla.cgeneric)}: Evaluate \code{\link[=precision]{precision()}} on an \code{inla.cgeneric} object
+\item \code{prec(inla.cgeneric)}: Evaluate \code{\link[=prec]{prec()}} on an \code{inla.cgeneric} object
 
 }}
 \seealso{

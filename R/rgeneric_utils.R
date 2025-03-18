@@ -49,11 +49,11 @@ graph.inla.rgeneric <- function(model) {
       cmd = "graph"
   ))
 }
-#' The precision method for an 'inla.rgeneric' object.
+#' The precision method for an `inla.rgeneric` object.
 #' @param ... additional parameter such as 'theta'
 #' If 'theta' is not supplied, initial will be taken.
 #' @export
-precision.inla.rgeneric <- function(model, ...) {
+prec.inla.rgeneric <- function(model, ...) {
   mc <- list(...)
   nargs <- names(mc)
   if(any(nargs == "theta")) {

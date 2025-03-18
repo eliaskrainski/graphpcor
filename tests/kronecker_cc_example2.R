@@ -31,9 +31,6 @@ Rs <- inla.scale.model(
     constr = cntr
 )
 
-iRs <- inla.qinv(Rs + Diagonal(n, 1e-5), cntr)
-summary(diag(iRs))
-
 ## m1 definition
 m1 <- cgeneric(
     model = "generic0",
@@ -48,7 +45,7 @@ prior(m1, theta = +1.0)
 initial(m1)
 
 theta1 <- 0
-Q1 <- precision(m1, theta = theta1)
+Q1 <- prec(m1, theta = theta1)
 
 summary(diag(inla.qinv(Q1 + Diagonal(n, 1e-5), cntr)))
 
@@ -71,13 +68,13 @@ m2 <- cgeneric(
 str(initial(m2))
 length(theta2 <- c(0.5, 0.3, 0))
 
-Q2 <- precision(m2, theta = theta2)
+Q2 <- prec(m2, theta = theta2)
 Q2
 
 solve(Q2)
 
 cov2cor(solve(Q2))
-cov2cor(variance(m2.graph, theta2[-(1:n2)]))
+cov2cor(vcov(m2.graph, theta2[-(1:n2)]))
 
 ## The M1 (x) M2 Kronecker product model definition
 k12 <- kronecker(m1, m2)
@@ -87,11 +84,11 @@ k21 <- kronecker(m2, m1)
 
 ### two ways of getting the precision matrix
 Q12 <- kronecker(Q1, Q2)
-q12 <- precision(k12, theta = c(theta2))
+q12 <- prec(k12, theta = c(theta2))
 all.equal(Q12, q12)
 
 Q21 <- kronecker(Q2, Q1)
-q21 <- precision(k21, theta = c(theta2))
+q21 <- prec(k21, theta = c(theta2))
 all.equal(Q21, q21)
 
 ## reorder test
@@ -202,13 +199,13 @@ rbind(c(th = theta2),
 
 
 diag(solve(Q2))
-diag(solve(precision(m2, theta = out12$mode$theta)))
-diag(solve(precision(m2, theta = out21$mode$theta)))
+diag(solve(prec(m2, theta = out12$mode$theta)))
+diag(solve(prec(m2, theta = out21$mode$theta)))
 
 cov2cor(solve(Q2))
 
-cov2cor(variance(m2.graph, theta = out12$mode$theta[-(1:n2)]))
-cov2cor(variance(m2.graph, theta = out21$mode$theta[-(1:n2)]))
+cov2cor(vcov(m2.graph, theta = out12$mode$theta[-(1:n2)]))
+cov2cor(vcov(m2.graph, theta = out21$mode$theta[-(1:n2)]))
 
 summary(out12$summary.random$idx$mean)
 summary(out21$summary.random$idx$mean)

@@ -27,8 +27,8 @@ model$f$cgeneric$data$characters
 prior(model, theta = ini)
 
 graph(model, optimize = TRUE)
-precision(model, theta = ini, optimize = TRUE)
+prec(model, theta = ini, optimize = TRUE)
 
 graph(model)
-precision(model, theta = ini)
+prec(model, theta = ini)
 

@@ -81,7 +81,7 @@ mcorr.fit <- cov2cor(variance(
     theta = fit$mode$theta[nc+1:np]))
 mcorr.fit
 
-q.fit <- precision(gmodel, theta = fit$mode$theta)
+q.fit <- prec(gmodel, theta = fit$mode$theta)
 mcov.fit <- solve(q.fit)
 
 mcov

@@ -44,7 +44,7 @@ L0
 round(tcrossprod(L0), 4)
 
 ## the precision for a correlation matrix
-Q0 <- precision(g, theta = theta0l)
+Q0 <- prec(g, theta = theta0l)
 Q0
 
 C0 <- solve(Q0)
@@ -197,13 +197,13 @@ C1
 
 round(solve(V1), 2)
 
-Q1c <- precision(cmodel, theta = theta1)
+Q1c <- prec(cmodel, theta = theta1)
 Q1c
 
 round(Q1c, 2)
 
 all.equal(solve(as.matrix(Q1c)), variance(g, theta = theta1))
-all.equal(as.matrix(Q1c), precision(g, theta = theta1))
+all.equal(as.matrix(Q1c), prec(g, theta = theta1))
 
 dataf <- list(
     i = 1:ne[1],
@@ -218,5 +218,5 @@ fit0 <- inla(
     control.mode = list(theta = theta1, fixed = TRUE)
 )
 
-all.equal(Q1c, precision(fit0))
+all.equal(Q1c, prec(fit0))
 

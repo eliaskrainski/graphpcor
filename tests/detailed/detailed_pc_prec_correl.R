@@ -21,7 +21,7 @@ m <- n * (n-1)/2
 theta1 <- rnorm(m)
 
 theta1
-(qq <- precision(model, theta = theta1))
+(qq <- prec(model, theta = theta1))
 
 sum(diag(chol(qq)))
 
@@ -46,7 +46,7 @@ fit <- inla(
     control.mode = cmode
 )
 
-all.equal(qq, precision(fit))
+all.equal(qq, prec(fit))
 
 pc1 <- prior(model, theta = theta1)
 pc1

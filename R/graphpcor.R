@@ -11,7 +11,7 @@
 #' g1
 #' summary(g1)
 #' plot(g1)
-#' precision(g1)
+#' prec(g1)
 graphpcor.formula <- function(...) {
   fch <- as.character(match.call())[-1]
   if(length(fch)<1)
@@ -220,35 +220,39 @@ setMethod(
   }
 )
 #' @describeIn graphpcor
-#' The variance method for 'graphpcor'
+#' The covariance method for a `graphpcor` object.
 #' @export
-variance.graphpcor <- function(x, ...) {
-  mc <- list(...)
-  nargs <- names(mc)
-  if(!any(nargs == "theta")) {
-    stop("Please provide 'theta'!")
+setMethod(
+  "vcov",
+  "graphpcor",
+  function(object, ...) {
+    mc <- list(...)
+    nargs <- names(mc)
+    if(!any(nargs == "theta")) {
+      stop("Please provide 'theta'!")
+    }
+    theta <- mc$theta
+    ne <- dim(object)
+    Q <- Laplacian(object)
+    stopifnot(ne[1]==nrow(Q))
+    stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
+    if(length(theta)==ne[2]) {
+      theta <- c(rep(0.0, ne[1]), theta)
+    } else {
+      stopifnot(length(theta)==sum(ne))
+    }
+    L <- getMethod('chol', 'graphpcor')(
+      object, theta = theta[-(1:ne[1])])
+    V <- chol2inv(L)
+    si <- exp(theta[1:ne[1]]) / sqrt(diag(V))
+    V <- diag(si) %*% V %*% diag(si)
+    return(V)
   }
-  theta <- mc$theta
-  ne <- dim(x)
-  Q <- Laplacian(x)
-  stopifnot(ne[1]==nrow(Q))
-  stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
-  if(length(theta)==ne[2]) {
-    theta <- c(rep(0.0, ne[1]), theta)
-  } else {
-    stopifnot(length(theta)==sum(ne))
-  }
-  L <- getMethod('chol', 'graphpcor')(
-    x, theta = theta[-(1:ne[1])])
-  V <- chol2inv(L)
-  si <- exp(theta[1:ne[1]]) / sqrt(diag(V))
-  V <- diag(si) %*% V %*% diag(si)
-  return(V)
-}
+)
 #' @describeIn graphpcor
 #' The precision method for 'graphpcor'
 #' @export
-precision.graphpcor <- function(x, ...) {
+prec.graphpcor <- function(x, ...) {
   ne <- dim(x)
   Q <- Laplacian(x)
   stopifnot(ne[1]==nrow(Q))
@@ -257,7 +261,7 @@ precision.graphpcor <- function(x, ...) {
   nargs <- names(mc)
   if(any(nargs == "theta")) {
     return(chol2inv(chol(
-      variance(x, ...))
+      vcov(x, ...))
     ))
   } else {
     warning("missing `theta`, returning Laplacian!")
@@ -304,8 +308,7 @@ fiL <- function(L, lfi) {
 #' ne <- dim(g)
 #' gH0 <- hessian(g, rep(-1, ne[2]))
 #' ## alternatively
-#' Q0 <- precision(g, theta = rep(c(0,-1), ne))
-#' C0 <- cov2cor(solve(Q0))
+#' C0 <- vcov(g, theta = rep(c(0,-1), ne))
 #' all.equal(hessian(g, C0), gH0)
 #' @export
 hessian.graphpcor <- function(graphpcor, base, decomposition = c("eigen", "svd", "chol"), ...) {
@@ -332,11 +335,11 @@ hessian.graphpcor <- function(graphpcor, base, decomposition = c("eigen", "svd",
     base <- ll0[lower.tri(ll0) & (!z0)]
   } else {
     stopifnot(length(base) == nEdges)
-    C0 <- variance(graphpcor, theta =base)
+    C0 <- vcov(graphpcor, theta = base)
   }
   ## hessian uses graphpcor:::KLD10
   H <- numDeriv::hessian(
-    function(x) KLD10(variance(graphpcor, theta = x), C0),
+    function(x) KLD10(vcov(graphpcor, theta = x), C0),
     base, ...)
   ## next bit follows mvtnorm:::rmvnorm()
   t0 <- sqrt(.Machine$double.eps)

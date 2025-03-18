@@ -26,9 +26,9 @@ summary(g1)
 
 plot(g1)
 
-precision(g1)
+prec(g1)
 
-(q1 <- precision(g1, theta = c(0)))
+(q1 <- prec(g1, theta = c(0)))
 
 v1 <- chol2inv(chol(q1))
 
@@ -53,16 +53,16 @@ summary(g2)
 
 plot(g2)
 
-precision(g2)
-precision(g2, theta = c(0, 0))
-precision(g2, theta = c(-1, 1))
+prec(g2)
+prec(g2, theta = c(0, 0))
+prec(g2, theta = c(-1, 1))
 
-solve(precision(g2))
+solve(prec(g2))
 
-solve(precision(g2, theta = c(0, 0)))
+solve(prec(g2, theta = c(0, 0)))
 variance(g2)
 
-chol2inv(chol(precision(g2, theta = c(0, 0))))[1:4, 1:4]
+chol2inv(chol(prec(g2, theta = c(0, 0))))[1:4, 1:4]
 variance(g2, theta = c(0, 0))
 
 g2
@@ -74,10 +74,10 @@ summary(g3)
 
 plot(g3)
 
-precision(g3)
-precision(g3, theta = c(0, 0))
+prec(g3)
+prec(g3, theta = c(0, 0))
 
-chol2inv(chol(precision(g3, theta = c(0, 0))))[1:4, 1:4]
+chol2inv(chol(prec(g3, theta = c(0, 0))))[1:4, 1:4]
 variance(g3, theta = c(0, 0))
 
 summary(g2)
@@ -85,13 +85,13 @@ summary(g2)
 g3
 drop(g3) ## to be fixed (do not remove childrens!)
 
-precision(g3)
-precision(drop(g3))
+prec(g3)
+prec(drop(g3))
 
 n3 <- dim(g3)[1]
 all.equal(
-    solve(precision(g2, theta = c(0, 0)))[1:n3, 1:n3],
-    solve(precision(g3, theta = c(0, 0)))[1:n3, 1:n3]
+    solve(prec(g2, theta = c(0, 0)))[1:n3, 1:n3],
+    solve(prec(g3, theta = c(0, 0)))[1:n3, 1:n3]
 )
 
 detach("package:graphpcor", unload = TRUE)

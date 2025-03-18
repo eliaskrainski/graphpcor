@@ -65,9 +65,9 @@ fit2 <- inla(
     control.mode = cmode
 )
 
-pp3 <- list(precision(fit0),
-            precision(fit1),
-            precision(fit2))
+pp3 <- list(prec(fit0),
+            prec(fit1),
+            prec(fit2))
 pp3[[2]]
 
 all.equal(pp3[[1]], pp3[[2]])

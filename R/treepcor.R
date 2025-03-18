@@ -21,24 +21,24 @@
 #' g1
 #' summary(g1)
 #' plot(g1)
-#' precision(g1)
-#' precision(g1, theta = 0)
+#' prec(g1)
+#' prec(g1, theta = 0)
 #'
 #' g2 <- treepcor(p1 ~ c1 + c2 + p2,
 #'           p2 ~ c3 - c4)
 #' g2
 #' summary(g2)
 #' plot(g2)
-#' precision(g2)
-#' precision(g2, theta = c(0, 0))
+#' prec(g2)
+#' prec(g2, theta = c(0, 0))
 #'
 #' g3 <- treepcor(p1 ~ -p2 + c1 + c2,
 #'           p2 ~ c3)
 #' g3
 #' summary(g3)
 #' plot(g3)
-#' precision(g3)
-#' precision(g3, theta = c(0,0))
+#' prec(g3)
+#' prec(g3, theta = c(0,0))
 treepcor <- function(...) {
 
   fch <- as.character(match.call())[-1]
@@ -351,7 +351,7 @@ setMethod(
 )
 #' @rdname treepcor
 #' @export
-precision.treepcor <- function(x, ...) {
+prec.treepcor <- function(x, ...) {
   d <- dim(x)
   Q <- matrix()
   trm <- attr(x, "relationship")
@@ -444,30 +444,35 @@ etreepcor2precision <- function(d.el) {
     q = q0
   ))
 }
-#' @rdname treepcor
+#' @describeIn treepcor
+#' The covariance method for a `treepcor` object.
 #' @export
-variance.treepcor <- function(x, ...) {
-  mc <- lapply(
-    match.call(
-      expand.dots = TRUE)[-1],
-    eval)
-  nargs <- names(mc)
-  nm <- dim(x)
-  edgl <- edges(x)
-  ij <- etreepcor2variance(edgl[1:nm[2]])
-  np <- length(ij$iv)
-  nc <- length(ij$iparent)
-  stopifnot(all(c(nc, np) == nm))
-  if(any(nargs == "theta")) {
-    vi <- sapply(ij$iv, function(i)
-      sum(exp(2 * mc$theta[i])))
-  } else {
-    vi <- sapply(ij$iv, function(i) length(i))
+setMethod(
+  "vcov",
+  "treepcor",
+  function(object, ...) {
+    mc <- lapply(
+      match.call(
+        expand.dots = TRUE)[-1],
+      eval)
+    nargs <- names(mc)
+    nm <- dim(object)
+    edgl <- edges(object)
+    ij <- etreepcor2variance(edgl[1:nm[2]])
+    np <- length(ij$iv)
+    nc <- length(ij$iparent)
+    stopifnot(all(c(nc, np) == nm))
+    if(any(nargs == "theta")) {
+      vi <- sapply(ij$iv, function(i)
+        sum(exp(2 * mc$theta[i])))
+    } else {
+      vi <- sapply(ij$iv, function(i) length(i))
+    }
+    vv <- diag(nc) + vi[ij$itop]
+    rownames(vv) <- colnames(vv) <- names(edgl)[np + 1:nc]
+    return(t(vv * ij$schildren) * ij$schildren)
   }
-  vv <- diag(nc) + vi[ij$itop]
-  rownames(vv) <- colnames(vv) <- names(edgl)[np + 1:nc]
-  return(t(vv * ij$schildren) * ij$schildren)
-}
+)
 #' Internal function to extract elements to
 #' build the covariance matrix from a `treepcor`.
 #' @param d.el list of the first n edges of a `treepcor`.

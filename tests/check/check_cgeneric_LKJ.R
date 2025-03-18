@@ -111,11 +111,11 @@ cmodel <- cgeneric(
 
 str(cmodel)
 
-precision(cmodel)
-solve(precision(cmodel))
-solve(precision(cmodel, theta = theta1))
+prec(cmodel)
+solve(prec(cmodel))
+solve(prec(cmodel, theta = theta1))
 
-precision(cmodel, theta = theta1)
+prec(cmodel, theta = theta1)
 (Q1 <- chol2inv(t(graphpcor:::theta2gamma2L(theta1))))
 
 itest <- inla(y ~ 0 + f(i, model = cmodel),
@@ -128,7 +128,7 @@ itest <- inla(y ~ 0 + f(i, model = cmodel),
      verbose = !TRUE)
 
 itest$mode$theta
-solve(precision(itest))
+solve(prec(itest))
 solve(Q1)
 
 p3 <- prior(cmodel, theta = theta1)
@@ -262,7 +262,7 @@ x1
 cos(x1)
 sin(x1)
 
-(qq <- precision(cmodel, theta = theta1))
+(qq <- prec(cmodel, theta = theta1))
 
 (b1 <- graphpcor:::theta2gamma2L(theta1))
 all.equal(as.matrix(qq), solve(tcrossprod(b1)))
@@ -287,7 +287,7 @@ fit <- inla(
     control.mode = cmode
 )
 
-all.equal(qq, precision(fit))
+all.equal(qq, prec(fit))
 
 ### 
 nrep <- 2
@@ -311,7 +311,7 @@ fitr <- inla(
 )
 
 round(qq, 2)
-round(precision(fitr), 2)
+round(prec(fitr), 2)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)

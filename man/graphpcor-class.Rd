@@ -11,8 +11,8 @@
 \alias{plot,graphpcor,ANY-method}
 \alias{Laplacian.graphpcor}
 \alias{chol,graphpcor-method}
-\alias{variance.graphpcor}
-\alias{precision.graphpcor}
+\alias{vcov,graphpcor-method}
+\alias{prec.graphpcor}
 \title{Set class for objects to model correlation matrices}
 \usage{
 \method{graphpcor}{formula}(...)
@@ -31,9 +31,9 @@
 
 \S4method{chol}{graphpcor}(x, ...)
 
-\method{variance}{graphpcor}(x, ...)
+\S4method{vcov}{graphpcor}(object, ...)
 
-\method{precision}{graphpcor}(x, ...)
+\method{prec}{graphpcor}(x, ...)
 }
 \arguments{
 \item{...}{list of formula used to define the edges.}
@@ -51,6 +51,8 @@ The \code{~} is taken as link.
 
 \item \code{chol(graphpcor)}: Build the unite diagonal lower triangle matrix
 
+\item \code{vcov(graphpcor)}: The covariance method for a \code{graphpcor} object.
+
 }}
 \section{Functions}{
 \itemize{
@@ -67,9 +69,7 @@ a variable and each edge indicates a conditional distribution.
 
 \item \code{Laplacian(graphpcor)}: The Laplacian method for \code{graphpcor}
 
-\item \code{variance(graphpcor)}: The variance method for 'graphpcor'
-
-\item \code{precision(graphpcor)}: The precision method for 'graphpcor'
+\item \code{prec(graphpcor)}: The precision method for 'graphpcor'
 
 }}
 \examples{
@@ -77,5 +77,5 @@ g1 <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
 g1
 summary(g1)
 plot(g1)
-precision(g1)
+prec(g1)
 }

@@ -33,7 +33,7 @@ Vg
 cov2cor(variance(g, theta = theta.base)) ## base model correlation
 cov2cor(Vg) ## correlation to be used to sample data
 
-precision(cmodel, theta = theta1)
+prec(cmodel, theta = theta1)
 
 ## some data
 nrep <- 100
@@ -64,7 +64,7 @@ rbind(true = c(theta1),
       fit = fit$mode$theta)
 fit$mode$theta - c(theta1)
 
-precision(cmodel, theta = fit$mode$theta)
+prec(cmodel, theta = fit$mode$theta)
 
 round(Vg, 2)
 

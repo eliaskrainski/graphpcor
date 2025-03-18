@@ -32,7 +32,7 @@ m1 <- cgeneric(
 )
 
 theta1 <- 0
-Q1 <- precision(m1, theta = theta1)
+Q1 <- prec(m1, theta = theta1)
 
 Q1[1:min(5,n), 1:min(10,n)]
 

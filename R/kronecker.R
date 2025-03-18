@@ -306,8 +306,8 @@ setMethod(
       }
 
       Q <- function(n, theta) {
-        Q1 <- precision(X, theta = theta[1:nth1])
-        Q2 <- precision(Y, theta = theta[nth1+1:nth2])
+        Q1 <- prec(X, theta = theta[1:nth1])
+        Q2 <- prec(Y, theta = theta[nth1+1:nth2])
         QQ <- INLA::inla.as.sparse(kronecker(Q1, Q2))
         idx <- which(QQ@i <= QQ@j)
         return(QQ@x[idx])
@@ -405,8 +405,8 @@ setMethod(
       }
 
       Q <- function(n, theta) {
-        Q1 <- precision(X, theta = theta[1:nth1])
-        Q2 <- precision(Y, theta = theta[nth1+1:nth2])
+        Q1 <- prec(X, theta = theta[1:nth1])
+        Q2 <- prec(Y, theta = theta[nth1+1:nth2])
         QQ <- INLA::inla.as.sparse(kronecker(Q1, Q2))
         idx <- which(QQ@i <= QQ@j)
         return(QQ@x[idx])
@@ -502,8 +502,8 @@ setMethod(
       }
 
       Q <- function(n, theta) {
-        Q1 <- precision(X, theta = theta[1:nth1])
-        Q2 <- precicion(Y, theta = theta[nth1+1:nth2])
+        Q1 <- prec(X, theta = theta[1:nth1])
+        Q2 <- prec(Y, theta = theta[nth1+1:nth2])
         QQ <- INLA::inla.as.sparse(
           kronecker(Q1, Q2))
         idx <- which(QQ@i <= QQ@j)

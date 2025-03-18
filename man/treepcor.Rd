@@ -8,8 +8,7 @@
 \alias{drop,treepcor-method}
 \alias{edges,treepcor-method}
 \alias{plot,treepcor,ANY-method}
-\alias{precision.treepcor}
-\alias{variance.treepcor}
+\alias{prec.treepcor}
 \title{treepcor
 Set a graph whose nodes represent two kind of
 variables: children and parent.}
@@ -28,9 +27,7 @@ treepcor(...)
 
 \S4method{plot}{treepcor,ANY}(x, y, ...)
 
-\method{precision}{treepcor}(x, ...)
-
-\method{variance}{treepcor}(x, ...)
+\method{prec}{treepcor}(x, ...)
 }
 \arguments{
 \item{...}{a list of formula used as relationship
@@ -58,22 +55,22 @@ g1 <- treepcor(p1 ~ c1 + c2 - c3)
 g1
 summary(g1)
 plot(g1)
-precision(g1)
-precision(g1, theta = 0)
+prec(g1)
+prec(g1, theta = 0)
 
 g2 <- treepcor(p1 ~ c1 + c2 + p2,
           p2 ~ c3 - c4)
 g2
 summary(g2)
 plot(g2)
-precision(g2)
-precision(g2, theta = c(0, 0))
+prec(g2)
+prec(g2, theta = c(0, 0))
 
 g3 <- treepcor(p1 ~ -p2 + c1 + c2,
           p2 ~ c3)
 g3
 summary(g3)
 plot(g3)
-precision(g3)
-precision(g3, theta = c(0,0))
+prec(g3)
+prec(g3, theta = c(0,0))
 }

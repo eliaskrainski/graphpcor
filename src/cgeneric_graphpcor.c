@@ -205,6 +205,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
     int m2 = N*(N+1)/2;
     double ll[N * N], qtemp[m2];
 
+    // star L with diag, off-diag are zero
     k=0;
     for(i=0; i<N; i++) {
       for(j=0; j<N; j++) {
@@ -221,6 +222,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
       printMat(ll, N, N, "L[i,j]:\n");
     }
 
+    // add low theta to L
     k=0;
     for(i=0; i<M; i++) {
       if(ii->ints[i]!=jj->ints[i]) {
@@ -254,7 +256,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
     }
 
     if(debug>9999){
-      printf("Q0 (upper)\n");
+      printf("L0 (upper)\n");
       k=0;
       for(i=0; i<N; i++) {
         for(j=i; j<N; j++) {

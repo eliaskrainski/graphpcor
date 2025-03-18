@@ -19,7 +19,7 @@ round(ith <- initial(model), 4)
 m <- n * (n-1)/2
 theta1 <- rnorm(m)
 
-(qq <- precision(model, theta = theta1))
+(qq <- prec(model, theta = theta1))
 
 (vv <- solve(qq))
 
@@ -40,7 +40,7 @@ fit <- inla(
     control.mode = cmode
 )
 
-all.equal(qq, precision(fit))
+all.equal(qq, prec(fit))
 
 pc1 <- prior(model, theta = theta1)
 pc1

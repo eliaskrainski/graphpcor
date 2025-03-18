@@ -33,7 +33,6 @@ g <- graphpcor(x1 ~ x2 + x3, x2 ~ x4, x3 ~ x4)
 ne <- dim(g)
 gH0 <- hessian(g, rep(-1, ne[2]))
 ## alternatively
-Q0 <- precision(g, theta = rep(c(0,-1), ne))
-C0 <- cov2cor(solve(Q0))
+C0 <- vcov(g, theta = rep(c(0,-1), ne))
 all.equal(hessian(g, C0), gH0)
 }

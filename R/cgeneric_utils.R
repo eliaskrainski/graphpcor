@@ -1,6 +1,6 @@
 #' @describeIn cgeneric
 #' `cgeneric_get` is an internal function used by
-#' `graph`, `precision`, `initial`, `mu` or `prior`
+#' `graph`, `prec`, `initial`, `mu` or `prior`
 #' methods for `inla.cgeneric`
 #' @param model an object `inla.cgeneric` object.
 #' @param cmd an string to specify which model element to get
@@ -215,14 +215,14 @@ graph.inla.cgeneric <- function(model, ...) {
     optimize = optimize))
 }
 #' @describeIn cgeneric
-#' Evaluate [precision()] on a model
+#' Evaluate [prec()] on a model
 Q <- function(model, ...) {
-  UseMethod("precision")
+  UseMethod("prec")
 }
 #' @describeIn cgeneric
-#' Evaluate [precision()] on an `inla.cgeneric` object
+#' Evaluate [prec()] on an `inla.cgeneric` object
 #' @export
-precision.inla.cgeneric <- function(model, ...) {
+prec.inla.cgeneric <- function(model, ...) {
   mc <- list(...)
   nargs <- names(mc)
   if(any(nargs == "theta")) {

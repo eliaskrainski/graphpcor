@@ -46,7 +46,7 @@ out1 <- inla(
         fixed = TRUE)
 )
 
-all.equal(Q1, precision(out1))
+all.equal(Q1, prec(out1))
 
 ## model 2 definition
 m2 <- treepcor(
@@ -56,12 +56,12 @@ m2
 dim(m2)
 summary(m2)
 
-precision(m2, theta = c(0))
-solve(precision(m2, theta = c(0)))
-variance(m2, theta = c(0))
+prec(m2, theta = c(0))
+solve(prec(m2, theta = c(0)))
+vcov(m2, theta = c(0))
 
 theta.p <- c(0.33)
-(V2 <- variance(m2, theta = theta.p))
+(V2 <- vcov(m2, theta = theta.p))
 
 C2 <- cov2cor(V2)
 C2
@@ -76,7 +76,7 @@ m2.cg <- cgeneric(
 (n2 <- m2.cg$f$n)
 
 theta.test <- c(seq(-1, 1, length = n2), theta.p)
-Q2test <- precision(m2.cg, theta = theta.test)
+Q2test <- prec(m2.cg, theta = theta.test)
 
 solve(Q2test)
 crossprod(C2 %*% diag(exp(theta.test[1:n2])),
@@ -86,7 +86,7 @@ cov2cor(solve(Q2test))
 C2
 
 theta2 <- c(0.0, 0.0, theta.p) ## unit variance
-Q2 <- precision(m2.cg, theta = theta2)
+Q2 <- prec(m2.cg, theta = theta2)
 Q2
 solve(Q2)
 
@@ -99,7 +99,7 @@ out2 <- inla(
         theta = theta2,
         fixed = TRUE)
 )
-all.equal(Q2, precision(out2))
+all.equal(Q2, prec(out2))
 
 rho = C2[1, 2]
 Q2 * (1 - rho^2)
@@ -134,7 +134,7 @@ ires1 <- inla(
     control.mode = cmode
 )
 
-Qinla1 <- precision(ires1)
+Qinla1 <- prec(ires1)
 
 all.equal(Q21r, Qinla1)
 
@@ -145,15 +145,15 @@ m1 <- cgeneric(
     scale = FALSE,
     param = c(1, 0.0))
 
-Q1c <- precision(m1, theta = 0)
+Q1c <- prec(m1, theta = 0)
 
 all.equal(
-    precision(out1),
+    prec(out1),
     Q1c
 )
 
 k21 <- kronecker(m2.cg, m1)
-q21 <- precision(k21, theta = c(theta2))
+q21 <- prec(k21, theta = c(theta2))
 
 all.equal(q21, Q21)
 
@@ -166,7 +166,7 @@ ires2 <- inla(
              fixed = TRUE)
 )
 
-Qinla2 <- precision(ires2)
+Qinla2 <- prec(ires2)
 
 all.equal(q21, Qinla2)
 

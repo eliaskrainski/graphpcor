@@ -46,9 +46,9 @@ table(g1ij[[1]]<=g1ij[[2]])
 
 str(graph(m1))
 
-str(precision(m1, theta = theta1))
+str(prec(m1, theta = theta1))
 
-Q1 <- precision(m1, theta = theta1)
+Q1 <- prec(m1, theta = theta1)
 str(Q1)
 
 Q1[1:min(5,n), 1:min(10,n)]

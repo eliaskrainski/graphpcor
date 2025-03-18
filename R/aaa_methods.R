@@ -3,21 +3,20 @@
 graphpcor <- function(...) {
   UseMethod("graphpcor")
 }
-#' The `precision` method
-#' @rdname precision-methods
+#' The `prec` method
+#' @rdname prec-methods
 #' @param x object or model
 #' @param ... additional arguments passed on
 #' @export
-precision <- function(x, ...) {
-  UseMethod("precision")
+prec <- function(object, ...) {
+  UseMethod("prec")
 }
 #' The default precision method
-#' computes the inverse of the [variance()]
-#' @rdname precision-methods
-#' @seealso [variance()]
+#' computes the inverse of the variance
+#' @rdname prec-methods
 #' @export
-precision.default <- function(x, ...) {
-  v <- variance(x, ...)
+prec.default <- function(object, ...) {
+  v <- vcov(object, ...)
   return(
     forwardsolve(
       backsolve(
@@ -26,17 +25,17 @@ precision.default <- function(x, ...) {
     )
   )
 }
-#' @describeIn precision-methods
-#' Define the precision method for an inla output object
+#' @describeIn prec-methods
+#' Define the prec method for an inla output object
 #' @export
-precision.inla <- function(x, ...) {
-  if(is.null(x$misc$config$config)) {
+prec.inla <- function(object, ...) {
+  if(is.null(object$misc$config$config)) {
     warning("inla.rerun() with config = TRUE in control.compute.")
-    x$.args$control.compute$config <- TRUE
-    x <- do.call("inla", args = x$.args)
+    object$.args$control.compute$config <- TRUE
+    object <- do.call("inla", args = object$.args)
   }
   Qu <- INLA::inla.as.sparse(
-    x$misc$config$config[[1]]$Qprior
+    object$misc$config$config[[1]]$Qprior
   )
   #  ii <- which(Qu@i < Qu@j)
   # if(length(ii)>0) {
@@ -56,20 +55,6 @@ precision.inla <- function(x, ...) {
   #  Q <- Qu
   #}
   return(Q)
-}
-#' The variance method
-#' @rdname variance-methods
-#' @param x model object
-#' @param ... additional arguments passed on
-#' @export
-variance <- function(x, ...) {
-  UseMethod("variance")
-}
-#' The variance default method
-#' @rdname variance
-#' @export
-variance.default <- function(x, ...) {
-  return(var(x))
 }
 #' Define the is.zero method
 #' @export
@@ -117,7 +102,8 @@ is.zero.matrix <- function(x, ...) {
 Laplacian <- function(graph) {
   UseMethod("Laplacian")
 }
-#' The Laplacian.default method
+#' The Laplacian default method (none)
+#' @rdname Laplacian
 #' @export
 Laplacian.default <- function(graph) {
   stop("No Laplacian for this object!")

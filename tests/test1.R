@@ -61,8 +61,8 @@ initial(gmodel)
 prior(gmodel, theta = initial(gmodel))
 
 graph(gmodel)
-precision(gmodel, theta = initial(gmodel))
-precision(gmodel, theta = initial(gmodel), optimize = TRUE)
+prec(gmodel, theta = initial(gmodel))
+prec(gmodel, theta = initial(gmodel), optimize = TRUE)
 
 ff <- y ~ 0 +
     f(idx1, model = gmodel, replicate = repl) +

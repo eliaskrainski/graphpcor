@@ -116,10 +116,10 @@ drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta.low) -
 theta1 <- c(d = logsigmas,
             l = theta.low)
 
-Q1c <- precision(cmodel, theta = theta1)
+Q1c <- prec(cmodel, theta = theta1)
 
 round(Q1c, 2)
-round(Q <- precision(g, theta = theta1), 2)
+round(Q <- prec(g, theta = theta1), 2)
 
 ##          [,1]     [,2]     [,3]    [,4]
 ## [1,] 166.6667 -45.1754 -12.1716  0.0000
@@ -144,5 +144,5 @@ fit1 <- inla(
     control.mode = list(theta = theta1, fixed = TRUE)
 )
 
-all.equal(Q1c, precision(fit1))
+all.equal(Q1c, prec(fit1))
 
