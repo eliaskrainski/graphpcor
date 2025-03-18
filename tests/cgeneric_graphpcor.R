@@ -1,12 +1,12 @@
 library(INLA)
 library(graphpcor)
 
-### for concepts: test/concepts/concepts_corgraph.R
-### for details: tests/check/check_corgraph.R
-### for details: tests/detailed/detailed_corgraph.R
+### for concepts: test/concepts/concepts_graphpcor.R
+### for details: tests/check/check_graphpcor.R
+### for details: tests/detailed/detailed_graphpcor.R
 
 ## the graph in Example 2.6 of the GMRF book
-g <- corgraph(x1 ~ x2+x3, x2~x4, x3~x4)
+g <- graphpcor(x1 ~ x2+x3, x2~x4, x3~x4)
 class(g)
 g
 summary(g)
@@ -14,7 +14,7 @@ Laplacian(g)
 
 (ne <- dim(g))
 
-## define the cgeneric model (see test/concepts/corgraph.R for other options)
+## define the cgeneric model (see test/concepts/graphpcor.R for other options)
 theta.base <- rep(0, ne[2])
 cmodel <- cgeneric(
     model = g,

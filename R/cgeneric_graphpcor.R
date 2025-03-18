@@ -1,11 +1,11 @@
-#' Build an `inla.cgeneric` for a graph, see [corgraph()]
+#' Build an `inla.cgeneric` for a graph, see [graphpcor()]
 #' @description
 #' From either a `graph` (see [graph()]) or
 #' a square matrix (used as a graph),
 #' creates an `inla.cgeneric` (see [cgeneric()])
 #' to implement the Penalized Complexity prior using the
-#' Kullback–Leibler divergence - KLD from a base corgraph.
-#' @param graph  a `corgraph` (see [corgraph()]) or
+#' Kullback–Leibler divergence - KLD from a base graphpcor.
+#' @param graph  a `graphpcor` (see [graphpcor()]) or
 #' a square matrix (to be used as a graph)
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
@@ -64,7 +64,7 @@
 #' @param libpath string to the shared object. Default is NULL.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
-cgeneric_corgraph <-
+cgeneric_graphpcor <-
   function(graph,
            lambda,
            base,
@@ -90,7 +90,7 @@ cgeneric_corgraph <-
     }
 
     if(inherits(graph, "matrix")) {
-      graph <- corgraph(graph)
+      graph <- graphpcor(graph)
     }
     Q0 <- Laplacian(graph)
     n <- nrow(Q0)
@@ -101,6 +101,10 @@ cgeneric_corgraph <-
       print(Q0)
     }
     stopifnot(all(lambda>0))
+    if(length(lambda)>1) {
+      warning('length(lambda)>1, using lambda[1]!')
+      lambda <- as.numeric(lambda[1])
+    }
     if(missing(sigma.prior.reference)) {
        sigma.prior.reference <- rep(1, n)
     }
@@ -206,7 +210,7 @@ cgeneric_corgraph <-
     }
 
     m_args <- list(
-      model = "inla_cgeneric_corgraph",
+      model = "inla_cgeneric_graphpcor",
       shlib = libpath,
       n = as.integer(n),
       debug = as.integer(debug),

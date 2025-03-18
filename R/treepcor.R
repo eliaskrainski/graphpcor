@@ -1,9 +1,9 @@
-#' @rdname cortree
-#' @title cortree
+#' @rdname treepcor
+#' @title treepcor
 #' Set a graph whose nodes represent two kind of
 #' variables: children and parent.
 #' @param ... a list of formula used as relationship
-#' to define a three for correlation modeling, see [cortree()].
+#' to define a three for correlation modeling, see [treepcor()].
 #' Parent nodes shall be in the right side while children
 #' (or parent with a parent) in the left side.
 #' @details
@@ -17,14 +17,14 @@
 #' which is a parent variable.
 #' @export
 #' @examples
-#' g1 <- cortree(p1 ~ c1 + c2 - c3)
+#' g1 <- treepcor(p1 ~ c1 + c2 - c3)
 #' g1
 #' summary(g1)
 #' plot(g1)
 #' precision(g1)
 #' precision(g1, theta = 0)
 #'
-#' g2 <- cortree(p1 ~ c1 + c2 + p2,
+#' g2 <- treepcor(p1 ~ c1 + c2 + p2,
 #'           p2 ~ c3 - c4)
 #' g2
 #' summary(g2)
@@ -32,14 +32,14 @@
 #' precision(g2)
 #' precision(g2, theta = c(0, 0))
 #'
-#' g3 <- cortree(p1 ~ -p2 + c1 + c2,
+#' g3 <- treepcor(p1 ~ -p2 + c1 + c2,
 #'           p2 ~ c3)
 #' g3
 #' summary(g3)
 #' plot(g3)
 #' precision(g3)
 #' precision(g3, theta = c(0,0))
-cortree <- function(...) {
+treepcor <- function(...) {
 
   fch <- as.character(match.call())[-1]
   if(length(fch)<1)
@@ -173,7 +173,7 @@ cortree <- function(...) {
          rownames(trm)[nr==0])
   }
 
-  class(fch) <- "cortree"
+  class(fch) <- "treepcor"
   attr(fch, "children") <- n
   attr(fch, "parent") <- m
   attr(fch, "relationship") <- trm
@@ -181,10 +181,10 @@ cortree <- function(...) {
   return(fch)
 
 }
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
-print.cortree <- function(x, ...) {
-  cat("cortree for",
+print.treepcor <- function(x, ...) {
+  cat("treepcor for",
       attr(x, "children"),
       "children and",
       attr(x, "parent"),
@@ -193,23 +193,23 @@ print.cortree <- function(x, ...) {
     cat(x[[i]], "\n")
   }
 }
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
-summary.cortree <- function(object, ...) {
+summary.treepcor <- function(object, ...) {
   attr(object, "relationship")
 }
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
-dim.cortree <- function(x, ...) {
+dim.treepcor <- function(x, ...) {
   trm <- attr(x, "relationship")
   m <- ncol(trm)
   c(children = nrow(trm) - m + 1, parent = m)
 }
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
 setMethod(
   "drop",
-  "cortree",
+  "treepcor",
   function(x) {
     stopifnot((m <- length(x))>1)
     trm0 <- attr(x, "relationship")
@@ -232,15 +232,15 @@ setMethod(
     }
     )
     do.call(
-      "cortree",
+      "treepcor",
       args)
   }
 )
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
 setMethod(
   "edges",
-  "cortree",
+  "treepcor",
   function(object, which, ...) {
     trm <- attr(object, "relationship")
     m <- ncol(trm)
@@ -270,11 +270,11 @@ setMethod(
     return(edgl)
   }
 )
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
 setMethod(
   "plot",
-  "cortree",
+  "treepcor",
   function(x, y, ...) {
     edgl <- edges(x)
     nodes <- names(edgl)
@@ -349,14 +349,14 @@ setMethod(
     getMethod("plot", "Ragraph")(ag)
 }
 )
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
-precision.cortree <- function(x, ...) {
+precision.treepcor <- function(x, ...) {
   d <- dim(x)
   Q <- matrix()
   trm <- attr(x, "relationship")
   edgl <- edges(x)
-  q.el <- ecortree2precision(edgl[1:d[2]])
+  q.el <- etreepcor2precision(edgl[1:d[2]])
   mc <- list(...)
   nargs <- names(mc)
   Q <- q.el$q
@@ -375,9 +375,9 @@ precision.cortree <- function(x, ...) {
   return(Q)
 }
 #' Internal function to extract elements to
-#' build the precision from the `cortree` edges.
-#' @param d.el list of n first edges of a `cortree`.
-ecortree2precision <- function(d.el) {
+#' build the precision from the `treepcor` edges.
+#' @param d.el list of n first edges of a `treepcor`.
+etreepcor2precision <- function(d.el) {
   stopifnot(all(substr(names(d.el), 1, 1) == "p"))
   stopifnot(length(d.el) == length(unique(names(d.el))))
   ip <- as.integer(substring(names(d.el), 2))
@@ -444,9 +444,9 @@ ecortree2precision <- function(d.el) {
     q = q0
   ))
 }
-#' @rdname cortree
+#' @rdname treepcor
 #' @export
-variance.cortree <- function(x, ...) {
+variance.treepcor <- function(x, ...) {
   mc <- lapply(
     match.call(
       expand.dots = TRUE)[-1],
@@ -454,7 +454,7 @@ variance.cortree <- function(x, ...) {
   nargs <- names(mc)
   nm <- dim(x)
   edgl <- edges(x)
-  ij <- ecortree2variance(edgl[1:nm[2]])
+  ij <- etreepcor2variance(edgl[1:nm[2]])
   np <- length(ij$iv)
   nc <- length(ij$iparent)
   stopifnot(all(c(nc, np) == nm))
@@ -469,9 +469,9 @@ variance.cortree <- function(x, ...) {
   return(t(vv * ij$schildren) * ij$schildren)
 }
 #' Internal function to extract elements to
-#' build the covariance matrix from a `cortree`.
-#' @param d.el list of the first n edges of a `cortree`.
-ecortree2variance <- function(d.el) {
+#' build the covariance matrix from a `treepcor`.
+#' @param d.el list of the first n edges of a `treepcor`.
+etreepcor2variance <- function(d.el) {
   np <- length(d.el)
   iv <- lapply(1:np, function(i) i)
   for(i in 1:np) {
@@ -506,12 +506,12 @@ ecortree2variance <- function(d.el) {
   return(list(iparent = iP, iv = iv, itop = itop, schildren=sch))
 }
 #' @describeIn cgeneric
-#' The `cgeneric` method for `cortree`, uses [cgeneric_cortree()]
+#' The `cgeneric` method for `treepcor`, uses [cgeneric_treepcor()]
 #' @export
-cgeneric.cortree <- function(...) {
+cgeneric.treepcor <- function(...) {
   args <- list(...)
   args$graph <- args$model
   args$model <- NULL
-  do.call(what = 'cgeneric_cortree',
+  do.call(what = 'cgeneric_treepcor',
           args = args)
 }

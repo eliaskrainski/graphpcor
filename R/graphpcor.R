@@ -1,5 +1,5 @@
-#' @describeIn corgraph
-#' The `corgraph` is a corgraph where each node represents
+#' @describeIn graphpcor
+#' The `graphpcor` is a graphpcor where each node represents
 #' a variable and each edge indicates a conditional distribution.
 #' @param ... list of formula used to define the edges.
 #' @details
@@ -7,12 +7,12 @@
 #' The `~` is taken as link.
 #' @export
 #' @examples
-#' g1 <- corgraph(x ~ y, y ~ v, v ~ z, z ~ x)
+#' g1 <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
 #' g1
 #' summary(g1)
 #' plot(g1)
 #' precision(g1)
-corgraph.formula <- function(...) {
+graphpcor.formula <- function(...) {
   fch <- as.character(match.call())[-1]
   if(length(fch)<1)
     stop("Please provide an argument!")
@@ -33,7 +33,8 @@ corgraph.formula <- function(...) {
     terms.r[[i]] <- schi
   }
   nodesR <- unique(unlist(terms.r))
-  nodes <- unique(c(nodesL, nodesR))
+  nodes <- unique(unlist(lapply(1:m, function(i)
+    c(nodesL[i], terms.r[[i]]))))
   nNodes <- length(nodes)
   grel <- matrix(
     0, m, length(nodesR),
@@ -42,15 +43,15 @@ corgraph.formula <- function(...) {
     jj <- pmatch(terms.r[[i]], nodesR)
     grel[i, jj] <- 1
   }
-  class(fch) <- 'corgraph'
+  class(fch) <- 'graphpcor'
   attr(fch, 'nodes') <- nodes
   attr(fch, 'relationship') <- grel
   return(fch)
 }
-#' @describeIn corgraph
-#' Build a `corgraph` from a matrix
+#' @describeIn graphpcor
+#' Build a `graphpcor` from a matrix
 #' @export
-corgraph.matrix <- function(x) {
+graphpcor.matrix <- function(x) {
   #  if(inherits(list(...)[[1]], "matrix")) {
   #    x <- list(...)[[1]]
   stopifnot(all.equal(x, t(x)))
@@ -66,36 +67,36 @@ corgraph.matrix <- function(x) {
     paste(vnams[i], "~",
           paste(vnams[jj], collapse = " + "))
   })
-  return(do.call(what = 'corgraph',
+  return(do.call(what = 'graphpcor',
                  args = lapply(argl, as.formula)))
 }
-#' @describeIn corgraph
-#' The print method for `corgraph`
+#' @describeIn graphpcor
+#' The print method for `graphpcor`
 #' @export
-print.corgraph <- function(x, ...) {
-  cat("A corgraph for",
+print.graphpcor <- function(x, ...) {
+  cat("A graphpcor for",
       length(attr(x, 'nodes')), "variables",
       "with", sum(attr(x, 'relationship')), "edges.\n")
 }
-#' @describeIn corgraph
-#' The summary method for `corgraph`
+#' @describeIn graphpcor
+#' The summary method for `graphpcor`
 #' @export
-summary.corgraph <- function(object, ...) {
+summary.graphpcor <- function(object, ...) {
   attr(object, "relationship")
 }
-#' @describeIn corgraph
-#' The dim method for `corgraph`
+#' @describeIn graphpcor
+#' The dim method for `graphpcor`
 #' @export
-dim.corgraph <- function(x, ...) {
+dim.graphpcor <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
     edges=sum(attr(x, 'relationship')))
 }
-#' @describeIn corgraph
-#' The plot method for `corgraph`
+#' @describeIn graphpcor
+#' The plot method for `graphpcor`
 #' @export
 setMethod(
   "plot",
-  "corgraph",
+  "graphpcor",
   function(x, y, ...) {
     ne <- dim(x)
     nodes <- attr(x, "nodes")
@@ -176,10 +177,10 @@ Laplacian.matrix <- function(graph) {
     Laplacian.default(graph)
   }
 }
-#' @describeIn corgraph
-#' The Laplacian method for `corgraph`
+#' @describeIn graphpcor
+#' The Laplacian method for `graphpcor`
 #' @export
-Laplacian.corgraph <- function(graph) {
+Laplacian.graphpcor <- function(graph) {
   ne <- dim(graph)
   nodes <- attr(graph, "nodes")
   grel <- attr(graph, "relationship")
@@ -190,22 +191,22 @@ Laplacian.corgraph <- function(graph) {
   for(i in 1:nrow(grel)) {
     ii <- pmatch(rownames(grel)[i], nodes)
     jj <- pmatch(colnames(grel)[grel[i, ]!=0], nodes)
-    L[i, jj] <- (-1)
+    L[ii, jj] <- (-1)
   }
   L <- L + t(L)
   diag(L) <- -rowSums(L)
   return(L)
 }
-#' @describeIn corgraph
+#' @describeIn graphpcor
 #' Build the unite diagonal lower triangle matrix
 setMethod(
   "chol",
-  "corgraph",
+  "graphpcor",
   function(x, ...) {
     ne <- dim(x)
     G <- Laplacian(x)
     idx <- which(lower.tri(G) & (!is.zero(G)))
-    L <- diag(ne[1])
+    L <- diag(1:ne[1])
     stopifnot(length(idx)==ne[2])
     args <- list(...)
     stopifnot(length(args$theta)==ne[2])
@@ -218,10 +219,10 @@ setMethod(
     return(t(L))
   }
 )
-#' @describeIn corgraph
-#' The variance method for 'corgraph'
+#' @describeIn graphpcor
+#' The variance method for 'graphpcor'
 #' @export
-variance.corgraph <- function(x, ...) {
+variance.graphpcor <- function(x, ...) {
   mc <- list(...)
   nargs <- names(mc)
   if(!any(nargs == "theta")) {
@@ -237,17 +238,17 @@ variance.corgraph <- function(x, ...) {
   } else {
     stopifnot(length(theta)==sum(ne))
   }
-  L <- getMethod('chol', 'corgraph')(
+  L <- getMethod('chol', 'graphpcor')(
     x, theta = theta[-(1:ne[1])])
   V <- chol2inv(L)
   si <- exp(theta[1:ne[1]]) / sqrt(diag(V))
   V <- diag(si) %*% V %*% diag(si)
   return(V)
 }
-#' @describeIn corgraph
-#' The precision method for 'corgraph'
+#' @describeIn graphpcor
+#' The precision method for 'graphpcor'
 #' @export
-precision.corgraph <- function(x, ...) {
+precision.graphpcor <- function(x, ...) {
   ne <- dim(x)
   Q <- Laplacian(x)
   stopifnot(ne[1]==nrow(Q))
@@ -286,12 +287,12 @@ fiL <- function(L, lfi) {
   }
   return(L)
 }
-#' Evaluate the hessian of the KLD for a `corgraph`
+#' Evaluate the hessian of the KLD for a `graphpcor`
 #' correlation model around a base model.
-#' @param corgraph model definition of a graphical model.
-#' This can be either a matrix or a 'corgraph'.
+#' @param graphpcor model definition of a graphical model.
+#' This can be either a matrix or a 'graphpcor'.
 #' @param base either a reference correlation matrix
-#' or as a parameter reference for a 'corgraph' model.
+#' or as a parameter reference for a 'graphpcor' model.
 #' @param decomposition character to specify which
 #' decomposition method to use to compute H^0.5 and H^(1/2).
 #' @param ... additional arguments passed to [numDeriv::hessian()]
@@ -299,7 +300,7 @@ fiL <- function(L, lfi) {
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used
 #' @examples
-#' g <- corgraph(x1 ~ x2 + x3, x2 ~ x4, x3 ~ x4)
+#' g <- graphpcor(x1 ~ x2 + x3, x2 ~ x4, x3 ~ x4)
 #' ne <- dim(g)
 #' gH0 <- hessian(g, rep(-1, ne[2]))
 #' ## alternatively
@@ -307,9 +308,9 @@ fiL <- function(L, lfi) {
 #' C0 <- cov2cor(solve(Q0))
 #' all.equal(hessian(g, C0), gH0)
 #' @export
-hessian.corgraph <- function(corgraph, base, decomposition = c("eigen", "svd", "chol"), ...) {
+hessian.graphpcor <- function(graphpcor, base, decomposition = c("eigen", "svd", "chol"), ...) {
   decomposition <- match.arg(decomposition)
-  Q0 <- Laplacian(corgraph)
+  Q0 <- Laplacian(graphpcor)
   nEdges <- sum((!is.zero(Q0)) & lower.tri(Q0))
   z0 <- is.zero(Q0)
   n <- nrow(Q0)
@@ -324,18 +325,18 @@ hessian.corgraph <- function(corgraph, base, decomposition = c("eigen", "svd", "
     c0.ok <- all(which(abs(ll0)>sqrt(.Machine$double.eps)) %in%
                    which(abs(l1)>0))
     if(!c0.ok) {
-      stop("Provided base correlation not in the corgraph model class!")
+      stop("Provided base correlation not in the graphpcor model class!")
     }
     for(i in 1:nrow(C0))
       ll0[i, ] <- ll0[i, ]/ll0[i, i]
     base <- ll0[lower.tri(ll0) & (!z0)]
   } else {
     stopifnot(length(base) == nEdges)
-    C0 <- variance(corgraph, theta =base)
+    C0 <- variance(graphpcor, theta =base)
   }
   ## hessian uses graphpcor:::KLD10
   H <- numDeriv::hessian(
-    function(x) KLD10(variance(corgraph, theta = x), C0),
+    function(x) KLD10(variance(graphpcor, theta = x), C0),
     base, ...)
   ## next bit follows mvtnorm:::rmvnorm()
   t0 <- sqrt(.Machine$double.eps)
@@ -370,12 +371,12 @@ hessian.corgraph <- function(corgraph, base, decomposition = c("eigen", "svd", "
   return(H)
 }
 #' @describeIn cgeneric
-#' The `cgeneric` method for `corgraph` uses [cgeneric_corgraph()]
+#' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
 #' @export
-cgeneric.corgraph <- function(...) {
+cgeneric.graphpcor <- function(...) {
   args <- list(...)
   args$graph <- args$model
   args$model <- NULL
-  do.call(what = 'cgeneric_corgraph',
+  do.call(what = 'cgeneric_graphpcor',
           args = args)
 }

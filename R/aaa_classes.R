@@ -1,8 +1,8 @@
 #' Set class for objects to model correlation matrices over tree
-setClass("cortree")
+setClass("treepcor")
 
 #' Set class for objects to model correlation matrices
-setClass("corgraph")
+setClass("graphpcor")
 
 #' `inla.rgeneric` class, short `rgeneric`,
 #' to define a [INLA::rgeneric()] latent model

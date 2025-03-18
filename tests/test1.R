@@ -7,7 +7,7 @@ inla.setOption(
     num.threads = 6
 )
 
-g1 <- cortree(p1 ~ c1 + c2 + c3)
+g1 <- treepcor(p1 ~ c1 + c2 + c3)
 d1 <- dim(g1)
 
 plot(g1)

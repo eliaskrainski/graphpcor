@@ -1,20 +1,20 @@
 library(graphpcor)
 library(INLA)
 
-g1 <- corgraph(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
+g1 <- graphpcor(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
 
 G1 <- Laplacian(g1)
 G1
 
-g2 <- corgraph(c1~c2+c6, c2~c3, c3~c4, c4~c5, c5~c6)
+g2 <- graphpcor(c1~c2+c6, c2~c3, c3~c4, c4~c5, c5~c6)
 G2 <- Laplacian(g2)
 G2
 
-g3 <- corgraph(c1~c2+c3+c4+c5+c6)
+g3 <- graphpcor(c1~c2+c3+c4+c5+c6)
 G3 <- Laplacian(g3)
 G3
 
-g4 <- corgraph(c1~c3, c2~c3, c3~c5, c4~c5, c5~c6)
+g4 <- graphpcor(c1~c3, c2~c3, c3~c5, c4~c5, c5~c6)
 G4 <- Laplacian(g4)
 
 thetas1 <- rep(-1, 5)

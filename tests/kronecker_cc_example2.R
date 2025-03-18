@@ -53,7 +53,7 @@ Q1 <- precision(m1, theta = theta1)
 summary(diag(inla.qinv(Q1 + Diagonal(n, 1e-5), cntr)))
 
 ## Model 2: 
-m2.graph <- cortree(
+m2.graph <- treepcor(
     p1 ~ c1 + c2
 )
 

@@ -1,5 +1,5 @@
 
-/* cgeneric_cortree.c
+/* cgeneric_treepcor.c
  *
  * Copyright (C) 2023 Elias Krainski
  *
@@ -28,7 +28,7 @@
 #include "graphpcor.h"
 #include "graphpcor_utils.h"
 
-double *inla_cgeneric_cortree(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
+double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
   double *ret = NULL;

@@ -49,7 +49,7 @@ out1 <- inla(
 all.equal(Q1, precision(out1))
 
 ## model 2 definition
-m2 <- cortree(
+m2 <- treepcor(
     p1 ~ c1 - c2
 )
 m2

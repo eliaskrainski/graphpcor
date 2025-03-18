@@ -71,7 +71,7 @@ Q1 <- precision(m1, theta = c(0))
 image(Q1)
 
 ## model 2
-m2g <- cortree(
+m2g <- treepcor(
     p1 ~ c1 + c2 + p2,
     p2 ~ c3
 )

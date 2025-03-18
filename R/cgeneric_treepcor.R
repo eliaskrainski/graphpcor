@@ -1,10 +1,10 @@
-#' Build an `cgeneric` for [cortree()])
+#' Build an `cgeneric` for [treepcor()])
 #' @description
 #' This set the necessary data to implement the penalized
 #' complexity prior for a correlation matrix considering
 #' a three as proposed in
 #' [Sterrantino et. al. 2025](https://arxiv.org/abs/2312.06289)
-#' @param graph object of class `cortree` for the model specification.
+#' @param graph object of class `treepcor` for the model specification.
 #' @param lambda the lambda parameter for the graph correlation prior.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
@@ -27,10 +27,10 @@
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
 #' then the sigma is fixed to 2 and not estimated.
 #' @return objects to be used in the f() formula term in INLA.
-#' @seealso [cortree()] and [cgeneric()]
+#' @seealso [treepcor()] and [cgeneric()]
 #' @useDynLib graphpcor, .registration = TRUE
 #' @export
-cgeneric_cortree <-
+cgeneric_treepcor <-
   function(graph,
            lambda,
            sigma.prior.reference,
@@ -49,7 +49,7 @@ cgeneric_cortree <-
     if(debug) {
       cat(c(sch = sch), "\n")
     }
-    d.elc <- ecortree2variance(d.el[1:dd[2]])
+    d.elc <- etreepcor2variance(d.el[1:dd[2]])
     if(debug) {
       print(str(d.elc))
     }
@@ -82,7 +82,7 @@ cgeneric_cortree <-
     stopifnot(lambda>0)
 
     the_model <- cgeneric.default(
-      model = "inla_cgeneric_cortree",
+      model = "inla_cgeneric_treepcor",
       debug = as.logical(debug),
       useINLAprecomp = as.logical(useINLAprecomp),
       n = as.integer(nc),

@@ -114,9 +114,9 @@ void dpftrf_(char *transr, char *uplo, int *n,
              double *A, int *info, fortran_charlen_t);
 
 inla_cgeneric_func_tp inla_cgeneric_generic0;
-inla_cgeneric_func_tp inla_cgeneric_cortree;
+inla_cgeneric_func_tp inla_cgeneric_treepcor;
 inla_cgeneric_func_tp inla_cgeneric_kronecker;
 inla_cgeneric_func_tp inla_cgeneric_LKJ;
 inla_cgeneric_func_tp inla_cgeneric_Wishart;
 inla_cgeneric_func_tp inla_cgeneric_pc_prec_correl;
-inla_cgeneric_func_tp inla_cgeneric_corgraph;
+inla_cgeneric_func_tp inla_cgeneric_graphpcor;

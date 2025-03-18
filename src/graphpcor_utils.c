@@ -209,26 +209,23 @@ void l2L(int n, double *l, double *L) {
 
 void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc) {
   assert(n>1);
-  double l[n*(n-1)/2];
-  theta2gamma2Lcorr(n, &hldet[0], &theta[0], &l[0]);
-  printL(l, n, n, "l\n");
-  double L[n*n];
-  l2L(n, &l[0], &L[0]);
-  printMat(L,n,n,"L:\n");
-  printf("OK until here\n");
+  double ll[n*(n-1)/2];
+  theta2gamma2Lcorr(n, &hldet[0], &theta[0], &ll[0]);
   int i;
   for(i=0; i<(n-1); i++) {
-    cc[i] = l[i+1];
+    cc[i] = ll[i+1];
   }
-  printf("OK until here\n");
   if(n>2) {
-    int nij, j, k = n-1;
+    int inc, j, k, kk = n-1;
     for(i=2; i<n; i++) {
-      printf("i = %d: ", i);
       for(j=1; j<i; j++) {
-        nij = i-j+1;
-        printf("(%d, %d) : %d \n", i, j, nij);
-        cc[k++] = ddot_(&nij, &L[i], &n, &L[j], &n, F_ONE);
+        cc[kk] = 0.0;
+        inc = n-j;
+        for(k=0; k<j; k++) {
+          cc[kk] += (ll[j+inc*k] * ll[i+inc*k]);
+        }
+        k++;
+//        cc[k++] = ddot_(&nij, &L[i], &n, &L[j], &n, F_ONE);
       }
     }
   }

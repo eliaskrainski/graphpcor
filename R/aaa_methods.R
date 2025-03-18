@@ -1,7 +1,7 @@
-#' The `corgraph` method
+#' The `graphpcor` method
 #' @export
-corgraph <- function(...) {
-  UseMethod("corgraph")
+graphpcor <- function(...) {
+  UseMethod("graphpcor")
 }
 #' The `precision` method
 #' @rdname precision-methods
@@ -80,8 +80,12 @@ is.zero <- function(x, ...) {
 #' @export
 is.zero.default <- function(x, ...) {
   a <- abs(as.numeric(c(x)))
-  tol <- .Machine$double.eps *
-    max(sqrt(length(a))) * max(a)
+  if(diff(range(a))<(.Machine$double.eps^0.9)) {
+    tol <- (.Machine$double.eps^0.9)
+  } else {
+    tol <- .Machine$double.eps *
+      max(sqrt(length(a))) * max(a)
+  }
   return(a < tol)
 }
 #' The is.zero.matrix definition
@@ -89,8 +93,12 @@ is.zero.default <- function(x, ...) {
 is.zero.matrix <- function(x, ...) {
   stopifnot(inherits(x, "matrix"))
   a <- abs(x)
-  tol <- .Machine$double.eps *
-    max(dim(a)) * max(a)
+  if(diff(range(a))<(.Machine$double.eps^0.9)) {
+    tol <- (.Machine$double.eps^0.9)
+  } else {
+    tol <- .Machine$double.eps *
+      max(sqrt(length(a))) * max(a)
+  }
   return(a < tol)
 }
 #' The Laplacian of a graph

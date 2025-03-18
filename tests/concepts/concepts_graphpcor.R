@@ -1,6 +1,8 @@
 library(graphpcor)
 
-g <- corgraph(x ~ y, y ~ v, v ~ z, z ~ x)
+g <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
+
+plot(g)
 
 class(g)
 
@@ -17,20 +19,20 @@ G
 
 ## alternatively
 all.equal(G,
-          Laplacian(corgraph(x~y+z,y~v,v~z)))
+          Laplacian(graphpcor(x~y+z,y~v,v~z)))
 
 ## compact, but different ordering
-Laplacian(corgraph(x~y+z,v~y+z))
+Laplacian(graphpcor(x~y+z,v~y+z))
 
-corgraph(x1~x2+x3, x4~x2+x3)
-Laplacian(corgraph(x1~x2+x3, x4~x2+x3))
+graphpcor(x1~x2+x3, x4~x2+x3)
+Laplacian(graphpcor(x1~x2+x3, x4~x2+x3))
 
-g <- corgraph(x1~x2+x3, x2~x4, x3~x4) ## compact ordered
+g <- graphpcor(x1~x2+x3, x2~x4, x3~x4) ## compact ordered
 (G <- Laplacian(g)) ## the graph in Example 2.6 of the GMRF book
 
-corgraph(G) ## dag from a matrix
+graphpcor(G) ## dag from a matrix
 
-all.equal(corgraph(G), g) ## TRUE if compact ordered
+all.equal(graphpcor(G), g) ## TRUE if compact ordered
 
 ## base model (theta for L)
 theta0l <- rep(-0.5, ne[2])
@@ -61,7 +63,7 @@ all.equal(
     hessian(g, base = C0, decomposition = 'svd')
 )
 
-## variance method for corgraph computes the correlation
+## variance method for graphpcor computes the correlation
 ##  if only theta for lower of L is provided
 all.equal(
     C0,
@@ -91,9 +93,9 @@ variance(g, theta = c(-.5,-.5,-.5,.5))
 variance(g, theta = c(-5,-5,-5,5))
 
 ## build the cgeneric model
-## Note: here 'model' is a 'corgraph'
+## Note: here 'model' is a 'graphpcor'
 cmodel <- cgeneric(
-    model = g, ## a `corgraph` in model argument
+    model = g, ## a `graphpcor` in model argument
     lambda = 1,
     base = theta0l, 
     sigma.prior.reference = rep(1, ne[1]),
@@ -103,7 +105,7 @@ cmodel <- cgeneric(
 all.equal(
     cmodel,
     cgeneric(
-        model = "corgraph", ## model now is acharacter
+        model = "graphpcor", ## model now is acharacter
         graph = G, ## using G as a graph
         lambda = 1,
         base = theta0l,
@@ -115,7 +117,7 @@ all.equal(
 all.equal(
     cmodel,
     cgeneric(
-        model = "corgraph",
+        model = "graphpcor",
         graph = G!=0, ## any binary matrix works
         lambda = 1,
         base = theta0l,

@@ -84,19 +84,6 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
         }
       }
 
-      if(debug>999) {
-        printf("ii: ");
-        for(k=0; k<M; k++) {
-          printf("%f ", ret[2+k]);
-        }
-        printf("\njj: ");
-        for(k=0; k<M; k++) {
-          printf("%f ", ret[2+M+k]);
-        }
-        printf("\n");
-      }
-
-
   }
     break;
   case INLA_CGENERIC_Q:
@@ -157,7 +144,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 
     int kj, k2=0;
     double lhdetC;
-    printf("%d %d", (N-1)*(N-1), nth*nth);
+
     // log determinant
     double cc[(N-1)*(N-1)];
     theta2gamma2Ucorrel(N, &lhdetC, &theta[0], &cc[0]);

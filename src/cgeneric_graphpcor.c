@@ -1,5 +1,5 @@
 
-/* cgeneric_corgraph.c
+/* cgeneric_graphpcor.c
  *
  * Copyright (C) 2025 Elias Krainski
  *
@@ -28,7 +28,7 @@
 #include "graphpcor.h"
 #include "graphpcor_utils.h"
 
-double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
+double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp * data)
 {
 
   // theta : vector of unknown parameters
@@ -139,14 +139,17 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
       sigmas[i] = exp(actualtheta[i]);
     }
     if(debug>99) {
-      printf("n fixed sigma = %d\n", nsfixed);
+      printf("number of fixed sigma = %d\n", nsfixed);
       for(i=0;i<N;i++) printf("%d ", sfixed[i]);
       printMat(sigmas,1,N,"\nsigmas\n");
+    }
+    for(i=0; i<ne; i++) {
+      actualtheta[itheta->ints[N+i]] = theta[k++];
     }
     // this is I(\theta_0)^{-0.5} \theta_0
     for(i=0; i<ne; i++) {
       thetat[i] = data->doubles[4]->doubles[i];
-      lowtheta[i] = theta[itheta->ints[N+i]];
+      lowtheta[i] = actualtheta[itheta->ints[N+i]];
     }
     if(debug>99){
       printMat(thetat, 1, ne, "thetat:\n");
@@ -206,7 +209,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     for(i=0; i<N; i++) {
       for(j=0; j<N; j++) {
         if(i==j) {
-          ll[k] = 1.0;
+          ll[k] = 1.0 + ((double)i);
         } else {
           ll[k] = 0.0;
         }
@@ -214,7 +217,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
       }
     }
 
-    if(debug>99) {
+    if(debug>9999) {
       printMat(ll, N, N, "L[i,j]:\n");
     }
 
@@ -224,19 +227,19 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
         ll[iuq->ints[i]] = lowtheta[k++];
       }
     }
-    if(debug>99) {
+    if(debug>9999) {
       printMat(ll, N, N, "L[i,j]:\n");
     }
 
     if(nfi>0) {
 
-      if(debug>99) {
+      if(debug>9999) {
         printf("filling %d entries\n", nfi);
       }
 
       fillL(&N, &nfi, &ifi->ints[0], &jfi->ints[0], &ll[0]) ;
 
-      if(debug>99) {
+      if(debug>9999) {
         printMat(ll, N, N, "L[i,j]:\n");
       }
 
@@ -250,7 +253,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
       }
     }
 
-    if(debug>99){
+    if(debug>9999){
       printf("Q0 (upper)\n");
       k=0;
       for(i=0; i<N; i++) {
@@ -266,7 +269,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     char uplo = 'L';
     dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-    if(debug>99){
+    if(debug>9999){
       printf("V0 (upper)\n");
       k=0;
       for(i=0; i<N; i++) {
@@ -286,7 +289,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
       k += (N-i);
     }
 
-    if(debug>99) {
+    if(debug>999) {
       printMat(si, 1, N, "si:\n");
     }
     k=0;
@@ -296,7 +299,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
       }
     }
 
-    if(debug>99){
+    if(debug>9999){
       printf("V (upper)\n");
       k=0;
       for(i=0; i<N; i++) {
@@ -310,7 +313,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     // chol(V)
     dpptrf_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-    if(debug>99){
+    if(debug>9999){
       printf("chol(V) (upper)\n");
       k=0;
       for(i=0; i<N; i++) {
@@ -324,7 +327,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
     // Q = chol2inv(chol(V))
     dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-    if(debug>99){
+    if(debug>9999){
       printf("Q (upper)\n");
       k=0;
       for(i=0; i<N; i++) {
@@ -388,17 +391,24 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 
     // the low L params Jacobian
     double val, pparams[ne];
+    // last angle
     pparams[ne-1] = atan2(thetat[ne-1], theta[ne-2]);
+//    printf("ne = %d, pparams[ne-1] = %2.5f (%2.7f)\n",
+  //         ne, pparams[ne-1], atan2(0.0, 0.0));
     if(pparams[ne-1]<0) {
       pparams[ne-1] += 2.0*M_PI;
     }
     val = SQR(thetat[ne-1]) + SQR(thetat[ne-2]);
+    // remaining angles
     for(i=(ne-2); i>=0; i--) {
       pparams[i] = atan2(sqrt(val), thetat[i-1]);
       val += SQR(thetat[i-1]);
     }
-    // (\theta-\theta_0)I(\theta_0)(\theta -\theta_0)
-    pparams[0] = sqrt(val); // the approx. KLD
+    // r
+    pparams[0] = sqrt(val);
+    if(debug>999) {
+      printMat(pparams,1,ne,"rphi:\n");
+    }
 
     double ldJacobian;
     ldJacobian = ((double)(ne-1)) * log(pparams[0]);
@@ -407,7 +417,7 @@ double *inla_cgeneric_corgraph(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
         ldJacobian += ((double)(ne-1-i)) * log(sin(pparams[i]));
       }
     }
-    if(debug>999) {
+    if(debug>99) {
       printf("log det Jacobian = %2.7f\n", ldJacobian);
     }
 

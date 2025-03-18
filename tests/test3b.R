@@ -2,7 +2,7 @@
 library(graphpcor)
 library(INLA)
 
-g <- cortree(
+g <- treepcor(
     p1 ~ p2 + c1 + c2,
     p2 ~ p3 -c3 + c4,
     p3 ~ c5 - c6)
