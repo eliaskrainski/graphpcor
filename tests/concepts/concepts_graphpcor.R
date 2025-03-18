@@ -52,7 +52,7 @@ C0
 
 ## the Hese matrix around a base model
 ## using numDeriv::hessian
-hessian(function(x) graphpcor:::KLD10(variance(g, theta=x), C0), x = theta0l)
+hessian(function(x) graphpcor:::KLD10(vcov(g, theta=x), C0), x = theta0l)
 
 ## using hessian for a `corgtraph` returns more stuff:
 hessian(g, base = theta0l)
@@ -67,30 +67,30 @@ all.equal(
 ##  if only theta for lower of L is provided
 all.equal(
     C0,
-    variance(g, theta = theta0l)
+    vcov(g, theta = theta0l)
 )
 
-variance(g, theta = theta0l)
-variance(g, theta = c(log(c(2,1,4,0.5)), theta0l))
+vcov(g, theta = theta0l)
+vcov(g, theta = c(log(c(2,1,4,0.5)), theta0l))
 
 ## the 'iid' case would be
-variance(g, theta = rep(0, ne[2]))
-variance(g, theta = rep(0, sum(ne)))
+vcov(g, theta = rep(0, ne[2]))
+vcov(g, theta = rep(0, sum(ne)))
 
 ## marginal variance specified throught standard errors
 sigmas <- c(0.3, 0.7, 1.2, 0.5)
 
-variance(g, theta = c(log(sigmas), theta0l))
-variance(g, theta = c(log(sigmas), rep(0, ne[2])))
-variance(g, theta = c(log(sigmas), rep(-1, ne[2])))
-all.equal(variance(g, theta =  rep(-1, ne[2])),
-          cov2cor(variance(g, theta = c(log(sigmas), rep(-1, ne[2])))))
+vcov(g, theta = c(log(sigmas), theta0l))
+vcov(g, theta = c(log(sigmas), rep(0, ne[2])))
+vcov(g, theta = c(log(sigmas), rep(-1, ne[2])))
+all.equal(vcov(g, theta =  rep(-1, ne[2])),
+          cov2cor(vcov(g, theta = c(log(sigmas), rep(-1, ne[2])))))
 
-variance(g, theta = rep(1, ne[2])) ## no edge 2~3 but high covariance!!!
-variance(g, theta = c(log(sigmas), rep(1, ne[2]))) ## no edge 2~3 but high covariance!!!
+vcov(g, theta = rep(1, ne[2])) ## no edge 2~3 but high covariance!!!
+vcov(g, theta = c(log(sigmas), rep(1, ne[2]))) ## no edge 2~3 but high covariance!!!
 
-variance(g, theta = c(-.5,-.5,-.5,.5))
-variance(g, theta = c(-5,-5,-5,5))
+vcov(g, theta = c(-.5,-.5,-.5,.5))
+vcov(g, theta = c(-5,-5,-5,5))
 
 ## build the cgeneric model
 ## Note: here 'model' is a 'graphpcor'
@@ -189,10 +189,10 @@ prior(cmodel, theta = rnorm(sum(ne)))
 prior(cmodel, theta = rnorm(sum(ne)))
 prior(cmodel, theta = theta1)
 
-V1 <- variance(g, theta = theta1)
+V1 <- vcov(g, theta = theta1)
 V1
 
-C1 <- cov2cor(variance(g, theta = theta1))
+C1 <- cov2cor(vcov(g, theta = theta1))
 C1
 
 round(solve(V1), 2)
@@ -202,7 +202,7 @@ Q1c
 
 round(Q1c, 2)
 
-all.equal(solve(as.matrix(Q1c)), variance(g, theta = theta1))
+all.equal(solve(as.matrix(Q1c)), vcov(g, theta = theta1))
 all.equal(as.matrix(Q1c), prec(g, theta = theta1))
 
 dataf <- list(

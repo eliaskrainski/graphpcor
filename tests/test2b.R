@@ -21,7 +21,7 @@ plot(g)
 
 (theta.p <- seq(1/2, -1/2, length = np))
 
-mcorr <- cov2cor(variance(g, theta = theta.p))
+mcorr <- cov2cor(vcov(g, theta = theta.p))
 round(mcorr * 100)
 
 (theta.ch <- seq(-1/2, 1/2, length = nc))
@@ -76,7 +76,7 @@ plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
 tail(fit$logfile, 30)
 
-mcorr.fit <- cov2cor(variance(
+mcorr.fit <- cov2cor(vcov(
     g,
     theta = fit$mode$theta[nc+1:np]))
 mcorr.fit

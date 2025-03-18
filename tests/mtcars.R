@@ -189,7 +189,7 @@ fit1$mode$theta[nc+1:np]
 
 plot(fit1, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-cc.fit1 <- cov2cor(dcg_covariance(
+cc.fit1 <- cov2cor(dcg_covcov(
     mtcd, fit1$mode$theta[nc+1:np]))
 
 round(mypc*100)
@@ -217,7 +217,7 @@ fit2$mode$theta[nc+1:np]
 
 plot(fit2, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-cc.fit2 <- cov2cor(dcg_covariance(
+cc.fit2 <- cov2cor(dcg_covcov(
     mtcd, fit2$mode$theta[nc+1:np]))
 
 round(mypc*100)

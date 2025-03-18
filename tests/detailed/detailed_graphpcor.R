@@ -42,7 +42,7 @@ Q0
 V0 <- chol2inv(t(Lf))
 V0
 
-variance(g, theta = c(log(diag(V0))/2, theta.low))
+vcov(g, theta = c(log(diag(V0))/2, theta.low))
 
 cov2cor(V0)
 ##           [,1]      [,2]      [,3]      [,4]

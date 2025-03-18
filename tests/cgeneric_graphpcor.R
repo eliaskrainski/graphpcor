@@ -27,10 +27,10 @@ sigmas <- c(5, 0.5, 1, 0.1)
 thetaL <- c(-5, 1, 2, -0.1)
 theta1 <- c(log(sigmas), thetaL)
 
-Vg <- variance(g, theta = theta1)
+Vg <- vcov(g, theta = theta1)
 Vg
 
-cov2cor(variance(g, theta = theta.base)) ## base model correlation
+cov2cor(vcov(g, theta = theta.base)) ## base model correlation
 cov2cor(Vg) ## correlation to be used to sample data
 
 prec(cmodel, theta = theta1)
@@ -68,6 +68,6 @@ prec(cmodel, theta = fit$mode$theta)
 
 round(Vg, 2)
 
-round(variance(g, theta = thetaL), 2)
+round(vcov(g, theta = thetaL), 2)
 round(cor(xx), 2)
-round(Vfit <- variance(g, theta = fit$mode$theta[5:8]), 2)
+round(Vfit <- vcov(g, theta = fit$mode$theta[5:8]), 2)

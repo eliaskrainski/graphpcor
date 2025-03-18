@@ -20,7 +20,7 @@ d
 
 (theta.p <- c(0, -0.33, 0.33))
 
-mcov0 <- variance(g, theta = theta.p)
+mcov0 <- vcov(g, theta = theta.p)
 mcorr <- cov2cor(mcov0)
 round(mcorr,2)
 
@@ -76,7 +76,7 @@ rbind(true = c(theta.c, theta.p),
 
 plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-cc.fit <- cov2cor(variance(g, theta = cfit$mode$theta[nc+1:d[2]]))
+cc.fit <- cov2cor(vcov(g, theta = cfit$mode$theta[nc+1:d[2]]))
 
 round(cor(xx)*100)
 round(cc.fit*100)
