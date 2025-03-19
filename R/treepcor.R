@@ -45,18 +45,18 @@ treepcor <- function(...) {
   if(length(fch)<1)
     stop("Please provide an argument!")
 
-  ch <- lapply(fch, function(x)
+  lchar <- lapply(fch, function(x)
     as.character(as.formula(x)))
 
   ## left side check
-  pp <- sapply(ch, function(x) x[2])
+  pp <- sapply(lchar, function(x) x[2])
   if (length(pp)>length(unique(pp))) {
     stop("Non-unique parent definition!")
   }
   if(!all(sapply(pp, substr, 1, 1) == "p"))
     stop("Please use the letter 'p' for parent!")
   if(any(is.na(as.integer(
-    sapply(ch, function(x)
+    sapply(lchar, function(x)
       substring(x[2], 2)))))) {
     stop("Please use integer after letter 'p' for parent!")
   }
@@ -70,7 +70,7 @@ treepcor <- function(...) {
                      collapse = ", ")))
   }
   fch <- fch[opp]
-  ch <- ch[opp]
+  lchar <- lchar[opp]
   pp <- pp[opp]
   m <- length(pp)
   P <- sort(pp)
@@ -80,7 +80,7 @@ treepcor <- function(...) {
   terms.i <- vector("list", m)
   terms.s <- vector("list", m)
   for(i in 1:m) {
-    x <- gsub(" ", "", ch[[i]][3])
+    x <- gsub(" ", "", lchar[[i]][3])
     ##    print(c(x = x))
     if(substr(x, 1, 1) != "-")
       x <- paste0("+", x)
@@ -102,17 +102,17 @@ treepcor <- function(...) {
     ch.l <- substr(schi, 1, 1)
     ##print(c(ch.l))
     if(!all(ch.l %in% c("p", "c")))
-      stop("Invalid variable labeling in ~ ", ch[[i]][3])
+      stop("Invalid variable labeling in ~ ", lchar[[i]][3])
     jj.i <- as.integer(substring(schi, 2))
     ##print(jj.i)
     if(any(is.na(jj.i)) | any(jj.i<1))
-      stop("Invalid variable numbering in ~ ", ch[[i]][3])
+      stop("Invalid variable numbering in ~ ", lchar[[i]][3])
     ipar <- ch.l == "p"
     if(any(ipar)) {
       if(any(jj.i[ipar] <= 1))
-        stop("Parent id in ~ ", ch[[i]][3], " must be >", 1)
+        stop("Parent id in ~ ", lchar[[i]][3], " must be >", 1)
       if(any(jj.i[ipar] > m))
-        stop("Wrong parent id in ~ ", ch[[i]][3])
+        stop("Wrong parent id in ~ ", lchar[[i]][3])
       iord <- order(jj.i + ifelse(ipar, -max(jj.i+1), 0))
     } else {
       iord <- order(jj.i)
@@ -376,7 +376,7 @@ prec.treepcor <- function(x, ...) {
 }
 #' Internal function to extract elements to
 #' build the precision from the `treepcor` edges.
-#' @param d.el list of n first edges of a `treepcor`.
+#' @param d.el list of first n edges of a `treepcor`.
 etreepcor2precision <- function(d.el) {
   stopifnot(all(substr(names(d.el), 1, 1) == "p"))
   stopifnot(length(d.el) == length(unique(names(d.el))))

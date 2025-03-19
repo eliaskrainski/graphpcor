@@ -150,7 +150,7 @@ setMethod(
       if(any(nargs == "width"))
         mc$width
       else
-        rep(0.75, ne[1])
+        rep(1.5, ne[1])
     },
     fontsize = {
       if(any(nargs == "fontsize"))
@@ -161,7 +161,13 @@ setMethod(
     )
     for(i in 1:length(nattr))
       names(nattr[[i]]) <- nodes
-    getMethod("plot", "graph")(gr, nodeAttrs = nattr, ...)
+
+    ag <- agopen(gr, "", nodeAttrs = nattr)
+
+    for(k in 1:length(ag@AgEdge)) {
+      ag@AgEdge[[k]]@color <- "red"
+    }
+    getMethod("plot", "Ragraph")(ag)
   }
 )
 #' @describeIn Laplacian
