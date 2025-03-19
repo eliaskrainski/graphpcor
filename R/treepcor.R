@@ -463,14 +463,23 @@ setMethod(
     nc <- length(ij$iparent)
     stopifnot(all(c(nc, np) == nm))
     if(any(nargs == "theta")) {
-      vi <- sapply(ij$iv, function(i)
-        sum(exp(2 * mc$theta[i])))
+      if(length(mc$theta) == sum(nm)) {
+        sigmas <- exp(mc$theta[1:nm[1]])
+        vi <- sapply(ij$iv, function(i)
+          sum(exp(2 * mc$theta[nm[1]+i])))
+      } else {
+        sigmas <- rep(1, nm[1])
+        vi <- sapply(ij$iv, function(i)
+          sum(exp(2 * mc$theta[i])))
+      }
     } else {
+      sigmas <- rep(1, nm[1])
       vi <- sapply(ij$iv, function(i) length(i))
     }
     vv <- diag(nc) + vi[ij$itop]
     rownames(vv) <- colnames(vv) <- names(edgl)[np + 1:nc]
-    return(t(vv * ij$schildren) * ij$schildren)
+    c0 <- cov2cor(t(vv * ij$schildren) * ij$schildren)
+    return(diag(sigmas) %*% c0 %*% diag(sigmas))
   }
 )
 #' Internal function to extract elements to

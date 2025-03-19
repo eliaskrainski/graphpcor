@@ -1,8 +1,6 @@
 #' Function that returns density for a given model structure
-#'
+#' @rdname old_corGraph
 #' @param S model structure given as a formula
-#' @details
-#' See the vignette.
 #' @return a named list with objects:
 #' \itemize{
 #'  \item FL formula for negative logarithm of density
@@ -12,7 +10,6 @@
 #'  \item NP number of parents
 #'  \item NC number of children
 #'  }
-#' @export
 GraphDens <- function(S){
   S <- S[order(sapply(S, function(x) strsplit(as.character(x), split="~")[[2]]))]
   parents <- sapply(S, function(x) strsplit(as.character(x), split="~")[[2]])
@@ -88,7 +85,7 @@ GraphDens <- function(S){
   }
   return(list(FL=FL, JD=JD, STR=STR, Pmat=Pmat, NP=NPi, NC=length(grep("c", unlist(childrenU))))) # do we need S in the output?
 }
-#'
+#' @describeIn old_corGraph
 #' Function that returns the distance between two models
 #' @param f1 negative logarithm of density function for model 1
 #' @param f0 negative logarithm of density function for model 0 (NULL if model 0 is independent, i.e., last step)
@@ -98,7 +95,6 @@ GraphDens <- function(S){
 #' @param NC number of children
 #' @return distance
 #' @import numDeriv
-#' @export
 Tdist <- function(f1, f0=NULL, SD1, SD0=NULL, STR, NC){ # f negative logarithm of density
   Q1 <- numDeriv::hessian(f1, rep(0, length(STR)), SDev=c(SD0, SD1)) # precision 1
   diag(Q1) <- diag(Q1)+1e-12
@@ -124,6 +120,7 @@ Tdist <- function(f1, f0=NULL, SD1, SD0=NULL, STR, NC){ # f negative logarithm o
   }
   return(Dst)
 }
+#' @describeIn old_corGraph
 #' Function that computes the prior distribution for a given model structure
 #' @param S model structure given as a formula
 #' @param lat latent parameter
@@ -131,7 +128,6 @@ Tdist <- function(f1, f0=NULL, SD1, SD0=NULL, STR, NC){ # f negative logarithm o
 #' @param SP GraphDens applied to S (avoids to recompute it)
 #' @param Tdist function that returns the distance between two models
 #' @return PRT the prior for theta
-#' @export
 GraphPrior <- function(S, lat, lambda, SP, Tdist){
   DIS <- vector("list", length=SP$NP)
   PRT <- vector("list", length=SP$NP) # prior theta
@@ -179,7 +175,7 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
   PRT[[SP$NP]] <- Prd
   return(PRT)
 }
-#'
+#' @describeIn old_corGraph
 #' Function to plot a graph
 #' @param S model structure given as a formula
 #' @param base b
@@ -188,7 +184,6 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
 #' @param height e
 #' @import graph
 #' @import Rgraphviz
-#' @export
 #' @examples
 #'  graph.def <- list(p1 ~ c1 + c2)
 #'  graph.plot <- GraphPlot(graph.def, base = 0)
@@ -235,7 +230,7 @@ GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height
   gr <- graph::graphNEL(nodes=nod, edgeL=edg, edgemode='directed')
   return(list(gr=gr, nAttrs=nAttrs))
 }
-#'
+#' @describeIn old_corGraph
 #' Function to plot the graph prior
 #' @param S model structure given as a formula
 #' @param fontsize b
@@ -244,7 +239,6 @@ GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height
 #' @param fontsizeLast e
 #' @param widthLast f
 #' @param heightLast g
-#' @export
 GraphPlotPrior <- function(S, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(0.5,0.5), fontsizeLast=14, widthLast=0.75, heightLast=0.5){
   S <- S[order(sapply(S, function(x) strsplit(as.character(x), split="~")[[2]]))]
   parents <- sapply(S, function(x) strsplit(as.character(x), split="~")[[2]])
@@ -268,13 +262,12 @@ GraphPlotPrior <- function(S, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(
   GRAPHS[[length(parents)+1]] <- list("gr"=graph::graphNEL(nodes=nod[(length(parents)+1):length(nod)]), "nAttrs"=nAttrs)
   return(GRAPHS)
 }
-#'
+#' @describeIn old_corGraph
 #' Function to map from theta to correlation matrix
 #' @param SP a
 #' @param lat b
 #' @param COV logical indicating if it is to return the covariance.
 #' If FALSE the correlation is returned. Default value is FALSE.
-#' @export
 ThetaCor <- function(SP, lat, COV = FALSE){
   # remove round
   Q <- numDeriv::hessian(SP$JD[[1]], rep(0, length(SP$STR[[1]])), SDev=exp(lat[-(1:SP$NC)]))#*SP$Pmat # precision matrix

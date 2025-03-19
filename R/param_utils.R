@@ -1,18 +1,47 @@
+#' Internal function to interpret theta for precision
+#' @rdname param-utils
+#' @param theta numeric vector of length m = p(p-1)/2
+#' @param p integer with the resulting matrix dimension
+interpret.ptheta <- function(theta, p) {
+  ii <- 1:p
+  ij <- p + 1:(p * (p-1)/2)
+  L.prec <- diag(exp(theta[ii]))
+  L.prec[lower.tri(L.prec)] <- theta[ij]
+  ret <- list(mprec = tcrossprod(L.prec))
+  ret$covar <- chol2inv(t(L.prec))
+  ret$sd <- sqrt(diag(ret$covar))
+  ret$correl <- t(ret$covar/ret$sd)/ret$sd
+  return(ret)
+}
+#' @describeIn param-utils
+#' Internal function to interpret theta for covariance
+interpret.vtheta <- function(theta, p) {
+  ii <- 1:p
+  ij <- p + 1:(p * (p-1)/2)
+  Lcov <- diag(exp(-theta[ii]))
+  Lcov[lower.tri(Lcov)] <- theta[ij]
+  ret <- list(mprec = chol2inv(t(Lcov)))
+  ret$covar <- tcrossprod(Lcov)
+  ret$sd <- sqrt(diag(ret$covar))
+  ret$correl <- t(ret$covar/ret$sd)/ret$sd
+  return(ret)
+}
+#' @describeIn param-utils
 #' From theta to the lower triangle such that Q = LL'.
-#' @param theta numeric vector of length m = n(n-1)/2
 #' @examples
 #' theta1 <- c(0, -1, -2)
 #' theta2L(theta1)
 theta2L <- function(theta) {
-### imput theta output L such Q = LL'
-    m <- length(theta)
-    n <- (1 + sqrt(1+8*m))/2
-    stopifnot((n==floor(n)) & (n==ceiling(n)))
-    stopifnot(n>0)
-    L <- diag(n)
-    L[lower.tri(L)] <- theta
-    return(L)
+  ### imput theta output L such Q = LL'
+  m <- length(theta)
+  n <- (1 + sqrt(1+8*m))/2
+  stopifnot((n==floor(n)) & (n==ceiling(n)))
+  stopifnot(n>0)
+  L <- diag(n)
+  L[lower.tri(L)] <- theta
+  return(L)
 }
+#' @describeIn param-utils
 #' From theta to a correlation matrix
 #' using the 'theta2L' parametrization
 #' @examples
@@ -23,7 +52,9 @@ theta2C <- function(theta) {
     V <- chol2inv(t(theta2L(theta)))
     return(cov2cor(V))
 }
+#' @describeIn param-utils
 #' Compute the KLD with respect to a base model
+#' @param C1 is a correlation matrix.
 #' @param C0 is a correlation matrix of the base model.
 #' @details
 #' compute C1 using 'theta2C' on theta  with
@@ -47,6 +78,7 @@ KLD10 <- function(C1, C0) {
     tr <- sum(diag(chol2inv(l0) %*% C1))
     0.5*(tr -p) + hld0 - hld1
 }
+#' @describeIn param-utils
 #' Compute the hessian, its svd and some elements
 #' @examples
 #' theta2H(c(-1,-1,-1))
@@ -67,6 +99,7 @@ theta2H <- function(theta) {
          hneg.5 = hneg.5,
          svdH = sv)
 }
+#' @describeIn param-utils
 #' Transform from spherical coordinates to Euclidian
 #' @param rphi numeric vector where the first element
 #' is the radius and the remaining are the angles
@@ -80,6 +113,7 @@ rphi2x <- function(rphi) {
     x <- rphi[1] * c(co, 1) * c(1, si)
     return(x)
 }
+#' @describeIn param-utils
 #' Tranform from Euclidian coordinates to spherical
 x2rphi <- function(x) {
 ### to convert from x_i \in \Re into \{r, \phi_1, ..., \phi_{m-1} \}
@@ -104,6 +138,7 @@ x2rphi <- function(x) {
     }
     return(c(sqrt(r2), phi))
 }
+#' @describeIn param-utils
 #' Drawn samples from the PC-prior for correlation
 #' @param n integer to define the size of the correlation matrix
 #' @param lambda numeric as the parameter for the
@@ -125,6 +160,7 @@ rtheta <- function(n, lambda=1, R, theta.base) {
     }
     drop((rphi2x(c(r, phi)) %*% R) + theta.base)
 }
+#' @describeIn param-utils
 #' PC-prior density for the correlation matrix
 #' @param H.elements list output of theta2H
 dtheta <- function(theta, lambda, theta.base, H.elements) {

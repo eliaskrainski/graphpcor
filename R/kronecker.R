@@ -70,7 +70,8 @@ setMethod(
     stopifnot(all(ij1[[1]]<=ij1[[2]]))
     M1 <- length(ij1[[1]])
     if(debug) {
-      cat('M1:', M1, "")
+      cat('M1:', M1, "\n")
+      print(str(ij1))
     }
     names(ij1) <- c("i", "j")
 
@@ -83,7 +84,8 @@ setMethod(
     stopifnot(all(ij2[[1]]<=ij2[[2]]))
     M2 <- length(ij2[[1]])
     if(debug) {
-      cat('M2:', M2, "")
+      cat('M2:', M2, "\n")
+      print(str(ij2))
     }
     names(ij2) <- c('i', 'j')
 
@@ -105,15 +107,15 @@ setMethod(
     ##  n1*n2 + M1*u2        + M2*u1            =
     ##  n1*n2 + (n1 + u1)*u2 + (n2 + u2)*u1     =
     ##  n1*n2 + n1*u2 + u1*u2 + n2*u1 + u2*u1   =
-    ##  n1*(n2 + u2)  + u1*(n2 + u2)  + u2*u1
-    ##  n1*M2         + u1*M2         + u2*u1
-    ##  (n1 + u1) * M2                + u2*u1
+    ##  n1*(n2 + u2)  + u1*(n2 + u2)  + u2*u1   =
+    ##  n1*M2         + u1*M2         + u2*u1   =
+    ##  (n1 + u1) * M2                + u2*u1   =
     ##         M1 * M2 + u2 * u1
-    ## the j<i part from Q1
+    ## the i<j part from Q1
     idx1u <- which(ij1$i < ij1$j)
     u1 <- length(idx1u)
     stopifnot(u1 == (M1-n1))
-    ## the j<i part from Q2
+    ## the i<j part from Q2
     idx2u <- which(ij2$i < ij2$j)
     u2 <- length(idx2u)
     stopifnot(u2 == (M2-n2))

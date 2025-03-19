@@ -1,3 +1,4 @@
+#' @describeIn old_corGraph
 #' R generic implementation of the graph model.
 #' @param cmd the name of the object to return.
 #' @param theta internal parameters.
@@ -8,8 +9,7 @@
 #'  \item GraphPrior: function to compute the prior.
 #'  \item S, lambda, Tdist: required to [GraphPrior()]
 #' }
-#' @return the asked object
-#' @export
+#' @return an `inla.rgeneric`
 rgeneric_CorGraph <- function(cmd = c("graph", "Q", "mu", "initial",
                                     "log.norm.const", "log.prior", "quit"),
                                theta = NULL)

@@ -132,7 +132,7 @@ setMethod(
     fillcolor = {
       if(any(nargs == "fillcolor"))
         mc$fillcolor
-      else rep("lightsalmon", ne[1])
+      else rep("lightblue", ne[1])
     },
     shape = {
       if(any(nargs == "shape"))
