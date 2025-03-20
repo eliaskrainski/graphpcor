@@ -234,7 +234,7 @@ for(i in 1:K) {
     nami <- vnames[i]
     m3.i <- inla.tmarginal(exp, res.m3$internal.marginals.hyperpar[[i]])
     m4.i <- inla.tmarginal(exp, res.m4$internal.marginals.hyperpar[[i]]) 
-    plot(m4.i, type = "l", bty = 'n', lwd = 2,
+    plot(m3.i, type = "l", bty = 'n', lwd = 2,
          xlim = range(m3.i[, 1], m4.i[, 1]),
          ylim = range(m3.i[, 2], m4.i[, 2]),
          xlab = bquote(sigma[.(nami)]), ylab = 'Density')

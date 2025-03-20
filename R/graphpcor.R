@@ -91,18 +91,17 @@ dim.graphpcor <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
     edges=sum(attr(x, 'relationship')))
 }
-#' @describeIn graphpcor
-#' The plot method for `graphpcor`
+#' @rdname graphpcor
 #' @export
 setMethod(
-  "plot",
-  "graphpcor",
-  function(x, y, ...) {
-    ne <- dim(x)
-    nodes <- attr(x, "nodes")
+  "edges",
+  "treepcor",
+  function(object, which, ...) {
+    ne <- dim(object)
+    nodes <- attr(object, "nodes")
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
-    L <- Laplacian(x)
+    L <- Laplacian(object)
     edgl <- vector("list", ne[1])
     for(i in 1:ne[1]) {
       jj <- setdiff(which(!is.zero(L[i, ])), i)
@@ -116,6 +115,21 @@ setMethod(
       }
     }
     names(edgl) <- nodes
+    return(edgl)
+  }
+)
+#' @describeIn graphpcor
+#' The plot method for `graphpcor`
+#' @export
+setMethod(
+  "plot",
+  "graphpcor",
+  function(x, y, ...) {
+    ne <- dim(x)
+    nodes <- attr(x, "nodes")
+    stopifnot(!is.null(nodes))
+    stopifnot(ne[1]==length(nodes))
+    edgl <- edges(x)
     gr <- graph::graphNEL(
       nodes = nodes,
       edgeL = edgl,

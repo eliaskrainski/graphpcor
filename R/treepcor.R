@@ -374,6 +374,7 @@ prec.treepcor <- function(x, ...) {
     names(edgl)[c(d[2] + 1:d[1], 1:d[2])]
   return(Q)
 }
+#' @describeIn treepcor
 #' Internal function to extract elements to
 #' build the precision from the `treepcor` edges.
 #' @param d.el list of first n edges of a `treepcor`.
@@ -451,10 +452,7 @@ setMethod(
   "vcov",
   "treepcor",
   function(object, ...) {
-    mc <- lapply(
-      match.call(
-        expand.dots = TRUE)[-1],
-      eval)
+    mc <- list(...)
     nargs <- names(mc)
     nm <- dim(object)
     edgl <- edges(object)
@@ -482,6 +480,7 @@ setMethod(
     return(diag(sigmas) %*% c0 %*% diag(sigmas))
   }
 )
+#' @describeIn treepcor
 #' Internal function to extract elements to
 #' build the covariance matrix from a `treepcor`.
 #' @param d.el list of the first n edges of a `treepcor`.

@@ -3,10 +3,19 @@
 \docType{class}
 \name{treepcor-class}
 \alias{treepcor-class}
+\alias{etreepcor2precision}
 \alias{vcov,treepcor-method}
+\alias{etreepcor2variance}
 \title{Set class for objects to model correlation matrices over tree}
 \usage{
+etreepcor2precision(d.el)
+
 \S4method{vcov}{treepcor}(object, ...)
+
+etreepcor2variance(d.el)
+}
+\arguments{
+\item{d.el}{list of the first n edges of a \code{treepcor}.}
 }
 \description{
 Set class for objects to model correlation matrices over tree
@@ -14,5 +23,14 @@ Set class for objects to model correlation matrices over tree
 \section{Methods (by generic)}{
 \itemize{
 \item \code{vcov(treepcor)}: The covariance method for a \code{treepcor} object.
+
+}}
+\section{Functions}{
+\itemize{
+\item \code{etreepcor2precision()}: Internal function to extract elements to
+build the precision from the \code{treepcor} edges.
+
+\item \code{etreepcor2variance()}: Internal function to extract elements to
+build the covariance matrix from a \code{treepcor}.
 
 }}
