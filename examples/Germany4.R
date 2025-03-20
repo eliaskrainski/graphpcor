@@ -153,8 +153,7 @@ colnames(svcor.m2) <- rownames(svcor.m2) <-
 ## graphical model for correlation
 graph5 <- graphpcor(
     Oral_1 ~ Osph_2 + Lary_3,
-    Lung_4 ~ Osph_2 + Lary_3,
-    Osph_2 ~ Lary_3
+    Lung_4 ~ Osph_2 + Lary_3 + Oral_1
 )
 graph4 <- graphpcor(
     Oral_1 ~ Osph_2 + Lary_3,
@@ -213,13 +212,15 @@ res.m4 <- inla(
 
 ## similar marginal std (see next plot)
 res.m3$summary.hyperpar[1:K, c(1,2,3,5)]
-res.m3$summary.hyperpar[1:K, c(1,2,3,5)]
+res.m4$summary.hyperpar[1:K, c(1,2,3,5)]
 
 edgl.all <- matrix(paste(rep(vnames, each = K), "~", vnames), K)
 edgl.all
 
 lg5 <- Laplacian(graph5)
+lg5
 lg4 <- Laplacian(graph4)
+lg4
 
 edg.g5 <- edgl.all[lower.tri(lg5) & (!is.zero(lg5))]
 edg.g4 <- edgl.all[lower.tri(lg4) & (!is.zero(lg4))]
@@ -243,9 +244,9 @@ for(i in 1:K) {
 for(i in (K+1):(K+5)) {
     edjnam <- edg.g5[i-K]
     m3.i <- inla.smarginal(res.m3$internal.marginals.hyperpar[[i]])
-    k <- i - (i>(K+1))
+    k <- i - (i>(K+2))
     cat(c(i=i, k=k), "\n")
-    if(i!=(K+2)) {
+    if(i!=(K+3)) {
         m4.i <- inla.smarginal(res.m4$internal.marginals.hyperpar[[k]])
         xlm <- range(m3.i$x, m4.i$x)
         ylm <- range(m3.i$y, m4.i$y)
@@ -256,7 +257,7 @@ for(i in (K+1):(K+5)) {
     plot(m3.i, type = "l", bty = 'n', lwd = 2,
          xlim = xlm, ylim = ylm, 
          xlab = edjnam, ylab = 'Density')
-    if(i!=(K+2)) {
+    if(i!=(K+3)) {
         lines(m4.i, lwd = 3, lty = 2)
     }
     abline(v=0, col=gray(0.5), lwd = 2, lty = 2)
@@ -282,18 +283,22 @@ round(svcor.m4, 2)
 
 if(FALSE) {
     
-    tb0 <- svcor.obs
-    tb1 <- svcor.m1
-    tb2 <- svcor.m2
-    tb3 <- svcor.m3
-    tb4 <- svcor.m4
-    dimnames(tb0) <- dimnames(tb1) <- dimnames(tb2) <-  
-        dimnames(tb3) <- dimnames(tb4) <- list(
+    tbs <- list(
+        m0 = svcor.obs,
+        m1 = svcor.m1,
+        m2 = svcor.m2,
+        m3 = svcor.m3,
+        m4 = svcor.m4)
+    for(i in 1:length(tbs))
+        dimnames(tbs[[i]])  <- list(
             c("Oral", "Oesophagus", "Larynx", "Lung"),
             c("Oral", "Oesophagus", "Larynx", "Lung")
         )
 
-    knitr::kable(tb0, digits = 2)
+    for(i in 1:length(tbs))
+        tbs[[i]][lower.tri(tbs[[i]])] <- NA
+
+    knitr::kable(tbs[[1]], digits = 2)
 
     knitr::kable(tb1, digits = 2)
 
