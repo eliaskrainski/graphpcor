@@ -100,12 +100,10 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
     theta2gamma2Lcorr(N, &hld, &theta[0], &ret[2]);
 
     if(debug>999) {
-      printf("L:\n");
+      printf("L:\n"); k = 0;
       for(i=0; i<N; i++) {
-        k = i;
-        for(j=0; j<=i; j++) {
-          printf("%2.3f ", ret[offset+k]);
-          k += (N-j-1);
+        for(j=i; j<N; j++) {
+          printf("%2.3f ", ret[offset+k++]);
         }
         printf("\n");
       }
@@ -142,34 +140,54 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
   {
     ret = Calloc(1, double);
 
-    int kj, k2=0;
-    double lhdetC;
-
-    // log determinant
-    double cc[(N-1)*(N-1)];
-    theta2gamma2Ucorrel(N, &lhdetC, &theta[0], &cc[0]);
+    // log determinant is computed in the theta2gamma2Lcorrel
+    double lhdetC, ll[N*(N+1)/2], cc1[N*(N-1)/2], cc2[N*(N-1)/2];
+    theta2gamma2Lcorr(N, &lhdetC, &theta[0], &ll[0]);
+    if(debug>999) {
+      printf("L[upper]:\n");
+      k = 0;
+      for(i=0; i<N; i++) {
+        for(j=i; j<N; j++) {
+          printf("%2.3f ", ll[k++]);
+        }
+        printf("\n");
+      }
+    }
+    if(debug>999) {
+      printL(ll,N,N,"Lcorr\n");
+    }
     if(debug>99) {
       printf("|R| = %2.5f, lc+(eta-1)|R| = %2.5f\n",
              2.0*lhdetC, lc + 2.0*(eta-1)*lhdetC);
     }
-    if(debug>99) {
-      printL(cc, N-1, N-1, "R[.]:\n");
+    L2Cupper(N, &ll[0], &cc1[0]);
+    if(debug>999) {
+      printf("C:\n"); k=0;
+      for(i=0; i<(N-1); i++) {
+        for(j=i; j<(N-1); j++) {
+          printf("%2.5f ", cc1[k++]);
+        }
+        printf("\n");
+      }
     }
 
     // compute the Jacobian[nth*nth]
+    int kj, k2=0;
     double ldtmp, daux, h = 0.0005;
     double h2 = 2.0*h;
-    double cc2[(N-1)*(N-1)], mJacobian[nth*nth];
+    double mJacobian[nth*nth];
     for(kj=0; kj<nth; kj++) {
       daux = theta[kj];
       theta[kj] = daux-h;
-      theta2gamma2Ucorrel(N, &ldtmp, &theta[0], &cc[0]);
+      theta2gamma2Lcorr(N, &ldtmp, &theta[0], &ll[0]);
+      L2Cupper(N, &ll[0], &cc1[0]);
       theta[kj] = daux+h;
-      theta2gamma2Ucorrel(N, &ldtmp, &theta[0], &cc2[0]);
+      theta2gamma2Lcorr(N, &ldtmp, &theta[0], &ll[0]);
+      L2Cupper(N, &ll[0], &cc2[0]);
       theta[kj] = daux;
       // store derivatives
       for(k=0; k<nth; k++) {
-        daux = (cc2[k] -cc[k])/h2;
+        daux = (cc2[k] -cc1[k])/h2;
         mJacobian[k2++] = daux;
       }
     }
@@ -190,7 +208,6 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
     if(ldJacobian<0) {
       ldJacobian *= -1.0;
     }
-
     // store the log-prior
     // 'lc' is a pre-computed constant
     ret[0] = lc + 2.0 * lhdetC * (eta-1.0);

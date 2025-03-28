@@ -48,7 +48,7 @@ if(1) {                                                        \
   printf("%s (%d x %d)\n", _msg, _nr, _nc);                    \
   for(_i=0; _i<_nr; _i++) {                                    \
     for(_j=0; _j<_nc; _j++) {                                  \
-      printf("%5.3f ", (_M)[(_nc) * _i + _j]);                 \
+      printf("%5.4f ", (_M)[(_nc) * _i + _j]);                 \
     }                                                          \
     printf("\n");                                              \
   }                                                            \
@@ -62,7 +62,7 @@ if(1) {                                                        \
   printf("%s (%d x %d)\n", _msg, _nr, _nc);                    \
   for(_i=0; _i<_nr; _i++) {                                    \
     for(_j=_i; _j<_nc; _j++) {                                 \
-      printf("%5.3f ", (_M)[_k++]);                   \
+      printf("%5.4f ", (_M)[_k++]);                   \
     }                                                          \
     printf("\n");                                              \
   }                                                            \
@@ -77,7 +77,7 @@ if(1) {                                                        \
   for(_i=0; _i<_nr; _i++) {                                    \
     _k = _i;                                             \
     for(_j=0; _j<=_i; _j++) {                                         \
-      printf("%5.3f ", (_M)[_k]);                                       \
+      printf("%5.4f ", (_M)[_k]);                                       \
       _k += (_nr-_j-1);                                            \
     }                                                               \
     printf("\n");                                              \
@@ -93,7 +93,7 @@ void theta2Qcorrel(int n, int std, double *theta, double *Qu);
 void theta2precision(int n, double *l, double *Q);
 void l2L(int n, double *l, double *L);
 void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L);
-void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc);
+void L2Cupper(int n, double *ll, double *cc);
 void dl2fullQ(int n, double *d, double *l, double *q);
 void dl2Qu(int n, double *d, double *l, double *qu);
 void fillL(int *d, int *m, int *ii, int *jj, double *x);

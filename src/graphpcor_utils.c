@@ -207,25 +207,41 @@ void l2L(int n, double *l, double *L) {
   }
 }
 
-void theta2gamma2Ucorrel(int n, double *hldet, double *theta, double *cc) {
-  assert(n>1);
-  double ll[n*(n-1)/2];
-  theta2gamma2Lcorr(n, &hldet[0], &theta[0], &ll[0]);
-  int i;
-  for(i=0; i<(n-1); i++) {
-    cc[i] = ll[i+1];
+void L2Cupper(int n, double *ll, double *cc) {
+// compute C = LL'
+// in  ll[n(n+1)/2]: lower L (with diagonal)
+// out cc[n(n-1)/2]: upper C (without diagonal)
+  if(n==1) {
+    cc[0] = 1.0;
   }
-  if(n>2) {
-    int inc, j, k, kk = n-1;
-    for(i=2; i<n; i++) {
-      for(j=1; j<i; j++) {
-        cc[kk] = 0.0;
-        inc = n-j;
-        for(k=0; k<j; k++) {
-          cc[kk] += (ll[j+inc*k] * ll[i+inc*k]);
+  if(n==2) {
+    cc[0] = ll[1];
+  }
+  if(n==3) {
+    cc[0] = ll[1];
+    cc[1] = ll[2];
+    cc[2] = ll[1]*ll[2] + ll[3]*ll[4];
+  }
+  if(n>3) {
+    int i, j, k, k1, k2, kk;
+    // first row
+    for(j=0; j<(n-1); j++) {
+      cc[j] = ll[j+1];
+    }
+    // from 2nd row
+    kk = n-1;
+    for(i=1; i<(n-1); i++) {
+      for(j=i+1; j<n; j++) {
+        k1 = i;
+        k2 = j;
+        cc[kk] = ll[k1] * ll[k2];
+        for(k=1; k<=i; k++) {
+          k1 += (n-k);
+          k2 += (n-k);
+          printf("%d,%d ", k1, k2);
+          cc[kk] += (ll[k1] * ll[k2]);
         }
-        k++;
-//        cc[k++] = ddot_(&nij, &L[i], &n, &L[j], &n, F_ONE);
+        kk++;
       }
     }
   }
