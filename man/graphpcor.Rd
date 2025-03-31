@@ -2,12 +2,12 @@
 % Please edit documentation in R/aaa_methods.R, R/graphpcor.R
 \name{graphpcor}
 \alias{graphpcor}
-\alias{edges,treepcor-method}
+\alias{edges,graphpcor-method}
 \title{The \code{graphpcor} method}
 \usage{
 graphpcor(...)
 
-\S4method{edges}{treepcor}(object, which, ...)
+\S4method{edges}{graphpcor}(object, which, ...)
 }
 \description{
 The \code{graphpcor} method

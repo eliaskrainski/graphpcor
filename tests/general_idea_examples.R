@@ -1,5 +1,4 @@
 library(graphpcor)
-library(INLA)
 
 g1 <- graphpcor(c1~c2, c2~c3, c3~c4, c4~c5, c5~c6)
 

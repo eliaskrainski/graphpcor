@@ -31,7 +31,6 @@
 #' E.g., if it is a character, a specific function
 #' will be called, see the example in Methods section.
 #' @export
-#' @importFrom INLA inla.cgeneric.define
 cgeneric <- function(model, ...) {
   UseMethod("cgeneric")
 }

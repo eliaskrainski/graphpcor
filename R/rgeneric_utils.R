@@ -21,7 +21,6 @@ rgeneric <- function(model,
 #' @param model the model defined as a function.
 #' See the 'rgeneric' vignette from the INLA package.
 #' @export
-#' @importFrom INLA inla.cgeneric.define
 rgeneric.default <- function(model,
                              debug = FALSE,
                              compile = TRUE,

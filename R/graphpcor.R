@@ -95,7 +95,7 @@ dim.graphpcor <- function(x, ...) {
 #' @export
 setMethod(
   "edges",
-  "treepcor",
+  "graphpcor",
   function(object, which, ...) {
     ne <- dim(object)
     nodes <- attr(object, "nodes")
@@ -129,7 +129,7 @@ setMethod(
     nodes <- attr(x, "nodes")
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
-    edgl <- edges(x)
+    edgl <- edges(x, which)
     gr <- graph::graphNEL(
       nodes = nodes,
       edgeL = edgl,
