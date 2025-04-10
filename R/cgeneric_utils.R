@@ -13,8 +13,7 @@
 cgeneric_get <- function(model,
                          cmd = c("graph", "Q", "initial", "mu", "log_prior"),
                          theta,
-                         optimize = TRUE
-) {
+                         optimize = TRUE) {
 
   ret <- NULL
   cmd[cmd == "log.prior"] <- "log_prior"
@@ -169,14 +168,14 @@ initial.inla.cgeneric <- function(model) {
 #' @describeIn cgeneric
 #' Evaluate the mean.
 #' @export
-mu <- function(model) {
+mu <- function(model, theta) {
   UseMethod("mu")
 }
 #' @describeIn cgeneric
 #' Evaluate the mean for an `inla.cgeneric` model.
 #' @export
-mu.inla.cgeneric <- function(model) {
-  cgeneric_get(model, "mu")
+mu.inla.cgeneric <- function(model, theta) {
+  cgeneric_get(model, "mu", theta = theta)
 }
 #' @describeIn cgeneric
 #' Evaluate the log-prior.

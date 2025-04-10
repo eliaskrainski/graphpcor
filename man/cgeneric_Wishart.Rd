@@ -5,7 +5,14 @@
 \title{Build an \code{inla.cgeneric} to implement the Wishart
 prior for a precision matrix.}
 \usage{
-cgeneric_Wishart(n, dof, R, debug = FALSE, useINLAprecomp = !TRUE)
+cgeneric_Wishart(
+  n,
+  dof,
+  R,
+  debug = FALSE,
+  useINLAprecomp = TRUE,
+  libpath = NULL
+)
 }
 \arguments{
 \item{n}{the size of the precision matrix}
@@ -14,13 +21,14 @@ cgeneric_Wishart(n, dof, R, debug = FALSE, useINLAprecomp = !TRUE)
 
 \item{R}{lower triangle of the scale matrix parameter}
 
-\item{debug}{logical indicating if it is to debug.}
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
 
-\item{useINLAprecomp}{logical indicating if is to be used
-shared object pre-compiled by INLA. It is not considered if
-libpath is provided.}
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
 
-\item{libpath}{string to the shared object. Default is NULL.}
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
 a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.

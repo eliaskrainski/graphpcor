@@ -6,16 +6,14 @@
 \alias{prec.inla}
 \title{The \code{prec} method}
 \usage{
-prec(object, ...)
+prec(model, ...)
 
-\method{prec}{default}(object, ...)
+\method{prec}{default}(model, ...)
 
-\method{prec}{inla}(object, ...)
+\method{prec}{inla}(model, ...)
 }
 \arguments{
-\item{...}{additional arguments passed on}
-
-\item{x}{object or model}
+\item{model}{a model object}
 }
 \description{
 The \code{prec} method

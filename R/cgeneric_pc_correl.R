@@ -4,11 +4,12 @@
 #' hypershere decomposition, see details.
 #' @param n integer to define the size of the matrix
 #' @param lambda numeric (positive), the penalization rate parameter
-#' @param debug logical indicating if it is to debug.
-#' @param useINLAprecomp logical indicating if is to be used
-#' shared object pre-compiled by INLA. It is not considered if
-#' libpath is provided.
-#' @param libpath string to the shared object. Default is NULL.
+#' @param debug integer, default is zero, indicating the verbose level.
+#' Will be used as logical by INLA.
+#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
+#' be used the shared object pre-compiled by INLA.
+#' This is not considered if 'libpath' is provided.
+#' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
 #' The hypershere decomposition, as proposed in
 #' Rapisarda, Brigo and Mercurio (2007)
@@ -42,8 +43,10 @@ cgeneric_pc_correl <-
   function(n,
            lambda,
            debug = FALSE,
-           useINLAprecomp = !TRUE) {
+           useINLAprecomp = TRUE,
+           libpath = NULL) {
 
+    if(is.null(libpath)) {
       if (useINLAprecomp) {
         libpath <- INLA::inla.external.lib("graphpcor")
       } else {
@@ -54,6 +57,7 @@ cgeneric_pc_correl <-
           libpath <- file.path(libpath, "graphpcor.so")
         }
       }
+    }
 
     stopifnot(n>1)
     stopifnot(lambda>0)

@@ -10,8 +10,12 @@
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
 #' to define the prior for the standard deviation parameters.
-#' @param useINLAprecomp logical indicating if
-#' it is to be used the shared object within INLA.
+#' @param debug integer, default is zero, indicating the verbose level.
+#' Will be used as logical by INLA.
+#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
+#' be used the shared object pre-compiled by INLA.
+#' This is not considered if 'libpath' is provided.
+#' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
 #'  The correlation prior as in the paper depends on the lambda value.
 #'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
@@ -36,7 +40,8 @@ cgeneric_treepcor <-
            sigma.prior.reference,
            sigma.prior.probability,
            debug = FALSE,
-           useINLAprecomp = !TRUE) {
+           useINLAprecomp = TRUE,
+           libpath = NULL) {
 
 
     dd <- dim(graph)
@@ -83,6 +88,7 @@ cgeneric_treepcor <-
 
     the_model <- cgeneric.default(
       model = "inla_cgeneric_treepcor",
+      libpath = libpath,
       debug = as.logical(debug),
       useINLAprecomp = as.logical(useINLAprecomp),
       n = as.integer(nc),

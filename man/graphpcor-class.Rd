@@ -17,7 +17,7 @@
 \usage{
 \method{graphpcor}{formula}(...)
 
-\method{graphpcor}{matrix}(x)
+\method{graphpcor}{matrix}(...)
 
 \method{print}{graphpcor}(x, ...)
 
@@ -33,10 +33,12 @@
 
 \S4method{vcov}{graphpcor}(object, ...)
 
-\method{prec}{graphpcor}(x, ...)
+\method{prec}{graphpcor}(model, ...)
 }
 \arguments{
 \item{...}{list of formula used to define the edges.}
+
+\item{graph}{graphpcor object, see \code{\link{graphpcor}}.}
 }
 \description{
 Set class for objects to model correlation matrices

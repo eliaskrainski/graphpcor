@@ -13,7 +13,7 @@ cgeneric_graphpcor(
   params.id,
   low.params.fixed,
   debug = FALSE,
-  useINLAprecomp = !TRUE,
+  useINLAprecomp = TRUE,
   libpath = NULL
 )
 }
@@ -42,12 +42,18 @@ assumed for a correlation. If a length \code{n} vector is given
 and \code{sigma.prior.reference} is missing, it will be used as
 known square root of the variances.
 NOTE: \code{params.id} will be applied here as
-\code{sigma.prior.reference[params.id[(1:n)]]}.}
+\code{sigma.prior.reference[params.id[1:n]]}.}
 
 \item{sigma.prior.probability}{numeric vector with length \code{n}
 to set the probability statement of the PC prior for each
 marginal variance parameters. The probability statement is
-P(sigma < \verb{sigma.prior.reference') = p. If missing, all the marginal variances are considered as known, as described in }sigma.prior.reference\verb{. If a vector is given and a probability is NA, 0 or 1, the corresponding }sigma.prior.reference\verb{will be used as fixed. NOTE:}params.id\verb{will be applied here as}sigma.prior.probability[params.id\link{(1:n)}]`.}
+P(sigma < \code{sigma.prior.reference}) = p. If missing, all the
+marginal variances are considered as known, as described in
+\code{sigma.prior.reference}.
+If a vector is given and a probability is NA, 0 or 1, the
+corresponding \code{sigma.prior.reference} will be used as fixed.
+NOTE: \code{params.id} will be applied here as
+\code{sigma.prior.probability[params.id[1:n]]}.}
 
 \item{params.id}{integer ordered vector with length equals
 to \code{n+m} to specify common parameter values. If missing it
@@ -71,13 +77,14 @@ and equal to 1. NOTE: \code{params.id} will be applied here as
 examples give \verb{NA -1 -1 NA} and so the second and third low L
 parameters are fixed to \code{-1}.}
 
-\item{debug}{logical indicating if it is to debug.}
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
 
-\item{useINLAprecomp}{logical indicating if is to be used
-shared object pre-compiled by INLA. It is not considered if
-libpath is provided.}
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
 
-\item{libpath}{string to the shared object. Default is NULL.}
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
 objects to be used in the f() formula term in INLA.

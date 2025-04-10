@@ -26,17 +26,17 @@
 #' and `sigma.prior.reference` is missing, it will be used as
 #' known square root of the variances.
 #' NOTE: `params.id` will be applied here as
-#' `sigma.prior.reference[params.id[(1:n)]]`.
+#' `sigma.prior.reference[params.id[1:n]]`.
 #' @param sigma.prior.probability numeric vector with length `n`
 #' to set the probability statement of the PC prior for each
 #' marginal variance parameters. The probability statement is
-#' P(sigma < `sigma.prior.reference') = p. If missing, all the
+#' P(sigma < `sigma.prior.reference`) = p. If missing, all the
 #' marginal variances are considered as known, as described in
 #' `sigma.prior.reference`.
 #' If a vector is given and a probability is NA, 0 or 1, the
 #' corresponding `sigma.prior.reference` will be used as fixed.
 #' NOTE: `params.id` will be applied here as
-#' `sigma.prior.probability[params.id[(1:n)]]`.
+#' `sigma.prior.probability[params.id[1:n]]`.
 #' @param params.id integer ordered vector with length equals
 #' to `n+m` to specify common parameter values. If missing it
 #' is assumed `1:(n+m)` and all parameters are assumed distinct.
@@ -57,11 +57,12 @@
 #' `low.params.fixed[params.id[(n+1:m)]-n+1]`, thus the provided
 #' examples give `NA -1 -1 NA` and so the second and third low L
 #' parameters are fixed to `-1`.
-#' @param debug logical indicating if it is to debug.
-#' @param useINLAprecomp logical indicating if is to be used
-#' shared object pre-compiled by INLA. It is not considered if
-#' libpath is provided.
-#' @param libpath string to the shared object. Default is NULL.
+#' @param debug integer, default is zero, indicating the verbose level.
+#' Will be used as logical by INLA.
+#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
+#' be used the shared object pre-compiled by INLA.
+#' This is not considered if 'libpath' is provided.
+#' @param libpath string, default is NULL, with the path to the shared object.
 #' @return objects to be used in the f() formula term in INLA.
 #' @export
 cgeneric_graphpcor <-
@@ -73,7 +74,7 @@ cgeneric_graphpcor <-
            params.id,
            low.params.fixed,
            debug = FALSE,
-           useINLAprecomp = !TRUE,
+           useINLAprecomp = TRUE,
            libpath = NULL) {
 
     if (is.null(libpath)) {

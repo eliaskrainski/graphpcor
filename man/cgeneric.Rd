@@ -25,7 +25,7 @@ to define a \code{\link[INLA:cgeneric]{INLA::cgeneric()}} latent model}
 \usage{
 cgeneric(model, ...)
 
-\method{cgeneric}{default}(model, debug = FALSE, useINLAprecomp = !TRUE, ...)
+\method{cgeneric}{default}(model, debug = FALSE, useINLAprecomp = TRUE, libpath = NULL, ...)
 
 \method{cgeneric}{character}(model, ...)
 
@@ -40,9 +40,9 @@ initial(model)
 
 \method{initial}{inla.cgeneric}(model)
 
-mu(model)
+mu(model, theta)
 
-\method{mu}{inla.cgeneric}(model)
+\method{mu}{inla.cgeneric}(model, theta)
 
 prior(model, theta)
 
@@ -65,10 +65,14 @@ Q(model, ...)
 
 \item{...}{arguments passed on.}
 
-\item{debug}{logical indicating debug state.}
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
 
-\item{useINLAprecomp}{logical indicating if
-it is to be used the shared object within INLA.}
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
+
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 
 \item{cmd}{an string to specify which model element to get}
 

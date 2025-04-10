@@ -36,32 +36,40 @@ cgeneric <- function(model, ...) {
 }
 #' @describeIn cgeneric
 #' This calls [INLA::inla.cgeneric.define()]
-#' @param debug logical indicating debug state.
-#' @param useINLAprecomp logical indicating if
-#' it is to be used the shared object within INLA.
+#' @param debug integer, default is zero, indicating the verbose level.
+#' Will be used as logical by INLA.
+#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
+#' be used the shared object pre-compiled by INLA.
+#' This is not considered if 'libpath' is provided.
+#' @param libpath string, default is NULL, with the path to the shared object.
 #' @param ... arguments passed on.
 #' @export
 cgeneric.default <- function(model,
                              debug = FALSE,
-                             useINLAprecomp = !TRUE,
+                             useINLAprecomp = TRUE,
+                             libpath = NULL,
                              ...) {
   ## it uses INLA::inla.cgeneric.define()
-  if (useINLAprecomp) {
-    shlib <- INLA::inla.external.lib("graphpcor")
-  } else {
-    libpath <- system.file("libs", package = "graphpcor")
-    if (Sys.info()["sysname"] == "Windows") {
-      shlib <- file.path(libpath, "graphpcor.dll")
+  if(is.null(libpath)) {
+    if (useINLAprecomp) {
+      shlib <- INLA::inla.external.lib("graphpcor")
     } else {
-      shlib <- file.path(libpath, "graphpcor.so")
+      libpath <- system.file("libs", package = "graphpcor")
+      if (Sys.info()["sysname"] == "Windows") {
+        shlib <- file.path(libpath, "graphpcor.dll")
+      } else {
+        shlib <- file.path(libpath, "graphpcor.so")
+      }
     }
+  } else {
+    shlib <- libpath
   }
 
   args <- list(...)
   nargs <- names(args)
   if(any(nargs == ""))
     stop("Please name the arguments!")
-  cmodel <- do.call(
+  cmodel <- do.call( ## TO DO: make it independent of INLA:::inla.cgeneric.define
     "inla.cgeneric.define",
     c(list(model = model,
            debug = debug,

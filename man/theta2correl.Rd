@@ -34,9 +34,6 @@ Result
 \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
 \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
 }
-\examples{
-theta2correl(rnorm(4*3/2))
-}
 \references{
 Rapisarda, Brigo and Mercurio (2007).
 Parameterizing correlations: a geometric interpretation.

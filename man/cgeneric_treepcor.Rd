@@ -10,7 +10,8 @@ cgeneric_treepcor(
   sigma.prior.reference,
   sigma.prior.probability,
   debug = FALSE,
-  useINLAprecomp = !TRUE
+  useINLAprecomp = TRUE,
+  libpath = NULL
 )
 }
 \arguments{
@@ -24,8 +25,14 @@ to define the prior for the standard deviation parameters.}
 \item{sigma.prior.probability}{a vector with the probability values
 to define the prior for the standard deviation parameters.}
 
-\item{useINLAprecomp}{logical indicating if
-it is to be used the shared object within INLA.}
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
+
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
+
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
 objects to be used in the f() formula term in INLA.

@@ -5,20 +5,21 @@
 \title{Build an \code{inla.cgeneric} object to implement the
 LKG prior for the correlation matrix.}
 \usage{
-cgeneric_LKJ(n, eta, debug = FALSE, useINLAprecomp = !TRUE)
+cgeneric_LKJ(n, eta, debug = FALSE, useINLAprecomp = TRUE, libpath = NULL)
 }
 \arguments{
 \item{n}{integer to define the size of the matrix}
 
 \item{eta}{numeric greater than 1, the parameter}
 
-\item{debug}{logical indicating if it is to debug.}
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
 
-\item{useINLAprecomp}{logical indicating if is to be used
-shared object pre-compiled by INLA. It is not considered if
-libpath is provided.}
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
 
-\item{libpath}{string to the shared object. Default is NULL.}
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
 a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.

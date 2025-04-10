@@ -9,6 +9,9 @@ graphpcor(...)
 
 \S4method{edges}{graphpcor}(object, which, ...)
 }
+\arguments{
+\item{...}{either a list of formulae or a matrix}
+}
 \description{
 The \code{graphpcor} method
 }

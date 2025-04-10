@@ -30,7 +30,7 @@ interpret.vtheta <- function(theta, p) {
 #' From theta to the lower triangle such that Q = LL'.
 #' @examples
 #' theta1 <- c(0, -1, -2)
-#' theta2L(theta1)
+#' graphpcor:::theta2L(theta1)
 theta2L <- function(theta) {
   ### imput theta output L such Q = LL'
   m <- length(theta)
@@ -45,8 +45,8 @@ theta2L <- function(theta) {
 #' From theta to a correlation matrix
 #' using the 'theta2L' parametrization
 #' @examples
-#' theta2C(c(0,0,0))
-#' theta2C(c(1,1,1))
+#' graphpcor:::theta2C(c(0,0,0))
+#' graphpcor:::theta2C(c(1,1,1))
 theta2C <- function(theta) {
 ### imput theta output C
     V <- chol2inv(t(theta2L(theta)))
@@ -60,9 +60,8 @@ theta2C <- function(theta) {
 #' compute C1 using 'theta2C' on theta  with
 #'  KLD = 0.5( tr(C0^{-1}C1) -p + ... - log(|C1|) + log(|C0|) )
 #' @examples
-#' theta2KLD(c(0,0,0))
-#' cc0 <- theta2C(c(-3,-3,-3))
-#' cc1 <- theta2C(c(-1,-1,-1))
+#' cc0 <- graphpcor:::theta2C(c(-3,-3,-3))
+#' cc1 <- graphpcor:::theta2C(c(-1,-1,-1))
 #' KLD10(cc1, cc0)
 KLD10 <- function(C1, C0) {
 ### imput C1, C0 ouptut KLD
@@ -81,7 +80,7 @@ KLD10 <- function(C1, C0) {
 #' @describeIn param-utils
 #' Compute the hessian, its svd and some elements
 #' @examples
-#' theta2H(c(-1,-1,-1))
+#' graphpcor:::theta2H(c(-1,-1,-1))
 theta2H <- function(theta) {
 ### imput theta output H, H^0.5, svd(H)
     if(missing(theta)) stop('Please provide "theta"!')
@@ -181,4 +180,3 @@ dtheta <- function(theta, lambda, theta.base, H.elements) {
     ld <- log(lambda) -rphi[1]*lambda -log(2) - (m-1)*log(pi)
     return(ld + ld1 + ld2)
 }
-

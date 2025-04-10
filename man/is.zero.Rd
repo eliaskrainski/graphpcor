@@ -6,6 +6,11 @@
 \usage{
 is.zero(x, ...)
 }
+\arguments{
+\item{x}{an R object}
+
+\item{...}{additional arguments}
+}
 \description{
 Define the is.zero method
 }

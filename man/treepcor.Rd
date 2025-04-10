@@ -5,7 +5,7 @@
 \alias{print.treepcor}
 \alias{summary.treepcor}
 \alias{dim.treepcor}
-\alias{drop,treepcor-method}
+\alias{drop1,treepcor-method}
 \alias{edges,treepcor-method}
 \alias{plot,treepcor,ANY-method}
 \alias{prec.treepcor}
@@ -21,13 +21,13 @@ treepcor(...)
 
 \method{dim}{treepcor}(x, ...)
 
-\S4method{drop}{treepcor}(x)
+\S4method{drop1}{treepcor}(object)
 
 \S4method{edges}{treepcor}(object, which, ...)
 
 \S4method{plot}{treepcor,ANY}(x, y, ...)
 
-\method{prec}{treepcor}(x, ...)
+\method{prec}{treepcor}(model, ...)
 }
 \arguments{
 \item{...}{a list of formula used as relationship

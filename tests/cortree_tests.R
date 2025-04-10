@@ -83,10 +83,10 @@ vcov(g3, theta = c(0, 0))
 summary(g2)
 
 g3
-drop(g3) ## to be fixed (do not remove childrens!)
+drop1(g3) ## to be fixed (do not remove childrens!)
 
 prec(g3)
-prec(drop(g3))
+prec(drop1(g3))
 
 n3 <- dim(g3)[1]
 all.equal(

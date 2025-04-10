@@ -5,16 +5,30 @@
 \alias{inla.rgeneric-class}
 \alias{rgeneric}
 \alias{rgeneric.default}
+\alias{graph.inla.rgeneric}
+\alias{prec.inla.rgeneric}
+\alias{initial.inla.rgeneric}
+\alias{mu.inla.rgeneric}
+\alias{prior.inla.rgeneric}
 \title{\code{inla.rgeneric} class, short \code{rgeneric},
 to define a \code{\link[INLA:rgeneric]{INLA::rgeneric()}} latent model}
 \usage{
 rgeneric(model, debug = FALSE, compile = TRUE, optimize = TRUE, ...)
 
 \method{rgeneric}{default}(model, debug = FALSE, compile = TRUE, optimize = TRUE, ...)
+
+\method{graph}{inla.rgeneric}(model, ...)
+
+\method{prec}{inla.rgeneric}(model, ...)
+
+\method{initial}{inla.rgeneric}(model)
+
+\method{mu}{inla.rgeneric}(model, theta)
+
+\method{prior}{inla.rgeneric}(model, theta)
 }
 \arguments{
-\item{model}{the model defined as a function.
-See the 'rgeneric' vignette from the INLA package.}
+\item{model}{a \code{inla.rgeneric} model object}
 
 \item{debug}{logical indicating debug state.}
 
@@ -23,8 +37,10 @@ See the 'rgeneric' vignette from the INLA package.}
 \item{optimize}{logical indicating if only the elements
 of the precision matrix are returned.}
 
-\item{...}{additional arguments to be used internally
-for the model, for example, additional data.}
+\item{...}{additional parameter such as 'theta'
+If 'theta' is not supplied, initial will be taken.}
+
+\item{theta}{the parameter.}
 }
 \description{
 \code{inla.rgeneric} class, short \code{rgeneric},
@@ -34,3 +50,16 @@ Define rgeneric methods.
 
 The rgeneric default method.
 }
+\section{Functions}{
+\itemize{
+\item \code{graph(inla.rgeneric)}: The graph method for 'inla.rgeneric'
+
+\item \code{prec(inla.rgeneric)}: The precision method for an \code{inla.rgeneric} object.
+
+\item \code{initial(inla.rgeneric)}: The initial method for 'inla.rgeneric'
+
+\item \code{mu(inla.rgeneric)}: The mu method for 'inla.rgeneric'
+
+\item \code{prior(inla.rgeneric)}: The prior metho for 'inla.rgeneric'
+
+}}

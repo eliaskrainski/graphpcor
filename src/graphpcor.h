@@ -33,8 +33,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <omp.h>
 #include "cgeneric.h"
+
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+
 
 #if !defined(Calloc)
 #define Calloc(n_, type_)  (type_ *)calloc((n_), sizeof(type_))

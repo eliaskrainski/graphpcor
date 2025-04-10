@@ -7,20 +7,27 @@ proposed on Simpson et. al. (2007),
 for the correlation matrix parametrized from the
 hypershere decomposition, see details.}
 \usage{
-cgeneric_pc_correl(n, lambda, debug = FALSE, useINLAprecomp = !TRUE)
+cgeneric_pc_correl(
+  n,
+  lambda,
+  debug = FALSE,
+  useINLAprecomp = TRUE,
+  libpath = NULL
+)
 }
 \arguments{
 \item{n}{integer to define the size of the matrix}
 
 \item{lambda}{numeric (positive), the penalization rate parameter}
 
-\item{debug}{logical indicating if it is to debug.}
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
 
-\item{useINLAprecomp}{logical indicating if is to be used
-shared object pre-compiled by INLA. It is not considered if
-libpath is provided.}
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
 
-\item{libpath}{string to the shared object. Default is NULL.}
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
 a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.

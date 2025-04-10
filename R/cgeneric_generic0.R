@@ -11,8 +11,16 @@
 #'   \deqn{P(\sigma > a) = u}
 #' where \eqn{\sigma} can be interpreted as marginal standard
 #' deviation of the process if scale = TRUE. See details.
+#' @param constr logical indicating if it is to add a
+#' sum-to-zero constraint. Default is TRUE.
 #' @param scale logical indicating if it is to scale
 #' the mnodel. See detais.
+#' @param debug integer, default is zero, indicating the verbose level.
+#' Will be used as logical by INLA.
+#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
+#' be used the shared object pre-compiled by INLA.
+#' This is not considered if 'libpath' is provided.
+#' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
 #' Following Sørbie & Rue (2014), if scale = TRUE
 #' the model is scaled so that
@@ -36,16 +44,19 @@ cgeneric_generic0 <-
            constr = TRUE,
            scale = TRUE,
            debug = FALSE,
-           useINLAprecomp = !TRUE) {
+           useINLAprecomp = TRUE,
+           libpath = NULL) {
 
-    if (useINLAprecomp) {
-      libpath <- INLA::inla.external.lib("graphpcor")
-    } else {
-      libpath <- system.file("libs", package = "graphpcor")
-      if (Sys.info()["sysname"] == "Windows") {
-        libpath <- file.path(libpath, "graphpcor.dll")
+    if(is.null(libpath)) {
+      if (useINLAprecomp) {
+        libpath <- INLA::inla.external.lib("graphpcor")
       } else {
-        libpath <- file.path(libpath, "graphpcor.so")
+        libpath <- system.file("libs", package = "graphpcor")
+        if (Sys.info()["sysname"] == "Windows") {
+          libpath <- file.path(libpath, "graphpcor.dll")
+        } else {
+          libpath <- file.path(libpath, "graphpcor.so")
+        }
       }
     }
 
@@ -143,7 +154,7 @@ cgeneric_iid <-
            constr = FALSE,
            scale = TRUE,
            debug = FALSE,
-           useINLAprecomp = !TRUE) {
+           useINLAprecomp = TRUE) {
     cgeneric_generic0(
       R = Diagonal(n = n,
                    x = rep(1, n)),

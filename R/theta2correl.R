@@ -23,8 +23,6 @@
 #'   <doi 10.1093/imaman/dpl010>
 #' @return a correlation matrix
 #' @export
-#' @examples
-#' theta2correl(rnorm(4*3/2))
 theta2correl <- function(theta, fromR = TRUE) {
   tcrossprod(theta2gamma2L(theta, fromR = fromR))
 }
@@ -73,15 +71,6 @@ theta2gamma2L <- function(theta, fromR = TRUE) {
 #' A Principled, Practical Approach to Constructing Priors.
 #'  Statist. Sci. 32(1): 1-28 (February 2017).
 #'  <doi: 10.1214/16-STS576>
-#' @examples
-#' rcorrel(2)
-#' rcorrel(3)
-#' rcorrel(4)
-#'
-#' R <- rcorrel(5)
-#' attr(R, 'determinant')
-#' attr(R, 'kld')
-#' sqrt(-log(attr(R, 'determinant')))
 #' @export
 rcorrel <- function(p, lambda = NA) {
   stopifnot(p>1)

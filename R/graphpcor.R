@@ -51,9 +51,8 @@ graphpcor.formula <- function(...) {
 #' @describeIn graphpcor
 #' Build a `graphpcor` from a matrix
 #' @export
-graphpcor.matrix <- function(x) {
-  #  if(inherits(list(...)[[1]], "matrix")) {
-  #    x <- list(...)[[1]]
+graphpcor.matrix <- function(...) {
+  x <- list(...)[[1]]
   stopifnot(all.equal(x, t(x)))
   ne <- c(nrow(x), NA)
   iz <- is.zero(x)
@@ -199,6 +198,7 @@ Laplacian.matrix <- function(graph) {
 }
 #' @describeIn graphpcor
 #' The Laplacian method for `graphpcor`
+#' @param graph graphpcor object, see [`graphpcor`].
 #' @export
 Laplacian.graphpcor <- function(graph) {
   ne <- dim(graph)
@@ -272,16 +272,16 @@ setMethod(
 #' @describeIn graphpcor
 #' The precision method for 'graphpcor'
 #' @export
-prec.graphpcor <- function(x, ...) {
-  ne <- dim(x)
-  Q <- Laplacian(x)
+prec.graphpcor <- function(model, ...) {
+  ne <- dim(model)
+  Q <- Laplacian(model)
   stopifnot(ne[1]==nrow(Q))
   stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
   mc <- list(...)
   nargs <- names(mc)
   if(any(nargs == "theta")) {
     return(chol2inv(chol(
-      vcov(x, ...))
+      vcov(model, ...))
     ))
   } else {
     warning("missing `theta`, returning Laplacian!")

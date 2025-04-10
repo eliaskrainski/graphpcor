@@ -74,8 +74,8 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 	assert(N == Rgraph->nrow);
 	assert(N == Rgraph->ncol);
 	int M = Rgraph->n;
-	if (debug > 0) {
-		fprintf(stderr, "M = %d\n", M);
+	if (debug > 99) {
+		printf("M = %d\n", M);
 	}
 
 	switch (cmd) {

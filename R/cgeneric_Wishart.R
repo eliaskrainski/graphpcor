@@ -3,11 +3,12 @@
 #' @param n the size of the precision matrix
 #' @param dof degrees of freedom model parameter
 #' @param R lower triangle of the scale matrix parameter
-#' @param debug logical indicating if it is to debug.
-#' @param useINLAprecomp logical indicating if is to be used
-#' shared object pre-compiled by INLA. It is not considered if
-#' libpath is provided.
-#' @param libpath string to the shared object. Default is NULL.
+#' @param debug integer, default is zero, indicating the verbose level.
+#' Will be used as logical by INLA.
+#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
+#' be used the shared object pre-compiled by INLA.
+#' This is not considered if 'libpath' is provided.
+#' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
 #' For a random \eqn{p\times p} precision matrix \eqn{Q},
 #' given the parameters \eqn{d} and \eqn{R},
@@ -22,8 +23,10 @@ cgeneric_Wishart <-
            dof,
            R,
            debug = FALSE,
-           useINLAprecomp = !TRUE) {
+           useINLAprecomp = TRUE,
+           libpath = NULL) {
 
+    if(is.null(libpath)) {
       if (useINLAprecomp) {
         libpath <- INLA::inla.external.lib("graphpcor")
       } else {
@@ -34,6 +37,7 @@ cgeneric_Wishart <-
           libpath <- file.path(libpath, "graphpcor.so")
         }
       }
+    }
     stopifnot(file.exists(libpath))
 
     stopifnot(n>=1)

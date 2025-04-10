@@ -10,7 +10,8 @@ cgeneric_pc_prec_correl(
   lambda,
   theta.base,
   debug = FALSE,
-  useINLAprecomp = !TRUE
+  useINLAprecomp = TRUE,
+  libpath = NULL
 )
 }
 \arguments{
@@ -21,13 +22,14 @@ cgeneric_pc_prec_correl(
 \item{theta.base}{numeric vector with the model parameters
 at the base model}
 
-\item{debug}{logical indicating if it is to debug.}
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
 
-\item{useINLAprecomp}{logical indicating if is to be used
-shared object pre-compiled by INLA. It is not considered if
-libpath is provided.}
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
 
-\item{libpath}{string to the shared object. Default is NULL.}
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
 a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.

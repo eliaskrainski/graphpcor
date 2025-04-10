@@ -208,11 +208,11 @@ dim.treepcor <- function(x, ...) {
 #' @rdname treepcor
 #' @export
 setMethod(
-  "drop",
+  "drop1",
   "treepcor",
-  function(x) {
-    stopifnot((m <- length(x))>1)
-    trm0 <- attr(x, "relationship")
+  function(object) {
+    stopifnot((m <- length(object))>1)
+    trm0 <- attr(object, "relationship")
     stopifnot(ncol(trm0) == m)
     ilast <- which(rownames(trm0) == (colnames(trm0)[m]))
     iplast <- which(!is.zero(trm0[ilast, ]))
@@ -351,11 +351,10 @@ setMethod(
 )
 #' @rdname treepcor
 #' @export
-prec.treepcor <- function(x, ...) {
-  d <- dim(x)
-  Q <- matrix()
-  trm <- attr(x, "relationship")
-  edgl <- edges(x)
+prec.treepcor <- function(model, ...) {
+  d <- dim(model)
+  trm <- attr(model, "relationship")
+  edgl <- edges(model)
   q.el <- etreepcor2precision(edgl[1:d[2]])
   mc <- list(...)
   nargs <- names(mc)
@@ -369,7 +368,6 @@ prec.treepcor <- function(x, ...) {
     Q[q.el$iq1th] <- -1.0 * q.el$sth *
       exp(-mc$theta[q.el$i1th])
   }
-  d <- dim(x)
   rownames(Q) <- colnames(Q) <-
     names(edgl)[c(d[2] + 1:d[1], 1:d[2])]
   return(Q)

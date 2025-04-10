@@ -17,7 +17,8 @@ cgeneric_generic0(
   constr = TRUE,
   scale = TRUE,
   debug = FALSE,
-  useINLAprecomp = !TRUE
+  useINLAprecomp = TRUE,
+  libpath = NULL
 )
 
 cgeneric_iid(
@@ -26,7 +27,7 @@ cgeneric_iid(
   constr = FALSE,
   scale = TRUE,
   debug = FALSE,
-  useINLAprecomp = !TRUE
+  useINLAprecomp = TRUE
 )
 }
 \arguments{
@@ -38,8 +39,20 @@ cgeneric_iid(
 where \eqn{\sigma} can be interpreted as marginal standard
 deviation of the process if scale = TRUE. See details.}
 
+\item{constr}{logical indicating if it is to add a
+sum-to-zero constraint. Default is TRUE.}
+
 \item{scale}{logical indicating if it is to scale
 the mnodel. See detais.}
+
+\item{debug}{integer, default is zero, indicating the verbose level.
+Will be used as logical by INLA.}
+
+\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
+be used the shared object pre-compiled by INLA.
+This is not considered if 'libpath' is provided.}
+
+\item{libpath}{string, default is NULL, with the path to the shared object.}
 
 \item{n}{size of the model}
 }

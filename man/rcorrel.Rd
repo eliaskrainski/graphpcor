@@ -18,16 +18,6 @@ Simpson et. al. (2017), for details.}
 \description{
 Drawn a random sample correlation matrix
 }
-\examples{
-rcorrel(2)
-rcorrel(3)
-rcorrel(4)
-
-R <- rcorrel(5)
-attr(R, 'determinant')
-attr(R, 'kld')
-sqrt(-log(attr(R, 'determinant')))
-}
 \references{
 Simspon et. al. (2017).
 Penalising Model Component Complexity:

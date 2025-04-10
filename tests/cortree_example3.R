@@ -11,7 +11,7 @@ g
 
 summary(g)
 
-drop(g)
+drop1(g)
 
 plot(g, lwd = 3)
 
@@ -65,13 +65,13 @@ cfit <- inla(
     data = dataf,
     control.mode = list(
         theta = rep(0, d[1] + d[2])
-    ), 
+    ),
     control.inla = list(int.strategy = "eb")
     )
 
 cfit$cpu.used
 
-rbind(true = c(theta.c, theta.p), 
+rbind(true = c(theta.c, theta.p),
       cg = cfit$mode$theta)
 
 plot(cfit, F, F, F, F, F, F, plot.opt.trace = TRUE)

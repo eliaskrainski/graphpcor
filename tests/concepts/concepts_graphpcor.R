@@ -94,6 +94,7 @@ vcov(g, theta = c(-5,-5,-5,5))
 
 ## build the cgeneric model
 ## Note: here 'model' is a 'graphpcor'
+library(INLA)
 cmodel <- cgeneric(
     model = g, ## a `graphpcor` in model argument
     lambda = 1,

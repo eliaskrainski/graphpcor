@@ -21,11 +21,12 @@ dLKJ <- function(R, eta, log = FALSE) {
 #' LKG prior for the correlation matrix.
 #' @param n integer to define the size of the matrix
 #' @param eta numeric greater than 1, the parameter
-#' @param debug logical indicating if it is to debug.
-#' @param useINLAprecomp logical indicating if is to be used
-#' shared object pre-compiled by INLA. It is not considered if
-#' libpath is provided.
-#' @param libpath string to the shared object. Default is NULL.
+#' @param debug integer, default is zero, indicating the verbose level.
+#' Will be used as logical by INLA.
+#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
+#' be used the shared object pre-compiled by INLA.
+#' This is not considered if 'libpath' is provided.
+#' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
 #' The parametrization uses the
 #' hypershere decomposition, as proposed in
@@ -52,8 +53,10 @@ cgeneric_LKJ <-
   function(n,
            eta,
            debug = FALSE,
-           useINLAprecomp = !TRUE) {
+           useINLAprecomp = TRUE,
+           libpath = NULL) {
 
+    if(is.null(libpath)) {
       if (useINLAprecomp) {
         libpath <- INLA::inla.external.lib("graphpcor")
       } else {
@@ -64,6 +67,7 @@ cgeneric_LKJ <-
           libpath <- file.path(libpath, "graphpcor.so")
         }
       }
+    }
 
     stopifnot(n>1)
     stopifnot(eta>0)

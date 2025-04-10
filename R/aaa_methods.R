@@ -1,22 +1,22 @@
 #' The `graphpcor` method
+#' @param ... either a list of formulae or a matrix
 #' @export
 graphpcor <- function(...) {
   UseMethod("graphpcor")
 }
 #' The `prec` method
 #' @rdname prec-methods
-#' @param x object or model
-#' @param ... additional arguments passed on
+#' @param model a model object
 #' @export
-prec <- function(object, ...) {
+prec <- function(model, ...) {
   UseMethod("prec")
 }
 #' The default precision method
 #' computes the inverse of the variance
 #' @rdname prec-methods
 #' @export
-prec.default <- function(object, ...) {
-  v <- vcov(object, ...)
+prec.default <- function(model, ...) {
+  v <- vcov(model, ...)
   return(
     forwardsolve(
       backsolve(
@@ -28,14 +28,14 @@ prec.default <- function(object, ...) {
 #' @describeIn prec-methods
 #' Define the prec method for an inla output object
 #' @export
-prec.inla <- function(object, ...) {
-  if(is.null(object$misc$config$config)) {
+prec.inla <- function(model, ...) {
+  if(is.null(model$misc$config$config)) {
     warning("inla.rerun() with config = TRUE in control.compute.")
-    object$.args$control.compute$config <- TRUE
-    object <- do.call("inla", args = object$.args)
+    model$.args$control.compute$config <- TRUE
+    model <- do.call("inla", args = model$.args)
   }
   Qu <- INLA::inla.as.sparse(
-    object$misc$config$config[[1]]$Qprior
+    model$misc$config$config[[1]]$Qprior
   )
   #  ii <- which(Qu@i < Qu@j)
   # if(length(ii)>0) {
@@ -57,6 +57,8 @@ prec.inla <- function(object, ...) {
   return(Q)
 }
 #' Define the is.zero method
+#' @param x an R object
+#' @param ... additional arguments
 #' @export
 is.zero <- function(x, ...) {
   UseMethod("is.zero")
@@ -88,6 +90,7 @@ is.zero.matrix <- function(x, ...) {
 }
 #' The Laplacian of a graph
 #' @rdname Laplacian
+#' @param graph object defining a graph
 #' @description
 #' The (symmetric) Laplacian of a graph is a
 #' square matrix with dimention
@@ -106,5 +109,5 @@ Laplacian <- function(graph) {
 #' @rdname Laplacian
 #' @export
 Laplacian.default <- function(graph) {
-  stop("No Laplacian for this object!")
+  stop("No Laplacian for this graph!")
 }

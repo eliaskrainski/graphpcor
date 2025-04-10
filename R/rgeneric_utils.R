@@ -40,14 +40,19 @@ rgeneric.default <- function(model,
   class(rmodel$f$rgeneric) <- "inla.rgeneric"
   return(rmodel)
 }
+#' @describeIn rgeneric
 #' The graph method for 'inla.rgeneric'
+#' @param model a `inla.rgeneric` model object
+#' @param ... additional arguments
 #' @export
-graph.inla.rgeneric <- function(model) {
-  return(INLA::inla.rgeneric.q(
-      rmodel = model,
-      cmd = "graph"
-  ))
+graph.inla.rgeneric <- function(model, ...) {
+  return(do.call(
+    what = "inla.rgeneric.q",
+    args = list(rmodel = model,
+                cmd = "graph")
+    ))
 }
+#' @describeIn rgeneric
 #' The precision method for an `inla.rgeneric` object.
 #' @param ... additional parameter such as 'theta'
 #' If 'theta' is not supplied, initial will be taken.
@@ -62,19 +67,24 @@ prec.inla.rgeneric <- function(model, ...) {
     theta <- initial(model)
     cat(theta, '\n')
   }
-  INLA::inla.rgeneric.q(
-    rmodel = model,
-    cmd = "Q",
-    theta = theta)
+  return(do.call(
+    what = "inla.rgeneric.q",
+    args = list(rmodel = model,
+                cmd = "Q",
+                theta = theta)
+  ))
 }
+#' @describeIn rgeneric
 #' The initial method for 'inla.rgeneric'
 #' @export
 initial.inla.rgeneric <- function(model) {
-  INLA::inla.rgeneric.q(
-    rmodel = model,
-    cmd = "initial")
+  return(do.call(
+    what = "inla.rgeneric.q",
+    args = list(rmodel = model,
+                cmd = "initial")
+  ))
 }
-
+#' @describeIn rgeneric
 #' The mu method for 'inla.rgeneric'
 #' @export
 mu.inla.rgeneric <- function(model, theta) {
@@ -84,18 +94,22 @@ mu.inla.rgeneric <- function(model, theta) {
       "Using the default initial theta as:",
       format(theta)))
   }
-  INLA::inla.rgeneric.q(
-    rmodel = model,
-    cmd = "mu",
-    theta = theta)
+  return(do.call(
+    what = "inla.rgeneric.q",
+    args = list(rmodel = model,
+                cmd = "mu",
+                theta = theta)
+  ))
 }
-
+#' @describeIn rgeneric
 #' The prior metho for 'inla.rgeneric'
 #' @param theta the parameter.
 #' @export
 prior.inla.rgeneric <- function(model, theta) {
-  return(INLA::inla.rgeneric.q(
-    rmodel = model,
-    cmd = "log.prior",
-    theta = theta))
+  return(do.call(
+    what = "inla.rgeneric.q",
+    args = list(rmodel = model,
+                cmd = "log.prior",
+                theta = theta)
+  ))
 }

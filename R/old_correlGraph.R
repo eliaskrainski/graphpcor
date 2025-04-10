@@ -186,7 +186,7 @@ GraphPrior <- function(S, lat, lambda, SP, Tdist){
 #' @import Rgraphviz
 #' @examples
 #'  graph.def <- list(p1 ~ c1 + c2)
-#'  graph.plot <- GraphPlot(graph.def, base = 0)
+#'  graph.plot <- graphpcor:::GraphPlot(graph.def, base = 0)
 #'  plot(graph.plot$gr, nodeAttrs = graph.plot$nAttrs)
 GraphPlot <- function(S, base=0, fontsize=c(14, 14), width=c(0.75, 0.75), height=c(0.5,0.5)){
   S <- S[order(sapply(S, function(x) strsplit(as.character(x), split="~")[[2]]))]

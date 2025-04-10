@@ -12,6 +12,9 @@ Laplacian(graph)
 
 \method{Laplacian}{matrix}(graph)
 }
+\arguments{
+\item{graph}{object defining a graph}
+}
 \description{
 The (symmetric) Laplacian of a graph is a
 square matrix with dimention
