@@ -118,5 +118,5 @@ segments(5:10-0.1, vars.kd[5:10, 3], 5:10-0.1, vars.kd[5:10, 5])
 points(5:10+0.1,gsummary[5:10, 1], col = 2, pch = 8)
 segments(5:10+0.1, gsummary[5:10, 3], 5:10+0.1, gsummary[5:10, 4], col = 2)
 abline(h=0)
-
-
+legend("topleft", c("IIDKD", "GraphPCor"), bty = "n",
+       lty = 1, col = 1:2, pch = c(19,8))
