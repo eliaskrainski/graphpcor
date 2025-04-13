@@ -20,7 +20,7 @@ library(graphpcor)
 
 
 This material detail the model properties of the 
-graphical approach to model correlations proposed in @dtg2024model.
+graphical approach to model correlations proposed in @treepcor2024model.
 We first formalize the specific kind of graph used
 to define the model and provides an intuitive visualization.
 We also formalize simple rules for writing the joint distribution
@@ -36,16 +36,14 @@ directed edges linking them.
 Because the edges are directed, there is no closed loop on it.
 A tree is a graph where there is only one possible path 
 between a pair of nodes.
-We consider such two definitions to define a 
-directed tree graph - DTG. 
-A DTG can be simple view as a tree with directed edges.
+Furthermore, the edges of a tree are directed edges.
 This also impose a hierarchy on the nodes.
 
-We use the DTG to represent variables and the
+We consider a particular tree definition 
+represent two kind of variables and the
 directed edges (arrows) to represent conditional distributions.
-In addition, the nodes of the DTG are classified as
-parent or children.
-The nodes classified as children are leafs of the DTG, 
+We classify the nodes as parent or children.
+The nodes classified as children are leafs of the tree, 
 which are nodes with an ancestor (parent) 
 but with no children.
 The nodes classified as parent will always have children nodes,
@@ -62,22 +60,27 @@ which is the root of the tree.
 We have some examples in Figure 1 bellow.
 
 ```{r graphs, echo = FALSE, fig.width = 9, fig.height = 4, out.width="79%", fig.align = 'center', fig.cap = "Graphs representing different models. A model with one parent, (A), a model with two parents (B), and two different models with three parents (C) and (D)."}
-g1 <- dtg(p1 ~ c1 + c2 + c3)
-g2 <- dtg(p1 ~ p2 + c1 + c2, p2 ~ c3 + c4)
-g3a <- dtg(p1 ~ p2 + p3 + c1 + c2, p2 ~ c3 + c4, p3 ~ c5 + c6)
-g3b <- dtg(p1 ~ p2 + c1 + c2, p2 ~ p3 + c3 + c4, p3 ~ c5 + c6)
+t1 <- treepcor(p1 ~ c1 + c2 + c3)
+t2 <- treepcor(p1 ~ p2 + c1 + c2, 
+               p2 ~ c3 + c4)
+t3a <- treepcor(p1 ~ p2 + p3 + c1 + c2, 
+                p2 ~ c3 + c4, 
+                p3 ~ c5 + c6)
+t3b <- treepcor(p1 ~ p2 + c1 + c2, 
+                p2 ~ p3 + c3 + c4, 
+                p3 ~ c5 + c6)
 par(mfrow = c(2, 2), mar = c(0, 0, 0, 0))
-plot(g1)
+plot(t1)
 legend("topleft", "(A)", bty = "n")
-plot(g2)
+plot(t2)
 legend("topleft", "(B)", bty = "n")
-plot(g3a)
+plot(t3a)
 legend("topleft", "(C)", bty = "n")
-plot(g3b)
+plot(t3b)
 legend("topleft", "(D)", bty = "n")
 ```
 
-The proposed model is based on a DTG and induces a
+The tree based model induces a
 non-zero covariance between children as long as there 
 are arrows linking them.
 The strength of the correlation depends on how many parents, 
@@ -105,11 +108,11 @@ children of $p_1$ to be smaller than to a children of $p_2$, e.g.
 
 ## Model definition
 
-We now define a set of rules to propose a model from a DTG.
+We now define a set of rules to propose a model.
 We assume a distribution for the main parent, $p_1$,
 and conditional distributions for each of the
 remaining $k-1$ parents and each of the $m$ children.
-The arrows in the DTG represent each of these conditional distributions.
+The arrows represent each of these conditional distributions.
 Since we assume Gaussian distributions, 
 we just need to define the (conditional) mean and variance.
 
@@ -358,18 +361,19 @@ We now consider more variables and use two models, as shown in Figure 2 bellow.
 The difference in on who is the parent to $p_4$. 
 We will use it to further illustrate the **Property 2a**.
 
-```{r g4, echo = FALSE,  fig.width = 9, fig.height = 4, out.width="69%", fig.align = 'center', fig.cap = "Two different models for the same number of children and parents."}
-g4a <- dtg(p1 ~ p2 + p3 + c1 + c2, 
-           p2 ~ p4 + c3 + c4, 
-           p3 ~ p5 + c5 + c6, 
-           p4 ~ c7 + c8, p5 ~ c9 + c10)
-g4b <- dtg(p1 ~ p2 + p3 + c1 + c2, 
-           p2 ~ c3 + c4, p3 ~ p4 + p5 + c5 + c6, 
-           p4 ~ c7 + c8, p5 ~ c9 + c10)
+```{r t4, echo = FALSE,  fig.width = 9, fig.height = 4, out.width="69%", fig.align = 'center', fig.cap = "Two different models for the same number of children and parents."}
+t4a <- treepcor(
+  p1 ~ p2 + p3 + c1 + c2, 
+  p2 ~ p4 + c3 + c4, 
+  p3 ~ p5 + c5 + c6, 
+  p4 ~ c7 + c8, p5 ~ c9 + c10)
+t4b <- treepcor(p1 ~ p2 + p3 + c1 + c2, 
+  p2 ~ c3 + c4, p3 ~ p4 + p5 + c5 + c6, 
+  p4 ~ c7 + c8, p5 ~ c9 + c10)
 par(mfrow = c(1, 2), mar = c(0, 0, 0, 0))
-plot(g4a)
+plot(t4a)
 legend("topleft", "(E)", bty = "n")
-plot(g4b)
+plot(t4b)
 legend("topleft", "(F)", bty = "n")
 ```
 
