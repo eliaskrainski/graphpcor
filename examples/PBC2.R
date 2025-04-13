@@ -100,7 +100,7 @@ round(cbind(vars.kd[, 1:2], gsummary[, 1:2]), 4)
 ijc <- list(c(1,2), c(1,3), c(1,4), c(2,3), c(2,4), c(3,4))
 
 par(mfrow = c(1, 2), mar = c(4,4,1,1), mgp = c(3,1.5,0), las = 1, bty = 'n')
-plot(1:4-0.1, vars.kd[1:4, 1], pch = 19, axes = FALSE,
+plot(1:4-0.1, vars.kd[1:4, 1], pch = 19, axes = FALSE, log = "y",
      xlim = c(0.5, 4.5), ylim = range(vars.kd[1:4, 3:5]),
      xlab = '', ylab = expression(sigma))
 axis(2)
