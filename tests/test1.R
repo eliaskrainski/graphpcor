@@ -51,7 +51,6 @@ gmodel <- cgeneric(
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.05, nc),
     lambda = 2,
-    iprior = 3,
     useINLAprecomp = FALSE,
     debug =  0 ## bigger debug prints llllooootttttsss of details
 )
@@ -72,7 +71,7 @@ ff <- y ~ 0 +
 cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 
 fit <- inla(
-    formula = ff, 
+    formula = ff,
     data = dataf,
     control.family = list(cfam)
 )

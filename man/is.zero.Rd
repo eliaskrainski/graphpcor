@@ -2,9 +2,15 @@
 % Please edit documentation in R/aaa_methods.R
 \name{is.zero}
 \alias{is.zero}
+\alias{is.zero.default}
+\alias{is.zero.matrix}
 \title{Define the is.zero method}
 \usage{
 is.zero(x, ...)
+
+\method{is.zero}{default}(x, ...)
+
+\method{is.zero}{matrix}(x, ...)
 }
 \arguments{
 \item{x}{an R object}
@@ -14,3 +20,10 @@ is.zero(x, ...)
 \description{
 Define the is.zero method
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{is.zero(default)}: The is.zero.default definition
+
+\item \code{is.zero(matrix)}: The is.zero.matrix definition
+
+}}

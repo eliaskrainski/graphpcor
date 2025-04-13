@@ -1,16 +1,17 @@
 #' @describeIn old_corGraph
 #' R generic implementation of the graph model.
-#' @param cmd the name of the object to return.
-#' @param theta internal parameters.
+#' @param cmd an string to specify which model element to get
+#' @param theta numeric vector with the model parameters.
 #' @description
 #' An argument 'args' should be provided as a named list with
 #' \itemize{
 #'  \item SP: output from the [GraphDens()] function.
 #'  \item GraphPrior: function to compute the prior.
 #'  \item S, lambda, Tdist: required to [GraphPrior()]
-#' }
+#'  }
+#' @importFrom stats dgamma
 #' @return an `inla.rgeneric`
-rgeneric_CorGraph <- function(cmd = c("graph", "Q", "mu", "initial",
+old_rgeneric_CorGraph <- function(cmd = c("graph", "Q", "mu", "initial",
                                     "log.norm.const", "log.prior", "quit"),
                                theta = NULL)
 {

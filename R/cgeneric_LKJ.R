@@ -45,7 +45,7 @@ dLKJ <- function(R, eta, log = FALSE) {
 #' @references
 #' Rapisarda, Brigo and Mercurio (2007).
 #'   Parameterizing correlations: a geometric interpretation.
-#'   IMA Journal of Management Mathematics (2007) 18, 55−73.
+#'   IMA Journal of Management Mathematics (2007) 18, 55-73.
 #'   <doi 10.1093/imaman/dpl010>
 #' @return a [cgeneric()] object to be used in the f() formula term in INLA.
 #'

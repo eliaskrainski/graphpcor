@@ -1,10 +1,11 @@
 #' @describeIn graphpcor
-#' The `graphpcor` is a graphpcor where each node represents
-#' a variable and each edge indicates a conditional distribution.
+#' A `graphpcor` is a graph where a node represents
+#' a variable and an edge a conditional distribution.
 #' @param ... list of formula used to define the edges.
 #' @details
 #' The terms in the formula do represent the nodes.
 #' The `~` is taken as link.
+#' @importFrom stats as.formula
 #' @export
 #' @examples
 #' g1 <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
@@ -50,6 +51,7 @@ graphpcor.formula <- function(...) {
 }
 #' @describeIn graphpcor
 #' Build a `graphpcor` from a matrix
+#' @importFrom stats as.formula
 #' @export
 graphpcor.matrix <- function(...) {
   x <- list(...)[[1]]
@@ -71,6 +73,7 @@ graphpcor.matrix <- function(...) {
 }
 #' @describeIn graphpcor
 #' The print method for `graphpcor`
+#' @param x graphpcor
 #' @export
 print.graphpcor <- function(x, ...) {
   cat("A graphpcor for",
@@ -79,18 +82,23 @@ print.graphpcor <- function(x, ...) {
 }
 #' @describeIn graphpcor
 #' The summary method for `graphpcor`
+#' @param object graphpcor
 #' @export
 summary.graphpcor <- function(object, ...) {
   attr(object, "relationship")
 }
 #' @describeIn graphpcor
 #' The dim method for `graphpcor`
+#' @param x graphpcor
 #' @export
 dim.graphpcor <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
     edges=sum(attr(x, 'relationship')))
 }
-#' @rdname graphpcor
+#' @describeIn graphpcor
+#' Extract the edges of a `graphcor` to be used for plot
+#' @param object graphpcor object
+#' @param which not used
 #' @export
 setMethod(
   "edges",
@@ -119,6 +127,9 @@ setMethod(
 )
 #' @describeIn graphpcor
 #' The plot method for `graphpcor`
+#' @param x graphpcor
+#' @param y graphpcor
+#' @importFrom methods getMethod
 #' @export
 setMethod(
   "plot",
@@ -185,6 +196,7 @@ setMethod(
 )
 #' @describeIn Laplacian
 #' The Laplacian of a matrix
+#' @param graph an object that inherits a matrix class
 #' @export
 Laplacian.matrix <- function(graph) {
   if(inherits(graph, "matrix")) {
@@ -197,7 +209,7 @@ Laplacian.matrix <- function(graph) {
   }
 }
 #' @describeIn graphpcor
-#' The Laplacian method for `graphpcor`
+#' The Laplacian method for a `graphpcor`
 #' @param graph graphpcor object, see [`graphpcor`].
 #' @export
 Laplacian.graphpcor <- function(graph) {
@@ -219,6 +231,7 @@ Laplacian.graphpcor <- function(graph) {
 }
 #' @describeIn graphpcor
 #' Build the unite diagonal lower triangle matrix
+#' @param x a `graphpcor` object
 setMethod(
   "chol",
   "graphpcor",
@@ -226,7 +239,7 @@ setMethod(
     ne <- dim(x)
     G <- Laplacian(x)
     idx <- which(lower.tri(G) & (!is.zero(G)))
-    L <- diag(1:ne[1])
+    L <- diag(x = 1:ne[1], nrow = ne[1], ncol = ne[1])
     stopifnot(length(idx)==ne[2])
     args <- list(...)
     stopifnot(length(args$theta)==ne[2])
@@ -240,7 +253,8 @@ setMethod(
   }
 )
 #' @describeIn graphpcor
-#' The covariance method for a `graphpcor` object.
+#' The `vcov` method for a `graphpcor`
+#' @importFrom methods getMethod
 #' @export
 setMethod(
   "vcov",
@@ -271,6 +285,7 @@ setMethod(
 )
 #' @describeIn graphpcor
 #' The precision method for 'graphpcor'
+#' @param model graphpcor model object
 #' @export
 prec.graphpcor <- function(model, ...) {
   ne <- dim(model)
@@ -311,6 +326,7 @@ fiL <- function(L, lfi) {
   }
   return(L)
 }
+#' @describeIn graphpcor
 #' Evaluate the hessian of the KLD for a `graphpcor`
 #' correlation model around a base model.
 #' @param graphpcor model definition of a graphical model.
@@ -330,8 +346,11 @@ fiL <- function(L, lfi) {
 #' ## alternatively
 #' C0 <- vcov(g, theta = rep(c(0,-1), ne))
 #' all.equal(hessian(g, C0), gH0)
+#' @importFrom stats cov2cor
 #' @export
-hessian.graphpcor <- function(graphpcor, base, decomposition = c("eigen", "svd", "chol"), ...) {
+hessian.graphpcor <- function(graphpcor, base,
+                              decomposition = c("eigen", "svd", "chol"),
+                              ...) {
   decomposition <- match.arg(decomposition)
   Q0 <- Laplacian(graphpcor)
   nEdges <- sum((!is.zero(Q0)) & lower.tri(Q0))
@@ -383,7 +402,7 @@ hessian.graphpcor <- function(graphpcor, base, decomposition = c("eigen", "svd",
     Hd <- chol(H, pivot = TRUE)
     h.5 <- matrix(Hd[, order(attr(Hd, "pivot")), ], nrow(H))
     hn <- chol2inv(chol(H))
-    hn.5 <- chol(Hn, pivot = TRUE)
+    hn.5 <- chol(hn, pivot = TRUE)
     hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
   }
   stopifnot(all.equal(H, tcrossprod(h.5)))

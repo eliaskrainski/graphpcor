@@ -1,7 +1,9 @@
-#' Set class for objects to model correlation matrices over tree
+#' Set a tree whose nodes represent the two kind of variables:
+#' children and parent.
 setClass("treepcor")
 
-#' Set class for objects to model correlation matrices
+#' Set a graph whose nodes and edges represent variables and
+#' conditional distributions, respectively.
 setClass("graphpcor")
 
 #' `inla.rgeneric` class, short `rgeneric`,

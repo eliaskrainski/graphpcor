@@ -4,7 +4,7 @@
 #' a square matrix (used as a graph),
 #' creates an `inla.cgeneric` (see [cgeneric()])
 #' to implement the Penalized Complexity prior using the
-#' Kullback–Leibler divergence - KLD from a base graphpcor.
+#' Kullback-Leibler divergence - KLD from a base graphpcor.
 #' @param graph  a `graphpcor` (see [graphpcor()]) or
 #' a square matrix (to be used as a graph)
 #' to define the precision structure of the model.
@@ -168,7 +168,7 @@ cgeneric_graphpcor <-
     if(missing(low.params.fixed)) {
       low.params.fixed <- rep(NA, nEdges)
     } else {
-      stopfinot(length(low.params.fixed)==nEdges)
+      stopifnot(length(low.params.fixed)==nEdges)
     }
     low.params.fixed[params.id[n+1:nEdges]-n]
     if(any(!is.na(low.params.fixed)))  stop("WORK IN PROGRESS!")

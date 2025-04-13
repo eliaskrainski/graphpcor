@@ -25,8 +25,8 @@
 #' \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
 #'  \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
 #' @references
-#' Daniel Simpson, H{\\aa}vard Rue, Andrea Riebler, Thiago G.
-#' Martins and Sigrunn H. S{\\o{}}rbye (2017).
+#' Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
+#' Martins and Sigrunn H. S\\o rbye (2017).
 #' Penalising Model Component Complexity:
 #' A Principled, Practical Approach to Constructing Priors
 #' Statistical Science 2017, Vol. 32, No. 1, 1–28.
@@ -34,7 +34,7 @@
 #'
 #' Rapisarda, Brigo and Mercurio (2007).
 #'   Parameterizing correlations: a geometric interpretation.
-#'   IMA Journal of Management Mathematics (2007) 18, 55−73.
+#'   IMA Journal of Management Mathematics (2007) 18, 55-73.
 #'   <doi 10.1093/imaman/dpl010>
 #'
 #' @return a [cgeneric()] object to be used in the f() formula term in INLA.

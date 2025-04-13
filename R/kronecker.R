@@ -1,7 +1,12 @@
-#' Functions to implement Kronecker (product) models
-#' as methods for kronecker()
+#' @describeIn cgeneric
+#' Kronecker (product) between two `inla.cgeneric` models as
+#' a method for kronecker()
+#' @param X `inla.cgeneric` or `inla.rgeneric`
+#' @param Y `inla.cgeneric` or `inla.rgeneric`
+#' @param FUN see `kronecker`
+#' @param make.dimnames see `kronecker`
+#' @importFrom utils str
 #' @export
-
 setMethod(
   "kronecker",
   c(X="inla.cgeneric", Y = "inla.cgeneric"),
@@ -257,7 +262,7 @@ setMethod(
           e = rep(c1$e, each = Y$f$n)
         )
       } else {
-        c2 <- m1$f$extraconstr
+        c2 <- Y$f$extraconstr
         ret$f$extraconstr <- list(
           A = rbind(
             kronecker(c1$A, diag(ncol(c2$A))),
@@ -273,7 +278,14 @@ setMethod(
 
   }
 )
-
+#' @describeIn rgeneric
+#' Kronecker (product) between a `inla.cgeneric` model and
+#' a `inla.rgeneric` model as a method for kronecker()
+#' @param X `inla.cgeneric` or `inla.rgeneric`
+#' @param Y `inla.cgeneric` or `inla.rgeneric`
+#' @param FUN see `kronecker`
+#' @param make.dimnames see `kronecker`
+#' @importFrom utils str
 setMethod(
   "kronecker",
   c(X="inla.cgeneric", Y = "inla.rgeneric"),
@@ -372,7 +384,10 @@ setMethod(
 
   }
 )
-
+#' @describeIn rgeneric
+#' Kronecker (product) between a `inla.rgeneric` model and
+#' a `inla.cgeneric` model as a method for kronecker()
+#' @importFrom utils str
 setMethod(
   "kronecker",
   c(X="inla.rgeneric", Y = "inla.cgeneric"),
@@ -469,7 +484,10 @@ setMethod(
 
   }
 )
-
+#' @describeIn rgeneric
+#' Kronecker (product) between a `inla.rgeneric` model and
+#' a `inla.rgeneric` model as a method for kronecker()
+#' @importFrom utils str
 setMethod(
   "kronecker",
   c(X="inla.rgeneric", Y = "inla.rgeneric"),

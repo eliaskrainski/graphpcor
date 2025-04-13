@@ -1,4 +1,5 @@
-#' The `graphpcor` method
+#' @rdname graphpcor
+#' @title The `graphpcor` generic method for [graphpcor-class]
 #' @param ... either a list of formulae or a matrix
 #' @export
 graphpcor <- function(...) {
@@ -7,13 +8,14 @@ graphpcor <- function(...) {
 #' The `prec` method
 #' @rdname prec-methods
 #' @param model a model object
+#' @param ... additional arguments
 #' @export
 prec <- function(model, ...) {
   UseMethod("prec")
 }
+#' @describeIn prec-methods
 #' The default precision method
 #' computes the inverse of the variance
-#' @rdname prec-methods
 #' @export
 prec.default <- function(model, ...) {
   v <- vcov(model, ...)
@@ -63,6 +65,7 @@ prec.inla <- function(model, ...) {
 is.zero <- function(x, ...) {
   UseMethod("is.zero")
 }
+#' @describeIn is.zero
 #' The is.zero.default definition
 #' @export
 is.zero.default <- function(x, ...) {
@@ -75,6 +78,7 @@ is.zero.default <- function(x, ...) {
   }
   return(a < tol)
 }
+#' @describeIn is.zero
 #' The is.zero.matrix definition
 #' @export
 is.zero.matrix <- function(x, ...) {
@@ -105,8 +109,8 @@ is.zero.matrix <- function(x, ...) {
 Laplacian <- function(graph) {
   UseMethod("Laplacian")
 }
+#' @describeIn Laplacian
 #' The Laplacian default method (none)
-#' @rdname Laplacian
 #' @export
 Laplacian.default <- function(graph) {
   stop("No Laplacian for this graph!")

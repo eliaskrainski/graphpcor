@@ -1,2 +1,2 @@
-PKG_LIBS = $(BLAS_LIBS) $(FLIBS) $(LAPACK_LIBS) -lltdl -lm -fopenmp
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -lltdl -lm -fopenmp
 CFLAGS = $(FLAGS) -O3 -mtune=generic -Wall -Wextra -fopenmp -fpic -I.

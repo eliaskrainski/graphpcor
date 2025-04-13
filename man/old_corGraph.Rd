@@ -7,7 +7,7 @@
 \alias{GraphPlot}
 \alias{GraphPlotPrior}
 \alias{ThetaCor}
-\alias{rgeneric_CorGraph}
+\alias{old_rgeneric_CorGraph}
 \title{Function that returns density for a given model structure}
 \usage{
 GraphDens(S)
@@ -36,7 +36,7 @@ GraphPlotPrior(
 
 ThetaCor(SP, lat, COV = FALSE)
 
-rgeneric_CorGraph(
+old_rgeneric_CorGraph(
   cmd = c("graph", "Q", "mu", "initial", "log.norm.const", "log.prior", "quit"),
   theta = NULL
 )
@@ -81,9 +81,9 @@ rgeneric_CorGraph(
 \item{COV}{logical indicating if it is to return the covariance.
 If FALSE the correlation is returned. Default value is FALSE.}
 
-\item{cmd}{the name of the object to return.}
+\item{cmd}{an string to specify which model element to get}
 
-\item{theta}{internal parameters.}
+\item{theta}{numeric vector with the model parameters.}
 }
 \value{
 a named list with objects:
@@ -122,7 +122,7 @@ An argument 'args' should be provided as a named list with
 
 \item \code{ThetaCor()}: Function to map from theta to correlation matrix
 
-\item \code{rgeneric_CorGraph()}: R generic implementation of the graph model.
+\item \code{old_rgeneric_CorGraph()}: R generic implementation of the graph model.
 
 }}
 \examples{

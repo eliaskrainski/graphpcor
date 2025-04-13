@@ -1,5 +1,6 @@
 #' Build the correlation matrix parametrized from the
 #' hypershere decomposition, see details.
+#' @rdname correl
 #' @param theta numeric vector with length equal n(n-1)/2
 #' @param fromR logical indicating if theta is in R.
 #' If FALSE, assumes \eqn{\theta[k] \in (0, pi)}.
@@ -19,13 +20,14 @@
 #' @references
 #' Rapisarda, Brigo and Mercurio (2007).
 #'   Parameterizing correlations: a geometric interpretation.
-#'   IMA Journal of Management Mathematics (2007) 18, 55−73.
+#'   IMA Journal of Management Mathematics (2007) 18, 55-73.
 #'   <doi 10.1093/imaman/dpl010>
 #' @return a correlation matrix
 #' @export
 theta2correl <- function(theta, fromR = TRUE) {
   tcrossprod(theta2gamma2L(theta, fromR = fromR))
 }
+#' @describeIn correl
 #' Build a lower triangular matrix from a parameter vector.
 #' See details.
 #' @return Lower triangular n x n matrix
@@ -59,8 +61,9 @@ theta2gamma2L <- function(theta, fromR = TRUE) {
   attr(b, 'kld') <- sqrt(2 * kld)
   return(b)
 }
+#' @describeIn correl
 #' Drawn a random sample correlation matrix
-#' @param n integer to specify the matrix dimension
+#' @param p integer to specify the matrix dimension
 #' @param lambda is the penalization parameter.
 #' The lambda=0 case means no penalization and
 #' a random correlation matrix will be drawn.

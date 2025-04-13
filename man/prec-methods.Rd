@@ -14,15 +14,17 @@ prec(model, ...)
 }
 \arguments{
 \item{model}{a model object}
+
+\item{...}{additional arguments}
 }
 \description{
 The \code{prec} method
-
-The default precision method
-computes the inverse of the variance
 }
 \section{Functions}{
 \itemize{
+\item \code{prec(default)}: The default precision method
+computes the inverse of the variance
+
 \item \code{prec(inla)}: Define the prec method for an inla output object
 
 }}

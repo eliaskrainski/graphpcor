@@ -41,19 +41,23 @@ precision matrix as inverse of a correlation matrix.
 \details{
 The precision matrix parametrization
 step 1:
-\deqn{     |     1                                    |}
-\deqn{     | \theta[1]      1         SYMMETRIC       |}
-\deqn{Q0 = | \theta[2]   \theat[n]                    |}
-\deqn{     |    :           ...        ...            |}
-\deqn{     | \theta[n-1]    ...      \theta[m]    1   |}
+\deqn{Q0 = \left[
+\begin{array}{ccccc}
+  1 & & & & \\
+  \theta_1 & 1 & & & \\
+  \theta_2 & \theta_n & & & \\
+  \vdots & & \ldots & \ddots & \\
+  \theta_{n-1} & \theta_{2n-3} \ldots & \theta_m & 1
+  \end{array}
+  \right] }
 
-step 2: V = Q0^{-1}
+step 2: \eqn{V = Q0^{-1}}
 
-step 3: S = diag(V)^{1/2}
+step 3: \eqn{S = diag(V)^{1/2}}
 
-step 4: C = SVS
+step 4: \eqn{C = SVS}
 
-step 5: Q = C^{-1}
+step 5: \eqn{Q = C^{-1}}
 
 \deqn{p(Q|\lambda) = p(\theta[1:m] | lambda) =}
 \deqn{    p_C(C(Q)) | Jacobian C(Q) |}
@@ -76,8 +80,8 @@ Result
 \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
 }
 \references{
-Daniel Simpson, H{\\aa}vard Rue, Andrea Riebler, Thiago G.
-Martins and Sigrunn H. S{\\o{}}rbye (2017).
+Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
+Martins and Sigrunn H. S\\o rbye (2017).
 Penalising Model Component Complexity:
 A Principled, Practical Approach to Constructing Priors
 Statistical Science 2017, Vol. 32, No. 1, 1–28.
@@ -85,6 +89,6 @@ Statistical Science 2017, Vol. 32, No. 1, 1–28.
 
 Rapisarda, Brigo and Mercurio (2007).
 Parameterizing correlations: a geometric interpretation.
-IMA Journal of Management Mathematics (2007) 18, 55−73.
+IMA Journal of Management Mathematics (2007) 18, 55-73.
 <doi 10.1093/imaman/dpl010>
 }

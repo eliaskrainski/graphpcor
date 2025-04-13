@@ -2,32 +2,12 @@
 % Please edit documentation in R/treepcor.R
 \name{treepcor}
 \alias{treepcor}
-\alias{print.treepcor}
-\alias{summary.treepcor}
-\alias{dim.treepcor}
-\alias{drop1,treepcor-method}
-\alias{edges,treepcor-method}
-\alias{plot,treepcor,ANY-method}
-\alias{prec.treepcor}
-\title{treepcor
-Set a graph whose nodes represent two kind of
-variables: children and parent.}
+\title{Define a tree used to model correlation matrices
+using a shared latent variables method represented by a tree,
+whose nodes represent the two kind of variables:
+children and parent. See \linkS4class{treepcor}.}
 \usage{
 treepcor(...)
-
-\method{print}{treepcor}(x, ...)
-
-\method{summary}{treepcor}(object, ...)
-
-\method{dim}{treepcor}(x, ...)
-
-\S4method{drop1}{treepcor}(object)
-
-\S4method{edges}{treepcor}(object, which, ...)
-
-\S4method{plot}{treepcor,ANY}(x, y, ...)
-
-\method{prec}{treepcor}(model, ...)
 }
 \arguments{
 \item{...}{a list of formula used as relationship
@@ -36,9 +16,10 @@ Parent nodes shall be in the right side while children
 (or parent with a parent) in the left side.}
 }
 \description{
-treepcor
-Set a graph whose nodes represent two kind of
-variables: children and parent.
+Define a tree used to model correlation matrices
+using a shared latent variables method represented by a tree,
+whose nodes represent the two kind of variables:
+children and parent. See \linkS4class{treepcor}.
 }
 \details{
 The children variables are those with an ancestor (parent),

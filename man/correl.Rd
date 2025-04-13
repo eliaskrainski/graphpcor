@@ -2,19 +2,35 @@
 % Please edit documentation in R/theta2correl.R
 \name{theta2correl}
 \alias{theta2correl}
+\alias{theta2gamma2L}
+\alias{rcorrel}
 \title{Build the correlation matrix parametrized from the
 hypershere decomposition, see details.}
 \usage{
 theta2correl(theta, fromR = TRUE)
+
+theta2gamma2L(theta, fromR = TRUE)
+
+rcorrel(p, lambda = NA)
 }
 \arguments{
 \item{theta}{numeric vector with length equal n(n-1)/2}
 
 \item{fromR}{logical indicating if theta is in R.
 If FALSE, assumes \eqn{\theta[k] \in (0, pi)}.}
+
+\item{p}{integer to specify the matrix dimension}
+
+\item{lambda}{is the penalization parameter.
+The lambda=0 case means no penalization and
+a random correlation matrix will be drawn.
+Please see section 6.2 of the PC-prior paper,
+Simpson et. al. (2017), for details.}
 }
 \value{
 a correlation matrix
+
+Lower triangular n x n matrix
 }
 \description{
 Build the correlation matrix parametrized from the
@@ -34,9 +50,23 @@ Result
 \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
 \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
 }
+\section{Functions}{
+\itemize{
+\item \code{theta2gamma2L()}: Build a lower triangular matrix from a parameter vector.
+See details.
+
+\item \code{rcorrel()}: Drawn a random sample correlation matrix
+
+}}
 \references{
 Rapisarda, Brigo and Mercurio (2007).
 Parameterizing correlations: a geometric interpretation.
-IMA Journal of Management Mathematics (2007) 18, 55−73.
+IMA Journal of Management Mathematics (2007) 18, 55-73.
 <doi 10.1093/imaman/dpl010>
+
+Simspon et. al. (2017).
+Penalising Model Component Complexity:
+A Principled, Practical Approach to Constructing Priors.
+Statist. Sci. 32(1): 1-28 (February 2017).
+<doi: 10.1214/16-STS576>
 }

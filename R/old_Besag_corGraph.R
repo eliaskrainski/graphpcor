@@ -1,3 +1,7 @@
+#' Old implementation of the M Besag model
+#' @param cmd an string to specify which model element to get
+#' @param theta numeric vector with the model parameters.
+#' If missing, the [initial()] will be used.
 old_rgeneric.MBesag <-
     function(cmd = c("graph", "Q", "mu", "initial", "log.norm.const",
                      "log.prior", "quit"), theta = NULL)
@@ -77,11 +81,22 @@ old_rgeneric.MBesag <-
 
     val <- do.call(match.arg(cmd), args = list())
     return(val)
-}
-
+    }
+#' Old implementation of the treepcor model kronecker with Besag
+#' @param cmd an string to specify which model element to get
+#' @param theta numeric vector with the model parameters.
+#' If missing, the [initial()] will be used.
+#' @param Argm named list with additional arguments, see Details.
+#' @details
+#' \itemize{
+#'  \item SP: output from the [GraphDens()] function.
+#'  \item GraphPrior: function to compute the prior.
+#'  \item S, lambda, Tdist: required to [GraphPrior()]
+#'  }
+#' @importFrom stats dgamma
 old_rgeneric.CorGraphsBesag <-
     function(cmd = c("graph", "Q", "mu", "initial", "log.norm.const",
-                     "log.prior", "quit"), theta = NULL)
+                     "log.prior", "quit"), theta = NULL, Argm)
 {
   envir <- parent.env(environment())
   library(Rgraphviz)

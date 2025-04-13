@@ -84,7 +84,7 @@ cgeneric_generic0 <-
 
     if(scale) {
       R <- INLA::inla.as.sparse(
-        inla.scale.model(
+        INLA::inla.scale.model(
           Q = R,
           constr = list(A = matrix(1, 1, n), e = 0)
         )
@@ -147,6 +147,7 @@ cgeneric_generic0 <-
 #' @describeIn cgeneric_generic0
 #' The [cgeneric_iid()] uses the 'generic0' with
 #' structure matrix as the identity.
+#' @importFrom Matrix Diagonal
 #' @param n size of the model
 cgeneric_iid <-
   function(n,
@@ -154,7 +155,8 @@ cgeneric_iid <-
            constr = FALSE,
            scale = TRUE,
            debug = FALSE,
-           useINLAprecomp = TRUE) {
+           useINLAprecomp = TRUE,
+           libpath = NULL) {
     cgeneric_generic0(
       R = Diagonal(n = n,
                    x = rep(1, n)),
@@ -162,7 +164,8 @@ cgeneric_iid <-
       constr = constr,
       scale = FALSE,
       debug = debug,
-      useINLAprecomp = useINLAprecomp
+      useINLAprecomp = useINLAprecomp,
+      libpath = libpath
     )
 }
 

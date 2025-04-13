@@ -17,7 +17,7 @@ interpret.ptheta(theta, p)
 
 interpret.vtheta(theta, p)
 
-theta2L(theta)
+theta2L(theta, p, ilowerL)
 
 theta2C(theta)
 
@@ -34,9 +34,18 @@ rtheta(n, lambda = 1, R, theta.base)
 dtheta(theta, lambda, theta.base, H.elements)
 }
 \arguments{
-\item{theta}{numeric vector of length m = p(p-1)/2}
+\item{theta}{numeric vector of length m with
+the parameters for the lower part of L.
+If Q is dense, then \code{m = p(p-1)/2}, else
+\code{m = length(ilowerL)}.}
 
-\item{p}{integer with the resulting matrix dimension}
+\item{p}{numeric giving the dimention of Q.
+If missing, \code{p = (1+sqrt(1+8*length(theta)))}
+and Q is assumed to be dense.}
+
+\item{ilowerL}{numeric vector with index for the
+part of L to be filled with \code{theta}.
+Default is missing and Q is assumed to be dense.}
 
 \item{C1}{is a correlation matrix.}
 
@@ -44,6 +53,8 @@ dtheta(theta, lambda, theta.base, H.elements)
 
 \item{rphi}{numeric vector where the first element
 is the radius and the remaining are the angles}
+
+\item{x}{parameters in the Euclidian space to be converted}
 
 \item{n}{integer to define the size of the correlation matrix}
 
@@ -62,9 +73,9 @@ Internal function to interpret theta for precision
 }
 \details{
 compute C1 using 'theta2C' on theta  with
-KLD = 0.5( tr(C0^{-1}C1) -p + ... - log(|C1|) + log(|C0|) )
+\deqn{KLD = 0.5( tr(C0^{-1}C1) -p + ... - log(|C1|) + log(|C0|) )}
 
-see {https://en.wikipedia.org/wiki/N-sphere}
+see \href{https://en.wikipedia.org/wiki/N-sphere}{N-sphere/Euclidian}
 }
 \section{Functions}{
 \itemize{
@@ -89,12 +100,13 @@ using the 'theta2L' parametrization
 
 }}
 \examples{
-theta1 <- c(0, -1, -2)
+theta1 <- c(1, -1, -2)
 graphpcor:::theta2L(theta1)
+graphpcor:::theta2L(theta1, 4, c(2,4,7,12))
 graphpcor:::theta2C(c(0,0,0))
 graphpcor:::theta2C(c(1,1,1))
 cc0 <- graphpcor:::theta2C(c(-3,-3,-3))
 cc1 <- graphpcor:::theta2C(c(-1,-1,-1))
-KLD10(cc1, cc0)
+graphpcor:::KLD10(cc1, cc0)
 graphpcor:::theta2H(c(-1,-1,-1))
 }

@@ -3,11 +3,33 @@
 \docType{class}
 \name{treepcor-class}
 \alias{treepcor-class}
+\alias{print.treepcor}
+\alias{summary.treepcor}
+\alias{dim.treepcor}
+\alias{drop1,treepcor-method}
+\alias{edges,treepcor-method}
+\alias{plot,treepcor,ANY-method}
+\alias{prec.treepcor}
 \alias{etreepcor2precision}
 \alias{vcov,treepcor-method}
 \alias{etreepcor2variance}
-\title{Set class for objects to model correlation matrices over tree}
+\title{Set a tree whose nodes represent the two kind of variables:
+children and parent.}
 \usage{
+\method{print}{treepcor}(x, ...)
+
+\method{summary}{treepcor}(object, ...)
+
+\method{dim}{treepcor}(x, ...)
+
+\S4method{drop1}{treepcor}(object)
+
+\S4method{edges}{treepcor}(object, which, ...)
+
+\S4method{plot}{treepcor,ANY}(x, y, ...)
+
+\method{prec}{treepcor}(model, ...)
+
 etreepcor2precision(d.el)
 
 \S4method{vcov}{treepcor}(object, ...)
@@ -15,18 +37,46 @@ etreepcor2precision(d.el)
 etreepcor2variance(d.el)
 }
 \arguments{
+\item{x}{treepcor object}
+
+\item{...}{usde to pass \code{theta} as a numeric vector
+with the model parameters}
+
+\item{object}{treepcor}
+
+\item{which}{not used (TO DO: )}
+
+\item{y}{not used}
+
+\item{model}{treepcor}
+
 \item{d.el}{list of the first n edges of a \code{treepcor}.}
 }
 \description{
-Set class for objects to model correlation matrices over tree
+Set a tree whose nodes represent the two kind of variables:
+children and parent.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{vcov(treepcor)}: The covariance method for a \code{treepcor} object.
+\item \code{drop1(treepcor)}: The \code{drop1} method for a \code{treepcor}
+
+\item \code{edges(treepcor)}: Extract the edges of a \code{treepcor} to be used for plot
+
+\item \code{plot(x = treepcor, y = ANY)}: The \code{plot} method for a \code{treepcor}
+
+\item \code{vcov(treepcor)}: The \code{vcov} method for a \code{treepcor}
 
 }}
 \section{Functions}{
 \itemize{
+\item \code{print(treepcor)}: The \code{print} method for a \code{treepcor}
+
+\item \code{summary(treepcor)}: The \code{summary} method for a \code{treepcor}
+
+\item \code{dim(treepcor)}: The \code{dim} for a \code{treepcor}
+
+\item \code{prec(treepcor)}: The \code{prec} for a \code{treepcor}
+
 \item \code{etreepcor2precision()}: Internal function to extract elements to
 build the precision from the \code{treepcor} edges.
 

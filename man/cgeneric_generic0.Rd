@@ -27,7 +27,8 @@ cgeneric_iid(
   constr = FALSE,
   scale = TRUE,
   debug = FALSE,
-  useINLAprecomp = TRUE
+  useINLAprecomp = TRUE,
+  libpath = NULL
 )
 }
 \arguments{

@@ -1,7 +1,7 @@
-#' @rdname treepcor
-#' @title treepcor
-#' Set a graph whose nodes represent two kind of
-#' variables: children and parent.
+#' Define a tree used to model correlation matrices
+#' using a shared latent variables method represented by a tree,
+#' whose nodes represent the two kind of variables:
+#' children and parent. See [treepcor-class].
 #' @param ... a list of formula used as relationship
 #' to define a three for correlation modeling, see [treepcor()].
 #' Parent nodes shall be in the right side while children
@@ -15,6 +15,7 @@
 #' The main parent (fist) should be identified as `p1`.
 #' Parent variables (except `p1`) have an ancestor,
 #' which is a parent variable.
+#' @importFrom stats as.formula
 #' @export
 #' @examples
 #' g1 <- treepcor(p1 ~ c1 + c2 - c3)
@@ -181,7 +182,9 @@ treepcor <- function(...) {
   return(fch)
 
 }
-#' @rdname treepcor
+#' @describeIn treepcor
+#' The `print` method for a `treepcor`
+#' @param x treepcor
 #' @export
 print.treepcor <- function(x, ...) {
   cat("treepcor for",
@@ -193,19 +196,24 @@ print.treepcor <- function(x, ...) {
     cat(x[[i]], "\n")
   }
 }
-#' @rdname treepcor
+#' @describeIn treepcor
+#' The `summary` method for a `treepcor`
+#' @param object treepcor
 #' @export
 summary.treepcor <- function(object, ...) {
   attr(object, "relationship")
 }
-#' @rdname treepcor
+#' @describeIn treepcor
+#' The `dim` for a `treepcor`
 #' @export
 dim.treepcor <- function(x, ...) {
   trm <- attr(x, "relationship")
   m <- ncol(trm)
   c(children = nrow(trm) - m + 1, parent = m)
 }
-#' @rdname treepcor
+#' @describeIn treepcor
+#' The `drop1` method for a `treepcor`
+#' @param object treepcor
 #' @export
 setMethod(
   "drop1",
@@ -236,7 +244,11 @@ setMethod(
       args)
   }
 )
-#' @rdname treepcor
+#' @describeIn treepcor
+#' Extract the edges of a `treepcor` to be used for plot
+#' @param object treepcor
+#' @param which not used (TO DO: )
+#' @importFrom methods new
 #' @export
 setMethod(
   "edges",
@@ -270,7 +282,10 @@ setMethod(
     return(edgl)
   }
 )
-#' @rdname treepcor
+#' @describeIn treepcor
+#' The `plot` method for a `treepcor`
+#' @param x treepcor object
+#' @param y not used
 #' @export
 setMethod(
   "plot",
@@ -349,7 +364,11 @@ setMethod(
     getMethod("plot", "Ragraph")(ag)
 }
 )
-#' @rdname treepcor
+#' @describeIn treepcor
+#' The `prec` for a `treepcor`
+#' @param model treepcor
+#' @param ... to be used to pass `theta` as a
+#' numeric vector with the model parameters
 #' @export
 prec.treepcor <- function(model, ...) {
   d <- dim(model)
@@ -444,7 +463,11 @@ etreepcor2precision <- function(d.el) {
   ))
 }
 #' @describeIn treepcor
-#' The covariance method for a `treepcor` object.
+#' The `vcov` method for a `treepcor`
+#' @importFrom stats cov2cor
+#' @param object treepcor
+#' @param ... usde to pass `theta` as a numeric vector
+#' with the model parameters
 #' @export
 setMethod(
   "vcov",

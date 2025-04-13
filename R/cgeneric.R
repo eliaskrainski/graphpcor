@@ -82,6 +82,7 @@ cgeneric.default <- function(model,
 #' Method for when `model` is a character.
 #' E.g. cgeneric(model = "generic0")
 #' calls [cgeneric_generic0]
+#' @importFrom methods existsFunction
 #' @export
 cgeneric.character <- function(model, ...) {
   fn <- paste0("cgeneric_", model)

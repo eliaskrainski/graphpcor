@@ -13,7 +13,7 @@ Laplacian(graph)
 \method{Laplacian}{matrix}(graph)
 }
 \arguments{
-\item{graph}{object defining a graph}
+\item{graph}{an object that inherits a matrix class}
 }
 \description{
 The (symmetric) Laplacian of a graph is a
@@ -28,6 +28,8 @@ n_i is the number of edges including node i.
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{Laplacian(default)}: The Laplacian default method (none)
+
 \item \code{Laplacian(matrix)}: The Laplacian of a matrix
 
 }}

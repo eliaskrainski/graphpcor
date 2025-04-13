@@ -47,9 +47,8 @@ gmodel <- cgeneric(
     lambda = 2,
     sigma.prior.reference = rep(1, d[1]),
     sigma.prior.probability = rep(0.1, d[1]),
-    iprior = 3,
     useINLAprecomp = FALSE,
-    debug = 1### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details    
+    debug = 1### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details
 )
 
 ff <- y ~ 0 + factor(i) +
@@ -61,13 +60,13 @@ fit <- inla(
     data = dataf,
     control.inla = list(int.strategy = "eb"),
 ##    control.mode = list(theta = rep(0, 6),  restart = FALSE, fixed = !TRUE),
-    verbose = !TRUE) 
+    verbose = !TRUE)
 
 fit$cpu.used
 
 fit$misc$nf
 
-rbind(true = c(theta.c, theta.p), 
+rbind(true = c(theta.c, theta.p),
       cg = fit$mode$theta)
 
 plot(fit, F, F, F, F, F, F, plot.opt.trace = TRUE)

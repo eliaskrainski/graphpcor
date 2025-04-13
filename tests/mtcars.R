@@ -1,13 +1,13 @@
 
 if(FALSE) { ### just to avoid having to add dependencies we don't really need
-    
+
     library(dplyr)
     library(correlation)
     library(see)
     library(ggraph)
     library(ggpubr)
-    
-    
+
+
     mc <- mtcars %>%
         correlation(partial = FALSE)
 
@@ -22,13 +22,13 @@ if(FALSE) { ### just to avoid having to add dependencies we don't really need
     mc.c$CI_low <- mc$CI_low*(abs(mc$r)>0.7)
     mc.c$CI_high <- mc$CI_high*(abs(mc$r)>0.7)
     mc.c$t <- mc$t*(abs(mc$r)>0.7)
-        
+
     pc.c <- pc
     pc.c$r <- pc$r*(abs(pc$r)>0.3)
     pc.c$CI_low <- pc$CI_low*(abs(pc$r)>0.3)
     pc.c$CI_high <- pc$CI_high*(abs(pc$r)>0.3)
     pc.c$t <- pc$t*(abs(pc$r)>0.3)
-    
+
     ggarrange(
         mc %>%
         plot() +
@@ -118,7 +118,7 @@ fit0 <- inla(
     control.family=list(hyper = pprc),
     data = data0,
     control.inla = list(int.strategy = "eb"),
-    verbose = !TRUE) 
+    verbose = !TRUE)
 
 round(fit0$summary.fix[, c(1, 2, 3, 5)], 2)
 
@@ -140,7 +140,7 @@ summary(data1)
 ff1 <- y ~ iv + f(i, model = gmodel, replicate = r, vb.correct = FALSE)
 ff1
 
-## graph to plot 
+## graph to plot
 mtcd1 <- list(
     p1 ~ p2 + p3 + c1,
     p2 ~ p4 + c4,
@@ -167,7 +167,6 @@ gmodel <- dcg_model(
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc),
     lambda = 1,
-    iprior = 3,
     debug = 0
 )
 
@@ -175,7 +174,7 @@ str(gmodel, 5)
 
 fit1 <- inla(
     formula = ff1,
-    control.family=list(hyper = pprc), 
+    control.family=list(hyper = pprc),
     data = data1,
     control.inla = list(int.strategy = "eb"),
     control.mode = list(theta = rep(c(-2, 0), c(nc, np)), restart = TRUE),
@@ -205,7 +204,7 @@ ff2 <- update(ff0, .~.+f(i, model = gmodel, replicate = r, vb.correct = FALSE))
 
 fit2 <- inla(
     formula = ff2,
-    control.family=list(hyper = pprc), 
+    control.family=list(hyper = pprc),
     data = data2,
     control.inla = list(int.strategy = "eb"),
     verbose = !TRUE) ### if true prints looooooottttssss of details
@@ -224,7 +223,7 @@ round(mypc*100)
 round(cc.fit1*100)
 round(cc.fit2*100)
 
-ff3 <- update(ff0, .~.+f(i, model = "iidkd", order = nc, n = n*nc, vb.correct = FALSE)) 
+ff3 <- update(ff0, .~.+f(i, model = "iidkd", order = nc, n = n*nc, vb.correct = FALSE))
 
 lcc <- t(chol(solve(mypc)))
 ini3 <- c(log(diag(lcc)), lcc[lower.tri(lcc)])
@@ -232,7 +231,7 @@ length(ini3)
 
 fit3 <- inla(
     formula = ff3,
-    control.family=list(hyper = pprc), 
+    control.family=list(hyper = pprc),
     data = data2,
 ##    control.mode = list(theta = ini3, restart = TRUE),
     control.inla = list(int.strategy = "eb"),

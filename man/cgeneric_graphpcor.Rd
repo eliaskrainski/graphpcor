@@ -94,5 +94,5 @@ From either a \code{graph} (see \code{\link[=graph]{graph()}}) or
 a square matrix (used as a graph),
 creates an \code{inla.cgeneric} (see \code{\link[=cgeneric]{cgeneric()}})
 to implement the Penalized Complexity prior using the
-Kullback–Leibler divergence - KLD from a base graphpcor.
+Kullback-Leibler divergence - KLD from a base graphpcor.
 }

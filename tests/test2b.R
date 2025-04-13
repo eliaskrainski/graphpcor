@@ -53,7 +53,6 @@ gmodel <- cgeneric(
     lambda = 1,
     sigma.prior.reference = rep(5, nc),
     sigma.prior.probability = rep(0.2, nc),
-    iprior = 3,
     debug = 0 ### if debug>999 and inla(..., verbose = true) prints looooooottttssss of details
     )
 
@@ -64,7 +63,7 @@ fit <- inla(
     formula = ff,
     control.family = list(hyper = list(prec = list(initial = 10, fixed = TRUE))),
     data = dataf
-) 
+)
 
 fit$cpu.used
 

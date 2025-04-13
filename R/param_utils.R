@@ -28,22 +28,40 @@ interpret.vtheta <- function(theta, p) {
 }
 #' @describeIn param-utils
 #' From theta to the lower triangle such that Q = LL'.
+#' @param theta numeric vector of length m with
+#' the parameters for the lower part of L.
+#' If Q is dense, then `m = p(p-1)/2`, else
+#' `m = length(ilowerL)`.
+#' @param p numeric giving the dimention of Q.
+#' If missing, `p = (1+sqrt(1+8*length(theta)))`
+#' and Q is assumed to be dense.
+#' @param ilowerL numeric vector with index for the
+#' part of L to be filled with `theta`.
+#' Default is missing and Q is assumed to be dense.
 #' @examples
-#' theta1 <- c(0, -1, -2)
+#' theta1 <- c(1, -1, -2)
 #' graphpcor:::theta2L(theta1)
-theta2L <- function(theta) {
+#' graphpcor:::theta2L(theta1, 4, c(2,4,7,12))
+theta2L <- function(theta, p, ilowerL) {
   ### imput theta output L such Q = LL'
-  m <- length(theta)
-  n <- (1 + sqrt(1+8*m))/2
-  stopifnot((n==floor(n)) & (n==ceiling(n)))
-  stopifnot(n>0)
-  L <- diag(n)
-  L[lower.tri(L)] <- theta
+  if(missing(p)) {
+    m <- length(theta)
+    p <- (1 + sqrt(1+8*m))/2
+    stopifnot((p==floor(p)) & (p==ceiling(p)))
+  }
+  stopifnot(p>0)
+  L <- diag(x=1:p, nrow = p, ncol = p)
+  if(missing(ilowerL)) {
+    L[lower.tri(L)] <- theta
+  } else {
+    L[ilowerL] <- theta
+  }
   return(L)
 }
 #' @describeIn param-utils
 #' From theta to a correlation matrix
 #' using the 'theta2L' parametrization
+#' @importFrom stats cov2cor
 #' @examples
 #' graphpcor:::theta2C(c(0,0,0))
 #' graphpcor:::theta2C(c(1,1,1))
@@ -58,11 +76,11 @@ theta2C <- function(theta) {
 #' @param C0 is a correlation matrix of the base model.
 #' @details
 #' compute C1 using 'theta2C' on theta  with
-#'  KLD = 0.5( tr(C0^{-1}C1) -p + ... - log(|C1|) + log(|C0|) )
+#'  \deqn{KLD = 0.5( tr(C0^{-1}C1) -p + ... - log(|C1|) + log(|C0|) )}
 #' @examples
 #' cc0 <- graphpcor:::theta2C(c(-3,-3,-3))
 #' cc1 <- graphpcor:::theta2C(c(-1,-1,-1))
-#' KLD10(cc1, cc0)
+#' graphpcor:::KLD10(cc1, cc0)
 KLD10 <- function(C1, C0) {
 ### imput C1, C0 ouptut KLD
     p <- nrow(C1)
@@ -103,7 +121,7 @@ theta2H <- function(theta) {
 #' @param rphi numeric vector where the first element
 #' is the radius and the remaining are the angles
 #' @details
-#' see {https://en.wikipedia.org/wiki/N-sphere}
+#' see [N-sphere/Euclidian](https://en.wikipedia.org/wiki/N-sphere)
 rphi2x <- function(rphi) {
 ### to convert from \{r, \phi_1, ..., \phi_{m-1} \} into x_i \in \Re
 ### see https://en.wikipedia.org/wiki/N-sphere
@@ -114,6 +132,7 @@ rphi2x <- function(rphi) {
 }
 #' @describeIn param-utils
 #' Tranform from Euclidian coordinates to spherical
+#' @param x parameters in the Euclidian space to be converted
 x2rphi <- function(x) {
 ### to convert from x_i \in \Re into \{r, \phi_1, ..., \phi_{m-1} \}
 ### see https://en.wikipedia.org/wiki/N-sphere
@@ -145,6 +164,8 @@ x2rphi <- function(x) {
 #' @param R scaling matrix (square root of the Hessian
 #' around the base model)
 #' @param theta.base numeric vector of the base model
+#' @importFrom stats runif
+#' @importFrom stats rexp
 rtheta <- function(n, lambda=1, R, theta.base) {
     m <- n*(n-1)/2
     r <- rexp(1, lambda) ## radial coordinate
