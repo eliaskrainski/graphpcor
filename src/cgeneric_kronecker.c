@@ -109,7 +109,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(ni1 > 1);
 	assert(ni2 > 1);
 	assert(nc1 > 1);
-	assert(nc2 > 1);
+//	assert(nc2 > 1);
 	assert(data->n_chars > 5);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
