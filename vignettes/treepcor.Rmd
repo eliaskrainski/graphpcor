@@ -1,5 +1,5 @@
 ---
-title: "Directed tree based correlation model implementation"
+title: "The tree based correlation model implementation"
 author: "Elias T Krainski, Denis Rustand, Anna Freni-Sterrantino, Janet van Niekerk,
   and Håvard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
@@ -25,7 +25,7 @@ library(graphpcor)
 # Abstract
 
 In this vignette we show how to work with a particular class of graphs used to introduce a model class for correlation matrices in 
-@dtg2024model.
+@treepcor2024model.
 
 # The model definition
 
@@ -34,20 +34,19 @@ directed edges linking them.
 Because the edges are directed, there is no closed loop on it.
 A tree is a graph where there is only one possible path 
 between a pair of nodes.
-We consider such two definitions to define a 
-directed tree graph - DTG. 
-A DTG can be simple view as a tree with directed edges.
+We consider such two definitions to define a tree used to model correlations, 
+which is made up of nodes with directed edges.
 This also impose a hierarchy on the nodes.
 
-We classify the nodes of the DTG in parent or children.
+The definition start by considering two kind of nodes: parent or children.
 The $m$ variables of interest, 
 those for we want to model their correlation,
 will be classified as children variables.
 They are labeled as $c_i$, $i\in\{1,\ldots,m\}$. 
-The nodes in the DTG to represent children variables are
-leafs of the DTG, which are nodes with an ancestor (parent) 
+The nodes to represent children variables are
+leafs of the tree, having always an ancestor (parent) 
 but with no children.
-Each children variable has a directed edge from its parent.
+Each children node has a directed edge from its parent.
 The path between each $c_i$ goes through a set of $k$ parent variables, 
 labeled as $p_j$, $j\in\{1,\ldots,k\}$.
 The $m$ parent variables are nodes with children nodes.
@@ -75,22 +74,22 @@ The parent is represented as ``p1``,
 and the children variables as ``c1``, ``c2`` and ``c3``. 
 We consider that ``c3`` will be negatively correlated 
 with ``c1`` and ``c2``.
-The DTG for this case is defined as
+For this case we define the tree as
 ```{r graph1, include = chinclude}
-g1 <- dtg(p1 ~ c1 + c2 - c3)
-g1
-summary(g1)
+tree1 <- treepcor(p1 ~ c1 + c2 - c3)
+tree1
+summary(tree1)
 ```
 where the summary shows their relationship.
 The number of children and parent variables 
-are obtainted with
+are obtained with
 ```{r dim1}
-dim(g1)
+dim(tree1)
 ```
 
-This DTG can be visualized with 
+This tree can be visualized with 
 ```{r visgraph1, include = chinclude}
-plot(g1)
+plot(tree1)
 ```
 
 From this model definition we will use the methods 
@@ -98,12 +97,12 @@ to build the correlation matrix.
 First, we build the precision matrix structure
 (that is not yet a precision matrix):
 ```{r qs1, include = chinclude}
-precision(g1)
+prec(tree1)
 ```
 and we can use inform the log of $\gamma_1$, 
 which is the standard error for $p_1$, with:
 ```{r q, include = chinclude}
-q1 <- precision(g1, theta = 0)
+q1 <- prec(tree1, theta = 0)
 q1
 ```
 
@@ -112,9 +111,9 @@ primarily interest, from the precision matrix.
 However, also have a covariance method to be 
 directly applied with
 ```{r v1, include = chinclude}
-variance(g1) ## assume theta = 0 (\gamma_1 = 1)
-variance(g1, theta = 0.5) # \gamma_1^2 = exp(2 * 0.5) = exp(1)
-cov1a <- variance(g1, theta = 0) 
+vcov(tree1) ## assume theta = 0 (\gamma_1 = 1)
+vcov(tree1, theta = 0.5) # \gamma_1^2 = exp(2 * 0.5) = exp(1)
+cov1a <- vcov(tree1, theta = 0) 
 cov1a
 ```
 from where we obtain the desired matrix with
@@ -133,22 +132,23 @@ and ``c3`` and ``c4`` having the second parent as parent.
 We want to have the correlation between ``c3`` and ``c4``
 higher than the correlation between ``c1`` and ``c3``. 
 This requires ``p2`` to be children of ``p1``.
-The DTG for this is set by
+The tree for this is set by
 ```{r graph2}
-g2 <- dtg(p1 ~ p2 + c1 + c2, 
-          p2 ~ c3 - c4)
-dim(g2)
-g2
-summary(g2)
+tree2 <- treepcor(
+  p1 ~ p2 + c1 + c2, 
+  p2 ~ c3 - c4)
+dim(tree2)
+tree2
+summary(tree2)
 ```
 which can be visualized by
 ```{r visgraph2}
-plot(g2)
+plot(tree2)
 ```
 
 We can drop the last parent with
 ```{r drop1}
-drop(g2)
+drop(tree2)
 ```
 
 We now have two parameters:
@@ -157,13 +157,13 @@ and $\gamma_2^2$ the conditional variance of $p_2$.
 For $\gamma_1 = \gamma_2 = 1$, 
 the precision matrix can be obtained with:
 ```{r q2}
-q2 <- precision(g2, theta = c(0, 0))
+q2 <- prec(tree2, theta = c(0, 0))
 q2
 ```
 
 The correlation matrix can be obtained with 
 ```{r c2}
-cov2 <- variance(g2, theta = c(0, 0))
+cov2 <- vcov(tree2, theta = c(0, 0))
 cov2
 c2 <- cov2cor(cov2)
 round(c2, 3)
@@ -180,15 +180,16 @@ Let us consider the second example but change the sign
 between the parents and swap the sign 
 in both terms of the second equation:
 ```{r graph2b}
-g2b <- dtg(p1 ~ -p2 + c1 + c2, 
-           p2 ~ -c3 + c4)
-g2b
-summary(g2b)
+tree2b <- treepcor(
+  p1 ~ -p2 + c1 + c2, 
+  p2 ~ -c3 + c4)
+tree2b
+summary(tree2b)
 ```
 
 This gives the precision matrix as 
 ```{r prec2}
-q2b <- precision(g2b, theta = c(0, 0))
+q2b <- prec(tree2b, theta = c(0, 0))
 q2b
 ``` 
 
@@ -201,8 +202,8 @@ all.equal(solve(q2)[1:4, 1:4],
 ```
 
 Therefore, allowing flexibility in an edge of parent to another parent is not useful and will only imply more complexity.
-Therefore we will not consider it in the `variance` method. 
-NOTE: The `variance` of a `dtg` does not takes into account 
+Therefore we will not consider it in the `vcov` method. 
+NOTE: The `vcov` of a `treepcor` does not takes into account 
 the sing between parent variables!
 So, please use it with care.
 
