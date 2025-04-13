@@ -57,7 +57,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	nth = (int) ((double) N * ((double) (N - 1)) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
 	double lambda = data->doubles[0]->doubles[0];
@@ -66,9 +66,11 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->doubles[1]->name, "lconst"));
 	double lconst = data->doubles[1]->doubles[0];
 
+/*
 	if (debug > 999) {
 		printf("N=%d, nth=%d, M=%d, lambda=%f\n", N, nth, M, lambda);
 	}
+*/
 
 	switch (cmd) {
 	case INLA_CGENERIC_GRAPH:
@@ -85,19 +87,6 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 
-		if (debug > 999) {
-			printf("ii: ");
-			for (k = 0; k < M; k++) {
-				printf("%f ", ret[2 + k]);
-			}
-			printf("\njj: ");
-			for (k = 0; k < M; k++) {
-				printf("%f ", ret[2 + M + k]);
-			}
-			printf("\n");
-		}
-
-
 	}
 		break;
 	case INLA_CGENERIC_Q:
@@ -113,6 +102,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		double hld;
 		theta2gamma2Lcorr(N, &hld, &theta[0], &ret[offset]);
 
+/*
 		if (debug > 999) {
 			printf("L:\n");
 			for (i = 0; i < N; i++) {
@@ -124,6 +114,8 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("\n");
 			}
 		}
+*/
+
 		// chol2inv
 		int info;
 		char uplo = 'L';

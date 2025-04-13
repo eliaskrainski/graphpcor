@@ -297,7 +297,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP Sntheta, SEXP ints, SEXP 
 	static int ltdl_init = 1;
 
 	if (ltdl_init) {
-#pragma omp critical (Name_97a987bafe2f18c620f3cefa664a9f775cb7559b)		
+#pragma omp critical (Name_97a987bafe2f18c620f3cefa664a9f775cb7559b)
 		if (ltdl_init) {
 			lt_dlinit();
 			lt_dlerror();
@@ -307,7 +307,7 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP Sntheta, SEXP ints, SEXP 
 
 	lt_dlhandle handle;
 	inla_cgeneric_func_tp *model_func = NULL;
-	
+
 	handle = lt_dlopen(cgeneric_shlib);
 	model_func = (inla_cgeneric_func_tp *) lt_dlsym(handle, cgeneric_model);
 	assert(model_func);
@@ -386,8 +386,8 @@ SEXP cgeneric_element_get(SEXP Rcmd, SEXP Stheta, SEXP Sntheta, SEXP ints, SEXP 
 		UNPROTECT(1);
 	}
 
-	Free(cgeneric_data);
-	Free(ret);
+	free(cgeneric_data);
+	free(ret);
 
 	return Rret;
 }

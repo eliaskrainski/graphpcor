@@ -1,14 +1,12 @@
-#' Build an `inla.cgeneric` to implement a generic0 model
-#' with has a precision matrix defined as
-#'  \deqn{Q = \tau R}
-#' where the structure matrix R is supplied by the user
-#' and \eqn{\tau} is the (local, see detais) precision parameter.
+#' Build an `inla.cgeneric` to implement a
+#' model whose precision has a conditional
+#' precision parameter. See details.
 #' This uses the cgeneric interface that can be used as a
 #' model in a `INLA` `f()` model component.
 #' @param R the structure matrix for the model definition.
 #' @param param length two vector with the parameters
-#' \eqn{a,b} for the PC-prior distribution defined from
-#'   \deqn{P(\sigma > a) = u}
+#' `a` and `p` for the PC-prior distribution defined from
+#'   \deqn{P(\sigma > a) = p}
 #' where \eqn{\sigma} can be interpreted as marginal standard
 #' deviation of the process if scale = TRUE. See details.
 #' @param constr logical indicating if it is to add a
@@ -22,7 +20,11 @@
 #' This is not considered if 'libpath' is provided.
 #' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
-#' Following Sørbie & Rue (2014), if scale = TRUE
+#' The precision matrix is defined as
+#'  \deqn{Q = \tau R}
+#' where the structure matrix R is supplied by the user
+#' and \eqn{\tau} is the precision parameter.
+#' Following Sørbie and Rue (2014), if scale = TRUE
 #' the model is scaled so that
 #'  \deqn{Q = \tau s R}
 #'  where \eqn{s} is the geometric mean of the diagonal
@@ -32,12 +34,13 @@
 #' marginal variances, the diagonal of \eqn{Q^{-1}}, is one.
 #' Therefore, when the model is scaled,
 #' \eqn{\tau} is the marginal precision,
-#' otherwise \eqn{tau} is the conditional precision.
+#' otherwise \eqn{\tau} is the conditional precision.
 #' @references
 #' Sigrunn Holbek Sørbye and Håvard Rue (2014).
 #' Scaling intrinsic Gaussian Markov random field priors in
 #' spatial modelling. Spatial Statistics, vol. 8, p. 39-51.
-#' @return a [cgeneric()] object to be used in the f() formula term in INLA.
+#' @return a [cgeneric()] object to be used in
+#' an f() formula term in INLA.
 cgeneric_generic0 <-
   function(R,
            param,
@@ -145,10 +148,10 @@ cgeneric_generic0 <-
 
   }
 #' @describeIn cgeneric_generic0
-#' The [cgeneric_iid()] uses the 'generic0' with
-#' structure matrix as the identity.
-#' @importFrom Matrix Diagonal
+#' The [cgeneric_iid()] uses the [cgeneric_generic0]
+#' with the structure matrix as the identity.
 #' @param n size of the model
+#' @importFrom Matrix Diagonal
 cgeneric_iid <-
   function(n,
            param,

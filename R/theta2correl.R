@@ -65,6 +65,7 @@ theta2gamma2L <- function(theta, fromR = TRUE) {
 #' Drawn a random sample correlation matrix
 #' @param p integer to specify the matrix dimension
 #' @param lambda is the penalization parameter.
+#' If missing it will be assumed equal to zero.
 #' The lambda=0 case means no penalization and
 #' a random correlation matrix will be drawn.
 #' Please see section 6.2 of the PC-prior paper,
@@ -75,14 +76,16 @@ theta2gamma2L <- function(theta, fromR = TRUE) {
 #'  Statist. Sci. 32(1): 1-28 (February 2017).
 #'  <doi: 10.1214/16-STS576>
 #' @export
-rcorrel <- function(p, lambda = NA) {
+rcorrel <- function(p, lambda) {
   stopifnot(p>1)
   m <- p * (p - 1) / 2
-  if(is.na(lambda)) {
+  if(missing(lambda))
+    lambda <- 0
+  if(is.zero(lambda)) {
     theta <- runif(m, 0, pi)
   } else {
     stopifnot(lambda>0.0)
-    theta <- INLA:::inla.pc.cormat.rtheta(n=1, p, lambda)
+    theta <- INLA::inla.pc.cormat.rtheta(n=1, p, lambda)
   }
   # if(lambda<=sqrt(.Machine$double.eps)) {
   #   g <- rexp(m)

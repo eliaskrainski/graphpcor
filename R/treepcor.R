@@ -249,6 +249,7 @@ setMethod(
 #' @param object treepcor
 #' @param which not used (TO DO: )
 #' @importFrom methods new
+#' @importFrom graph edges
 #' @export
 setMethod(
   "edges",
@@ -350,7 +351,7 @@ setMethod(
     for(i in 1:length(nattr))
       names(nattr[[i]]) <- nodes
 
-    ag <- agopen(gr, "", nodeAttrs = nattr)
+    ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
     for(k in 1:length(ag@AgEdge)) {
       i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
       j <- pmatch(ag@AgEdge[[k]]@head,
@@ -517,7 +518,8 @@ etreepcor2variance <- function(d.el) {
       }
     }
   }
-  NC <- sum(sapply(d.el, function(s) sum(!s$parent)))
+  NC <- sum(sapply(d.el, function(s)
+    sum(!s$parent)))
   sch <- integer(NC)
   iP <- integer(NC)
   for(i in 1:np) {

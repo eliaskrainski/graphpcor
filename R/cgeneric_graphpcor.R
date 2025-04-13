@@ -192,7 +192,7 @@ cgeneric_graphpcor <-
       base <- rep(0, nEdges)
     }
 
-    Ibase <- hessian(graph, base, decomposition = "eigen")
+    Ibase <- hessian(graph, base)
     if(debug) {
       cat("I(base model) elements\n")
       print(str(Ibase))

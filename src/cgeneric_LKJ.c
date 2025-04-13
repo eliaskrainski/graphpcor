@@ -56,7 +56,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	nth = (int) ((double) N * ((double) (N - 1)) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->doubles[0]->name, "eta"));
 	double eta = data->doubles[0]->doubles[0];
@@ -65,9 +65,11 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	assert(!strcasecmp(data->doubles[1]->name, "lc"));
 	double lc = data->doubles[1]->doubles[0];
 
+/*
 	if (debug > 999) {
 		printf("N=%d, nth=%d, M=%d, eta=%f, lc=%f\n", N, nth, M, eta, lc);
 	}
+*/
 
 	switch (cmd) {
 	case INLA_CGENERIC_GRAPH:
@@ -99,6 +101,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		// build L that factorize C giving C = LL'
 		theta2gamma2Lcorr(N, &hld, &theta[0], &ret[2]);
 
+/*
 		if (debug > 999) {
 			printf("L:\n");
 			k = 0;
@@ -109,6 +112,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 				printf("\n");
 			}
 		}
+*/
 		// chol2inv: Q = C^{-1} computed from L
 		int info;
 		char uplo = 'L';
@@ -143,6 +147,8 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		// log determinant is computed in the theta2gamma2Lcorrel
 		double lhdetC, ll[N * (N + 1) / 2], cc1[N * (N - 1) / 2], cc2[N * (N - 1) / 2];
 		theta2gamma2Lcorr(N, &lhdetC, &theta[0], &ll[0]);
+
+/*
 		if (debug > 999) {
 			printf("L[upper]:\n");
 			k = 0;
@@ -152,15 +158,16 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 				}
 				printf("\n");
 			}
-		}
-		if (debug > 999) {
 			printL(ll, N, N, "Lcorr\n");
-		}
-		if (debug > 99) {
 			printf("|R| = %2.5f, lc+(eta-1)|R| = %2.5f\n", 2.0 * lhdetC, lc + 2.0 * (eta - 1) * lhdetC);
 		}
+*/
+
 		L2Cupper(N, &ll[0], &cc1[0]);
-		if (debug > 999) {
+
+
+/*
+ 		if (debug > 999) {
 			printf("C:\n");
 			k = 0;
 			for (i = 0; i < (N - 1); i++) {
@@ -170,6 +177,8 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 				printf("\n");
 			}
 		}
+*/
+
 		// compute the Jacobian[nth*nth]
 		int kj, k2 = 0;
 		double ldtmp, daux, h = 0.0005;
@@ -190,9 +199,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 				mJacobian[k2++] = daux;
 			}
 		}
-		if (debug > 99) {
-			printMat(mJacobian, nth, nth, "matrix Jacobian\n");
-		}
+
 		int info, pivot[nth], lwork = 2 * nth + nth + 1;
 		double work[lwork], tau[nth];
 		dgeqp3_(&nth, &nth, &mJacobian[0], &nth, &pivot[0], &tau[0], &work[0], &lwork, &info, F_ONE);
@@ -200,9 +207,11 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		for (i = 0; i < nth; i++) {
 			ldJacobian += log(fabs(mJacobian[i * nth + i]));
 		}
+/*
 		if (debug > 99) {
 			printf("\ndet Jacobian = %f\n", ldJacobian);
 		}
+*/
 		if (ldJacobian < 0) {
 			ldJacobian *= -1.0;
 		}

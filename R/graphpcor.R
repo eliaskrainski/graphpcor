@@ -99,6 +99,7 @@ dim.graphpcor <- function(x, ...) {
 #' Extract the edges of a `graphcor` to be used for plot
 #' @param object graphpcor object
 #' @param which not used
+#' @importFrom graph edges
 #' @export
 setMethod(
   "edges",
@@ -186,7 +187,7 @@ setMethod(
     for(i in 1:length(nattr))
       names(nattr[[i]]) <- nodes
 
-    ag <- agopen(gr, "", nodeAttrs = nattr)
+    ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
 
     for(k in 1:length(ag@AgEdge)) {
       ag@AgEdge[[k]]@color <- "red"
@@ -326,16 +327,18 @@ fiL <- function(L, lfi) {
   }
   return(L)
 }
-#' @describeIn graphpcor
 #' Evaluate the hessian of the KLD for a `graphpcor`
 #' correlation model around a base model.
-#' @param graphpcor model definition of a graphical model.
+#' @param func model definition of a graphical model.
 #' This can be either a matrix or a 'graphpcor'.
-#' @param base either a reference correlation matrix
-#' or as a parameter reference for a 'graphpcor' model.
-#' @param decomposition character to specify which
-#' decomposition method to use to compute H^0.5 and H^(1/2).
-#' @param ... additional arguments passed to [numDeriv::hessian()]
+#' @param x either a reference correlation matrix
+#' or a numeric vector with the parameters for the
+#' reference 'graphpcor' model.
+#' @param method see [numDeriv::hessian()]
+#' @param method.args see [numDeriv::hessian()]
+#' @param ... use to pass the decomposition method,
+#' as a character to specify which one is to be used
+#' to compute H^0.5 and H^(1/2).
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used
@@ -347,71 +350,86 @@ fiL <- function(L, lfi) {
 #' C0 <- vcov(g, theta = rep(c(0,-1), ne))
 #' all.equal(hessian(g, C0), gH0)
 #' @importFrom stats cov2cor
+#' @importFrom numDeriv hessian
 #' @export
-hessian.graphpcor <- function(graphpcor, base,
-                              decomposition = c("eigen", "svd", "chol"),
-                              ...) {
-  decomposition <- match.arg(decomposition)
-  Q0 <- Laplacian(graphpcor)
-  nEdges <- sum((!is.zero(Q0)) & lower.tri(Q0))
-  z0 <- is.zero(Q0)
-  n <- nrow(Q0)
-  l1 <- t(chol(Q0 + diag(1.0, n, n)))
-  if(inherits(base, "matrix")) {
-    ## maybe optim() to get theta.base that
-    ## give it close to C0?
-    ## For now check the elements of L from C0^{-1}
-    C0 <- cov2cor(base)
-    qq0 <- chol2inv(chol(C0))
-    ll0 <- t(chol(qq0))
-    c0.ok <- all(which(abs(ll0)>sqrt(.Machine$double.eps)) %in%
-                   which(abs(l1)>0))
-    if(!c0.ok) {
-      stop("Provided base correlation not in the graphpcor model class!")
+hessian.graphpcor <-
+  function(func,
+           x,
+           method = "Richardson",
+           method.args = list(),
+           ...) {
+    decomposition <- c("eigen", "svd", "chol")
+    if(is.null(list(...)$decomposition)) {
+      decomposition <- "eigen"
+    } else {
+      decomposition <- match.arg(
+        list(...)$decomposition,
+        decomposition)
     }
-    for(i in 1:nrow(C0))
-      ll0[i, ] <- ll0[i, ]/ll0[i, i]
-    base <- ll0[lower.tri(ll0) & (!z0)]
-  } else {
-    stopifnot(length(base) == nEdges)
-    C0 <- vcov(graphpcor, theta = base)
+    Q0 <- Laplacian(func)
+    nEdges <- sum((!is.zero(Q0)) & lower.tri(Q0))
+    z0 <- is.zero(Q0)
+    n <- nrow(Q0)
+    l1 <- t(chol(Q0 + diag(1.0, n, n)))
+    if(inherits(x, "matrix")) {
+      ## maybe optim() to get theta that
+      ## give it close to C0?
+      ## For now check the elements of L from C0^{-1}
+      C0 <- cov2cor(x)
+      qq0 <- chol2inv(chol(C0))
+      ll0 <- t(chol(qq0))
+      c0.ok <- all(which(abs(ll0)>sqrt(.Machine$double.eps)) %in%
+                     which(abs(l1)>0))
+      if(!c0.ok) {
+        stop("Provided base correlation not in the graphpcor model class!")
+      }
+      for(i in 1:nrow(C0))
+        ll0[i, ] <- ll0[i, ]/ll0[i, i]
+      x <- ll0[lower.tri(ll0) & (!z0)]
+    } else {
+      stopifnot(length(x) == nEdges)
+      C0 <- vcov(func, theta = x)
+    }
+    ## hessian uses graphpcor:::KLD10
+    H <- hessian(
+      func = function(th)
+        KLD10(vcov(func, theta = th), C0),
+      x = x,
+      method = method,
+      method.args = method.args,
+      ...)
+    ## next bit follows mvtnorm:::rmvnorm()
+    t0 <- sqrt(.Machine$double.eps)
+    if(decomposition == "eigen") {
+      Hd <- eigen(H)
+      if(!all(Hd$values >= (t0 * abs(Hd$values[1]))))
+        warning("'H' is numerically not positive semidefinite")
+      s <- sqrt(pmax(Hd$values, 0.0))
+      h.5 <- t(Hd$vectors %*% (t(Hd$vectors) * s))
+      hneg.5 <- t(Hd$vectors %*% (t(Hd$vectors) / s))
+    }
+    if(decomposition == "svd") {
+      Hd <- svd(H)
+      if(any(Hd$d<(t0 * abs(Hd$d[1]))))
+        warning("'H' is numerically not positive semidefinite")
+      s <- sqrt(pmax(Hd$d, 0.0))
+      h.5 <- t(Hd$v %*% (t(Hd$u) * s))
+      hneg.5 <- t(Hd$v %*% (t(Hd$u) / s))
+    }
+    if(decomposition == "chol") {
+      Hd <- chol(H, pivot = TRUE)
+      h.5 <- matrix(Hd[, order(attr(Hd, "pivot")), ], nrow(H))
+      hn <- chol2inv(chol(H))
+      hn.5 <- chol(hn, pivot = TRUE)
+      hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
+    }
+    stopifnot(all.equal(H, tcrossprod(h.5)))
+    attr(H, "base") <- x
+    attr(H, "h.5") < h.5
+    attr(H, "hneg.5") <- hneg.5
+    attr(H, "decomposition") <- Hd
+    return(H)
   }
-  ## hessian uses graphpcor:::KLD10
-  H <- numDeriv::hessian(
-    function(x) KLD10(vcov(graphpcor, theta = x), C0),
-    base, ...)
-  ## next bit follows mvtnorm:::rmvnorm()
-  t0 <- sqrt(.Machine$double.eps)
-  if(decomposition == "eigen") {
-    Hd <- eigen(H)
-    if(!all(Hd$values >= (t0 * abs(Hd$values[1]))))
-      warning("'H' is numerically not positive semidefinite")
-    s <- sqrt(pmax(Hd$values, 0.0))
-    h.5 <- t(Hd$vectors %*% (t(Hd$vectors) * s))
-    hneg.5 <- t(Hd$vectors %*% (t(Hd$vectors) / s))
-  }
-  if(decomposition == "svd") {
-    Hd <- svd(H)
-    if(any(Hd$d<(t0 * abs(Hd$d[1]))))
-      warning("'H' is numerically not positive semidefinite")
-    s <- sqrt(pmax(Hd$d, 0.0))
-    h.5 <- t(Hd$v %*% (t(Hd$u) * s))
-    hneg.5 <- t(Hd$v %*% (t(Hd$u) / s))
-  }
-  if(decomposition == "chol") {
-    Hd <- chol(H, pivot = TRUE)
-    h.5 <- matrix(Hd[, order(attr(Hd, "pivot")), ], nrow(H))
-    hn <- chol2inv(chol(H))
-    hn.5 <- chol(hn, pivot = TRUE)
-    hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
-  }
-  stopifnot(all.equal(H, tcrossprod(h.5)))
-  attr(H, "base") <- base
-  attr(H, "h.5") < h.5
-  attr(H, "hneg.5") <- hneg.5
-  attr(H, "decomposition") <- Hd
-  return(H)
-}
 #' @describeIn cgeneric
 #' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
 #' @export

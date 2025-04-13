@@ -68,7 +68,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 	nth = (int) ((double) N * ((double) (N - 1)) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
 //  printf("debug = %d\n", debug);
 
@@ -78,11 +78,11 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 
 	assert(!strcasecmp(data->doubles[1]->name, "lconst"));
 	double lconst = data->doubles[1]->doubles[0];
-
+/*
 	if (debug > 999) {
 		printf("N=%d, nth=%d, M=%d, lambda=%f, lc=%f\n", N, nth, M, lambda, lconst);
 	}
-
+*/
 	double daux;
 	double param[nth];
 
@@ -101,9 +101,11 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		}
 		// r = sqrt(sum_i(theta[i]^2))
 		param[0] = sqrt(daux);
+/*
 		if (debug > 999) {
 			printMat(param, 1, nth, "param:\n");
 		}
+*/
 	} else {
 		for (i = 0; i < nth; i++) {
 			param[i] = NAN;
@@ -124,7 +126,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 				ret[k++] = i;
 			}
 		}
-
+/*
 		if (debug > 999) {
 			printf("ii: ");
 			for (k = 0; k < M; k++) {
@@ -136,7 +138,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 			}
 			printf("\n");
 		}
-
+*/
 
 	}
 		break;
@@ -184,10 +186,6 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 	case INLA_CGENERIC_LOG_PRIOR:
 	{
 		ret = Calloc(1, double);
-
-		if (debug > 999) {
-			printMat(param, 1, nth, "param:\n");
-		}
 		double ldJacobian;
 
 		ldJacobian = ((double) (nth - 1)) * log(param[0]);
@@ -196,10 +194,11 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 				ldJacobian += ((double) (nth - 1 - i)) * log(sin(param[i]));
 			}
 		}
-
+/*
 		if (debug > 999) {
 			printf("log det Jacobian = %2.7f\n", ldJacobian);
 		}
+*/
 		// the log prior:
 		// lconst should be equal to
 		// log(lambda) -(m-1)*log(pi)-log(2)-log(|H|)

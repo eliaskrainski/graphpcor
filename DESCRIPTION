@@ -1,29 +1,36 @@
 Package: graphpcor
 Type: Package
-Title: Models for correlation matrices based on graphs
-Version: 0.1-0.009
+Title: Models for Correlation Matrices Based on Graphs
+Version: 0.1.901
+Maintainer: Elias Krainski <eliaskrainski@gmail.com>
 Authors@R: c(
-  person("Elias Teixeira", "Krainski", email = "eliaskrainski@gmail.com",
-         role = c("cre", "aut", "cph"), 
-         comment = c(ORCID = "0000-0002-7063-2615")),
-  person("Denis", "Rustand", email = "denis@rustand.fr", 
-         role = c("aut", "cph"),
-         comment = c(ORCID = "0000-0001-9708-5220")),
-  person("Anna", "Freni-Sterrantino", email = "afrenisterrantino@turing.ac.uk", 
-         role = c("aut", "cph"),
-         comment = c(ORCID = "0000-0002-6602-6209")),
-  person("Janet", "Van Niekerk", email = "janet.vaniekerk@kaust.edus.a", 
-         role = c("aut", "cph"),
-         comment = c(ORDIC = "200~0000-0002-4334-2057")),
-  person("Haavard", "Rue", email = "haavard.rue@kaust.edu.sa",
-         role = c("aut"),
-         comment = c(ORCID = "0000-0002-0222-1881"))
-  )
-Description: This package implement distributions for 
-  correlation/covariance matrices including two approachs 
+ person(given = c("Elias"),
+        family = "Krainski",
+        email = "eliaskrainski@gmail.com",
+        role = c("cre", "aut", "cph"),
+        comment = c(ORCID = "0000-0002-7063-2615")),
+ person(given = "Denis",
+        family = "Rustand",
+        role = c("aut", "cph"),
+        comment = c(ORCID = "0000-0001-9708-5220")),
+ person(given = "Anna",
+        family = "Freni-Sterrantino",
+        role = c("aut", "cph"),
+        comment = c(ORCID = "0000-0002-6602-6209")),
+ person(given = "Janet",
+        family = "van Niekerk",
+        role = c("aut", "cph"),
+        comment = "200~0000-0002-4334-2057"),
+ person(given = "Haavard",
+        family = "Rue’",
+        role = "aut",
+        comment = c(ORCID = "0000-0002-0222-1881"))
+        )
+Description: Implement some models for 
+  correlation/covariance matrices including two approaches 
   to model correlation matrices from a graphical structure.
   One use the latent parent variable framework as
-  proposed in <https://arxiv.org/abs/2312.06289>.
+  proposed in <doi:10.48550/arXiv.2312.06289>.
   The other uses a graph to specify conditional 
   relations between the variables.
   The graphical structure makes correlation matrices 
@@ -40,9 +47,7 @@ Description: This package implement distributions for
   This allows one to use 'INLA' to build and fit 
   complex data models using the models in this 
   package as building blocks.
-URL: https://github.com/eliaskrainski/graphpcor
 Additional_repositories: https://inla.r-inla-download.org/R/testing
-BugReports: https://github.com/eliaskrainski/graphpcor/issues
 License: GPL (>=2) 
 Encoding: UTF-8
 RoxygenNote: 7.3.2
@@ -52,16 +57,12 @@ Depends:
     R (>= 4.3),
     Matrix,
     graph,
-    Rgraphviz,
     numDeriv
 Imports:
-    graphics,
-    grDevices,
     methods,
     stats,
-    utils
+    utils,
+    Rgraphviz
 Suggests:
-    INLA (>= 24.02.09),
-    knitr
-VignetteBuilder: knitr
+    INLA (>= 24.02.09)
 BuildVignettes: true

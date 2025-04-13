@@ -28,7 +28,7 @@
 #include <ltdl.h>
 #include "graphpcor.h"
 
-typedef struct 
+typedef struct
 {
 	int nth1;
 	lt_dlhandle handle1;
@@ -86,7 +86,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	int i, j, k;
 	int ni1, nd1, nc1, nm1, nsm1;
-	int ni2, nd2, nc2, nm2, nsm2;
+	int ni2, nsm2; //, nd2, nc2, nm2, nsm2;
 
 	// int n1 = data->ints[0]->ints[0];
 	ni1 = data->ints[0]->ints[1];
@@ -98,9 +98,9 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	// int n2 = data->ints[ni1]->ints[0];
 	ni2 = data->ints[0]->ints[7];
-	nd2 = data->ints[0]->ints[8];
-	nc2 = data->ints[0]->ints[9];
-	nm2 = data->ints[0]->ints[10];
+//	nd2 = data->ints[0]->ints[8];
+//	nc2 = data->ints[0]->ints[9];
+//	nm2 = data->ints[0]->ints[10];
 	nsm2 = data->ints[0]->ints[11];
 	int M2 = data->ints[0]->ints[12];
 	int n = data->ints[0]->ints[13];
@@ -114,19 +114,12 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
 	assert(!strcasecmp(data->ints[ni1 + 1]->name, "debug"));	// this will always be the case
-	int debug = (data->ints[1]->ints[0] | data->ints[ni1 + 1]->ints[0]);
+//	int debug = (data->ints[1]->ints[0] | data->ints[ni1 + 1]->ints[0]);
 
 	assert(!strcasecmp(data->ints[ni1 + ni2]->name, "idx1u"));	// this will always be the case
 	assert(!strcasecmp(data->ints[ni1 + ni2 + 1]->name, "idx2u"));	// this will always be the case
 
 	assert(!strcasecmp(data->ints[nsm1 + nsm2]->name, "Kgraph"));	// this will always be the case
-
-	if (debug) {
-		printf(					       // stderr,
-			      "M1: ni %d, nd %d, nc %d, nm %d, nsm %d \n", ni1, nd1, nc1, nm1, nsm1);
-		printf(					       // stderr,
-			      "M2: ni %d, nd %d, nc %d, nm %d, nsm %d \n", ni2, nd2, nc2, nm2, nsm2);
-	}
 
 	inla_cgeneric_data_tp *dataM1 = Calloc(1, inla_cgeneric_data_tp);
 	inla_cgeneric_data_tp *dataM2 = Calloc(1, inla_cgeneric_data_tp);
@@ -151,13 +144,9 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			lt_dlerror();
 			cache_tp *c = Calloc(1, cache_tp);
 
-			if (debug)
-				printf("open %s \n", &dataM1->chars[1]->chars[0]);
 			c->handle1 = lt_dlopen(&dataM1->chars[1]->chars[0]);
 
 			if (strcmp(&dataM1->chars[1]->chars[0], &dataM2->chars[1]->chars[0]) != 0) {
-				if (debug)
-					printf("open %s \n", &dataM2->chars[1]->chars[0]);
 				c->handle2 = lt_dlopen(&dataM2->chars[1]->chars[0]);
 			} else {
 				c->handle2 = c->handle1;
@@ -175,7 +164,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	assert(data->cache);
 	cache_tp *c = (cache_tp *) data->cache;
-	
+
 	double *theta1 = &theta[0];
 	double *theta2 = &theta[c->nth1];
 
@@ -218,22 +207,10 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 		int nu1 = data->ints[ni1 + ni2]->len;
 		int nu2 = data->ints[ni1 + ni2 + 1]->len;
-		if (debug) {
-			printf("u1 = %d, u2 = %d\n", nu1, nu2);
-		}
 
 		double retE[M];
 		double daux;
 		int ox;
-
-		if (debug) {
-			for (i = 0; i < M1; i++) {
-				printf("%d, %f\n", i, ret1[2 + i]);
-			}
-			for (i = 0; i < M2; i++) {
-				printf("%d, %f\n", i, ret2[2 + i]);
-			}
-		}
 
 		k = 0;
 		for (i = 0; i < M1; i++) {
@@ -256,13 +233,6 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		for (k = 0; k < data->smats[nsm1 + nsm2]->n; k++) {
 			ox = (int) data->smats[nsm1 + nsm2]->x[k];
 			ret[2 + k] = retE[ox];
-		}
-
-		if (debug) {
-			for (k = 0; k < M; k++) {
-				ox = (int) data->smats[nsm1 + nsm2]->x[k];
-				printf("%d, %d, %f, %f\n", k, ox, retE[k], ret[2 + k]);
-			}
 		}
 
 		break;

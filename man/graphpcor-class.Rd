@@ -14,7 +14,6 @@
 \alias{chol,graphpcor-method}
 \alias{vcov,graphpcor-method}
 \alias{prec.graphpcor}
-\alias{hessian.graphpcor}
 \title{Set a graph whose nodes and edges represent variables and
 conditional distributions, respectively.}
 \usage{
@@ -39,11 +38,9 @@ conditional distributions, respectively.}
 \S4method{vcov}{graphpcor}(object, ...)
 
 \method{prec}{graphpcor}(model, ...)
-
-\method{hessian}{graphpcor}(graphpcor, base, decomposition = c("eigen", "svd", "chol"), ...)
 }
 \arguments{
-\item{...}{additional arguments passed to \code{\link[numDeriv:hessian]{numDeriv::hessian()}}}
+\item{...}{list of formula used to define the edges.}
 
 \item{x}{a \code{graphpcor} object}
 
@@ -56,20 +53,6 @@ conditional distributions, respectively.}
 \item{graph}{graphpcor object, see \code{\link{graphpcor}}.}
 
 \item{model}{graphpcor model object}
-
-\item{graphpcor}{model definition of a graphical model.
-This can be either a matrix or a 'graphpcor'.}
-
-\item{base}{either a reference correlation matrix
-or as a parameter reference for a 'graphpcor' model.}
-
-\item{decomposition}{character to specify which
-decomposition method to use to compute H^0.5 and H^(1/2).}
-}
-\value{
-list containing the hessian,
-its 'square root', inverse 'square root' along
-with the decomposition used
 }
 \description{
 Set a graph whose nodes and edges represent variables and
@@ -107,9 +90,6 @@ a variable and an edge a conditional distribution.
 
 \item \code{prec(graphpcor)}: The precision method for 'graphpcor'
 
-\item \code{hessian(graphpcor)}: Evaluate the hessian of the KLD for a \code{graphpcor}
-correlation model around a base model.
-
 }}
 \examples{
 g1 <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
@@ -117,10 +97,4 @@ g1
 summary(g1)
 plot(g1)
 prec(g1)
-g <- graphpcor(x1 ~ x2 + x3, x2 ~ x4, x3 ~ x4)
-ne <- dim(g)
-gH0 <- hessian(g, rep(-1, ne[2]))
-## alternatively
-C0 <- vcov(g, theta = rep(c(0,-1), ne))
-all.equal(hessian(g, C0), gH0)
 }

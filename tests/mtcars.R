@@ -140,30 +140,22 @@ summary(data1)
 ff1 <- y ~ iv + f(i, model = gmodel, replicate = r, vb.correct = FALSE)
 ff1
 
-## graph to plot
-mtcd1 <- list(
-    p1 ~ p2 + p3 + c1,
-    p2 ~ p4 + c4,
-    p3 ~ c3,
-    p4 ~ p5 + c2,
-    p5 ~ c5
+## the tree 
+tree1 <- treepcor(
+  p1 ~ p2 + p3 - c1,
+  p2 ~ p4 + c4,
+  p3 ~ c3,
+  p4 ~ p5 + c2,
+  p5 ~ c5
 )
-d2plot <- GraphPlot(mtcd1, base=0)
 
-par(mar = c(1, 1, 1, 1))
-plot(d2plot$gr, nodeAttrs = d2plot$nAttrs)
+plot(tree1)
 
-mtcd <- list(
-    p1 ~ p2 + p3 - c1,
-    p2 ~ p4 + c4,
-    p3 ~ c3,
-    p4 ~ p5 + c2,
-    p5 ~ c5
-)
-(np <- length(mtcd))
+c(nc <- dim(tree1)[1],
+  np <- dim(tree1)[2])
 
-gmodel <- dcg_model(
-    dcg = mtcd,
+gmodel <- cgeneric(
+    model = tree1,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.1, nc),
     lambda = 1,
@@ -188,8 +180,9 @@ fit1$mode$theta[nc+1:np]
 
 plot(fit1, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-cc.fit1 <- cov2cor(dcg_covcov(
-    mtcd, fit1$mode$theta[nc+1:np]))
+cc.fit1 <- cov2cor(vcov(
+    tree1, 
+    fit1$mode$theta[nc+1:np]))
 
 round(mypc*100)
 round(cc.fit1*100)
@@ -216,8 +209,9 @@ fit2$mode$theta[nc+1:np]
 
 plot(fit2, F, F, F, F, F, F, plot.opt.trace = TRUE)
 
-cc.fit2 <- cov2cor(dcg_covcov(
-    mtcd, fit2$mode$theta[nc+1:np]))
+cc.fit2 <- cov2cor(vcov(
+    tree1,
+    fit2$mode$theta[nc+1:np]))
 
 round(mypc*100)
 round(cc.fit1*100)

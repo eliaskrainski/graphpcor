@@ -3,11 +3,9 @@
 \name{cgeneric_generic0}
 \alias{cgeneric_generic0}
 \alias{cgeneric_iid}
-\title{Build an \code{inla.cgeneric} to implement a generic0 model
-with has a precision matrix defined as
-\deqn{Q = \tau R}
-where the structure matrix R is supplied by the user
-and \eqn{\tau} is the (local, see detais) precision parameter.
+\title{Build an \code{inla.cgeneric} to implement a
+model whose precision has a conditional
+precision parameter. See details.
 This uses the cgeneric interface that can be used as a
 model in a \code{INLA} \code{f()} model component.}
 \usage{
@@ -35,8 +33,8 @@ cgeneric_iid(
 \item{R}{the structure matrix for the model definition.}
 
 \item{param}{length two vector with the parameters
-\eqn{a,b} for the PC-prior distribution defined from
-\deqn{P(\sigma > a) = u}
+\code{a} and \code{p} for the PC-prior distribution defined from
+\deqn{P(\sigma > a) = p}
 where \eqn{\sigma} can be interpreted as marginal standard
 deviation of the process if scale = TRUE. See details.}
 
@@ -58,19 +56,22 @@ This is not considered if 'libpath' is provided.}
 \item{n}{size of the model}
 }
 \value{
-a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
+a \code{\link[=cgeneric]{cgeneric()}} object to be used in
+an f() formula term in INLA.
 }
 \description{
-Build an \code{inla.cgeneric} to implement a generic0 model
-with has a precision matrix defined as
-\deqn{Q = \tau R}
-where the structure matrix R is supplied by the user
-and \eqn{\tau} is the (local, see detais) precision parameter.
+Build an \code{inla.cgeneric} to implement a
+model whose precision has a conditional
+precision parameter. See details.
 This uses the cgeneric interface that can be used as a
 model in a \code{INLA} \code{f()} model component.
 }
 \details{
-Following Sørbie & Rue (2014), if scale = TRUE
+The precision matrix is defined as
+\deqn{Q = \tau R}
+where the structure matrix R is supplied by the user
+and \eqn{\tau} is the precision parameter.
+Following Sørbie and Rue (2014), if scale = TRUE
 the model is scaled so that
 \deqn{Q = \tau s R}
 where \eqn{s} is the geometric mean of the diagonal
@@ -80,12 +81,12 @@ If the model is scaled, the geometric mean of the
 marginal variances, the diagonal of \eqn{Q^{-1}}, is one.
 Therefore, when the model is scaled,
 \eqn{\tau} is the marginal precision,
-otherwise \eqn{tau} is the conditional precision.
+otherwise \eqn{\tau} is the conditional precision.
 }
 \section{Functions}{
 \itemize{
-\item \code{cgeneric_iid()}: The \code{\link[=cgeneric_iid]{cgeneric_iid()}} uses the 'generic0' with
-structure matrix as the identity.
+\item \code{cgeneric_iid()}: The \code{\link[=cgeneric_iid]{cgeneric_iid()}} uses the \link{cgeneric_generic0}
+with the structure matrix as the identity.
 
 }}
 \references{

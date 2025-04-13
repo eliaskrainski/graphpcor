@@ -11,7 +11,7 @@ theta2correl(theta, fromR = TRUE)
 
 theta2gamma2L(theta, fromR = TRUE)
 
-rcorrel(p, lambda = NA)
+rcorrel(p, lambda)
 }
 \arguments{
 \item{theta}{numeric vector with length equal n(n-1)/2}
@@ -22,6 +22,7 @@ If FALSE, assumes \eqn{\theta[k] \in (0, pi)}.}
 \item{p}{integer to specify the matrix dimension}
 
 \item{lambda}{is the penalization parameter.
+If missing it will be assumed equal to zero.
 The lambda=0 case means no penalization and
 a random correlation matrix will be drawn.
 Please see section 6.2 of the PC-prior paper,

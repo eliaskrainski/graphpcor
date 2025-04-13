@@ -49,7 +49,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(N > 0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->ints[2]->name, "ne"));	       // this will always be the case
 	int ne = data->ints[2]->ints[0];
@@ -138,12 +138,14 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 			sigmas[i] = exp(actualtheta[i]);
 		}
+/*
 		if (debug > 99) {
 			printf("number of fixed sigma = %d\n", nsfixed);
 			for (i = 0; i < N; i++)
 				printf("%d ", sfixed[i]);
 			printMat(sigmas, 1, N, "\nsigmas\n");
 		}
+ */
 		for (i = 0; i < ne; i++) {
 			actualtheta[itheta->ints[N + i]] = theta[k++];
 		}
@@ -152,19 +154,23 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			thetat[i] = data->doubles[4]->doubles[i];
 			lowtheta[i] = actualtheta[itheta->ints[N + i]];
 		}
-		if (debug > 99) {
+/*
+		 if (debug > 99) {
 			printMat(thetat, 1, ne, "thetat:\n");
 			printMat(lowtheta, 1, ne, "lowtheta:\n");
 			printMat(data->mats[0]->x, ne, ne, "hHneg\n");
 		}
+*/
 		int one = 1;
 		char trans = 'N';
 		double alpha = 1.0, beta = -1.0;
 		// (complete) thetat: I(\theta_0)^{-0.5} ( \theta - \theta_0)
 		dgemv_(&trans, &ne, &ne, &alpha, &data->mats[0]->x[0], &ne, &lowtheta[0], &one, &beta, &thetat[0], &one, F_ONE);
+/*
 		if (debug > 99) {
 			printMat(thetat, 1, ne, "actual thetat:\n");
 		}
+*/
 	} else {
 		for (i = 0; i < N; i++) {
 			actualtheta[i] = NAN;
@@ -184,7 +190,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret[0] = N;				       /* dimension */
 		ret[1] = M;
 		/*
-		 * number of (i <= j) 
+		 * number of (i <= j)
 		 */
 		for (i = 0; i < M; i++) {
 			ret[k] = ii->ints[i];
@@ -217,10 +223,11 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				k++;
 			}
 		}
-
-		if (debug > 9999) {
+/*
+		 if (debug > 9999) {
 			printMat(ll, N, N, "L[i,j]:\n");
 		}
+*/
 		// add low theta to L
 		k = 0;
 		for (i = 0; i < M; i++) {
@@ -228,21 +235,25 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				ll[iuq->ints[i]] = lowtheta[k++];
 			}
 		}
-		if (debug > 9999) {
+/*
+		 if (debug > 9999) {
 			printMat(ll, N, N, "L[i,j]:\n");
 		}
-
+*/
 		if (nfi > 0) {
 
-			if (debug > 9999) {
+/*
+	    if (debug > 9999) {
 				printf("filling %d entries\n", nfi);
 			}
-
+*/
 			fillL(&N, &nfi, &ifi->ints[0], &jfi->ints[0], &ll[0]);
 
-			if (debug > 9999) {
+/*
+		   if (debug > 9999) {
 				printMat(ll, N, N, "L[i,j]:\n");
 			}
+ */
 
 		}
 		// copy L to q (to be worked later in-place)
@@ -253,7 +264,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 
-		if (debug > 9999) {
+/*
+		 if (debug > 9999) {
 			printf("L0 (upper)\n");
 			k = 0;
 			for (i = 0; i < N; i++) {
@@ -263,12 +275,15 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("\n");
 			}
 		}
+*/
+
 		// chol2inv: to compute V0 = Q_0^{-1}
 		int info;
 		char uplo = 'L';
 		dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-		if (debug > 9999) {
+/*
+		 if (debug > 9999) {
 			printf("V0 (upper)\n");
 			k = 0;
 			for (i = 0; i < N; i++) {
@@ -278,6 +293,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("\n");
 			}
 		}
+*/
+
 		// si = diag(V0)^{1/2}
 		// C = diag(1/si) V0 diag(1/si)
 		double si[N];
@@ -286,17 +303,18 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			si[i] = sigmas[i] / sqrt(qtemp[k]);
 			k += (N - i);
 		}
-
+/*
 		if (debug > 999) {
 			printMat(si, 1, N, "si:\n");
 		}
+*/
 		k = 0;
 		for (i = 0; i < N; i++) {
 			for (j = i; j < N; j++) {
 				qtemp[k++] *= (si[i] * si[j]);
 			}
 		}
-
+/*
 		if (debug > 9999) {
 			printf("V (upper)\n");
 			k = 0;
@@ -307,9 +325,11 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("\n");
 			}
 		}
+*/
 		// chol(V)
 		dpptrf_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
+/*
 		if (debug > 9999) {
 			printf("chol(V) (upper)\n");
 			k = 0;
@@ -320,10 +340,13 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("\n");
 			}
 		}
+*/
+
 		// Q = chol2inv(chol(V))
 		dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-		if (debug > 9999) {
+/*
+		 if (debug > 9999) {
 			printf("Q (upper)\n");
 			k = 0;
 			for (i = 0; i < N; i++) {
@@ -333,6 +356,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("\n");
 			}
 		}
+*/
+
 		// copy the non-zero to return
 		for (i = 0; i < M; i++) {
 			ret[offset + i] = qtemp[iuqpac->ints[i]];
@@ -378,9 +403,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			k = itheta->ints[i];
 			lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
 			ret[0] += pclogsigma(theta[i], lam);
-			if (debug > 999) {
-				printf("theta[%d], %2.3f, lamb[%d] = %2.3f : %2.3f \n", i, theta[i], i, lam, ret[0]);
-			}
 		}
 
 		// the low L params Jacobian
@@ -400,9 +422,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		}
 		// r
 		pparams[0] = sqrt(val);
-		if (debug > 999) {
-			printMat(pparams, 1, ne, "rphi:\n");
-		}
 
 		double ldJacobian;
 		ldJacobian = ((double) (ne - 1)) * log(pparams[0]);
@@ -410,9 +429,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			for (i = 1; i < (ne - 1); i++) {       // not the last one
 				ldJacobian += ((double) (ne - 1 - i)) * log(sin(pparams[i]));
 			}
-		}
-		if (debug > 99) {
-			printf("log det Jacobian = %2.7f\n", ldJacobian);
 		}
 
 		ret[0] += ldJacobian - lambda * pparams[0];

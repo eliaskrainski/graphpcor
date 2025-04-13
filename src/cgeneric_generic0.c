@@ -41,17 +41,12 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 	assert(N > 0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
-
-	if (debug > 0) {
-		printf("n = %d and debug = %d\n", N, debug);
-	}
+//	int debug = data->ints[1]->ints[0];
 
 	int fixed = 1;
 	if ((data->doubles[0]->doubles[1] > 0) & (data->doubles[0]->doubles[1] < 1)) {
 		fixed = 0;
 	}
-	// fprintf(stderr, "fixed = %d\n", fixed);
 
 	if (fixed) {
 		prec = 1 / pow2(data->doubles[0]->doubles[0]);
@@ -62,9 +57,7 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 			prec = NAN;
 		}
 	}
-	if (debug > 9) {
-		printf("prec = %f\n", prec);
-	}
+
 	// the number of neighbors at the diagonal
 	// and the (upper) graph (-1)
 	// NOTE: scale this above def one!!!
@@ -74,9 +67,11 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 	assert(N == Rgraph->nrow);
 	assert(N == Rgraph->ncol);
 	int M = Rgraph->n;
+	/*
 	if (debug > 99) {
 		printf("M = %d\n", M);
 	}
+	*/
 
 	switch (cmd) {
 
@@ -152,9 +147,11 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 			double u = data->doubles[0]->doubles[0];
 			double a = data->doubles[0]->doubles[1];
 			double l = -log(a) / u;
-			if (debug > 99) {
+/*
+ 			if (debug > 99) {
 				printf("th %f, u %f, a %f and l %f\n", theta[0], u, a, l);
 			}
+*/
 			if (u <= 0) {
 				ret[0] = 0.0;
 			} else {

@@ -27,7 +27,6 @@
 
 #include "graphpcor.h"
 #include "graphpcor_utils.h"
-
 double pclogsigma(double lsigma, double lam)
 {
 	// return log of the PC-prior density for the log of the
@@ -244,7 +243,7 @@ void L2Cupper(int n, double *ll, double *cc)
 				for (k = 1; k <= i; k++) {
 					k1 += (n - k);
 					k2 += (n - k);
-					printf("%d,%d ", k1, k2);
+//					printf("%d,%d ", k1, k2);
 					cc[kk] += (ll[k1] * ll[k2]);
 				}
 				kk++;

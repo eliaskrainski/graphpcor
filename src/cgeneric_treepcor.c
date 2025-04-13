@@ -43,7 +43,7 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 	M = (int) ((double) N * ((double) (N + 1)) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->ints[2]->name, "np"));	       // this will always be the case
 	np = data->ints[2]->ints[0];
@@ -51,13 +51,15 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 	nparam = N + np;
 	double v2[np];
 
+/*
 	if (debug > 99) {
 		printf("(np = %d, N = %d, M = %d), N2 = %d\n", np, N, M, N2);
 	}
+*/
 
 	assert(!strcasecmp(data->ints[3]->name, "nv"));	       // this will always be the case
-	inla_cgeneric_vec_tp *nv = data->ints[3];
-	assert(nv->len == np);
+//	inla_cgeneric_vec_tp *nv = data->ints[3];
+	//assert(nv->len == np);
 
 	assert(!strcasecmp(data->ints[4]->name, "ipar"));      // this will always be the case
 	inla_cgeneric_vec_tp *ipar = data->ints[4];
@@ -141,6 +143,7 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 		// double *qq = (double *) calloc(N*N, sizeof(double));
 		double mcov[N2], qq[N2];
 
+/*
 		if (debug > 999) {
 			printf(" nv:\n");
 			for (i = 0; i < nv->len; i++) {
@@ -165,6 +168,7 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 				printf("\n");
 			}
 		}
+*/
 
 		correlation_parent_children(np, N, iiv->len, &iiv->ints[0], &jjv->ints[0], &ipar->ints[0], &itop->ints[0], &sch->doubles[0], &v2[0],
 					    &mcov[0]);
@@ -188,6 +192,7 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 			}
 		}
 
+/*
 		if (debug > 999) {
 			printf("VV[i,j]:\n");
 			k = 0;
@@ -198,8 +203,11 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 				printf("\n");
 			}
 		}
+*/
 
 		dposv_(&uplo, &N, &N, &mcov[0], &N, &qq[0], &N, &info, F_ONE);
+
+/*
 		if (debug > 99) {
 			printf("INFO for dposv for Q is %d\n", info);
 		}
@@ -222,6 +230,8 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 				printf("\n");
 			}
 		}
+*/
+
 		// copy to ret
 		k = 0;
 		int k2 = offset;
@@ -283,10 +293,12 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 					   &iiv->ints[0], &jjv->ints[0], &ipar->ints[0],
 					   &itop->ints[0], &sch->doubles[0], &theta[N], hs, &kld[0], &kldh[0]);
 
+/*
 		if (debug > 99) {
 			for (i = 0; i < np; i++)
 				printf("k and d : %2.7f and %2.7f \n", kld[i], kldh[i]);
 		}
+*/
 
 		for (i = 0; i < np; i++) {
 			d = sqrt(2 * kld[i]);

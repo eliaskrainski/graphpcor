@@ -36,7 +36,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 
 	// This cgeneric model main objective is to compute the
 	// Wishart prior for a precision matrix Q
-	// 
+	//
 	// The parametrization for Q consider Q = LL' for
 	// diag(L) = {d_1, ..., d_N}, d_i = \exp(\theta_i)
 	// such that
@@ -44,7 +44,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	// L = | l_1 d_2 |
 	// | l_2 l_3 d_3 |
 	// where l_i = \theta_{N+i}, i = 1 ... M-N = N(N-1)/2
-	// 
+	//
 	// Given parameters
 	// dof: degrees of freedom
 	// R: inverse scale positive definite matrix,
@@ -54,7 +54,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	// | R_1 R_4 R_5 |
 	// R = | R_4 R_2 R_6 |
 	// | R_5 R_6 R_3 |
-	// 
+	//
 	// It returns for if 'cmd' is
 	// 'graph': i,j index set for the upper triangle of Q;
 	// 'Q': the result of LL';
@@ -63,7 +63,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	// 'log_prior': the Wishart prior for Q
 
 	double *ret = NULL;
-	int i, j, k, k2, N, M;
+	int i, j, k, N, M;
 
 	// the size of the model
 	assert(data->n_ints > 1);
@@ -73,7 +73,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	M = (int) ((double) N * ((double) (N + 1)) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->doubles[0]->name, "dof"));
 	double dof = data->doubles[0]->doubles[0];
@@ -87,32 +87,28 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	double lcprior = data->doubles[2]->doubles[0];
 	assert(lcprior > 0);
 
+/*
 	if (debug > 999) {
 		printf("Inputs\nN: %d, M: %d, dof: %f, lc: %f\n", N, M, dof, lcprior);
 		printMat(R, N, N, "R");
 	}
+*/
 
-	double dk[N], dlq[M];
+	double dk[N];
 	if (theta) {
 		k = 0;
-		k2 = N;
 		for (i = 0; i < N; i++) {
 			dk[i] = exp(theta[i]);
-			dlq[k++] = dk[i];
-			for (j = (i + 1); j < N; j++) {
-				dlq[k++] = theta[k2++];
-			}
 		}
+/*
 		if (debug > 999) {
 			printMat(dk, 1, N, "Diag");
 			printMat(dlq, N, N, "dlq");
 		}
+*/
 	} else {
 		for (i = 0; i < N; i++) {
 			dk[i] = NAN;
-		}
-		for (i = 0; i < M; i++) {
-			dlq[i] = NAN;
 		}
 	}
 
@@ -168,14 +164,14 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 
 		/*
 		 * double dlQ[M]; exchangeableU(N, 0.9, &dlQ[0]);
-		 * 
+		 *
 		 * char uplo = 'L'; int info; dpptrf_(&uplo, &N, &dlQ[0], &info, F_ONE); // chol dpptri_(&uplo, &N, &dlQ[0], &info, F_ONE); //
 		 * chol2inv
-		 * 
+		 *
 		 * dpptrf_(&uplo, &N, &dlQ[0], &info, F_ONE); // chol
-		 * 
+		 *
 		 * k2 = N; k=0; for(i=0; i<N; i++) { for(j=i; j<N; j++) { if(j==i) { ret[1+i] = log(dlQ[k++]); } else { ret[1+k2++] = dlQ[k++]; } }
-		 * } 
+		 * }
 		 */
 
 	}
@@ -198,18 +194,20 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 
 		// build the precision matrix
 		theta2precision(N, &theta[0], &qq[0]);
-
+/*
 		if (debug > 999) {
 			printMat(qq, N, N, "Q:");
 		}
+*/
 		// RW product: m2 =- qq %*% R
 		char uplo = 'L';
 		double alpha = 1.0, beta = 0.0;
 		dsymm_(&uplo, &uplo, &N, &N, &alpha, &qq[0], &N, &R[0], &N, &beta, &m2[0], &N, F_ONE);
-
+/*
 		if (debug > 999) {
 			printMat(m2, N, N, "QR:");
 		}
+*/
 		// trace
 		double qrtrace = 0.0;
 		k = 0;
@@ -217,9 +215,11 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 			qrtrace += m2[k];
 			k += N + 1;
 		}
-		if (debug > 9) {
+/*
+		 if (debug > 9) {
 			printf("trace(QR) = %f \n", qrtrace);
 		}
+*/
 		// Cholesky of Q
 		int info = 0;
 		dpotrf_(&uplo, &N, &qq[0], &N, &info, F_ONE);
@@ -227,9 +227,11 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 		for (i = 0; i < N; i++) {
 			halfldetQ += log(qq[i * N + i]);       // theta[i];
 		}
+/*
 		if (debug > 9) {
 			printf("0.5*ldet(Q) = %f \n", halfldetQ);
 		}
+*/
 		// compute J (numerical, using central difference)
 		// h is defined as in priorfunc_wishart_generic() function
 		// of r-inla/inlaprog/src/inla-priors.c
@@ -240,10 +242,11 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 				h = 0.0499 * qq[i * N + i];
 		}
 		double h2 = 2.0 * h;
-
+/*
 		if (debug > 9) {
 			printf("hldQ = %f, h = %f\n", halfldetQ, h);
 		}
+*/
 		// compute J[M*M], first wrt diag(Q) then others
 		int kj;
 		for (kj = 0; kj < M; kj++) {
@@ -272,11 +275,11 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 			}
 
 		}
-
+/*
 		if (debug > 999) {
 			printMat(J, M, M, "J:");
 		}
-
+*/
 		int pivot[M], lwork = 2 * M + M + 1;
 		double work[lwork], tau[M];
 		dgeqp3_(&M, &M, &J[0], &M, &pivot[0], &tau[0], &work[0], &lwork, &info, F_ONE);
@@ -284,9 +287,11 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 		for (i = 0; i < M; i++) {
 			ldJacobian += log(fabs(J[i * M + i]));
 		}
+/*
 		if (debug > 99) {
 			printf("\ndet Jacobian = %f\n", ldJacobian);
 		}
+*/
 		if (ldJacobian < 0) {
 			ldJacobian *= -1.0;
 		}
