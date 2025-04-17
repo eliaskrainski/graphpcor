@@ -76,4 +76,9 @@ fillLprec <- function(L, lfi) {
   }
   return(L)
 }
-
+#' Internal function to build C
+theta2Lprec2C <- function(theta, p, ilowerL) {
+  L <- Lprec(theta, p, ilowerL)
+  V0 <- chol2inv(t(L))
+  return(cov2cor(V))
+}

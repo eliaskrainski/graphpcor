@@ -6,7 +6,7 @@ n <- 4
 lambda <- 5
 
 model <- cgeneric(
-    model = "pc_correl", 
+    model = "pc_correl",
     n = n,
     lambda = lambda)
 
@@ -23,7 +23,7 @@ theta1 <- rnorm(m)
 
 (vv <- solve(qq))
 
-dat1 <- data.frame(    
+dat1 <- data.frame(
     i = 1:n,
     y = rep(NA, n)
 )
@@ -77,7 +77,7 @@ fitr <- inla(
     control.mode = cmode
 )
 
-(Lfitted <- graphpcor:::theta2gamma2L(fitr$mode$theta))
+(Lfitted <- Lprec(fitr$mode$theta))
 round(tcrossprod(Lfitted), 2)
 round(vv, 2)
 

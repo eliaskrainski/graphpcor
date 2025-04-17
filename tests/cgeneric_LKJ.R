@@ -8,7 +8,7 @@ n <- 4
 eta <- 10
 
 cmodel <- cgeneric(
-    model = "LKJ", 
+    model = "LKJ",
     n = n,
     eta = eta
 )
@@ -26,10 +26,10 @@ theta1 <- rnorm(m)
 (vv <- solve(qq))
 
 all.equal(as.matrix(vv),
-          tcrossprod(graphpcor:::theta2gamma2L(theta1)))
+          tcrossprod(Lprec(theta1)))
 
 ## fake data
-dat1 <- data.frame(    
+dat1 <- data.frame(
     i = 1:n,
     y = rep(NA, n)
 )
@@ -79,7 +79,7 @@ fitr <- inla(
     control.mode = cmode
 )
 
-(Lfitted <- graphpcor:::theta2gamma2L(fitr$mode$theta))
+(Lfitted <- Lprec(fitr$mode$theta))
 round(tcrossprod(Lfitted), 2)
 round(vv, 2)
 
