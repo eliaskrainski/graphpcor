@@ -63,7 +63,7 @@
 #' be used the shared object pre-compiled by INLA.
 #' This is not considered if 'libpath' is provided.
 #' @param libpath string, default is NULL, with the path to the shared object.
-#' @return objects to be used in the f() formula term in INLA.
+#' @return a `inla.cgeneric`, [cgeneric()] object.
 #' @export
 cgeneric_graphpcor <-
   function(graph,

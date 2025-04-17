@@ -9,6 +9,9 @@ graphpcor(...)
 \arguments{
 \item{...}{either a list of formulae or a matrix}
 }
+\value{
+a \code{graphpcor} object
+}
 \description{
 The \code{graphpcor} generic method for \linkS4class{graphpcor}
 }

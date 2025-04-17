@@ -15,6 +15,9 @@ Laplacian(graph)
 \arguments{
 \item{graph}{an object that inherits a matrix class}
 }
+\value{
+matrix as the Laplacian of a graph
+}
 \description{
 The (symmetric) Laplacian of a graph is a
 square matrix with dimention

@@ -248,7 +248,7 @@ setMethod(
     ll <- t(chol(G + diag(ne[1])))
     ifill <- which(is.zero(G) & (!is.zero(ll)))
     if(length(ifill)>0) {
-      L <- fiL(L, ifill)
+      L <- fillLprec(L, ifill)
     }
     return(t(L))
   }
@@ -303,29 +303,6 @@ prec.graphpcor <- function(model, ...) {
     warning("missing `theta`, returning Laplacian!")
   }
   return(Q)
-}
-#' Function to fill-in a Cholesky matrix
-#' @param L the lower triangle of the Cholesky decomposition
-#' @param lfi indicator of fill-in elements
-#' @return a filled L matrix.
-fiL <- function(L, lfi) {
-  L <- as.matrix(L)
-  ii <- row(L)[lfi]
-  jj <- col(L)[lfi]
-  for(v in 1:length(ii)) {
-    i <- ii[v]
-    j <- jj[v]
-    if(j==1) {
-      warning("j = 1!\n")
-      L[i,1] <- 0.0
-    } else {
-      stopifnot((i>1) & (j>1)) ## L_{11} not allowed
-      stopifnot(j>1) ## j=1 is not allowed
-      k <- 1:(j-1)
-      L[i, j] <- -sum(L[i, k] * L[j, k]) / L[j, j]
-    }
-  }
-  return(L)
 }
 #' Evaluate the hessian of the KLD for a `graphpcor`
 #' correlation model around a base model.

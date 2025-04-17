@@ -34,8 +34,6 @@ double *inla_cgeneric_generic0(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 
 	double *ret = NULL, prec;
 
-	// the size of the model
-	assert(data->n_ints > 1);
 	assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
 	int N = data->ints[0]->ints[0];			       // this will always be the case
 	assert(N > 0);

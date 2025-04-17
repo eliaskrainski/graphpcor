@@ -17,6 +17,9 @@ is.zero(x, ...)
 
 \item{...}{additional arguments}
 }
+\value{
+logical
+}
 \description{
 Define the is.zero method
 }

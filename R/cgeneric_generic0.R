@@ -39,8 +39,7 @@
 #' Sigrunn Holbek Sørbye and Håvard Rue (2014).
 #' Scaling intrinsic Gaussian Markov random field priors in
 #' spatial modelling. Spatial Statistics, vol. 8, p. 39-51.
-#' @return a [cgeneric()] object to be used in
-#' an f() formula term in INLA.
+#' @return a `inla.cgeneric`, [cgeneric()] object.
 cgeneric_generic0 <-
   function(R,
            param,

@@ -31,7 +31,7 @@ This is not considered if 'libpath' is provided.}
 \item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
-a \code{\link[=cgeneric]{cgeneric()}} object to be used in the f() formula term in INLA.
+a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
 }
 \description{
 Build an \code{inla.cgeneric} to implement the Wishart

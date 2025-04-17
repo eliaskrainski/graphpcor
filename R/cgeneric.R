@@ -30,6 +30,7 @@
 #' an object class for what a `inla.cgeneric` method exists.
 #' E.g., if it is a character, a specific function
 #' will be called, see the example in Methods section.
+#' @return a `inla.cgeneric`, [cgeneric()] object.
 #' @export
 cgeneric <- function(model, ...) {
   UseMethod("cgeneric")

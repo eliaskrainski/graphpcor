@@ -15,6 +15,9 @@ to define a three for correlation modeling, see \code{\link[=treepcor]{treepcor(
 Parent nodes shall be in the right side while children
 (or parent with a parent) in the left side.}
 }
+\value{
+a \code{treepcor} object
+}
 \description{
 Define a tree used to model correlation matrices
 using a shared latent variables method represented by a tree,

@@ -10,6 +10,7 @@
 #' the graph and precision are as a sparse matrix.
 #' If TRUE, graph only return the row/col indexes and
 #' precision return only the elements as a vector.
+#' @return depends on `cmd`
 cgeneric_get <- function(model,
                          cmd = c("graph", "Q", "initial", "mu", "log_prior"),
                          theta,

@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.901
+Version: 0.1.11
 Maintainer: Elias Krainski <eliaskrainski@gmail.com>
 Authors@R: c(
  person(given = c("Elias"),
@@ -20,7 +20,7 @@ Authors@R: c(
  person(given = "Janet",
         family = "van Niekerk",
         role = c("aut", "cph"),
-        comment = "200~0000-0002-4334-2057"),
+        comment = "0000-0002-4334-2057"),
  person(given = "Haavard",
         family = "Rue’",
         role = "aut",
@@ -29,24 +29,22 @@ Authors@R: c(
 Description: Implement some models for 
   correlation/covariance matrices including two approaches 
   to model correlation matrices from a graphical structure.
-  One use the latent parent variable framework as
-  proposed in <doi:10.48550/arXiv.2312.06289>.
+  One use latent parent variables as proposed in
+  Sterrantino et. al. (2024) <doi:10.48550/arXiv.2312.06289>.
   The other uses a graph to specify conditional 
   relations between the variables.
   The graphical structure makes correlation matrices 
   interpretable and avoids the quadratic increase of 
   parameters as a function of the dimension. 
-  These two modeling classes are then used as prior for
-  latent model parameters. 
   In the first approach a natural sequence of simpler 
   models along with a complexity penalization is used.
   The second penalizes deviations from a base model.
-  Models are implemented in a C code template for 
-  the 'cgeneric' interface with the 'INLA' package 
-  (<https://www.r-inla.org>). 
-  This allows one to use 'INLA' to build and fit 
-  complex data models using the models in this 
-  package as building blocks.
+  These can be used as prior for model parameters,
+  considering C code through the 'cgeneric' interface 
+  for the 'INLA' package (<https://www.r-inla.org>). 
+  This allows one to use these models as building 
+  blocks combined and to other latent Gaussian models 
+  in order to build complex data models.
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 License: GPL (>=2) 
 Encoding: UTF-8

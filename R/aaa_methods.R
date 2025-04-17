@@ -1,6 +1,7 @@
 #' @rdname graphpcor
 #' @title The `graphpcor` generic method for [graphpcor-class]
 #' @param ... either a list of formulae or a matrix
+#' @return a `graphpcor` object
 #' @export
 graphpcor <- function(...) {
   UseMethod("graphpcor")
@@ -9,6 +10,7 @@ graphpcor <- function(...) {
 #' @rdname prec-methods
 #' @param model a model object
 #' @param ... additional arguments
+#' @return a precision matrix
 #' @export
 prec <- function(model, ...) {
   UseMethod("prec")
@@ -61,6 +63,7 @@ prec.inla <- function(model, ...) {
 #' Define the is.zero method
 #' @param x an R object
 #' @param ... additional arguments
+#' @return logical
 #' @export
 is.zero <- function(x, ...) {
   UseMethod("is.zero")
@@ -105,6 +108,7 @@ is.zero.matrix <- function(x, ...) {
 #'  where i~j means that there is an edge
 #'  between nodes i and j and
 #'  n_i is the number of edges including node i.
+#' @return matrix as the Laplacian of a graph
 #' @export
 Laplacian <- function(graph) {
   UseMethod("Laplacian")

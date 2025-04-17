@@ -95,6 +95,11 @@ precision return only the elements as a vector.}
 
 \item{make.dimnames}{see \code{kronecker}}
 }
+\value{
+a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
+
+depends on \code{cmd}
+}
 \description{
 This organize data needed on the C interface
 for building latent models, which are characterized

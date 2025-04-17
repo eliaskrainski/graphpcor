@@ -60,6 +60,9 @@ of the precision matrix are returned.}
 
 \item{theta}{the parameter.}
 }
+\value{
+a \code{inla.rgeneric} object.
+}
 \description{
 \code{inla.rgeneric} class, short \code{rgeneric},
 to define a \code{\link[INLA:rgeneric]{INLA::rgeneric()}} latent model

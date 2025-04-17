@@ -30,8 +30,8 @@
 #'  sigma.prior.reference = c(1, 2, 3) and
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
 #' then the sigma is fixed to 2 and not estimated.
-#' @return objects to be used in the f() formula term in INLA.
 #' @seealso [treepcor()] and [cgeneric()]
+#' @return a `inla.cgeneric`, [cgeneric()] object.
 #' @useDynLib graphpcor, .registration = TRUE
 #' @export
 cgeneric_treepcor <-

@@ -25,7 +25,8 @@ m1 <- cgeneric(
     constr = FALSE,
     debug = !TRUE,
     scale = FALSE,
-    param = c(1, 0.0)
+    param = c(1, 0.0),
+    useINLAprecomp=FALSE
 )
 
 str(m1)
@@ -46,8 +47,7 @@ str(prec(m1, optimize = TRUE, theta = 0))
 
 if(FALSE) ### test model1
     inla(y ~ 0 + f(i, model = m1), "poisson",
-         data = 
-data.frame(y=rpois(n,1), i = 1:n))$cpu.used
+         data = data.frame(y=rpois(n,1), i = 1:n))$cpu.used
 
 Q1 <- prec(m1, theta = theta1)
 Q1[1:min(5, n), 1:min(20, n)]
@@ -73,7 +73,7 @@ m2 <- cgeneric(
     scale = FALSE,
     constr = FALSE,
     param = c(1, 0.5),
-    debug = FALSE)
+    useINLAprecomp=FALSE)
 
 initial(m2)
 

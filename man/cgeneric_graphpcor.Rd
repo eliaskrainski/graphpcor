@@ -87,7 +87,7 @@ This is not considered if 'libpath' is provided.}
 \item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
-objects to be used in the f() formula term in INLA.
+a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
 }
 \description{
 From either a \code{graph} (see \code{\link[=graph]{graph()}}) or

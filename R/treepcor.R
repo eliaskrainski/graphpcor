@@ -15,6 +15,7 @@
 #' The main parent (fist) should be identified as `p1`.
 #' Parent variables (except `p1`) have an ancestor,
 #' which is a parent variable.
+#' @return a `treepcor` object
 #' @importFrom stats as.formula
 #' @export
 #' @examples

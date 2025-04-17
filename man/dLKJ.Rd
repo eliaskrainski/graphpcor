@@ -14,6 +14,9 @@ dLKJ(R, eta, log = FALSE)
 \item{log}{logical indicating if the log of the density
 is to be returned, default = FALSE}
 }
+\value{
+numeric as the (log) density
+}
 \description{
 The LKJ density for a correlation matrix
 }

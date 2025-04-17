@@ -3,6 +3,7 @@
 #' @param eta numeric, the prior parameter
 #' @param log logical indicating if the log of the density
 #' is to be returned, default = FALSE
+#' @return numeric as the (log) density
 #' @export
 dLKJ <- function(R, eta, log = FALSE) {
   lR <- chol(R)
@@ -47,8 +48,7 @@ dLKJ <- function(R, eta, log = FALSE) {
 #'   Parameterizing correlations: a geometric interpretation.
 #'   IMA Journal of Management Mathematics (2007) 18, 55-73.
 #'   <doi 10.1093/imaman/dpl010>
-#' @return a [cgeneric()] object to be used in the f() formula term in INLA.
-#'
+#' @return a `inla.cgeneric`, [cgeneric()] object.
 cgeneric_LKJ <-
   function(n,
            eta,

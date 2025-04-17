@@ -64,7 +64,7 @@ theta2gamma2L <- function(theta, fromR = TRUE) {
 #' @describeIn correl
 #' Drawn a random sample correlation matrix
 #' @param p integer to specify the matrix dimension
-#' @param lambda is the penalization parameter.
+#' @param lambda numeric as the penalization parameter.
 #' If missing it will be assumed equal to zero.
 #' The lambda=0 case means no penalization and
 #' a random correlation matrix will be drawn.

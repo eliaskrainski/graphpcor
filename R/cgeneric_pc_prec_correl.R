@@ -63,8 +63,7 @@
 #'   IMA Journal of Management Mathematics (2007) 18, 55-73.
 #'   <doi 10.1093/imaman/dpl010>
 #'
-#' @return a [cgeneric()] object to be used in the f() formula term in INLA.
-#'
+#' @return a `inla.cgeneric`, [cgeneric()] object.
 cgeneric_pc_prec_correl <-
   function(n,
            lambda,

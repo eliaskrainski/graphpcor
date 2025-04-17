@@ -17,6 +17,9 @@ prec(model, ...)
 
 \item{...}{additional arguments}
 }
+\value{
+a precision matrix
+}
 \description{
 The \code{prec} method
 }

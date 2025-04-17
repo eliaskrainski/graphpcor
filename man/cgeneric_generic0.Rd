@@ -56,8 +56,7 @@ This is not considered if 'libpath' is provided.}
 \item{n}{size of the model}
 }
 \value{
-a \code{\link[=cgeneric]{cgeneric()}} object to be used in
-an f() formula term in INLA.
+a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
 }
 \description{
 Build an \code{inla.cgeneric} to implement a

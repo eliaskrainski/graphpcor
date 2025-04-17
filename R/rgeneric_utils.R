@@ -8,6 +8,7 @@
 #' of the precision matrix are returned.
 #' @param ... additional arguments to be used internally
 #' for the model, for example, additional data.
+#' @return a `inla.rgeneric` object.
 #' @export
 rgeneric <- function(model,
                      debug = FALSE,

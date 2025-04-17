@@ -35,7 +35,7 @@ This is not considered if 'libpath' is provided.}
 \item{libpath}{string, default is NULL, with the path to the shared object.}
 }
 \value{
-objects to be used in the f() formula term in INLA.
+a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
 }
 \description{
 This set the necessary data to implement the penalized

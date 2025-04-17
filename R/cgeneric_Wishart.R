@@ -16,8 +16,7 @@
 #' scale \eqn{p\times p} matrix the Wishart density is
 #' \deqn{|Q|^{(d-p-1)/2}\textrm{e}^{-tr(RQ)/2}|R|^{p/2}2^{-dp/2}\Gamma_p(n/2)^{-1}}
 #'
-#' @return a [cgeneric()] object to be used in the f() formula term in INLA.
-#'
+#' @return a `inla.cgeneric`, [cgeneric()] object.
 cgeneric_Wishart <-
   function(n,
            dof,
