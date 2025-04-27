@@ -3,11 +3,14 @@
 \name{Lprec}
 \alias{Lprec}
 \alias{fillLprec}
+\alias{theta2Lprec2C}
 \title{Precision matrix parametrization helper functions.}
 \usage{
 Lprec(theta, p, ilowerL)
 
 fillLprec(L, lfi)
+
+theta2Lprec2C(theta, p, ilowerL)
 }
 \arguments{
 \item{theta}{numeric vector of length \code{m}.}
@@ -49,6 +52,8 @@ Then the precision is defined as
 \section{Functions}{
 \itemize{
 \item \code{fillLprec()}: Function to fill-in a Cholesky matrix
+
+\item \code{theta2Lprec2C()}: Internal function to build C
 
 }}
 \examples{

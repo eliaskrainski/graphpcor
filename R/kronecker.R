@@ -38,10 +38,14 @@ setMethod(
     }
 
     if(is.null(mcall$useINLAprecomp)) {
-      useINLAprecomp = FALSE
+      useINLAprecomp = TRUE
+    } else {
+      useINLAprecomp = mcall$useINLAprecomp
     }
     if(is.null(mcall$libpath)) {
       libpath <- NULL
+    } else {
+      libpath <- mcall$libpath
     }
 
     model <- "inla_cgeneric_kronecker"

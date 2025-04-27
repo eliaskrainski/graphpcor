@@ -86,7 +86,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	int i, j, k;
 	int ni1, nd1, nc1, nm1, nsm1;
-	int ni2, nsm2; //, nd2, nc2, nm2, nsm2;
+	int ni2, nd2, nc2, nm2, nsm2;
 
 	// int n1 = data->ints[0]->ints[0];
 	ni1 = data->ints[0]->ints[1];
@@ -98,9 +98,9 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	// int n2 = data->ints[ni1]->ints[0];
 	ni2 = data->ints[0]->ints[7];
-//	nd2 = data->ints[0]->ints[8];
-//	nc2 = data->ints[0]->ints[9];
-//	nm2 = data->ints[0]->ints[10];
+	nd2 = data->ints[0]->ints[8];
+	nc2 = data->ints[0]->ints[9];
+	nm2 = data->ints[0]->ints[10];
 	nsm2 = data->ints[0]->ints[11];
 	int M2 = data->ints[0]->ints[12];
 	int n = data->ints[0]->ints[13];
@@ -109,7 +109,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(ni1 > 1);
 	assert(ni2 > 1);
 	assert(nc1 > 1);
-//	assert(nc2 > 1);
+	assert(nc2 > 1);
 	assert(data->n_chars > 5);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
@@ -124,16 +124,26 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	inla_cgeneric_data_tp *dataM1 = Calloc(1, inla_cgeneric_data_tp);
 	inla_cgeneric_data_tp *dataM2 = Calloc(1, inla_cgeneric_data_tp);
 
+	dataM1->n_ints = ni1;
 	dataM1->ints = &data->ints[0];
+	dataM1->n_doubles = nd1;
 	dataM1->doubles = &data->doubles[0];
+	dataM1->n_chars = nc1;
 	dataM1->chars = &data->chars[2];		       // first two is for KM!
+	dataM1->n_mats = nm1;
 	dataM1->mats = &data->mats[0];
+	dataM1->n_smats = nsm1;
 	dataM1->smats = &data->smats[0];
 
+	dataM2->n_ints = ni2;
 	dataM2->ints = &data->ints[ni1];
+	dataM2->n_doubles = nd2;
 	dataM2->doubles = &data->doubles[nd1];
+	dataM2->n_chars = nc2;
 	dataM2->chars = &data->chars[2 + nc1];		       // first two is for KM!
+	dataM2->n_mats = nm2;
 	dataM2->mats = &data->mats[nm1];
+	dataM2->n_smats = nsm2;
 	dataM2->smats = &data->smats[nsm1];
 
 	if (!(data->cache)) {
