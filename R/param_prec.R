@@ -38,7 +38,7 @@ Lprec <- function(theta, p, ilowerL) {
     L[lower.tri(L)] <- theta
   } else {
     L[ilowerL] <- theta
-    G <- diag(p)
+    G <- matrix(0, p, p)
     G[ilowerL] <- -1
     G <- t(G)
     G[ilowerL] <- -1
