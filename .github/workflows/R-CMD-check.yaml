@@ -3,15 +3,10 @@
 on:
   push:
     branches:
-      - master
-      - devel
-      - stable
-      - release/*
-      - feature/*
+      - main
   pull_request:
     branches:
-      - devel
-      - master
+      - main
 
 name: R-CMD-check
 
@@ -26,7 +21,9 @@ jobs:
       matrix:
         config:
           - {os: macOS-latest, r: 'release'}
+          - {os: macOS-latest, r: 'oldrel-1'}
           - {os: windows-latest, r: 'release'}
+          - {os: windows-latest, r: 'oldrel-1'}
           - {os: ubuntu-latest, r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest, r: 'release'}
           - {os: ubuntu-latest, r: 'oldrel-1'}
