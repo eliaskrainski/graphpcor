@@ -33,104 +33,64 @@ cgeneric_get <- function(model,
                    several.ok = TRUE)
   stopifnot(length(cmd)>0)
 
-  if(missing(theta)) {
-    if(cmd %in% c("Q", "log_prior")) {
-      stop("Please provide 'theta'!")
-    } else {
-      theta <- NULL
-      ntheta = 0L
+  args1 <- list("generic_element_get", "initial", NULL, 0L)
+  tr <- try(do.call(".Call", c(args1, model$f$cgeneric$data)),
+            silent = TRUE)
+  if(inherits(tr, 'try-error')) {
+
+    warning('Using "INLA::inla.cgeneric.q()" instead of direct code!')
+    if(!missing(theta)) {
+      warning('given `theta` not supported!')
     }
+
+    ret <- INLA::inla.cgeneric.q(model)
+    ret$graph <- INLA::inla.as.sparse(ret$graph)
+    ret$Q <- INLA::inla.as.sparse(ret$Q)
+    stopifnot(all(ret$graph@i == ret$Q@i))
+    stopifnot(all(ret$graph@j == ret$Q@j))
+    o <- intersect(
+      order(ret$graph@i),
+      which(ret$graph@j >= ret$graph@i))
+    ret$graph@i <- ret$graph@i[o]
+    ret$graph@j <- ret$graph@j[o]
+    ret$graph@x <- ret$graph@x[o]
+    ret$Q@i <- ret$Q@i[o]
+    ret$Q@j <- ret$Q@j[o]
+    ret$Q@x <- ret$Q@x[o]
+    if(optimize) {
+      ret$graph <- list(
+        ret$graph@i,
+        ret$graph@j
+      )
+      ret$Q <- ret$Q@x
+    }
+    names(ret) <- gsub("log.prior", "log_prior",
+                       names(ret), fixed = TRUE)
+    ret <- ret[cmd]
+    if(length(ret) == 1) {
+      ret <- ret[[1]]
+    }
+
   } else {
-    if(inherits(theta, "matrix")) {
-      ntheta <- as.integer(ncol(theta))
-    } else {
-      ntheta <- 1L
-    }
-  }
-
-  if(length(cmd) == 1) {
-    ret <- .Call(
-      "cgeneric_element_get",
-      cmd,
-      theta,
-      as.integer(ntheta),
-      cgdata$ints,
-      cgdata$doubles,
-      cgdata$characters,
-      cgdata$matrices,
-      cgdata$smatrices,
-      PACKAGE = "graphpcor"
-    )
-
-    if((cmd %in% c("graph", "Q")) && (!optimize)) {
-      if(cmd == "graph") {
-        ij <- ret
-        ret <- rep(1, length(ij[[1]]))
+    if(missing(theta)) {
+      if(cmd %in% c("Q", "log_prior")) {
+        stop("Please provide 'theta'!")
       } else {
-        ij <- .Call(
-          "cgeneric_element_get",
-          "graph",
-          NULL,
-          as.integer(ntheta),
-          cgdata$ints,
-          cgdata$doubles,
-          cgdata$characters,
-          cgdata$matrices,
-          cgdata$smatrices,
-          PACKAGE = "graphpcor"
-        )
+        theta <- NULL
+        ntheta = 0L
       }
-      ret <- Matrix::sparseMatrix(
-        i = ij[[1]] + 1L,
-        j = ij[[2]] + 1L,
-        x = ret,
-        symmetric = TRUE,
-        repr = "T"
-      )
-    }
-    return(ret)
-  }
-
-  names(cmd) <- cmd
-  ret <-
-    lapply(
-      cmd, function(x) {
-        .Call(
-          "cgeneric_element_get",
-          x,
-          theta,
-          as.integer(ntheta),
-          cgdata$ints,
-          cgdata$doubles,
-          cgdata$characters,
-          cgdata$matrices,
-          cgdata$smatrices,
-          PACKAGE = "graphpcor"
-        )
-      }
-    )
-  if(optimize) {
-    return(ret)
-  }
-
-  if(any(cmd == "graph")) {
-    ret$graph <-
-      Matrix::sparseMatrix(
-        i = ret$graph[[1]] + 1L,
-        j = ret$graph[[2]] + 1L,
-        x = rep(1, length(ret$graph[[1]])),
-        symmetric = TRUE,
-        repr = "T"
-      )
-  }
-
-  if(any(cmd == "Q")) {
-    if(any(cmd == "graph")) {
-      ij <- ret$graph
     } else {
-      ij <- .Call(
+      if(inherits(theta, "matrix")) {
+        ntheta <- as.integer(ncol(theta))
+      } else {
+        ntheta <- 1L
+      }
+    }
+
+    if(length(cmd) == 1) {
+      ret <- .Call(
         "cgeneric_element_get",
-        "graph",
+        cmd,
         theta,
         as.integer(ntheta),
         cgdata$ints,
@@ -140,15 +100,96 @@ cgeneric_get <- function(model,
         cgdata$smatrices,
         PACKAGE = "graphpcor"
       )
-      ij <- Matrix::sparseMatrix(
-        i = ij[[1]] + 1L,
-        j = ij[[2]] + 1L,
-        symmetric = TRUE,
-        repr = "T"
-      )
+
+      if((cmd %in% c("graph", "Q")) && (!optimize)) {
+        if(cmd == "graph") {
+          ij <- ret
+          ret <- rep(1, length(ij[[1]]))
+        } else {
+          ij <- .Call(
+            "cgeneric_element_get",
+            "graph",
+            NULL,
+            as.integer(ntheta),
+            cgdata$ints,
+            cgdata$doubles,
+            cgdata$characters,
+            cgdata$matrices,
+            cgdata$smatrices,
+            PACKAGE = "graphpcor"
+          )
+        }
+        ret <- Matrix::sparseMatrix(
+          i = ij[[1]] + 1L,
+          j = ij[[2]] + 1L,
+          x = ret,
+          symmetric = TRUE,
+          repr = "T"
+        )
+      }
+      return(ret)
     }
-    ij@x <- ret$Q
-    ret$Q <- ij
+
+    names(cmd) <- cmd
+    ret <-
+      lapply(
+        cmd, function(x) {
+          .Call(
+            "cgeneric_element_get",
+            x,
+            theta,
+            as.integer(ntheta),
+            cgdata$ints,
+            cgdata$doubles,
+            cgdata$characters,
+            cgdata$matrices,
+            cgdata$smatrices,
+            PACKAGE = "graphpcor"
+          )
+        }
+      )
+    if(optimize) {
+      return(ret)
+    }
+
+    if(any(cmd == "graph")) {
+      ret$graph <-
+        Matrix::sparseMatrix(
+          i = ret$graph[[1]] + 1L,
+          j = ret$graph[[2]] + 1L,
+          x = rep(1, length(ret$graph[[1]])),
+          symmetric = TRUE,
+          repr = "T"
+        )
+    }
+
+    if(any(cmd == "Q")) {
+      if(any(cmd == "graph")) {
+        ij <- ret$graph
+      } else {
+        ij <- .Call(
+          "cgeneric_element_get",
+          "graph",
+          theta,
+          as.integer(ntheta),
+          cgdata$ints,
+          cgdata$doubles,
+          cgdata$characters,
+          cgdata$matrices,
+          cgdata$smatrices,
+          PACKAGE = "graphpcor"
+        )
+        ij <- Matrix::sparseMatrix(
+          i = ij[[1]] + 1L,
+          j = ij[[2]] + 1L,
+          symmetric = TRUE,
+          repr = "T"
+        )
+      }
+      ij@x <- ret$Q
+      ret$Q <- ij
+    }
+
   }
 
   return(ret)
