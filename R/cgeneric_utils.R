@@ -48,21 +48,15 @@ cgeneric_get <- function(model,
     ret$Q <- INLA::inla.as.sparse(ret$Q)
     stopifnot(all(ret$graph@i == ret$Q@i))
     stopifnot(all(ret$graph@j == ret$Q@j))
-    o <- intersect(
-      order(ret$graph@i),
-      which(ret$graph@j >= ret$graph@i))
-    ret$graph@i <- ret$graph@i[o]
-    ret$graph@j <- ret$graph@j[o]
-    ret$graph@x <- ret$graph@x[o]
-    ret$Q@i <- ret$Q@i[o]
-    ret$Q@j <- ret$Q@j[o]
-    ret$Q@x <- ret$Q@x[o]
     if(optimize) {
+      o <- intersect(
+        order(ret$graph@i),
+        which(ret$graph@j >= ret$graph@i))
       ret$graph <- list(
-        ret$graph@i,
-        ret$graph@j
+        ret$graph@i[o],
+        ret$graph@j[o]
       )
-      ret$Q <- ret$Q@x
+      ret$Q@x <- ret$Q@x[o]
     }
     names(ret) <- gsub("log.prior", "log_prior",
                        names(ret), fixed = TRUE)
