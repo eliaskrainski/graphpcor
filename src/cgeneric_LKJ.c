@@ -135,7 +135,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		ret = Calloc(nth + 1, double);
 		ret[0] = nth;
 		for (i = 0; i < nth; i++) {
-			ret[1 + i] = 3.0;
+			ret[1 + i] = 0.0;
 		}
 	}
 		break;
