@@ -33,6 +33,9 @@ theta2Lprec2C(theta, p, ilowerL)
 
 \item{...}{additional arguments}
 
+\item{object}{Matrix supposed to be a
+sparse precision matrix}
+
 \item{theta}{numeric vector of length \code{m}.}
 
 \item{p}{numeric giving the dimention of Q.

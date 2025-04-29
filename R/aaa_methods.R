@@ -121,6 +121,8 @@ Laplacian.default <- function(graph) {
 }
 #' @describeIn prec
 #' The `vcov` method for sparse matrices
+#' @param object Matrix supposed to be a
+#' sparse precision matrix
 setMethod(
   "vcov",
   "Matrix",
