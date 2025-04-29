@@ -7,7 +7,7 @@ graphpcor <- function(...) {
   UseMethod("graphpcor")
 }
 #' The `prec` method
-#' @rdname prec-methods
+#' @rdname prec
 #' @param model a model object
 #' @param ... additional arguments
 #' @return a precision matrix
@@ -15,7 +15,7 @@ graphpcor <- function(...) {
 prec <- function(model, ...) {
   UseMethod("prec")
 }
-#' @describeIn prec-methods
+#' @describeIn prec
 #' The default precision method
 #' computes the inverse of the variance
 #' @export
@@ -29,7 +29,7 @@ prec.default <- function(model, ...) {
     )
   )
 }
-#' @describeIn prec-methods
+#' @describeIn prec
 #' Define the prec method for an inla output object
 #' @export
 prec.inla <- function(model, ...) {
@@ -119,3 +119,13 @@ Laplacian <- function(graph) {
 Laplacian.default <- function(graph) {
   stop("No Laplacian for this graph!")
 }
+#' @describeIn prec
+#' The `vcov` method for sparse matrices
+setMethod(
+  "vcov",
+  "Matrix",
+  function(object, ...) {
+    object <- Cholesky(object)
+    return(solve(object))
+  }
+)

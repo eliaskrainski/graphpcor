@@ -33,17 +33,17 @@ cgeneric_get <- function(model,
                    several.ok = TRUE)
   stopifnot(length(cmd)>0)
 
-  args1 <- list("generic_element_get", "initial", NULL, 0L)
-  tr <- try(do.call(".Call", c(args1, model$f$cgeneric$data)),
-            silent = TRUE)
-  if(inherits(tr, 'try-error')) {
+  args1 <- list("cgeneric_element_get", "initial", NULL, 0L)
+  tr0 <- try(do.call(".Call", c(args1, model$f$cgeneric$data)),
+             silent = TRUE)
+  if(inherits(tr0, 'try-error')) {
 
-    warning('Using "INLA::inla.cgeneric.q()" instead of direct code!')
-    if(!missing(theta)) {
-      warning('given `theta` not supported!')
+    warning('Using indirect code to extract elements!')
+    if(any(cmd %in% "log_prior")) {
+      warning('"log prior" is not suported without the direct code!')
     }
 
-    ret <- INLA::inla.cgeneric.q(model)
+    ret <- cgeneric.get(model, theta)
     ret$graph <- INLA::inla.as.sparse(ret$graph)
     ret$Q <- INLA::inla.as.sparse(ret$Q)
     stopifnot(all(ret$graph@i == ret$Q@i))
@@ -58,6 +58,7 @@ cgeneric_get <- function(model,
       )
       ret$Q@x <- ret$Q@x[o]
     }
+    names(ret) <- gsub("theta", "initial", names(ret))
     names(ret) <- gsub("log.prior", "log_prior",
                        names(ret), fixed = TRUE)
     ret <- ret[cmd]
@@ -274,4 +275,41 @@ prec.inla.cgeneric <- function(model, ...) {
   }
   stopifnot(is.logical(optimize))
   cgeneric_get(model, cmd = "Q", theta = theta, optimize = optimize)
+}
+#' @describeIn prec R level function to
+#' extract elements calling INLA program
+cgeneric.get <- function(model, theta) {
+  result <- INLA::inla.cgeneric.q(model)
+  if(!missing(theta)) {
+    ctrlf <- list(hyper = list(prec = list(
+      initial = 10, fixed = TRUE
+    )))
+    tr0 <- try(INLA::inla(
+        formula = y ~ -1 + f(one, model = model),
+        data = data.frame(y = NA, one = 1),
+        control.family = ctrlf,
+        control.mode = list(
+          restart = FALSE,
+          fixed = TRUE
+        ),
+        silent = 2L, verbose = FALSE),
+        silent = TRUE)
+    if(inherits(tr0, "try-error"))
+      return(tr0)
+    stopifnot(length(theta) == length(tr0$mode$theta))
+    iout <- INLA::inla(
+      formula = y ~ -1 + f(one, model = model),
+      data = data.frame(y = NA, one = 1),
+      control.family = ctrlf,
+      control.mode = list(
+        theta = theta,
+        restart = FALSE,
+        fixed = TRUE
+      ),
+      control.compute = list(config = TRUE),
+      control.inla = list(int.strategy = "eb"),
+      silent = 2L, verbose = FALSE)
+    result$Q <- prec(iout)
+  }
+  return(result)
 }

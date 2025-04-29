@@ -14,7 +14,8 @@ graph(model, optimize = TRUE)
 
 graph(model)
 
-round(ith <- initial(model), 4)
+initial(model)
+round(ith <- rep(3, n*(n-1)/2))
 
 m <- n * (n-1)/2
 theta1 <- rnorm(m)

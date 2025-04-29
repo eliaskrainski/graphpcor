@@ -6,7 +6,7 @@ n <- 4
 lambda <- 5
 
 model <- cgeneric(
-    model = "PC_prec_correl", 
+    model = "pc_prec_correl", 
     n = n,
     lambda = lambda)
 
@@ -14,7 +14,8 @@ graph(model, optimize = TRUE)
 
 graph(model)
 
-round(ith <- initial(model), 4)
+initial(model)
+ith <- rep(3, n*(n-1)/2)
 
 m <- n * (n-1)/2
 theta1 <- rnorm(m)
