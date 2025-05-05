@@ -27,12 +27,45 @@
 
 #include "graphpcor.h"
 #include "graphpcor_utils.h"
+
 double pclogsigma(double lsigma, double lam)
 {
-	// return log of the PC-prior density for the log of the
-	// standard deviation parameter.
-	// See Simpson et. al. (2017) for this prior definition
+	// PC-prior: \sigma ~ Exp(\lambda)
+	// return log of the PC-prior density for tlog(\sigma).
+	// See Simpson et. al. (2017) for this prior definition.
 	return log(lam) + lsigma - lam * exp(lsigma);
+}
+
+void cpc2correlCholesky(int n, double *theta, double *L) {
+// canonical partial correlation z[k] = tanh(theta[k])
+// return the Cholesky of a correlation matrix
+// See #correlation-matrix-inverse-transform at
+//  https://mc-stan.org/docs/reference-manual/transforms.html
+  int i, j, k0=0, k=0;
+//  int m = (n*(n-1))/2;
+  int M = (n*(n+1))/2;
+  double z[M], p[n-1];
+  for(i=0; i<n; i++) {
+    for(j=i; j<n; j++) {
+      if(i==j) {
+        z[k++] = 1.0;
+      } else {
+        z[k++] = tanh(theta[k0++]);
+      }
+    }
+  }
+  for(i=0; i<n; i++) {
+    L[i] = z[i];
+    p[i] = sqrt(1-SQR(z[i]));
+  }
+  k = n;
+  for(i=1; i<n; i++) {
+     for(j=i; j<n; j++) {
+       L[k] = z[k] * p[j];
+       p[j] *= sqrt(1-SQR(z[k]));
+       k++;
+     }
+  }
 }
 
 void theta2Qcorrel(int n, int std, double *theta, double *Qcorr)

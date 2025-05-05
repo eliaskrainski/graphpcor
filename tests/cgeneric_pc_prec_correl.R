@@ -78,8 +78,8 @@ fitr <- inla(
     control.mode = cmode
 )
 
-(Lfitted <- graphpcor:::theta2gamma2L(fitr$mode$theta))
-round(tcrossprod(Lfitted), 2)
+(Lfitted <- graphpcor:::c4theta(fitr$mode$theta))
+round(crossprod(Lfitted), 2)
 round(vv, 2)
 
 detach("package:graphpcor", unload = TRUE)

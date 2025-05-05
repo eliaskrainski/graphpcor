@@ -11,45 +11,41 @@
 #' This is not considered if 'libpath' is provided.
 #' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
-#' The precision matrix parametrization
-#' step 1:
-#' \deqn{Q0 = \left[
+#' The Canonical Partial Correlation - CPC parametrization
+#' step 1:  \eqn{q_i} = tanh(\eqn{\theta_i})
+#' step 2:
+#' \deqn{z = \left[
 #' \begin{array}{ccccc}
 #'   1 & & & & \\
-#'   \theta_1 & 1 & & & \\
-#'   \theta_2 & \theta_n & & & \\
+#'   q_1 & 1 & & & \\
+#'   q_2 & q_n & & & \\
 #'   \vdots & & \ldots & \ddots & \\
-#'   \theta_{n-1} & \theta_{2n-3} \ldots & \theta_m & 1
+#'   q_{n-1} & q_{2n-3} \ldots & q_m & 1
 #'   \end{array}
 #'   \right] }
 #'
-#' step 2: \eqn{V = Q0^{-1}}
+#' step 3: compute L such that the correlation matrix is
+#' \deqn{C = LL'}, a \eqn{n \times n} (lower triangle) matrix
+#' \deqn{L_{i,j} = \left\{\begin{array}{cc}
+#' 0 & i>j\\
+#' 1 & i=j=1\\
+#' z_{i,j} & j=1 \\
+#' prod_{k=1}^{j-1}\sqrt(1-z_{k,j^2}) & 1<i=j \\
+#' z_{i,j}prod_{k=1}^{j-1}\sqrt(1-z_{k,j^2}) &  1<j<i
+#' \end{array}\right.}
 #'
-#' step 3: \eqn{S = diag(V)^{1/2}}
-#'
-#' step 4: \eqn{C = SVS}
-#'
-#' step 5: \eqn{Q = C^{-1}}
-#'
-#' \deqn{p(Q|\lambda) = p(\theta[1:m] | lambda) =}
-#' \deqn{    p_C(C(Q)) | Jacobian C(Q) |}
-#'  where p_C is the PC-prior for correlation,
-#'   see section 6.2 of Simpson et. al. (2017),
-#' which is based on the hypersphere decomposition.
-#'
-#' The hypershere decomposition, as proposed in
-#' Rapisarda, Brigo and Mercurio (2007)
-#' consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
-#' compute \eqn{x[k] = pi/(1+exp(-theta[k]))}
-#' organize it as a lower triangle of a \eqn{n \times n} matrix
-#' \deqn{B[i,j] = \left\{\begin{array}{cc}
-#' cos(x[i,j]) & j=1 \\
-#' cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]) &  2 <= j <= i-1 \\
-#' prod_{k=1}^{j-1}sin(x[i,k])  & j=i \\
-#' 0 &  j+1 <= j <= n \end{array}\right.}
-#' Result
-#' \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
-#'  \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
+#' The prior of the correlation matrix is given as
+#'  \dqn{p(C) = |J_m|*l*exp(-l*r)/(2*pi^(m-1)}
+#'  following a bijective transformation from
+#'  \deqn{\theta[1:m] \in R^{m} to {r, \phi[1:(m-1)]}
+#'  where \eqn{\phi[1:(m-1)]} are angles and
+#'  r is the radius of a
+#'  [m-sphere](https://en.wikipedia.org/wiki/N-sphere).
+#'  That is
+#'  \deqn{r ~ Exponential(\lambda)}
+#'  \deqn{\phi[j] ~ Uniform(0, pi), j=1...m-2}
+#'  \deqn{\phi[m-1] ~ Uniform(0, 2pi)}
+#'  \eqn{J_m} is the Jacobian of this transformation
 #' @references
 #' Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
 #' Martins and Sigrunn H. S\\o rbye (2017).
@@ -90,20 +86,26 @@ cgeneric_pc_prec_correl <-
 
     m <- n*(n-1)/2
 
+    lc <- 0
+
     if(missing(theta.base)) {
       theta.base <- rep(0, m)
-      warning("Missing 'theta.base' model. Assuming 'iid' by using:\n",
-              paste(theta.base, collapse = ", "))
-    }
-    H.el <- theta2H(theta.base)
-    if(debug) {
-      cat("H elements\n")
-      print(str(H.el))
+#      warning("Missing 'theta.base' model. Assuming 'iid' by using:\n",
+ #             paste(theta.base, collapse = ", "))
+    } else {
+      if(any(!is.zero(abs(theta)))) {
+        stop("non-zero `theta.base` to be implemented!")
+      }
+      H.el <- theta2H(theta.base)
+      if(debug) {
+        cat("H elements\n")
+        print(str(H.el))
+      }
+      lc <- lc - sum(log(H.el$svd$d))
     }
 
     ## constant: log( \lambda \pi^{m-1}/2 |H| )
-    lc <- log(lambda) -(m-1)*log(pi) - log(2)
-    lc <- lc - sum(log(H.el$svd$d))
+    lc <- lc + log(lambda) -(m-1)*log(pi) - log(2)
 
     if(debug) {
       cat('log C', lc, '\n')

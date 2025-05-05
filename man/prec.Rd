@@ -9,7 +9,8 @@
 \alias{cgeneric.get}
 \alias{Lprec}
 \alias{fillLprec}
-\alias{theta2Lprec2C}
+\alias{theta2correl}
+\alias{c4theta}
 \title{The \code{prec} method}
 \usage{
 prec(model, ...)
@@ -26,7 +27,9 @@ Lprec(theta, p, ilowerL)
 
 fillLprec(L, lfi)
 
-theta2Lprec2C(theta, p, ilowerL)
+theta2correl(theta, p, ilowerL)
+
+c4theta(theta, p)
 }
 \arguments{
 \item{model}{a model object}
@@ -36,7 +39,10 @@ theta2Lprec2C(theta, p, ilowerL)
 \item{object}{Matrix supposed to be a
 sparse precision matrix}
 
-\item{theta}{numeric vector of length \code{m}.}
+\item{theta}{numeric vector with length \code{m} giving
+where tanh(\eqn{\theta_j}) is the canonical
+partial correlation - CPC. Note: \code{m = p(p-1)/2}
+is the number of CPC's.}
 
 \item{p}{numeric giving the dimention of Q.
 If missing, \code{p = (1+sqrt(1+8*length(theta)))}
@@ -93,7 +99,11 @@ extract elements calling INLA program
 
 \item \code{fillLprec()}: Function to fill-in a Cholesky matrix
 
-\item \code{theta2Lprec2C()}: Internal function to build C
+\item \code{theta2correl()}: Build a correlation matrix from the
+precision parametrization
+
+\item \code{c4theta()}: Cholesky of a correlation matrix using the
+\href{https://mc-stan.org/docs/reference-manual/transforms.html}{correlation-matrix-inverse-transform}
 
 }}
 \examples{

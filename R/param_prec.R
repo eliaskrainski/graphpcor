@@ -77,9 +77,34 @@ fillLprec <- function(L, lfi) {
   return(L)
 }
 #' @describeIn prec
-#' Internal function to build C
-theta2Lprec2C <- function(theta, p, ilowerL) {
+#' Build a correlation matrix from the
+#' precision parametrization
+theta2correl <- function(theta, p, ilowerL) {
   L <- Lprec(theta, p, ilowerL)
   V <- chol2inv(t(L))
   return(cov2cor(V))
+}
+#' @describeIn prec
+#' Cholesky of a correlation matrix using the
+#'  [correlation-matrix-inverse-transform](https://mc-stan.org/docs/reference-manual/transforms.html)
+#' @param theta numeric vector with length `m` giving
+#' where tanh(\eqn{\theta_j}) is the canonical
+#' partial correlation - CPC. Note: `m = p(p-1)/2`
+#' is the number of CPC's.
+c4theta <- function(theta, p) {
+  if(missing(p)) {
+    m <- length(theta)
+    p <- (1 + sqrt(1+8*m))/2
+    stopifnot((p==floor(p)) & (p==ceiling(p)))
+  }
+  stopifnot(p>0)
+  z <- diag(x=rep(1,p), nrow = p, ncol = p)
+  z[lower.tri(z)] <- tanh(theta)
+  w <- z <- t(z)
+  psz <- rep(1, p)
+  for(i in 2:p) {
+    psz <- psz * sqrt(1-z[i-1, ]^2)
+    w[i,i:p] <- z[i,i:p] * psz[i:p]
+  }
+  return(w)
 }

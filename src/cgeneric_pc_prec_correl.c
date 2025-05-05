@@ -31,24 +31,23 @@
 double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp *data)
 {
 
-	// This is the cgeneric implementatin of the
-	// PC-prior for a Precision matrix Q with dimension N,
-	// given (scalar) parameter 'lambda'.
-	// Q is parametrized as follows
-	// step 1: | 1 |
-	// | \theta[1] 1 SYMMETRIC |
-	// Q0 = | \theta[2] \theta[n] |
-	// | : ...  ...  |
-	// | \theta[n-1] ...  \theta[m] 1 |
-	// step 2: V = Q0^{-1}
-	// step 3: S = diag(V)^{-1/2}
-	// step 4: C = S %*% V %*% S : this is C(Q)
-	// step 5: Q = C^{-1}
-	// p(Q|lambda) = p_d( d(\theta[1:m]) | lambda) |J(C(Q))|
-	// where p_d() is the prior for the distance.
-	// d(\theta) = (\theta - \theta_0)' I(\theta_0) (\theta - \theta_0)
-	// I(\theta_0) is the Fisher information at \theta_0
-	// see section 6.2 of Simpson et. al. (2017)
+	// This is a cgeneric implementation for the
+	// PC-prior for a correlation matrix parametrized
+	// from the Canonical Partial Correlation - CPC.
+	//     cpc: x[j] = tanh(\theta[i])
+	// See #correlation-matrix-inverse-transform at
+	//  https://mc-stan.org/docs/reference-manual/transforms.html
+	// The prior of the correlation matrix is given as
+	//   p(C) = |J_m|*l*exp(-l*r)/(2*pi^(m-1)
+	// following a bijective transformation from
+	// theta[1:m] \in R^{m} to {r, \phi[1:(m-1)]}
+	// where \phi[1:(m-1)] are angles and r is the radius
+	// of a m-sphere (https://en.wikipedia.org/wiki/N-sphere).
+	// That is
+	//   r ~ Exponential(\lambda)
+	//   \phi[j] ~ Uniform(0, pi), j=1...m-2
+	//   \phi[m-1] ~ Uniform(0, 2pi)
+	//   J_m is the Jacobian of this transformation
 	// It returns for if 'cmd' is
 	// 'graph': i,j index set for the upper triangle of Q;
 	// 'Q': the inverse of C;
@@ -145,20 +144,17 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 	case INLA_CGENERIC_Q:
 	{
 		// Q = (CC)^{-1}
-		// with C = LL' parametrized as in Section 6.2 of the PC-prior paper
 		int offset = 2;
 
 		ret = Calloc(offset + M, double);
 		ret[0] = -1;				       /* REQUIRED */
 		ret[1] = M;				       /* REQUIRED */
 
-		// compute the (upper) correlation matrix
-		int std = 1;
-		theta2Qcorrel(N, std, &theta[0], &ret[offset]);
+		// Cholesky of the correlation matrix
+		cpc2correlCholesky(N, &theta[0], &ret[offset]);
 
 		int info;
 		char uplo = 'L';
-		dpptrf_(&uplo, &N, &ret[offset], &info, F_ONE);	// chol
 		dpptri_(&uplo, &N, &ret[offset], &info, F_ONE);	// chol2inv
 
 	}
@@ -178,7 +174,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		ret = Calloc(nth + 1, double);
 		ret[0] = nth;
 		for (i = 0; i < nth; i++) {
-			ret[1 + i] = 3.0;
+			ret[1 + i] = 1.0/sqrt(i+1.0);
 		}
 	}
 		break;

@@ -423,8 +423,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		// r
 		pparams[0] = sqrt(val);
 
-		double ldJacobian;
-		ldJacobian = ((double) (ne - 1)) * log(pparams[0]);
+		double ldJacobian = -log(2) -(ne-2)*log(M_PI);
+		ldJacobian += ((double) (ne - 1)) * log(pparams[0]);
 		if (ne > 2) {
 			for (i = 1; i < (ne - 1); i++) {       // not the last one
 				ldJacobian += ((double) (ne - 1 - i)) * log(sin(pparams[i]));

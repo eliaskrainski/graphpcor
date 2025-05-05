@@ -544,7 +544,6 @@ etreepcor2variance <- function(d.el) {
 }
 #' @describeIn cgeneric
 #' The `cgeneric` method for `treepcor`, uses [cgeneric_treepcor()]
-#' @export
 cgeneric.treepcor <- function(...) {
   args <- list(...)
   args$graph <- args$model

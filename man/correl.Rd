@@ -7,7 +7,7 @@
 \title{Build the correlation matrix parametrized from the
 hypershere decomposition, see details.}
 \usage{
-theta2correl(theta, fromR = TRUE)
+theta2correl(theta, p, ilowerL)
 
 theta2gamma2L(theta, fromR = TRUE)
 
@@ -16,10 +16,10 @@ rcorrel(p, lambda)
 \arguments{
 \item{theta}{numeric vector with length equal n(n-1)/2}
 
+\item{p}{integer to specify the matrix dimension}
+
 \item{fromR}{logical indicating if theta is in R.
 If FALSE, assumes \eqn{\theta[k] \in (0, pi)}.}
-
-\item{p}{integer to specify the matrix dimension}
 
 \item{lambda}{numeric as the penalization parameter.
 If missing it will be assumed equal to zero.

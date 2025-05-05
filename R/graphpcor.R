@@ -409,7 +409,6 @@ hessian.graphpcor <-
   }
 #' @describeIn cgeneric
 #' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
-#' @export
 cgeneric.graphpcor <- function(...) {
   args <- list(...)
   args$graph <- args$model
