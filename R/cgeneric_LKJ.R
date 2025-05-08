@@ -13,7 +13,7 @@ dLKJ <- function(R, eta, log = FALSE) {
   lbk <- lbeta(eta + (d-k-1)/2,
                eta + (d-k-1)/2) * (d-k)
   p2 <- sum((2*eta -2 + d - k)*(d-k))
-  o <- sum(lbk) + p2*log(2) + (eta-1)*ldR
+  o <- (eta-1)*ldR - sum(lbk) - p2*log(2)
   if(!log)
     o <- exp(o)
   return(o)

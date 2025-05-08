@@ -38,9 +38,9 @@ cgeneric_get <- function(model,
              silent = TRUE)
   if(inherits(tr0, 'try-error')) {
 
-    warning('Using indirect code to extract elements!')
+    warning('Using (slow) indirect code!')
     if(any(cmd %in% "log_prior")) {
-      warning('"log prior" is not suported without the direct code!')
+      warning('"log prior" not suported without direct code!')
     }
 
     ret <- cgeneric.get(model, theta)

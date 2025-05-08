@@ -97,7 +97,7 @@ void dl2fullQ(int n, double *d, double *l, double *q);
 void exchangeableU(int n, double r, double *cc);
 void fillL(int *d, int *m, int *ii, int *jj, double *x);
 void l2L(int n, double *l, double *L);
-void cpc2correlCholesky(int n, double *theta, double *L);
+void cpc2correlCholesky(int *N, double *theta, double *L);
 void theta2Qcorrel(int n, int std, double *theta, double *Qu);
 void theta2gamma2Lcorr(int n, double *hldet, double *theta, double *L);
 void theta2precision(int n, double *l, double *Q);

@@ -11,7 +11,7 @@
 #' This is not considered if 'libpath' is provided.
 #' @param libpath string, default is NULL, with the path to the shared object.
 #' @details
-#' The Canonical Partial Correlation - CPC parametrization
+#' The Canonical Partial Correlation - CPC parametrization.
 #' step 1:  \eqn{q_i} = tanh(\eqn{\theta_i})
 #' step 2:
 #' \deqn{z = \left[
@@ -35,9 +35,9 @@
 #' \end{array}\right.}
 #'
 #' The prior of the correlation matrix is given as
-#'  \dqn{p(C) = |J_m|*l*exp(-l*r)/(2*pi^(m-1)}
+#'  \deqn{p(C) = |J_m|*l*exp(-l*r)/(2*pi^(m-1)}
 #'  following a bijective transformation from
-#'  \deqn{\theta[1:m] \in R^{m} to {r, \phi[1:(m-1)]}
+#'  \deqn{\theta[1:m] \in R^{m} to \{r, \phi[1:(m-1)]\}}
 #'  where \eqn{\phi[1:(m-1)]} are angles and
 #'  r is the radius of a
 #'  [m-sphere](https://en.wikipedia.org/wiki/N-sphere).

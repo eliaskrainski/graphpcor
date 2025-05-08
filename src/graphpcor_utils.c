@@ -36,13 +36,14 @@ double pclogsigma(double lsigma, double lam)
 	return log(lam) + lsigma - lam * exp(lsigma);
 }
 
-void cpc2correlCholesky(int n, double *theta, double *L) {
+void cpc2correlCholesky(int *N, double *theta, double *L) {
 // canonical partial correlation z[k] = tanh(theta[k])
 // return the Cholesky of a correlation matrix
 // See #correlation-matrix-inverse-transform at
 //  https://mc-stan.org/docs/reference-manual/transforms.html
   int i, j, k0=0, k=0;
 //  int m = (n*(n-1))/2;
+  int n = (*N);
   int M = (n*(n+1))/2;
   double z[M], p[n-1];
   for(i=0; i<n; i++) {

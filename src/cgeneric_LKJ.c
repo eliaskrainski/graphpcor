@@ -35,8 +35,12 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	// This is the cgeneric implementatin of the
 	// LKJ prior for a correlation matrix C with dimension N,
 	// given (scalar) parameter 'eta'.
-	// Parametrized from a hypershere decomposition,
-	// see Rapisarda, Brigo and Mercurio (2007).
+	// Parametrized from the
+	// Canonical Partial Correlation - CPC.
+	//     cpc: x[j] = tanh(\theta[i])
+	// See #correlation-matrix-inverse-transform at
+	//  https://mc-stan.org/docs/reference-manual/transforms.html
+
 	// It returns for if 'cmd' is
 	// 'graph': i,j index set for the upper triangle of Q;
 	// 'Q': the inverse of C;
@@ -97,26 +101,12 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		ret[0] = -1;				       /* REQUIRED */
 		ret[1] = M;				       /* REQUIRED */
 
-		double hld;
-		// build L that factorize C giving C = LL'
-		theta2gamma2Lcorr(N, &hld, &theta[0], &ret[2]);
+    // Cholesky of the correlation matrix
+    cpc2correlCholesky(&N, &theta[0], &ret[offset]);
 
-/*
-		if (debug > 999) {
-			printf("L:\n");
-			k = 0;
-			for (i = 0; i < N; i++) {
-				for (j = i; j < N; j++) {
-					printf("%2.3f ", ret[offset + k++]);
-				}
-				printf("\n");
-			}
-		}
-*/
-		// chol2inv: Q = C^{-1} computed from L
-		int info;
-		char uplo = 'L';
-		dpptri_(&uplo, &N, &ret[offset], &info, F_ONE);
+    int info;
+    char uplo = 'L';
+    dpptri_(&uplo, &N, &ret[offset], &info, F_ONE);	// chol2inv
 
 	}
 		break;
@@ -144,80 +134,47 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	{
 		ret = Calloc(1, double);
 
-		// log determinant is computed in the theta2gamma2Lcorrel
-		double lhdetC, ll[N * (N + 1) / 2], cc1[N * (N - 1) / 2], cc2[N * (N - 1) / 2];
-		theta2gamma2Lcorr(N, &lhdetC, &theta[0], &ll[0]);
+		// ll : Cholesky of the correlation matrix
+		double ll[N * (N + 1) / 2];
+		cpc2correlCholesky(&N, &theta[0], &ll[0]);
 
-/*
-		if (debug > 999) {
-			printf("L[upper]:\n");
-			k = 0;
-			for (i = 0; i < N; i++) {
-				for (j = i; j < N; j++) {
-					printf("%2.3f ", ll[k++]);
-				}
-				printf("\n");
-			}
-			printL(ll, N, N, "Lcorr\n");
-			printf("|R| = %2.5f, lc+(eta-1)|R| = %2.5f\n", 2.0 * lhdetC, lc + 2.0 * (eta - 1) * lhdetC);
+		// half of the log determinant
+		double lhdetC = log(ll[N]);
+		if(N>2) {
+		  k = N;
+		  for(i=1; i<(N-1); i++) {
+		    k += (N-i);
+   		  lhdetC += log(ll[k]);
+		  }
 		}
-*/
+//		printf("half log det R = %2.5f\n", lhdetC);
 
-		L2Cupper(N, &ll[0], &cc1[0]);
-
-
-/*
- 		if (debug > 999) {
-			printf("C:\n");
-			k = 0;
-			for (i = 0; i < (N - 1); i++) {
-				for (j = i; j < (N - 1); j++) {
-					printf("%2.5f ", cc1[k++]);
-				}
-				printf("\n");
-			}
+		// log determinant of the Jacobian
+		double ldJacobian = 0.0, daux;
+		for(i=0; i<nth; i++) {
+		  ldJacobian -= 2.0*log(cosh(theta[i]));
 		}
-*/
-
-		// compute the Jacobian[nth*nth]
-		int kj, k2 = 0;
-		double ldtmp, daux, h = 0.0005;
-		double h2 = 2.0 * h;
-		double mJacobian[nth * nth];
-		for (kj = 0; kj < nth; kj++) {
-			daux = theta[kj];
-			theta[kj] = daux - h;
-			theta2gamma2Lcorr(N, &ldtmp, &theta[0], &ll[0]);
-			L2Cupper(N, &ll[0], &cc1[0]);
-			theta[kj] = daux + h;
-			theta2gamma2Lcorr(N, &ldtmp, &theta[0], &ll[0]);
-			L2Cupper(N, &ll[0], &cc2[0]);
-			theta[kj] = daux;
-			// store derivatives
-			for (k = 0; k < nth; k++) {
-				daux = (cc2[k] - cc1[k]) / h2;
-				mJacobian[k2++] = daux;
-			}
+		k = 1;
+		for(i=1; i<(N-1); i++) {
+		  for(j=(i+1); j<=N; j++) {
+		    daux = (double)(N-i-1);
+		    daux *= log(1-SQR(ll[k]));
+		    k++;
+		    ldJacobian += 0.5 * daux;
+		  }
+		  k++;
 		}
 
-		int info, pivot[nth], lwork = 2 * nth + nth + 1;
-		double work[lwork], tau[nth];
-		dgeqp3_(&nth, &nth, &mJacobian[0], &nth, &pivot[0], &tau[0], &work[0], &lwork, &info, F_ONE);
-		double ldJacobian = 0.0;
-		for (i = 0; i < nth; i++) {
-			ldJacobian += log(fabs(mJacobian[i * nth + i]));
-		}
-/*
-		if (debug > 99) {
-			printf("\ndet Jacobian = %f\n", ldJacobian);
-		}
-*/
-		if (ldJacobian < 0) {
-			ldJacobian *= -1.0;
-		}
 		// store the log-prior
-		// 'lc' is a pre-computed constant
-		ret[0] = lc + 2.0 * lhdetC * (eta - 1.0);
+		// 'lc' is a pre-computed constant, in R:
+		// 	k <- 1:(n-1)
+		//  lc <- sum((2*eta-2+n-k)*(n-k))*log(2) +
+		//    sum(lbeta(eta + (n-k-1)/2,
+    //              eta + (n-k-1)/2)*(n-k))
+    //printf("%2.5f, %2.5f, %2.5f, %2.5f\n",
+      //     lhdetC, 2.0*lhdetC*(eta-1.0),
+        //   lc, ldJacobian);
+		ret[0] = 2.0 * lhdetC * (eta - 1.0) -lc;
 		ret[0] += ldJacobian;
 
 	}

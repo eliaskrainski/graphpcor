@@ -100,6 +100,11 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		}
 		// r = sqrt(sum_i(theta[i]^2))
 		param[0] = sqrt(daux);
+		for(i=0; i<nth; i++) {
+		  if(fabs(param[i])<0.000000001) {
+		    param[i]      = 0.0000000005;
+		  }
+		}
 /*
 		if (debug > 999) {
 			printMat(param, 1, nth, "param:\n");
@@ -151,7 +156,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		ret[1] = M;				       /* REQUIRED */
 
 		// Cholesky of the correlation matrix
-		cpc2correlCholesky(N, &theta[0], &ret[offset]);
+		cpc2correlCholesky(&N, &theta[0], &ret[offset]);
 
 		int info;
 		char uplo = 'L';
@@ -190,6 +195,8 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 				ldJacobian += ((double) (nth - 1 - i)) * log(sin(param[i]));
 			}
 		}
+		double dm = (double)nth;
+		ret[0] = lconst -(0.5*dm + dm*M_PI -lgamma(0.5*dm+1.0));
 /*
 		if (debug > 999) {
 			printf("log det Jacobian = %2.7f\n", ldJacobian);
@@ -198,7 +205,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		// the log prior:
 		// lconst should be equal to
 		// log(lambda) -(m-1)*log(pi)-log(2)-log(|H|)
-		ret[0] = lconst - lambda * param[0] + ldJacobian;
+		ret[0] += ldJacobian - lambda * param[0];
 
 	}
 		break;

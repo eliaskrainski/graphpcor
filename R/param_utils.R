@@ -61,7 +61,14 @@ rtheta <- function(n, lambda=1, R, theta.base) {
   } else {
     phi <- NULL
   }
-  drop((rphi2x(c(r, phi)) %*% R) + theta.base)
+  if(missing(R)) {
+    R <- diag(x = rep(1, m), nrow = m, ncol = m)
+  }
+  out <- rphi2x(c(r, phi)) %*% R
+  if(!missing(theta.base)){
+    out <- out + theta.base
+  }
+  return(drop(out))
 }
 #' @describeIn param-utils
 #' PC-prior density for the correlation matrix
@@ -82,8 +89,9 @@ dtheta <- function(theta, lambda, theta.base, H.elements) {
     ii <- 1:(m-2) ### do not include the last one!
     ld1 <- ld1 + sum(log(sin(rphi[ii+1])) * (m-ii-1))
   }
-  ld <- log(lambda) -rphi[1]*lambda -log(2) - (m-1)*log(pi)
-  return(ld + ld1 + ld2)
+  cr <- log(2)+log(pi)+log(rphi[1])
+  ld <- log(lambda) -rphi[1]*lambda -log(2) -(m-1)*log(pi)
+  return(ld + ld1 + ld2 +cr)
 }
 #' @describeIn param-utils
 #' Compute the KLD with respect to a base model
@@ -113,14 +121,9 @@ theta2H <- function(theta) {
     if(missing(theta)) {
       stop('Please provide "theta"!')
     }
-    theta2C <- function(theta) {
-      ### imput theta output C
-      V <- chol2inv(t(Lprec(theta)))
-      return(cov2cor(V))
-    }
-    C0 <- theta2C(theta)
+    C0 <- crossprod(c4theta(theta))
     H <- hessian(function(x)
-      KLD10(theta2C(x), C0),
+      KLD10(crossprod(c4theta(x)), C0),
       theta)
     sv <- svd(H)
     if(any(sv$d<sqrt(.Machine$double.eps) * abs(sv$d[1])))

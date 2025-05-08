@@ -24,7 +24,7 @@
 #'   <doi 10.1093/imaman/dpl010>
 #' @return a correlation matrix
 #' @export
-theta2correl <- function(theta, fromR = TRUE) {
+theta2gamma2correl <- function(theta, fromR = TRUE) {
   tcrossprod(theta2gamma2L(theta, fromR = fromR))
 }
 #' @describeIn correl

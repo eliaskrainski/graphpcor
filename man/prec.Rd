@@ -39,10 +39,8 @@ c4theta(theta, p)
 \item{object}{Matrix supposed to be a
 sparse precision matrix}
 
-\item{theta}{numeric vector with length \code{m} giving
-where tanh(\eqn{\theta_j}) is the canonical
-partial correlation - CPC. Note: \code{m = p(p-1)/2}
-is the number of CPC's.}
+\item{theta}{numeric vector of length \code{m}
+with the parameter}
 
 \item{p}{numeric giving the dimention of Q.
 If missing, \code{p = (1+sqrt(1+8*length(theta)))}
@@ -104,6 +102,8 @@ precision parametrization
 
 \item \code{c4theta()}: Cholesky of a correlation matrix using the
 \href{https://mc-stan.org/docs/reference-manual/transforms.html}{correlation-matrix-inverse-transform}
+where tanh(\eqn{\theta_j}) is the canonical
+partial correlation - CPC.
 
 }}
 \examples{

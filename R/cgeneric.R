@@ -93,3 +93,39 @@ cgeneric.character <- function(model, ...) {
   return(do.call(what = fn,
                  args = list(...)))
 }
+#' Samples from an `inla` output, like `inla::inla.iidkd.sample()`
+#' @param n integer as the sample size.
+#' @param result an `inla` output.
+#' @param name character with the name of the model
+#' component in the set of random effects.
+#' @param from.theta a `cgeneric` model, or a function to
+#' convert from theta to the desired output for each sample.
+#' @param simplify logical (see ?sapply).
+#' @export
+inla.cgeneric.sample <- function(n = 1e4, result, name,
+                                 from.theta, simplify = FALSE) {
+  stopifnot(!missing(result))
+  stopifnot(inherits(result, "inla"))
+  stopifnot(!missing(name))
+  stopifnot(!missing(from.theta))
+  stopifnot(n > 0)
+  idx <- grep(name, names(result$mode$theta))
+  xx <- INLA::inla.hyperpar.sample(
+    n = n,
+    result = result,
+    intern = TRUE)[, idx, drop = FALSE]
+  if(inherits(from.theta, "inla.cgeneric")) {
+    result <- sapply(1:n, function(i)
+      cgeneric_get(model = from.theta,
+                   cmd = "Q",
+                   theta = xx[i, ]),
+      simplify = simplify
+    )
+  } else {
+    result <- sapply(
+      1:n,
+      function(i) from.theta(xx[i,]),
+      simplify = simplify)
+  }
+  return(result)
+}

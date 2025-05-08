@@ -1,6 +1,7 @@
 #' Precision matrix parametrization helper functions.
 #' @rdname prec
-#' @param theta numeric vector of length `m`.
+#' @param theta numeric vector of length `m`
+#' with the parameter
 #' @param p numeric giving the dimention of Q.
 #' If missing, `p = (1+sqrt(1+8*length(theta)))`
 #' and Q is assumed to be dense.
@@ -87,10 +88,8 @@ theta2correl <- function(theta, p, ilowerL) {
 #' @describeIn prec
 #' Cholesky of a correlation matrix using the
 #'  [correlation-matrix-inverse-transform](https://mc-stan.org/docs/reference-manual/transforms.html)
-#' @param theta numeric vector with length `m` giving
 #' where tanh(\eqn{\theta_j}) is the canonical
-#' partial correlation - CPC. Note: `m = p(p-1)/2`
-#' is the number of CPC's.
+#' partial correlation - CPC.
 c4theta <- function(theta, p) {
   if(missing(p)) {
     m <- length(theta)
