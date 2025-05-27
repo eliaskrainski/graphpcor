@@ -18,6 +18,7 @@
 \alias{graph.inla.cgeneric}
 \alias{Q}
 \alias{prec.inla.cgeneric}
+\alias{cgenericINLA}
 \alias{cgeneric.graphpcor}
 \alias{kronecker,inla.cgeneric,inla.cgeneric-method}
 \alias{cgeneric.treepcor}
@@ -57,11 +58,13 @@ Q(model, ...)
 
 \method{prec}{inla.cgeneric}(model, ...)
 
-\method{cgeneric}{graphpcor}(...)
+cgenericINLA(model, theta)
+
+\method{cgeneric}{graphpcor}(model, ...)
 
 \S4method{kronecker}{inla.cgeneric,inla.cgeneric}(X, Y, FUN = "*", make.dimnames = FALSE, ...)
 
-\method{cgeneric}{treepcor}(...)
+\method{cgeneric}{treepcor}(model, ...)
 }
 \arguments{
 \item{model}{an object \code{inla.cgeneric} object.}
@@ -168,6 +171,9 @@ methods for \code{inla.cgeneric}
 \item \code{Q()}: Evaluate \code{\link[=prec]{prec()}} on a model
 
 \item \code{prec(inla.cgeneric)}: Evaluate \code{\link[=prec]{prec()}} on an \code{inla.cgeneric} object
+
+\item \code{cgenericINLA()}: R level function to
+extract elements calling INLA program
 
 \item \code{kronecker(X = inla.cgeneric, Y = inla.cgeneric)}: Kronecker (product) between two \code{inla.cgeneric} models as
 a method for kronecker()

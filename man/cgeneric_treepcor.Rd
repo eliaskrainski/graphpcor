@@ -5,7 +5,7 @@
 \title{Build an \code{cgeneric} for \code{\link[=treepcor]{treepcor()}})}
 \usage{
 cgeneric_treepcor(
-  graph,
+  model,
   lambda,
   sigma.prior.reference,
   sigma.prior.probability,
@@ -15,7 +15,7 @@ cgeneric_treepcor(
 )
 }
 \arguments{
-\item{graph}{object of class \code{treepcor} for the model specification.}
+\item{model}{object of class \code{treepcor} for the model specification.}
 
 \item{lambda}{the lambda parameter for the graph correlation prior.}
 

@@ -43,7 +43,7 @@ cgeneric_get <- function(model,
       warning('"log prior" not suported without direct code!')
     }
 
-    ret <- cgeneric.get(model, theta)
+    ret <- cgenericINLA(model, theta)
     ret$graph <- INLA::inla.as.sparse(ret$graph)
     ret$Q <- INLA::inla.as.sparse(ret$Q)
     stopifnot(all(ret$graph@i == ret$Q@i))
@@ -114,13 +114,14 @@ cgeneric_get <- function(model,
             PACKAGE = "graphpcor"
           )
         }
-        ret <- Matrix::sparseMatrix(
+        ret <- INLA::inla.as.sparse(
+          Matrix::sparseMatrix(
           i = ij[[1]] + 1L,
           j = ij[[2]] + 1L,
           x = ret,
           symmetric = TRUE,
           repr = "T"
-        )
+        ))
       }
       return(ret)
     }
@@ -174,12 +175,13 @@ cgeneric_get <- function(model,
           cgdata$smatrices,
           PACKAGE = "graphpcor"
         )
-        ij <- Matrix::sparseMatrix(
+        ij <- INLA::inla.as.sparse(
+          Matrix::sparseMatrix(
           i = ij[[1]] + 1L,
           j = ij[[2]] + 1L,
           symmetric = TRUE,
           repr = "T"
-        )
+        ))
       }
       ij@x <- ret$Q
       ret$Q <- ij
@@ -276,11 +278,11 @@ prec.inla.cgeneric <- function(model, ...) {
   stopifnot(is.logical(optimize))
   cgeneric_get(model, cmd = "Q", theta = theta, optimize = optimize)
 }
-#' @describeIn prec R level function to
+#' @describeIn cgeneric R level function to
 #' extract elements calling INLA program
-cgeneric.get <- function(model, theta) {
+cgenericINLA <- function(model, theta) {
   result <- INLA::inla.cgeneric.q(model)
-  if(!missing(theta)) {
+  if(!is.null(theta)) {
     ctrlf <- list(hyper = list(prec = list(
       initial = 10, fixed = TRUE
     )))

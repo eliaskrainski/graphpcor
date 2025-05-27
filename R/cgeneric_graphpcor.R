@@ -5,7 +5,7 @@
 #' creates an `inla.cgeneric` (see [cgeneric()])
 #' to implement the Penalized Complexity prior using the
 #' Kullback-Leibler divergence - KLD from a base graphpcor.
-#' @param graph  a `graphpcor` (see [graphpcor()]) or
+#' @param model  a `graphpcor` (see [graphpcor()]) or
 #' a square matrix (to be used as a graph)
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
@@ -64,9 +64,8 @@
 #' This is not considered if 'libpath' is provided.
 #' @param libpath string, default is NULL, with the path to the shared object.
 #' @return a `inla.cgeneric`, [cgeneric()] object.
-#' @export
 cgeneric_graphpcor <-
-  function(graph,
+  function(model,
            lambda,
            base,
            sigma.prior.reference,
@@ -90,14 +89,14 @@ cgeneric_graphpcor <-
       }
     }
 
-    if(inherits(graph, "matrix")) {
-      graph <- graphpcor(graph)
+    if(inherits(model, "matrix")) {
+      model <- graphpcor(model)
     }
-    Q0 <- Laplacian(graph)
+    Q0 <- Laplacian(model)
     n <- nrow(Q0)
     stopifnot(n>0)
     if(debug>99) {
-      print(graph)
+      print(model)
       cat("Laplacian is\n")
       print(Q0)
     }
@@ -192,7 +191,7 @@ cgeneric_graphpcor <-
       base <- rep(0, nEdges)
     }
 
-    Ibase <- hessian(graph, base)
+    Ibase <- hessian(model, base)
     if(debug) {
       cat("I(base model) elements\n")
       print(str(Ibase))
@@ -203,8 +202,9 @@ cgeneric_graphpcor <-
                               attr(Ibase, "base"))
 
     ## constant
-    lc <- log(lambda) -(nEdges-1)*log(pi) - log(2)
-    lc <- lc - sum(log(attr(Ibase, "decomposition")$values))
+    lc <- log(lambda) + lgamma(1.0+nEdges/2)
+    lc <- lc -log(nEdges)-(0.5*nEdges)*log(pi)
+    lc <- lc #+ sum(log(attr(Ibase, "decomposition")$values))
 
     if(debug) {
       cat('log C', lc, '\n')
@@ -230,7 +230,9 @@ cgeneric_graphpcor <-
       sigmaprob = as.numeric(sigma.prior.probability),
       lconst = as.numeric(lc),
       thetabasescaled = as.numeric(thetabasescaled),
-      hHneg = attr(Ibase, "hneg.5")
+      thetab = as.numeric(base),
+      hHneg = attr(Ibase, "hneg.5"),
+      H = matrix(new("numeric", Ibase), nrow(Ibase))
     )
 
     if(debug>9) {

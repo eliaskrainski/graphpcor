@@ -121,9 +121,9 @@ theta2H <- function(theta) {
     if(missing(theta)) {
       stop('Please provide "theta"!')
     }
-    C0 <- crossprod(c4theta(theta))
+    C0 <- crossprod(Lcorrel(theta))
     H <- hessian(function(x)
-      KLD10(crossprod(c4theta(x)), C0),
+      KLD10(crossprod(Lcorrel(x)), C0),
       theta)
     sv <- svd(H)
     if(any(sv$d<sqrt(.Machine$double.eps) * abs(sv$d[1])))

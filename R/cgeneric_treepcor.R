@@ -4,7 +4,7 @@
 #' complexity prior for a correlation matrix considering
 #' a three as proposed in
 #' [Sterrantino et. al. 2025](https://arxiv.org/abs/2312.06289)
-#' @param graph object of class `treepcor` for the model specification.
+#' @param model object of class `treepcor` for the model specification.
 #' @param lambda the lambda parameter for the graph correlation prior.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
@@ -33,9 +33,8 @@
 #' @seealso [treepcor()] and [cgeneric()]
 #' @return a `inla.cgeneric`, [cgeneric()] object.
 #' @useDynLib graphpcor, .registration = TRUE
-#' @export
 cgeneric_treepcor <-
-  function(graph,
+  function(model,
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
@@ -43,9 +42,8 @@ cgeneric_treepcor <-
            useINLAprecomp = TRUE,
            libpath = NULL) {
 
-
-    dd <- dim(graph)
-    d.el <- edges(graph)[1:dd[2]]
+    dd <- dim(model)
+    d.el <- edges(model)[1:dd[2]]
     ich <- unlist(lapply(d.el, function(x)
       x$id[!x$parent]))
     sch <- unlist(lapply(d.el, function(x)
@@ -58,7 +56,6 @@ cgeneric_treepcor <-
     if(debug) {
       print(str(d.elc))
     }
-    dd <- dim(graph)
     np <- dd[2]
     nv <- sapply(d.elc$iv, length)
     if(debug)

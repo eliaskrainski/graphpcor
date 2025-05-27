@@ -178,8 +178,8 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		// where P is the number of hyperparameters
 		ret = Calloc(nth + 1, double);
 		ret[0] = nth;
-		for (i = 0; i < nth; i++) {
-			ret[1 + i] = 1.0/sqrt(i+1.0);
+		for(i=1; i<=nth; i++) {
+		  ret[i] = 0.0;
 		}
 	}
 		break;
@@ -190,13 +190,16 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		double ldJacobian;
 
 		ldJacobian = ((double) (nth - 1)) * log(param[0]);
+		// if nth=1 then |J|=0   ???
+		// if nth=2 then |J|=r
 		if (nth > 2) {
 			for (i = 1; i < (nth - 1); i++) {
 				ldJacobian += ((double) (nth - 1 - i)) * log(sin(param[i]));
 			}
 		}
 		double dm = (double)nth;
-		ret[0] = lconst -(0.5*dm + dm*M_PI -lgamma(0.5*dm+1.0));
+		ret[0] = lconst + dm*log(param[0]);
+		ret[0] -= 0.5*dm + dm*M_PI -lgamma(0.5*dm+1.0);
 /*
 		if (debug > 999) {
 			printf("log det Jacobian = %2.7f\n", ldJacobian);

@@ -5,7 +5,7 @@
 \title{Build an \code{inla.cgeneric} for a graph, see \code{\link[=graphpcor]{graphpcor()}}}
 \usage{
 cgeneric_graphpcor(
-  graph,
+  model,
   lambda,
   base,
   sigma.prior.reference,
@@ -18,7 +18,7 @@ cgeneric_graphpcor(
 )
 }
 \arguments{
-\item{graph}{a \code{graphpcor} (see \code{\link[=graphpcor]{graphpcor()}}) or
+\item{model}{a \code{graphpcor} (see \code{\link[=graphpcor]{graphpcor()}}) or
 a square matrix (to be used as a graph)
 to define the precision structure of the model.}
 

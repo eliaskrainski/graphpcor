@@ -150,21 +150,20 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 //		printf("half log det R = %2.5f\n", lhdetC);
 
 		// log determinant of the Jacobian
-		double ldJacobian = 0.0, daux;
-		for(i=0; i<nth; i++) {
-		  ldJacobian -= 2.0*log(cosh(theta[i]));
-		}
-		k = 1;
+		double daux, ldJacobian = 0.0;
+		k = 0;
 		for(i=1; i<(N-1); i++) {
 		  for(j=(i+1); j<=N; j++) {
 		    daux = (double)(N-i-1);
-		    daux *= log(1-SQR(ll[k]));
+		    daux *= log(1-SQR(tanh(theta[k])));
+		    ldJacobian += daux;
 		    k++;
-		    ldJacobian += 0.5 * daux;
 		  }
-		  k++;
 		}
-
+		ldJacobian *= 0.5;
+		for(i=0; i<nth; i++) {
+		  ldJacobian -= 2.0*log(cosh(theta[i]));
+		}
 		// store the log-prior
 		// 'lc' is a pre-computed constant, in R:
 		// 	k <- 1:(n-1)

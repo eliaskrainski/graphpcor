@@ -39,7 +39,8 @@ Build an \code{inla.cgeneric} to implement the PC-prior of a
 precision matrix as inverse of a correlation matrix.
 }
 \details{
-The Canonical Partial Correlation - CPC parametrization.
+The Canonical Partial Correlation - CPC parametrization,
+Lewandowski, Kurowicka, and Joe (2009).
 step 1:  \eqn{q_i} = tanh(\eqn{\theta_i})
 step 2:
 \deqn{z = \left[
@@ -59,7 +60,7 @@ step 3: compute L such that the correlation matrix is
 1 & i=j=1\\
 z_{i,j} & j=1 \\
 prod_{k=1}^{j-1}\sqrt(1-z_{k,j^2}) & 1<i=j \\
-z_{i,j}prod_{k=1}^{j-1}\sqrt(1-z_{k,j^2}) &  1<j<i
+z_{i,j}prod_{k=1}^{j-1}\sqrt(1-z_{k,j}^2) &  1<j<i
 \end{array}\right.}
 
 The prior of the correlation matrix is given as
@@ -76,15 +77,8 @@ That is
 \eqn{J_m} is the Jacobian of this transformation
 }
 \references{
-Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
-Martins and Sigrunn H. S\\o rbye (2017).
-Penalising Model Component Complexity:
-A Principled, Practical Approach to Constructing Priors
-Statistical Science 2017, Vol. 32, No. 1, 1–28.
-<doi 10.1214/16-STS576>
-
-Rapisarda, Brigo and Mercurio (2007).
-Parameterizing correlations: a geometric interpretation.
-IMA Journal of Management Mathematics (2007) 18, 55-73.
-<doi 10.1093/imaman/dpl010>
+Lewandowski, Daniel, Dorota Kurowicka, and Harry Joe.
+2009. “Generating Random Correlation Matrices Based
+on Vines and Extended Onion Method.”
+Journal of Multivariate Analysis 100: 1989–2001.
 }

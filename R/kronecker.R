@@ -325,7 +325,7 @@ setMethod(
 
       Q <- function(n, theta) {
         Q1 <- prec(X, theta = theta[1:nth1])
-        Q2 <- prec(Y, theta = theta[nth1+1:nth2])
+        Q2 <- INLA::inla.rgeneric.q(Y, "Q", theta = theta[nth1+1:nth2], optimize = FALSE)
         QQ <- INLA::inla.as.sparse(kronecker(Q1, Q2))
         idx <- which(QQ@i <= QQ@j)
         return(QQ@x[idx])
@@ -426,8 +426,8 @@ setMethod(
       }
 
       Q <- function(n, theta) {
-        Q1 <- prec(X, theta = theta[1:nth1])
-        Q2 <- prec(Y, theta = theta[nth1+1:nth2])
+        Q1 <- INLA::inla.rgeneric(X, theta = theta[1:nth1])
+        Q2 <- prec(Y, theta = theta[nth1+1:nth2], optimize = FALSE)
         QQ <- INLA::inla.as.sparse(kronecker(Q1, Q2))
         idx <- which(QQ@i <= QQ@j)
         return(QQ@x[idx])
@@ -526,8 +526,8 @@ setMethod(
       }
 
       Q <- function(n, theta) {
-        Q1 <- prec(X, theta = theta[1:nth1])
-        Q2 <- prec(Y, theta = theta[nth1+1:nth2])
+        Q1 <- INLA::inla.rgeneric.q(rmodel = X, cmd = "Q", theta = theta[1:nth1])
+        Q2 <- INLA::inla.rgeneric.q(rmodel = Y, cmd = "Q", theta = theta[nth1+1:nth2])
         QQ <- INLA::inla.as.sparse(
           kronecker(Q1, Q2))
         idx <- which(QQ@i <= QQ@j)
@@ -541,8 +541,8 @@ setMethod(
         return(numeric(0))
 
       log.prior <- function(n, theta) {
-        lp1 <- prior(X, theta = theta[1:nth1])
-        lp2 <- prior(Y, theta = theta[nth1+1:nth2])
+        lp1 <- INLA::inla.rgeneric.q(rmodel = X, cmd = "log.prior", theta = theta[1:nth1])
+        lp2 <- INLA::inla.rgeneric.q(rmodel = Y, cmd = "log.prior", theta = theta[nth1+1:nth2])
         return(lp1 + lp2)
       }
 

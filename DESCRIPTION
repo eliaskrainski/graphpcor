@@ -1,11 +1,11 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.13.902
-Maintainer: Elias Krainski <eliaskrainski@gmail.com>
+Version: 0.1.13.903
+Maintainer: Elias Teixeira Krainski <eliaskrainski@gmail.com>
 Authors@R: c(
  person(given = c("Elias"),
-        family = "Krainski",
+        family = "Teixeira Krainski",
         email = "eliaskrainski@gmail.com",
         role = c("cre", "aut", "cph"),
         comment = c(ORCID = "0000-0002-7063-2615")),

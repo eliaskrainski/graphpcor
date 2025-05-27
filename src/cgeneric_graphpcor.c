@@ -179,6 +179,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		for (i = 0; i < ne; i++) {
 			actualtheta[i] = NAN;
 			lowtheta[i] = NAN;
+			thetat[i] = NAN;
 		}
 	}
 
@@ -216,7 +217,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		for (i = 0; i < N; i++) {
 			for (j = 0; j < N; j++) {
 				if (i == j) {
-					ll[k] = 1.0 + ((double) i);
+					ll[k] = ((double) N-i);
 				} else {
 					ll[k] = 0.0;
 				}
@@ -394,7 +395,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 		// the log prior:
 		// lconst should be equal to
-		// log(lambda) -(m-1)*log(pi)-log(2)-log(|H|)
+		// log(lambda) -(m-1)*log(pi)-log(2)+log(|H|)
 		ret[0] = lconst;
 
 		// PC prior for sigma[i]
@@ -405,10 +406,11 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			ret[0] += pclogsigma(theta[i], lam);
 		}
 
+/*
 		// the low L params Jacobian
 		double val, pparams[ne];
 		// last angle
-		pparams[ne - 1] = atan2(thetat[ne - 1], theta[ne - 2]);
+		pparams[ne - 1] = atan2(thetat[ne - 1], thetat[ne - 2]);
 //    printf("ne = %d, pparams[ne-1] = %2.5f (%2.7f)\n",
 		// ne, pparams[ne-1], atan2(0.0, 0.0));
 		if (pparams[ne - 1] < 0) {
@@ -423,15 +425,30 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		// r
 		pparams[0] = sqrt(val);
 
-		double ldJacobian = -log(2) -(ne-2)*log(M_PI);
-		ldJacobian += ((double) (ne - 1)) * log(pparams[0]);
+		double ldJacobian = 0.0;
+ 		ldJacobian += ((double) (ne - 1)) * log(pparams[0]);
 		if (ne > 2) {
 			for (i = 1; i < (ne - 1); i++) {       // not the last one
 				ldJacobian += ((double) (ne - 1 - i)) * log(sin(pparams[i]));
 			}
 		}
+		ret[0] += ldJacobian;
+*/
 
-		ret[0] += ldJacobian - lambda * pparams[0];
+		double z[ne];
+		for(i=0; i<ne; i++) {
+		  z[i] = lowtheta[i]-data->doubles[5]->doubles[i];
+		}
+		int one = 1;
+		char trans = 'T';
+		double alpha = 1.0, beta = 0.0;
+		dgemv_(&trans, &ne, &ne, &alpha, &data->mats[1]->x[0], &ne, &z[0], &one, &beta, &thetat[0], &one, F_ONE);
+		double h = 0.0;
+		for(i=0; i<ne; i++) {
+		  h += thetat[i]*z[i];
+		}
+		ret[0] -= ((double) (ne - 2)) * log(fabs(h));
+		ret[0] -= lambda * sqrt(2*h) + log(fabs(h));
 
 	}
 		break;

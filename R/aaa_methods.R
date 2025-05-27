@@ -127,7 +127,7 @@ setMethod(
   "vcov",
   "Matrix",
   function(object, ...) {
-    object <- Cholesky(object)
+    object <- Matrix::Cholesky(object)
     return(solve(object))
   }
 )

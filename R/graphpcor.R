@@ -240,7 +240,7 @@ setMethod(
     ne <- dim(x)
     G <- Laplacian(x)
     idx <- which(lower.tri(G) & (!is.zero(G)))
-    L <- diag(x = 1:ne[1], nrow = ne[1], ncol = ne[1])
+    L <- diag(x = ne[1]:1, nrow = ne[1], ncol = ne[1])
     stopifnot(length(idx)==ne[2])
     args <- list(...)
     stopifnot(length(args$theta)==ne[2])
@@ -296,9 +296,17 @@ prec.graphpcor <- function(model, ...) {
   mc <- list(...)
   nargs <- names(mc)
   if(any(nargs == "theta")) {
-    return(chol2inv(chol(
-      vcov(model, ...))
-    ))
+    theta <- mc$theta
+    if(length(theta)==ne[2]) {
+      theta <- c(rep(0.0, ne[1]), theta)
+    } else {
+      stopifnot(length(theta)==sum(ne))
+    }
+    V <- vcov(model, theta = theta)
+    Q <- chol2inv(chol(V))
+    Q[is.zero(Q)] <- 0
+    return(INLA::inla.as.sparse(
+      Q, zeros.rm = TRUE))
   } else {
     warning("missing `theta`, returning Laplacian!")
   }
@@ -409,10 +417,10 @@ hessian.graphpcor <-
   }
 #' @describeIn cgeneric
 #' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
-cgeneric.graphpcor <- function(...) {
+#' @export
+cgeneric.graphpcor <- function(model, ...) {
   args <- list(...)
-  args$graph <- args$model
-  args$model <- NULL
+  args$model <- model
   do.call(what = 'cgeneric_graphpcor',
           args = args)
 }
