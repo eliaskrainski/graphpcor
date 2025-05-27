@@ -122,24 +122,24 @@ npars <- nvars + ncors
 
 par(mfrow = c(1, 2), mar = c(4,4,1,1), mgp = c(3,1.5,0), las = 1, bty = 'n')
 plot(1:nvars-0.1, vars.kd[1:nvars, 1], pch = 19, axes = FALSE, log = "y",
-     xlim = c(0.5, 4.5), ylim = range(vars.kd[1:nvars, 3:5], gsummary[1:nvars, 3:4]),
+     xlim = c(0.5, nvars+.5), ylim = range(vars.kd[1:nvars, 3:5], gsummary[1:nvars, 3:4]),
      xlab = '', ylab = expression(sigma))
 axis(2)
 axis(1, 1:nvars, as.expression(lapply(1:nvars, function(i) bquote(sigma[.(i)]))))
 segments(1:nvars-0.1, vars.kd[1:nvars, 3], 1:nvars-0.1, vars.kd[1:nvars, 5])
 points(1:nvars+0.1, gsummary[1:nvars, 1], col = 2, pch = 8)
 segments(1:nvars+0.1, gsummary[1:nvars, 3], 1:nvars+0.1, gsummary[1:nvars, 4], col = 2)
-plot((nvars+1):npars-0.1, vars.kd[(nvars+1):npars, 1], pch = 19, axes = FALSE,
-     ylim = range(vars.kd[(nvars+1):npars, 3:4]), xlim = c(nvars-1, ncors+1), 
+plot(1:ncors, vars.kd[(nvars+1):npars, 1], pch = 19, axes = FALSE,
+     ylim = range(vars.kd[(nvars+1):npars, 3:4]), xlim = c(-0.5, ncors+.5), 
      xlab = '', ylab = 'Correlation')
 axis(2)
-axis(1, (nvars+1):npars, as.expression(lapply(ijc, function(ij)
+axis(1, 1:ncors, as.expression(lapply(ijc, function(ij)
     bquote(rho[.(ij[1])~.(ij[2])]))))
-segments((nvars+1):npars-0.1, vars.kd[(nvars+1):npars, 3],
-   (nvars+1):npars-0.1, vars.kd[(nvars+1):npars, 5])
-points((nvars+1):npars+0.1,gsummary[(nvars+1):npars, 1], col = 2, pch = 8)
-segments((nvars+1):npars+0.1, gsummary[(nvars+1):npars, 3],
-         (nvars+1):npars+0.1, gsummary[(nvars+1):npars, 4], col = 2)
+segments(1:ncors-0.1, vars.kd[(nvars+1):npars, 3],
+   1:ncors-0.1, vars.kd[(nvars+1):npars, 5])
+points(1:ncors+0.1,gsummary[(nvars+1):npars, 1], col = 2, pch = 8)
+segments(1:ncors+0.1, gsummary[(nvars+1):npars, 3],
+         1:ncors+0.1, gsummary[(nvars+1):npars, 4], col = 2)
 abline(h=0)
 legend("bottomleft", c("IIDKD", "GraphPCor"), bty = "n",
        lty = 1, col = 1:2, pch = c(19,8))
