@@ -27,10 +27,12 @@ Longi <- na.omit(pbc2[, c("id", "years", "status","drug","age",
                           "sex","year","serBilir","SGOT", "albumin", "edema",
                           "platelets", "alkaline","spiders", "ascites")])
 
+f1 <- function(x) x^2
+
 ### first prepare data with correct format using dataOnly and full sample
 run0 <- joint(
-    formLong = list(serBilir ~ (1 + year) * drug + (1 + year| id),
-                    platelets ~ (1 + year) * drug + (1 + year| id)),
+    formLong = list(serBilir ~ (1 + year + f1(year)) * drug + (1 + year + f1(year)| id),
+                    platelets ~ (1 + year + f1(year)) * drug + (1 + year + f1(year)| id)),
     dataLong = Longi, id = "id", timeVar = "year",
     family = c("lognormal", "poisson"),
     control=list(int.strategy = "eb", cfg = TRUE),
@@ -39,8 +41,8 @@ run.kd <- joint.run(run0)
 vars.kd <- summary(run.kd, sdcor=T)$ReffList[[1]]
 
 ## graph-based structure model for partial correlations
-G <- graphpcor(a1 ~ b1 + a2, ## 1st intercept with 1st slope and 2nd intercept
-               b2 ~ a2 + b1) ## 2nd slope with 2nd intercept and 1st slope
+G <- graphpcor(a1 ~ a2 + a3 + b1, ## 1st intercept with 1st slope and 2nd intercept
+               b1 ~ b2 + b3) ## 2nd intercept with 2nd slope
 plot(G)
 
 ## the correlation model
@@ -67,14 +69,23 @@ gmodel <- kronecker(gmodel1, iidmodel, useINLAprecomp=TRUE)
 run.G <- run0
 run0$.args$formula
 run.G$.args$formula <-
-    Yjoint ~ -1 + Intercept_L1 + year_L1 +
-        drugDpenicil_L1 + year.X.drugDpenicil_L1 + 
-        Intercept_L2 + year_L2 + drugDpenicil_L2 +
-        year.X.drugDpenicil_L2 + 
-        f(IDIntercept_L1, WIntercept_L1, model = gmodel) +
-        f(IDyear_L1, Wyear_L1, copy = "IDIntercept_L1") + 
-        f(IDIntercept_L2, WIntercept_L2, copy = "IDIntercept_L1") +
-        f(IDyear_L2, Wyear_L2, copy = "IDIntercept_L1") 
+    Yjoint ~ -1 + Intercept_L1 + year_L1 + f1year_L1 + drugDpenicil_L1 + 
+    year.X.drugDpenicil_L1 + f1year.X.drugDpenicil_L1 + Intercept_L2 + 
+    year_L2 + f1year_L2 + drugDpenicil_L2 + year.X.drugDpenicil_L2 + 
+    f1year.X.drugDpenicil_L2 +
+    f(IDIntercept_L1, WIntercept_L1, model = gmodel) +
+    f(IDyear_L1, Wyear_L1, copy = "IDIntercept_L1") + 
+    f(IDf1year_L1, Wf1year_L1, copy = "IDIntercept_L1") +
+    f(IDIntercept_L2, WIntercept_L2, copy = "IDIntercept_L1") +
+    f(IDyear_L2, Wyear_L2, copy = "IDIntercept_L1") +
+    f(IDf1year_L2, Wf1year_L2, copy = "IDIntercept_L1")
+
+##    Yjoint ~ -1 + Intercept_L1 + year_L1 + drugDpenicil_L1 + year.X.drugDpenicil_L1 +
+  ##      Intercept_L2 + year_L2 + drugDpenicil_L2 + year.X.drugDpenicil_L2 +
+    ##    f(IDIntercept_L1, WIntercept_L1, model = gmodel) +
+      ##  f(IDyear_L1, Wyear_L1, copy = "IDIntercept_L1") +
+        ##f(IDIntercept_L2, WIntercept_L2, copy = "IDIntercept_L1") +
+        ##f(IDyear_L2, Wyear_L2, copy = "IDIntercept_L1")
 
 run.G <- joint.run(run.G)
 
@@ -98,9 +109,14 @@ gsummary <- data.frame(
 
 round(cbind(vars.kd[, 1:2], gsummary[, 1:2]), 4)
 
-## "12", "13", "14", "23", "34"
-ijc <- list(c(1,2), c(1,3), c(1,4), c(2,3), c(3,4))
-(nvars <- dim(G)[1])
+## "12", "13", "14", "15", "16",
+##   "23", "24", "25", "26", 
+##     "34", "35", "36"
+##      "45", "46", "56"
+ijc <- list(c(1,2), c(1,3), c(1,4), c(1,5), c(1,6),
+            c(2,3), c(2,4), c(2,5), c(2,6),
+            c(3,4), c(3,5), c(3,6), c(4,5), c(4,6), c(5,6))
+nvars <- 6
 ncors <- length(ijc)
 npars <- nvars + ncors
 
