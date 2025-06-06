@@ -26,6 +26,7 @@
  */
 
 #include "graphpcor.h"
+#include <ltdl.h>
 
 typedef struct {
 	inla_cgeneric_data_tp *dataM1;
@@ -178,7 +179,6 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 			   &d12cache->dataM2->chars[1]->chars[0]) != 0) {
 			d12cache->handle2 =
 			    lt_dlopen(&d12cache->dataM2->chars[1]->chars[0]);
-			}
 		} else {
 			d12cache->handle2 = d12cache->handle1;
 		}
