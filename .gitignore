@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+R/*~
+src/*~
+src/*.o
+src/*.so
+tests/*~
