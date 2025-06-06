@@ -26,6 +26,7 @@
  */
 
 #include "graphpcor.h"
+#include <ltdl.h>
 
 typedef struct {
 	inla_cgeneric_data_tp *dataM1;
@@ -178,11 +179,10 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 			   &d12cache->dataM2->chars[1]->chars[0]) != 0) {
 			d12cache->handle2 =
 			    lt_dlopen(&d12cache->dataM2->chars[1]->chars[0]);
-			}
 		} else {
 			d12cache->handle2 = d12cache->handle1;
 		}
-		*(void **)(&d12cache->model1_func) = 
+		*(void **)(&d12cache->model1_func) =
 		     lt_dlsym(d12cache->handle1,
 			   &d12cache->dataM1->chars[0]->chars[0]);
 		*(void **)(&d12cache->model2_func) =
