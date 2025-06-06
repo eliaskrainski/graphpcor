@@ -1,5 +1,5 @@
 
-/* cgeneric_kronecker.c
+/* cgeneric_kronecker.c -> INLAtools/, here using ltdl
  *
  * Copyright (C) 2024 Elias T Krainski
  *
@@ -25,20 +25,20 @@
  *        Thuwal 23955-6900, Saudi Arabia
  */
 
-#include <ltdl.h>
 #include "graphpcor.h"
 
-typedef struct
-{
-	int nth1;
+typedef struct {
+	inla_cgeneric_data_tp *dataM1;
+	inla_cgeneric_data_tp *dataM2;
 	lt_dlhandle handle1;
 	lt_dlhandle handle2;
 	inla_cgeneric_func_tp *model1_func;
 	inla_cgeneric_func_tp *model2_func;
-}
-	cache_tp;
+	int nth1;
+} cache_tp;
 
-double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp *data)
+double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
+				inla_cgeneric_data_tp *data)
 {
 	// concatenated data approach of the lists
 
@@ -80,9 +80,9 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	// data->smatrices[nsm1+nsm2] contains the graph
 	// where ->x is the order
 
-	double *ret1 = NULL;				       // to store output from M1.
-	double *ret2 = NULL;				       // to store output from M2.
-	double *ret = NULL;				       // to return;
+	double *ret1 = NULL;	// to store output from M1.
+	double *ret2 = NULL;	// to store output from M2.
+	double *ret = NULL;	// to return;
 
 	int i, j, k, M1, M2, n, M;
 	int ni1, nd1, nc1, nm1, nsm1;
@@ -112,192 +112,248 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(nc2 > 1);
 	assert(data->n_chars > 5);
 
-	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	assert(!strcasecmp(data->ints[ni1 + 1]->name, "debug"));	// this will always be the case
-//	int debug = (data->ints[1]->ints[0] | data->ints[ni1 + 1]->ints[0]);
-
-	assert(!strcasecmp(data->ints[ni1 + ni2]->name, "idx1u"));	// this will always be the case
-	assert(!strcasecmp(data->ints[ni1 + ni2 + 1]->name, "idx2u"));	// this will always be the case
-
-	assert(!strcasecmp(data->smats[nsm1 + nsm2]->name, "Kgraph"));	// this will always be the case
-
-	inla_cgeneric_data_tp *dataM1 = Calloc(1, inla_cgeneric_data_tp);
-	inla_cgeneric_data_tp *dataM2 = Calloc(1, inla_cgeneric_data_tp);
-
-	dataM1->n_ints = ni1;
-	dataM1->ints = &data->ints[0];
-	dataM1->n_doubles = nd1;
-	dataM1->doubles = &data->doubles[0];
-	dataM1->n_chars = nc1;
-	dataM1->chars = &data->chars[2];		       // first two is for KM!
-	dataM1->n_mats = nm1;
-	dataM1->mats = &data->mats[0];
-	dataM1->n_smats = nsm1;
-	dataM1->smats = &data->smats[0];
-
-	dataM2->n_ints = ni2;
-	dataM2->ints = &data->ints[ni1];
-	dataM2->n_doubles = nd2;
-	dataM2->doubles = &data->doubles[nd1];
-	dataM2->n_chars = nc2;
-	dataM2->chars = &data->chars[2 + nc1];		       // first two is for KM!
-	dataM2->n_mats = nm2;
-	dataM2->mats = &data->mats[nm1];
-	dataM2->n_smats = nsm2;
-	dataM2->smats = &data->smats[nsm1];
-
 	if (!(data->cache)) {
+
+#ifdef _OPENMP
 #pragma omp critical (Name_5bd4b7198feb5550e84446518f90d47072338c18)
-		if (!(data->cache)) {
+#endif
 
-			lt_dlinit();
-			lt_dlerror();
-			cache_tp *c = Calloc(1, cache_tp);
+		assert(!strcasecmp(data->ints[1]->name, "debug"));	// this will always be the case
+		assert(!strcasecmp(data->ints[ni1 + 1]->name, "debug"));	// this will always be the case
+		//    int debug = (data->ints[1]->ints[0] | data->ints[ni1 + 1]->ints[0]);
 
-			c->handle1 = lt_dlopen(&dataM1->chars[1]->chars[0]);
+		assert(!strcasecmp(data->ints[ni1 + ni2]->name, "idx1u"));	// this will always be the case
+		assert(!strcasecmp(data->ints[ni1 + ni2 + 1]->name, "idx2u"));	// this will always be the case
 
-			if (strcmp(&dataM1->chars[1]->chars[0], &dataM2->chars[1]->chars[0]) != 0) {
-				c->handle2 = lt_dlopen(&dataM2->chars[1]->chars[0]);
-			} else {
-				c->handle2 = c->handle1;
-			}
+		assert(!strcasecmp(data->smats[nsm1 + nsm2]->name, "Kgraph"));	// this will always be the case
 
-			c->model1_func = (inla_cgeneric_func_tp *) lt_dlsym(c->handle1, &dataM1->chars[0]->chars[0]);
-			c->model2_func = (inla_cgeneric_func_tp *) lt_dlsym(c->handle2, &dataM2->chars[0]->chars[0]);
-			assert(c->model1_func);
-			assert(c->model2_func);
-			c->nth1 = (int) c->model1_func(INLA_CGENERIC_INITIAL, NULL, dataM1)[0];
+		cache_tp *d12cache = Calloc(1, cache_tp);
+		d12cache->dataM1 = Calloc(1, inla_cgeneric_data_tp);
+		d12cache->dataM2 = Calloc(1, inla_cgeneric_data_tp);
 
-			data->cache = (void *) c;
+		d12cache->dataM1->n_ints = ni1;
+		d12cache->dataM1->ints = &data->ints[0];
+		d12cache->dataM1->n_doubles = nd1;
+		if (nd1 > 0) {
+			d12cache->dataM1->doubles = &data->doubles[0];
 		}
+		d12cache->dataM1->n_chars = nc1;
+		if (nc1 > 0) {
+			d12cache->dataM1->chars = &data->chars[2];	// first two is for KM!
+		}
+		d12cache->dataM1->n_mats = nm1;
+		if (nm1 > 0) {
+			d12cache->dataM1->mats = &data->mats[0];
+		}
+		d12cache->dataM1->n_smats = nsm1;
+		if (nsm1 > 0) {
+			d12cache->dataM1->smats = &data->smats[0];
+		}
+
+		d12cache->dataM2->n_ints = ni2;
+		d12cache->dataM2->ints = &data->ints[ni1];
+		d12cache->dataM2->n_doubles = nd2;
+		if (nd2 > 0) {
+			d12cache->dataM2->doubles = &data->doubles[nd1];
+		}
+		d12cache->dataM2->n_chars = nc2;
+		if (nc2 > 0) {
+			d12cache->dataM2->chars = &data->chars[2 + nc1];	// first two is for KM!
+		}
+		d12cache->dataM2->n_mats = nm2;
+		if (nm2 > 0) {
+			d12cache->dataM2->mats = &data->mats[nm1];
+		}
+		d12cache->dataM2->n_smats = nsm2;
+		if (nsm2 > 0) {
+			d12cache->dataM2->smats = &data->smats[nsm1];
+		}
+
+		lt_dlinit();
+		lt_dlerror();
+
+		d12cache->handle1 =
+		    lt_dlopen(&d12cache->dataM1->chars[1]->chars[0]);
+		if (strcmp(&d12cache->dataM1->chars[1]->chars[0],
+			   &d12cache->dataM2->chars[1]->chars[0]) != 0) {
+			d12cache->handle2 =
+			    lt_dlopen(&d12cache->dataM2->chars[1]->chars[0]);
+			}
+		} else {
+			d12cache->handle2 = d12cache->handle1;
+		}
+		*(void **)(&d12cache->model1_func) = 
+		     lt_dlsym(d12cache->handle1,
+			   &d12cache->dataM1->chars[0]->chars[0]);
+		*(void **)(&d12cache->model2_func) =
+		    lt_dlsym(d12cache->handle2,
+			  &d12cache->dataM2->chars[0]->chars[0]);
+		d12cache->nth1 =
+		    (int)d12cache->model1_func(INLA_CGENERIC_INITIAL, NULL,
+					       d12cache->dataM1)[0];
+
+		data->cache = (void *)d12cache;
 	}
 
 	assert(data->cache);
-	cache_tp *c = (cache_tp *) data->cache;
+	cache_tp *d12cache = (cache_tp *) data->cache;
 
-	double *theta1 = &theta[0];
-	double *theta2 = &theta[c->nth1];
+	double *theta1;
+	if (d12cache->nth1 > 0) {
+		theta1 = &theta[0];
+	} else {
+		theta1 = NULL;
+	}
+	double *theta2 = &theta[d12cache->nth1];
 
 	switch (cmd) {
 	case INLA_CGENERIC_VOID:
-	{
-		assert(!(cmd == INLA_CGENERIC_VOID));
-		break;
-	}
+		{
+			assert(!(cmd == INLA_CGENERIC_VOID));
+			break;
+		}
 
 	case INLA_CGENERIC_GRAPH:
-	{
+		{
 
-		assert(M == data->smats[nsm1 + nsm2]->n);
+			assert(M == data->smats[nsm1 + nsm2]->n);
 
-		ret = Calloc(2 + 2 * M, double);
-		ret[0] = n;
-		ret[1] = M;
+			ret = Calloc(2 + 2 * M, double);
+			ret[0] = n;
+			ret[1] = M;
 
-		// collect i
-		for (i = 0; i < M; i++) {
-			ret[2 + i] = data->smats[nsm1 + nsm2]->i[i];
+			// collect i
+			for (i = 0; i < M; i++) {
+				ret[2 + i] = data->smats[nsm1 + nsm2]->i[i];
+			}
+			// collect j
+			for (i = 0; i < M; i++) {
+				ret[2 + M + i] = data->smats[nsm1 + nsm2]->j[i];
+			}
+
+			break;
 		}
-		// collect j
-		for (i = 0; i < M; i++) {
-			ret[2 + M + i] = data->smats[nsm1 + nsm2]->j[i];
-		}
-
-		break;
-	}
 
 	case INLA_CGENERIC_Q:
-	{
-		ret = Calloc(2 + M, double);
-		ret[0] = -1;				       /* REQUIRED */
-		ret[1] = M;
+		{
+			ret = Calloc(2 + M, double);
+			ret[0] = -1;	/* REQUIRED */
+			ret[1] = M;
 
-		ret1 = c->model1_func(INLA_CGENERIC_Q, theta1, dataM1);
-		ret2 = c->model2_func(INLA_CGENERIC_Q, theta2, dataM2);
+			ret1 =
+			    d12cache->model1_func(INLA_CGENERIC_Q, theta1,
+						  d12cache->dataM1);
+			ret2 =
+			    d12cache->model2_func(INLA_CGENERIC_Q, theta2,
+						  d12cache->dataM2);
 
-		int nu1 = data->ints[ni1 + ni2]->len;
-		int nu2 = data->ints[ni1 + ni2 + 1]->len;
+			int nu1 = data->ints[ni1 + ni2]->len;
+			int nu2 = data->ints[ni1 + ni2 + 1]->len;
 
-		double retE[M];
-		double daux;
-		int ox;
+			double retE[M];
+			double daux;
+			int ox;
 
-		k = 0;
-		for (i = 0; i < M1; i++) {
-			daux = ret1[2 + i];
-			for (j = 0; j < M2; j++) {
-				retE[k++] = daux * ret2[2 + j];
-			}
-		}
-
-		if ((nu1 > 0) & (nu2 > 0)) {
-			for (i = 0; i < nu1; i++) {
-				daux = ret1[2 + data->ints[ni1 + ni2]->ints[i]];
-				for (j = 0; j < nu2; j++) {
-					retE[k++] = daux * ret2[2 + data->ints[ni1 + ni2 + 1]->ints[j]];
+			k = 0;
+			for (i = 0; i < M1; i++) {
+				daux = ret1[2 + i];
+				for (j = 0; j < M2; j++) {
+					retE[k++] = daux * ret2[2 + j];
 				}
 			}
-		}
 
-		assert(k == data->smats[nsm1 + nsm2]->n);
-		for (k = 0; k < data->smats[nsm1 + nsm2]->n; k++) {
-			ox = (int) data->smats[nsm1 + nsm2]->x[k];
-			ret[2 + k] = retE[ox];
-		}
+			if ((nu1 > 0) & (nu2 > 0)) {
+				for (i = 0; i < nu1; i++) {
+					daux =
+					    ret1[2 +
+						 data->ints[ni1 +
+							    ni2]->ints[i]];
+					for (j = 0; j < nu2; j++) {
+						retE[k++] =
+						    daux * ret2[2 +
+								data->ints[ni1 +
+									   ni2 +
+									   1]->
+								ints[j]];
+					}
+				}
+			}
 
-		break;
-	}
+			assert(k == data->smats[nsm1 + nsm2]->n);
+			for (k = 0; k < data->smats[nsm1 + nsm2]->n; k++) {
+				ox = (int)data->smats[nsm1 + nsm2]->x[k];
+				ret[2 + k] = retE[ox];
+			}
+
+			break;
+		}
 
 	case INLA_CGENERIC_MU:
-	{
-		// return (N, mu)
-		// if N==0 then mu is not needed as its taken to be mu[]==0
-		ret = Calloc(1, double);
-		ret[0] = 0;
-		break;
-	}
+		{
+			// return (N, mu)
+			// if N==0 then mu is not needed as its taken to be mu[]==0
+			ret = Calloc(1, double);
+			ret[0] = 0;
+			break;
+		}
 
 	case INLA_CGENERIC_INITIAL:
-	{
-		// return c(M, initials)
-		// where M is the number of hyperparameters
+		{
+			// return c(M, initials)
+			// where M is the number of hyperparameters
 
-		ret1 = c->model1_func(INLA_CGENERIC_INITIAL, NULL, dataM1);
-		ret2 = c->model2_func(INLA_CGENERIC_INITIAL, NULL, dataM2);
+			ret1 =
+			    d12cache->model1_func(INLA_CGENERIC_INITIAL, NULL,
+						  d12cache->dataM1);
+			ret2 =
+			    d12cache->model2_func(INLA_CGENERIC_INITIAL, NULL,
+						  d12cache->dataM2);
 
-		int nth1 = (int) ret1[0], nth2 = (int) ret2[0];
+			int nth1 = (int)ret1[0], nth2 = (int)ret2[0];
 
-		ret = Calloc(1 + nth1 + nth2, double);
-		ret[0] = nth1 + nth2;
+			ret = Calloc(1 + nth1 + nth2, double);
+			ret[0] = nth1 + nth2;
 
-		for (i = 0; i < nth1; i++) {
-			ret[1 + i] = ret1[1 + i];
+			for (i = 0; i < nth1; i++) {
+				ret[1 + i] = ret1[1 + i];
+			}
+
+			for (i = 0; i < nth2; i++) {
+				ret[1 + nth1 + i] = ret2[1 + i];
+			}
+
+			break;
 		}
-
-		for (i = 0; i < nth2; i++) {
-			ret[1 + nth1 + i] = ret2[1 + i];
-		}
-
-		break;
-	}
 
 	case INLA_CGENERIC_LOG_NORM_CONST:
-	{
-		break;
-	}
+		{
+			break;
+		}
 
 	case INLA_CGENERIC_LOG_PRIOR:
-	{
-		// return c(LOG_PRIOR)
-		ret1 = c->model1_func(INLA_CGENERIC_LOG_PRIOR, theta1, dataM1);
-		ret2 = c->model2_func(INLA_CGENERIC_LOG_PRIOR, theta2, dataM2);
+		{
+			// return c(LOG_PRIOR)
+			ret1 =
+			    d12cache->model1_func(INLA_CGENERIC_LOG_PRIOR,
+						  theta1, d12cache->dataM1);
+			ret2 =
+			    d12cache->model2_func(INLA_CGENERIC_LOG_PRIOR,
+						  theta2, d12cache->dataM2);
 
-		ret = Calloc(1, double);
-		ret[0] = ret1[0] + ret2[0];
-		break;
-	}
+			ret = Calloc(1, double);
+			ret[0] = ret1[0] + ret2[0];
+			break;
+		}
 
 	case INLA_CGENERIC_QUIT:
+		{
+			lt_dlclose(d12cache->handle1);
+			if (strcmp(&d12cache->dataM1->chars[1]->chars[0],
+			     &d12cache->dataM2->chars[1]->chars[0]) != 0) {
+				lt_dlclose(d12cache->handle2);
+			}
+			free(d12cache);
+		}
 	default:
 		break;
 	}
