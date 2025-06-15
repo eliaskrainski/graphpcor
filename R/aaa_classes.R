@@ -6,27 +6,19 @@ setClass("treepcor")
 #' conditional distributions, respectively.
 setClass("graphpcor")
 
-#' `inla.rgeneric` class, short `rgeneric`,
-#' to define a [INLA::rgeneric()] latent model
-#' @rdname rgeneric
+#' Contain information needed to define the penalized
+#' complexity prior for correlation matrices
 setClass(
-  "inla.rgeneric",
-  slots = "f",
+  "pcor",
+  slots = c("base", "theta", "p", "parametrization",
+            "itheta", "H"),
   validity = function(object) {
-    all(c("model", "n", "rgeneric") %in%
-          names(object$f))
+    p3 <- c("cpc", "CPC", "sap", "SAP", "itp", "ITP")
+    (object$p>1) &&
+      (object$p == nrow(object$base)) &&
+      all.equal(object$base == t(object$base)) &&
+      all(diag(object$base==1)) &&
+      all(diag(chol(object$base))>0) &&
+      object$parametrization %in% p3
   }
 )
-
-#' `inla.cgeneric` class, short `cgeneric`,
-#' to define a [INLA::cgeneric()] latent model
-#' @rdname cgeneric
-setClass(
-  "inla.cgeneric",
-  slots = "f",
-  validity = function(object) {
-    all(c("model", "n", "cgeneric") %in%
-          names(object$f))
-  }
-)
-

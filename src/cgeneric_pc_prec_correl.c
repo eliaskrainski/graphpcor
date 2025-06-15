@@ -82,10 +82,30 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		printf("N=%d, nth=%d, M=%d, lambda=%f, lc=%f\n", N, nth, M, lambda, lconst);
 	}
 */
-	double daux;
+	//double daux;
 	double param[nth];
 
 	if (theta) {
+//	  printf("%d %d %d\n", N, M, nth);
+	  for(i=0; i<nth; i++) {
+	    param[i] = data->doubles[2]->doubles[i];
+//	    printf("%2.3f, %2.3f \n", theta[i], param[i]);
+	  }
+	  int one = 1;
+	  char trans = 'N';
+	  double alpha = 1.0, beta = 1.0;
+	  // param = H^{-1/2}\theta + theta_0
+	//  printMat(data->mats[0]->x, nth, nth, "h.5\n");
+	  dgemv_(&trans, &nth, &nth, &alpha, &data->mats[0]->x[0], &nth,
+          &theta[0], &one, &beta, &param[0], &one, F_ONE);
+/*
+	  printf("\n");
+	  for(i=0; i<nth; i++) {
+	    printf("%2.3f %2.3f\n", theta[i], param[i]);
+	  }
+*/
+
+/*
 		param[nth - 1] = atan2(theta[nth - 1], theta[nth - 2]);
 		if (param[nth - 1] < 0) {
 			param[nth - 1] += 2.0 * M_PI;
@@ -105,6 +125,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		    param[i]      = 0.0000000005;
 		  }
 		}
+ */
 /*
 		if (debug > 999) {
 			printMat(param, 1, nth, "param:\n");
@@ -156,7 +177,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		ret[1] = M;				       /* REQUIRED */
 
 		// Cholesky of the correlation matrix
-		cpc2correlCholesky(&N, &theta[0], &ret[offset]);
+		cpc2correlCholesky(&N, &param[0], &ret[offset]);
 
 		int info;
 		char uplo = 'L';
@@ -179,7 +200,7 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		ret = Calloc(nth + 1, double);
 		ret[0] = nth;
 		for(i=1; i<=nth; i++) {
-		  ret[i] = 0.0;
+		  ret[i] = 0.00001;
 		}
 	}
 		break;
@@ -187,28 +208,31 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 	case INLA_CGENERIC_LOG_PRIOR:
 	{
 		ret = Calloc(1, double);
-		double ldJacobian;
-
-		ldJacobian = ((double) (nth - 1)) * log(param[0]);
-		// if nth=1 then |J|=0   ???
-		// if nth=2 then |J|=r
-		if (nth > 2) {
-			for (i = 1; i < (nth - 1); i++) {
-				ldJacobian += ((double) (nth - 1 - i)) * log(sin(param[i]));
-			}
+		double z[nth];
+		for(i=0; i<nth; i++) {
+		  z[i] = param[i] - data->doubles[2]->doubles[i];
+//		  printf("%2.3f %2.3f \n", param[i], z[i]);
 		}
-		double dm = (double)nth;
-		ret[0] = lconst + dm*log(param[0]);
-		ret[0] -= 0.5*dm + dm*M_PI -lgamma(0.5*dm+1.0);
+		int one = 1;
+		char trans = 'T';
+		double alpha = 1.0, beta = 0.0;
+		dgemv_(&trans, &nth, &nth, &alpha, &data->mats[0]->x[0],
+         &nth, &z[0], &one, &beta, &param[0], &one, F_ONE);
+		double d = 0.0;
+		for(i=0; i<nth; i++) {
+		  d += z[i]*param[i];
+		}
+	//	printf("%2.5f\n", d);
+
+		// the log prior:
+		// lconst should be equal to
+		// log(lambda) -gamma(1+m/2)-log(m)-(m/2)*log(pi)
+		ret[0] = lconst -lambda * d + fabs(1/sqrt(2*d));
 /*
 		if (debug > 999) {
 			printf("log det Jacobian = %2.7f\n", ldJacobian);
 		}
 */
-		// the log prior:
-		// lconst should be equal to
-		// log(lambda) -(m-1)*log(pi)-log(2)-log(|H|)
-		ret[0] += ldJacobian - lambda * param[0];
 
 	}
 		break;

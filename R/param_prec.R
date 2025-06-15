@@ -1,56 +1,47 @@
-#' Precision matrix parametrization helper functions.
-#' @rdname prec
+#' Build the Cholesky factor, L, of a precision matrix.
 #' @param theta numeric vector of length `m`
-#' with the parameter
-#' @param p integer giving the dimention of Q.
-#' If `p` and `ilowerL` are missing, then
-#' Q is assumed to be dense and
-#' `p = (1+sqrt(1+8*length(theta)))`.
-#' @param ilowerL integer vector as index
-#' to (lower) L to be filled with `theta`.
-#' @return matrix as the Cholesky factor of a
-#' precision matrix as the inverse of a correlation
+#' with the parameters.
+#' @param p integer giving the dimension of
+#' the precision matrix.
+#' @param itheta integer vector as index
+#' to (the lower part of) L
+#' to be filled with `theta`.
+#' Length of itheta must be equal 'm'.
+#' @param d0 elements at the diagonal of L.
+#' By default uses `p:1`.
+#' @return matrix as the (lower triangle)
+#' Cholesky factor of a precision matrix.
 #' @details
-#' The precision matrix definition consider
-#' `m` parameters for the lower part of L.
-#' If Q is dense, then `m = p(p-1)/2`, else
-#' `m = length(ilowerL)`.
 #' The precision is defined as
 #' \eqn{Q(\theta) = L(\theta)L(\theta)^T}
-#' @return a matrix whose elements at the lower
-#' triangle are the filled in elements of the
-#' Cholesky decomposition of a precision matrix
-#' and diagonal elements as `1:p`.
+#' where \eqn{L(\theta)} the Cholesky of \eqn{Q(\theta)}
+#' is filled using the following steps
+#' 1. Build \eqn{L} starting with filling its diagonal
+#'    with 'd0'.
+#' 2. Place \eqn{theta} at the positions 'itheta'
+#' 3. Compute the fill-in elements
+#' @seealso [correl]
 #' @export
 #' @examples
-#' theta1 <- c(1, -1, -2)
-#' Lprec(theta1)
-#' theta2 <- c(0.5, -0.5, -1, -1)
-#' Lprec(theta2, 4, c(2,4,7,12))
-Lprec <- function(theta, p, ilowerL, d0) {
-  if(missing(p)) {
-    if(!missing(ilowerL)) {
-      stop("Please provide `p`!")
-    }
-    m <- length(theta)
-    p <- (1 + sqrt(1+8*m))/2
-    stopifnot((p==floor(p)) & (p==ceiling(p)))
-  }
-  stopifnot(p>0)
+#' Lprec(c(1,-1,-2), 3, c(2,3,6))
+#' Lprec(c(2,-1,1,-0.5), 4, c(2,3,8,12))
+Lprec <- function(theta, p, itheta, d0) {
+  stopifnot(p>1)
   if(missing(d0)) {
-    d0 <- 1:p
+    d0 <- p:1
   }
   stopifnot(length(d0)==p)
   L <- diag(x=d0, nrow = p, ncol = p)
-  if(missing(ilowerL)) {
+  if(missing(itheta)) {
+    stopifnot(length(theta)==(p*(p-1)/2))
     L[lower.tri(L)] <- theta
   } else {
-    L[ilowerL] <- theta
-    L <- fillLprec(L, ilowerL = ilowerL)
+    L[itheta] <- theta
+    L <- fillLprec(L)
   }
   return(L)
 }
-#' @describeIn prec
+#' @describeIn Lprec
 #' Function to fill-in a Cholesky matrix
 #' @param L matrix as the lower triangle
 #' containing the Cholesky decomposition of
@@ -58,17 +49,16 @@ Lprec <- function(theta, p, ilowerL, d0) {
 #' @param lfi integer vector used as indicator of the
 #' position in the lower matrix where are the
 #' fill-in elements. Must be col then row ordered.
-fillLprec <- function(L, lfi, ilowerL) {
+fillLprec <- function(L, lfi) {
   L <- as.matrix(L)
   p <- nrow(L)
   if(missing(lfi)) {
-    G <- matrix(0, p, p)
-    G[ilowerL] <- -1
-    G <- t(G)
-    G[ilowerL] <- -1
+    i0 <- is.zero(L)
+    G <- i0 - 1.0
+    G <- G + t(G)
     diag(G) <- 1 - colSums(G)
     lG <- t(chol(G))
-    lfi <- which(is.zero(G) & (!is.zero(lG)))
+    lfi <- which(i0 & (!is.zero(lG)))
   }
   if(length(lfi)>0) {
     if(length(lfi)>1)
@@ -90,52 +80,4 @@ fillLprec <- function(L, lfi, ilowerL) {
     }
   }
   return(L)
-}
-#' @describeIn prec
-#' Build a correlation matrix from the
-#' precision parametrization
-theta2correl <- function(theta, p, ilowerL, d0,
-                         transf = c("natural", "cpc")) {
-  transf <- match.arg(transf, c("natural", "cpc"))
-  if(transf=="natural") {
-    L <- Lprec(theta, p=p, ilowerL=ilowerL, d0=d0)
-    V <- chol2inv(t(L))
-    return(cov2cor(V))
-  } else {
-    crossprod(Lcorrel(theta, p=p, ilowerL=ilowerL))
-  }
-}
-#' @describeIn correl
-#' Cholesky of a correlation matrix using the
-#'  [correlation-matrix-inverse-transform](https://mc-stan.org/docs/reference-manual/transforms.html)
-#' where tanh(\eqn{\theta_j}) is the canonical
-#' partial correlation - CPC.
-#' @param ilowerL integer vector as index
-#' to (lower) L to be filled with `theta`.
-#' Assume dense if missing.
-#' @export
-Lcorrel <- function(theta, p, ilowerL) {
-  if(missing(p)) {
-    if(!missing(ilowerL)) {
-      stop("Please provide `p`!")
-    }
-    m <- length(theta)
-    p <- (1 + sqrt(1+8*m))/2
-    stopifnot((p==floor(p)) & (p==ceiling(p)))
-  }
-  stopifnot(p>0)
-  z <- diag(x=rep(1,p), nrow = p, ncol = p)
-  if(missing(ilowerL)) {
-    z[lower.tri(z)] <- tanh(theta)
-  } else {
-    z[ilowerL] <- tanh(theta)
-  }
-  z <- fillLprec(z, ilowerL = ilowerL)
-  w <- z <- t(z)
-  psz <- rep(1, p)
-  for(i in 2:p) {
-    psz <- psz * sqrt(1-z[i-1, ]^2)
-    w[i,i:p] <- z[i,i:p] * psz[i:p]
-  }
-  return(w)
 }

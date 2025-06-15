@@ -83,25 +83,45 @@ cgeneric_treepcor <-
 
     stopifnot(lambda>0)
 
-    the_model <- cgeneric.default(
-      model = "inla_cgeneric_treepcor",
-      libpath = libpath,
-      debug = as.logical(debug),
-      useINLAprecomp = as.logical(useINLAprecomp),
-      n = as.integer(nc),
-      np = as.integer(np),
-      nv = as.integer(nv),
-      ipar = as.integer(d.elc$iparent-1L),
-      iiv = as.integer(iiv-1L),
-      jjv = as.integer(jjv-1L),
-      itop = as.integer(itop-1L),
-      ii = as.integer(ii-1L),
-      jj = as.integer(jj-1L),
-      lambda = as.double(lambda),
-      slambdas = as.double(slambdas),
-      schildren = as.double(sch)
+    cgmodel <- "inla_cgeneric_treepcor"
+    the_model <- list(
+      f=list(model = "cgeneric",
+             n = as.integer(nc),
+             cgeneric = list(
+               model = cgmodel,
+               shlib = libpath,
+               n = as.integer(nc),
+               debug = as.integer(debug)),
+             data = list(
+               ints = list(
+                 n = as.integetr(nc),
+                 debug = as.integer(debug),
+                 np = as.integer(np),
+                 nv = as.integer(nv),
+                 ipar = as.integer(d.elc$iparent-1L),
+                 iiv = as.integer(iiv-1L),
+                 jjv = as.integer(jjv-1L),
+                 itop = as.integer(itop-1L),
+                 ii = as.integer(ii-1L),
+                 jj = as.integer(jj-1L)),
+               doubles = list(
+                 lambda = as.double(lambda),
+                 slambdas = as.double(slambdas),
+                 schildren = as.double(sch)
+               ),
+               characters = list(
+                 model = cgmodel,
+                 shlib = libpath
+               ),
+               matrices = list(),
+               smatrices = list()
+             )
+      )
     )
 
-    return(the_model)
+    class(the_model) <- c("cgeneric", ## INLAtools
+                          "inla.cgeneric") ## this is needed in INLA::f()
+    class(the_model$f$cgeneric) <- class(the_model)
 
-  }
+    return(the_model)
+}

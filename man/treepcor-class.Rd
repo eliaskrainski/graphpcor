@@ -13,6 +13,7 @@
 \alias{etreepcor2precision}
 \alias{vcov,treepcor-method}
 \alias{etreepcor2variance}
+\alias{cgeneric.treepcor}
 \title{Set a tree whose nodes represent the two kind of variables:
 children and parent.}
 \usage{
@@ -35,6 +36,8 @@ etreepcor2precision(d.el)
 \S4method{vcov}{treepcor}(object, ...)
 
 etreepcor2variance(d.el)
+
+\method{cgeneric}{treepcor}(model, ...)
 }
 \arguments{
 \item{x}{treepcor object}
@@ -82,5 +85,7 @@ build the precision from the \code{treepcor} edges.
 
 \item \code{etreepcor2variance()}: Internal function to extract elements to
 build the covariance matrix from a \code{treepcor}.
+
+\item \code{cgeneric(treepcor)}: The \code{cgeneric} method for \code{treepcor}, uses \code{\link[=cgeneric_treepcor]{cgeneric_treepcor()}}
 
 }}

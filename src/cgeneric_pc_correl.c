@@ -147,27 +147,19 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	{
 		ret = Calloc(1, double);
 
-		double daux, d, r = 0.0, lJacobian = 0.0;
-		double x[nth], gamma[nth];
-//    printf("lc = %2.3f\n", lconst);
+		double daux, r = 0.0, d, lJacobian = 0.0;
 		for (i = 0; i < nth; i++) {
-			daux = exp(-theta[i]);
-			x[i] = M_PI / (1 + daux);
-			lJacobian += log(M_PI * daux / SQR(1.0 + daux));
-			lJacobian += log(fabs(1 / tan(x[i])));
-			gamma[i] = -log(sin(x[i]));
-			r += gamma[i];
-//      printf("g[%d] = %2.3f\n", i, gamma[i]);
+			daux = pow2(theta[i]);//exp(-theta[i]);
+			r += daux; //gamma[i];
 		}
-		d = sqrt(2.0 * r);
-		lJacobian += log(fabs(1.0 / d));
-//    printf("d= %2.3f, log|J| = %2.3f\n", d, lJacobian);
+		d = sqrt(r);
+		lJacobian += log(1/d);
 
 		// the log prior
-		// lconst should be equal to
-		// log(lambda) + lfactorial(nth-1) -nth*log(2);
-		ret[0] = lconst - lambda * d + lJacobian;
-		ret[0] -= ((double) (nth - 1)) * log(r);
+		// lconst should be equal to (m=nth)
+		// log(lambda) + lgamma(1+m/2)-log(m)-m/2*log(pi)
+		ret[0] = lconst - lambda * d; // + lJacobian;
+		ret[0] -= ((double) (nth - 2)) * log(r);
 
 	}
 		break;

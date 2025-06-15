@@ -62,7 +62,7 @@ cgeneric_pc_correl <-
     stopifnot(lambda>0)
     m <- n*(n-1)/2
 
-    lc <- log(lambda) + lfactorial(m-1) -m * log(2)
+    lc <- log(lambda) + lgamma(1+m/2)-log(m)-m/2*log(pi)
 
     if(debug) {
       cat('log C', lc, '\n')

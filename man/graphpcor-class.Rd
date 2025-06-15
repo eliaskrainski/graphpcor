@@ -11,9 +11,9 @@
 \alias{edges,graphpcor-method}
 \alias{plot,graphpcor,ANY-method}
 \alias{Laplacian.graphpcor}
-\alias{chol,graphpcor-method}
 \alias{vcov,graphpcor-method}
 \alias{prec.graphpcor}
+\alias{cgeneric.graphpcor}
 \title{Set a graph whose nodes and edges represent variables and
 conditional distributions, respectively.}
 \usage{
@@ -33,16 +33,16 @@ conditional distributions, respectively.}
 
 \method{Laplacian}{graphpcor}(graph)
 
-\S4method{chol}{graphpcor}(x, ...)
-
 \S4method{vcov}{graphpcor}(object, ...)
 
 \method{prec}{graphpcor}(model, ...)
+
+\method{cgeneric}{graphpcor}(model, ...)
 }
 \arguments{
 \item{...}{list of formula used to define the edges.}
 
-\item{x}{a \code{graphpcor} object}
+\item{x}{graphpcor}
 
 \item{object}{graphpcor object}
 
@@ -68,8 +68,6 @@ The \code{~} is taken as link.
 
 \item \code{plot(x = graphpcor, y = ANY)}: The plot method for \code{graphpcor}
 
-\item \code{chol(graphpcor)}: Build the unite diagonal lower triangle matrix
-
 \item \code{vcov(graphpcor)}: The \code{vcov} method for a \code{graphpcor}
 
 }}
@@ -89,6 +87,8 @@ a variable and an edge a conditional distribution.
 \item \code{Laplacian(graphpcor)}: The Laplacian method for a \code{graphpcor}
 
 \item \code{prec(graphpcor)}: The precision method for 'graphpcor'
+
+\item \code{cgeneric(graphpcor)}: The \code{cgeneric} method for \code{graphpcor} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
 
 }}
 \examples{

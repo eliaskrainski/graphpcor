@@ -1,83 +1,104 @@
-#' Build the correlation matrix parametrized from the
-#' hypershere decomposition, see details.
-#' @rdname correl
-#' @param theta numeric vector with length equal n(n-1)/2
-#' @param fromR logical indicating if theta is in R.
-#' If FALSE, assumes \eqn{\theta[k] \in (0, pi)}.
-#' @details
-#' The hypershere decomposition, as proposed in
-#' Rapisarda, Brigo and Mercurio (2007)
-#' consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
-#' compute \eqn{x[k] = pi/(1+exp(-theta[k]))}
-#' organize it as a lower triangle of a \eqn{n \times n} matrix
-#' \deqn{         | cos(x[i,j])                           ,      j=1}
-#' \deqn{B[i,j] = | cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]),  2 <= j <= i-1}
-#' \deqn{         | prod_{k=1}^{j-1}sin(x[i,k])           ,      j=i}
-#' \deqn{         | 0                                     , j+1 <= j <= n }
-#' Result
-#' \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
-#'  \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
-#' @references
-#' Rapisarda, Brigo and Mercurio (2007).
-#'   Parameterizing correlations: a geometric interpretation.
-#'   IMA Journal of Management Mathematics (2007) 18, 55-73.
-#'   <doi 10.1093/imaman/dpl010>
-#' @return a correlation matrix
-#' @export
-theta2gamma2correl <- function(theta, fromR = TRUE) {
-  tcrossprod(theta2gamma2L(theta, fromR = fromR))
-}
-#' @describeIn correl
-#' Build a lower triangular matrix from a parameter vector.
-#' See details.
-#' @return Lower triangular n x n matrix
-theta2gamma2L <- function(theta, fromR = TRUE) {
-  ## see PC-prior paper, section 6.2
-  ## return B lower triangular
-  m <- length(theta)
-  n <- (1 + sqrt(1+8*m))/2
-  stopifnot((floor(n)==n) && (ceiling(n)==n) && (n>1))
-  if(fromR)
-    theta <- pi / (1 + exp(-theta))
-  th <- matrix(NA, n, n)
-  th[lower.tri(th)] <- theta
-  b <- matrix(0, n, n)
-  b[1, 1] <- 1
-  b[2:n, 1] <- cos(th[2:n, 1])
-  su <- sin(th)
-  kld <- 0
-  for(i in 2:n) {
-    kld <- kld + sum(-log(su[i, 1:(i-1)]))
-    a <- prod(su[i, 1:(i-1)])
-    b[i, i] <- a
-    if(i>2) {
-      for(j in 2:(i-1)) {
-        a <- prod(su[i, 1:(j-1)])
-        b[i, j] <- cos(th[i,j]) * a
-      }
-    }
+#' Build the Cholesky (lower triangular) matrix from theta.
+#' @inheritParams pcor
+#' @returns matrix with lower triangle as the Cholesky factor
+#' of a correlation matrix (if parametrization is 'sap' or 'cpc')
+#' or of a precision matrix (if parametrization is 'itp')
+#' with diagonal elements as 'd0'.
+#' @keywords internal
+#' @noRd
+theta2L <- function(theta, p, parametrization, itheta, d0) {
+  parametrization <- match.arg(
+    arg = tolower(parametrization),
+    choices = c("cpc", "sap", "itp")
+  )
+  stopifnot((m <- length(theta))>0)
+  if(missing(p)) {
+    p <- (1 + sqrt(1+8*m))/2
   }
-  attr(b, "determinant") <- prod(diag(b))^2
-  attr(b, 'kld') <- sqrt(2 * kld)
-  return(b)
-}
-#' @describeIn correl
-#' Drawn a random sample correlation matrix
-#' @param p integer to specify the matrix dimension
-#' @param lambda numeric as the penalization parameter.
-#' If missing it will be assumed equal to zero.
-#' The lambda=0 case means no penalization and
-#' a random correlation matrix will be drawn.
-#' Please see section 6.2 of the PC-prior paper,
-#' Simpson et. al. (2017), for details.
-#' @references Simspon et. al. (2017).
-#' Penalising Model Component Complexity:
-#' A Principled, Practical Approach to Constructing Priors.
-#'  Statist. Sci. 32(1): 1-28 (February 2017).
-#'  <doi: 10.1214/16-STS576>
-#' @export
-rcorrel <- function(p, lambda) {
+  stopifnot(floor(p)==ceiling(p))
   stopifnot(p>1)
+  if(missing(itheta)) {
+    itheta <- which(lower.tri(
+      diag(x = rep(1, p), nrow = p, ncol = p)))
+  }
+  stopifnot(length(theta)==length(itheta))
+  stopifnot(all(itheta %in% which(lower.tri(
+    diag(x = rep(1, p), nrow = p, ncol = p)))))
+  if(missing(d0)) {
+    d0 <- d:1
+  }
+  if(parametrization == "itp") {
+    L <- Lprec(
+      theta = theta,
+      p = p,
+      itheta = itheta,
+      d0 = d0)
+  } else {
+    B <- A <- diag(p)
+    itheta  <- which(lower.tri(A))
+    if(parametrization == 'cpc') {
+      A[itheta] <- tanh(theta)
+      B[itheta] <- sqrt(1-A[itheta]^2)
+    } else {
+      theta <- pi/(1+exp(-theta))
+      A[itheta] <- cos(theta)
+      B[itheta] <- sin(theta)
+    }
+    for(j in 2:(p-1)) {
+      B[, j] <- B[, j] * B[, j-1]
+    }
+    L <- A * cbind(1, B[, 1:(p-1)])
+  }
+  attr(L, "parametrization") <- parametrization
+  attr(L, "theta") <- theta
+  if(parametrization == 'itp') {
+    attr(L, "itheta") <- itheta
+    attr(L, "d0") <- d0
+  }
+  return(L)
+}
+#' Build a correlation matrix from theta
+#' @inheritParams pcor
+#' @keywords internal
+#' @noRd
+theta2correl <- function(theta, p, parametrization, itheta, d0) {
+  parametrization <- match.arg(
+    arg = tolower(parametrization),
+    choices = c("cpc", "sap", "itp")
+  )
+  L <- theta2L(
+    theta = theta,
+    p = p,
+    parametrization = parametrization,
+    itheta = itheta,
+    d0 = d0
+  )
+  if(parametrization == 'itp') {
+    V <- chol2inv(t(L))
+    return(cov2cor(V))
+  } else {
+    return(tcrossprod(L))
+  }
+}
+#' @describeIn pcor
+#' Drawn a random sample correlation matrix.
+#' @param lambda numeric to specify the PC-prior parameter,
+#' see Simpson et. al. (2017).
+#' @param theta0 numeric vector to specify the base model.
+#' Drawn \deqn{r \sim \textrm{Exponential}(\lambda)},
+#' drawn a vector \deqn{\mathbf{z}} from
+#' standard Gaussian distribution.
+#' Compute \deqn{\mathbf{s} = \mathbf{z}/\sqrt{\mathbf{z}^{T}\mathbf{z}}}.
+#' Compute \deqn{\theta = r\mathbf{H}^{-1/2}\textbf{s}+\theta_0},
+#' where \deqn{\mathbf{H}} is the Hessian of the
+#' KLD around the base model.
+#' @export
+rcorrel <- function(lambda, theta0, p, parametrization, itheta, d0) {
+  C0 <- theta2correl(theta0, p, parametrization, itheta, d0)
+  if(missing(p)) {
+    p <- nrow(C0)
+  }
+  stopifnot(p==nrow(C0))
   m <- p * (p - 1) / 2
   if(missing(lambda))
     lambda <- 0

@@ -6,95 +6,6 @@
 graphpcor <- function(...) {
   UseMethod("graphpcor")
 }
-#' The `prec` method
-#' @rdname prec
-#' @param model a model object
-#' @param ... additional arguments
-#' @return a precision matrix
-#' @export
-prec <- function(model, ...) {
-  UseMethod("prec")
-}
-#' @describeIn prec
-#' The default precision method
-#' computes the inverse of the variance
-#' @export
-prec.default <- function(model, ...) {
-  v <- vcov(model, ...)
-  return(
-    forwardsolve(
-      backsolve(
-        chol(v)
-      )
-    )
-  )
-}
-#' @describeIn prec
-#' Define the prec method for an inla output object
-#' @export
-prec.inla <- function(model, ...) {
-  if(is.null(model$misc$config$config)) {
-    warning("inla.rerun() with config = TRUE in control.compute.")
-    model$.args$control.compute$config <- TRUE
-    model <- do.call("inla", args = model$.args)
-  }
-  Qu <- INLA::inla.as.sparse(
-    model$misc$config$config[[1]]$Qprior
-  )
-  #  ii <- which(Qu@i < Qu@j)
-  # if(length(ii)>0) {
-  Q <- #inla.as.sparse(
-    Matrix::sparseMatrix(
-      #        i = c(Qu@i, Qu@j[ii]) + 1L,
-      #       j = c(Qu@j, Qu@i[ii]) + 1L,
-      #      x = c(Qu@x, Qu@x[ii])
-      i = Qu@i + 1L,
-      j = Qu@j + 1L,
-      x = Qu@x,
-      symmetric = TRUE,
-      repr = "T"
-    )
-  #    )
-  # } else {
-  #  Q <- Qu
-  #}
-  return(Q)
-}
-#' Define the is.zero method
-#' @param x an R object
-#' @param ... additional arguments
-#' @return logical
-#' @export
-is.zero <- function(x, ...) {
-  UseMethod("is.zero")
-}
-#' @describeIn is.zero
-#' The is.zero.default definition
-#' @export
-is.zero.default <- function(x, ...) {
-  a <- abs(as.numeric(c(x)))
-  if(diff(range(a))<(.Machine$double.eps^0.9)) {
-    tol <- (.Machine$double.eps^0.9)
-  } else {
-    tol <- .Machine$double.eps *
-      max(sqrt(length(a))) * max(a)
-  }
-  return(a < tol)
-}
-#' @describeIn is.zero
-#' The is.zero.matrix definition
-#' @export
-is.zero.matrix <- function(x, ...) {
-  stopifnot(inherits(x, "matrix"))
-  a <- abs(x)
-  if(diff(range(a))<(.Machine$double.eps^0.9)) {
-    tol <- (.Machine$double.eps^0.9)
-  } else {
-    tol <- .Machine$double.eps *
-      max(sqrt(length(a))) * max(a)
-  }
-  return(a < tol)
-}
 #' The Laplacian of a graph
 #' @rdname Laplacian
 #' @param graph object defining a graph
@@ -119,15 +30,12 @@ Laplacian <- function(graph) {
 Laplacian.default <- function(graph) {
   stop("No Laplacian for this graph!")
 }
-#' @describeIn prec
-#' The `vcov` method for sparse matrices
-#' @param object Matrix supposed to be a
-#' sparse precision matrix
-setMethod(
-  "vcov",
-  "Matrix",
-  function(object, ...) {
-    object <- Matrix::Cholesky(object)
-    return(solve(object))
-  }
-)
+#' @rdname pcor
+#' @title Information needed for a prior that penalizes
+#' the divergence from a base correlation matrix.
+#' @returns a pcor object
+#' @export
+pcor <- function(base, p, parametrization,
+                 itheta, d0) {
+  UseMethod("pcor")
+}

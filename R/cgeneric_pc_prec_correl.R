@@ -83,22 +83,19 @@ cgeneric_pc_prec_correl <-
 
     if(missing(theta.base)) {
       theta.base <- rep(0, m)
-#      warning("Missing 'theta.base' model. Assuming 'iid' by using:\n",
- #             paste(theta.base, collapse = ", "))
-    } else {
-      if(any(!is.zero(abs(theta.base)))) {
-        stop("non-zero `theta.base` to be implemented!")
-      }
+      warning("Missing 'theta.base' model. Assuming 'iid' by using:\n",
+              paste(theta.base, collapse = ", "))
+    }
+    stopifnot(length(theta.base)==m)
       H.el <- theta2H(theta.base)
       if(debug) {
         cat("H elements\n")
         print(str(H.el))
       }
-      lc <- lc - sum(log(H.el$svd$d))
-    }
+##      lc <- lc - sum(log(H.el$svd$d))
 
-    ## constant: log( \lambda \pi^{m-1}/2 |H| )
-    lc <- lc + log(lambda) -(m-1)*log(pi) - log(2)
+    ## constant:
+    lc <- log(lambda) -gamma(1+m/2)-log(m)-(m/2)*log(pi)
 
     if(debug) {
       cat('log C', lc, '\n')
@@ -122,13 +119,15 @@ cgeneric_pc_prec_correl <-
             ),
             doubles = list(
               lambda = as.numeric(lambda),
-              lconst = as.numeric(lc)
+              lconst = as.numeric(lc),
+              theta0 = as.numeric(theta.base)
             ),
             characters = list(
               model = cmodel,
               shlib = libpath
             ),
             matrices = list(
+              hHn = c(m,m,H.el$h.5)
               ),
             smatrices = list(
               )

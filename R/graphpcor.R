@@ -63,11 +63,20 @@ graphpcor.matrix <- function(...) {
   if(is.null(vnams)) {
     vnams <- letters[1:ne[1]]
   }
-  argl <- lapply(1:(ne[1]-1), function(i) {
-    jj <- intersect((i+1):ne[1], which(!iz[i, ]))
-    paste(vnams[i], "~",
-          paste(vnams[jj], collapse = " + "))
-  })
+  argl <- list()
+  adde <- 0
+  for(i in 1:(ne[2]-1)) {
+    ii <- which(!iz[i, ])
+    if(length(ii)>0) {
+      jj <- intersect((i+1):ne[1], ii)
+      argl[[i]] <- paste(
+        vnams[i], "~",
+        paste(vnams[jj], collapse = " + "))
+      adde <- adde + length(ii)
+    }
+    if(adde>=ne[2])
+      break
+  }
   return(do.call(what = 'graphpcor',
                  args = lapply(argl, as.formula)))
 }
@@ -231,29 +240,6 @@ Laplacian.graphpcor <- function(graph) {
   return(L)
 }
 #' @describeIn graphpcor
-#' Build the unite diagonal lower triangle matrix
-#' @param x a `graphpcor` object
-setMethod(
-  "chol",
-  "graphpcor",
-  function(x, ...) {
-    ne <- dim(x)
-    G <- Laplacian(x)
-    idx <- which(lower.tri(G) & (!is.zero(G)))
-    L <- diag(x = ne[1]:1, nrow = ne[1], ncol = ne[1])
-    stopifnot(length(idx)==ne[2])
-    args <- list(...)
-    stopifnot(length(args$theta)==ne[2])
-    L[idx] <- args$theta
-    ll <- t(chol(G + diag(ne[1])))
-    ifill <- which(is.zero(G) & (!is.zero(ll)))
-    if(length(ifill)>0) {
-      L <- fillLprec(L, ifill)
-    }
-    return(t(L))
-  }
-)
-#' @describeIn graphpcor
 #' The `vcov` method for a `graphpcor`
 #' @importFrom methods getMethod
 #' @export
@@ -268,16 +254,20 @@ setMethod(
     }
     theta <- mc$theta
     ne <- dim(object)
-    Q <- Laplacian(object)
-    stopifnot(ne[1]==nrow(Q))
-    stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
+    G <- Laplacian(object)
+    stopifnot(ne[1]==nrow(G))
+    stopifnot((2*ne[2])==(sum(!is.zero(G))-ne[1]))
     if(length(theta)==ne[2]) {
       theta <- c(rep(0.0, ne[1]), theta)
     } else {
       stopifnot(length(theta)==sum(ne))
     }
-    L <- getMethod('chol', 'graphpcor')(
-      object, theta = theta[-(1:ne[1])])
+    itheta <- which(lower.tri(G) & (!is.zero(G)))
+    L <- t(Lprec(
+      theta = theta[-(1:ne[1])],
+      p = ne[1],
+      itheta = itheta,
+      d0 = ne[1]:1))
     V <- chol2inv(L)
     si <- exp(theta[1:ne[1]]) / sqrt(diag(V))
     V <- diag(si) %*% V %*% diag(si)
@@ -415,7 +405,7 @@ hessian.graphpcor <-
     attr(H, "decomposition") <- Hd
     return(H)
   }
-#' @describeIn cgeneric
+#' @describeIn graphpcor
 #' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
 #' @export
 cgeneric.graphpcor <- function(model, ...) {

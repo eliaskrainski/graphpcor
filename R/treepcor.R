@@ -542,7 +542,7 @@ etreepcor2variance <- function(d.el) {
   stopifnot(all.equal(iP,diag(itop)))
   return(list(iparent = iP, iv = iv, itop = itop, schildren=sch))
 }
-#' @describeIn cgeneric
+#' @describeIn treepcor
 #' The `cgeneric` method for `treepcor`, uses [cgeneric_treepcor()]
 #' @export
 cgeneric.treepcor <- function(model, ...) {

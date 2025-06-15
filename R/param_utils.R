@@ -1,10 +1,16 @@
-#' Functions for the mapping between spherical and
-#' Euclidean coordinates.
-#' @rdname param-utils
+#' Internal functions to map between Euclidean
+#' and spherical coordinates
+#' @name param-utils
+#' @details
+#' For details, please see the wikipedia entry on 'N-sphere' at
+#' [N-sphere](https://en.wikipedia.org/wiki/N-sphere)
+NULL
+#> NULL
+
+#' @describeIn param-utils
+#' Map between spherical to Euclidean coordinates
 #' @param rphi numeric vector where the first element
 #' is the radius and the remaining are the angles
-#' @details
-#' see [N-sphere/Euclidian](https://en.wikipedia.org/wiki/N-sphere)
 rphi2x <- function(rphi) {
   ### to convert from \{r, \phi_1, ..., \phi_{m-1} \} into x_i \in \Re
   ### see https://en.wikipedia.org/wiki/N-sphere
@@ -14,8 +20,8 @@ rphi2x <- function(rphi) {
   return(x)
 }
 #' @describeIn param-utils
-#' Tranform from Euclidian coordinates to spherical
-#' @param x parameters in the Euclidian space to be converted
+#' Transform from Euclidean coordinates to spherical
+#' @param x parameters in the Euclidean space to be converted
 x2rphi <- function(x) {
   ### to convert from x_i \in \Re into \{r, \phi_1, ..., \phi_{m-1} \}
   ### see https://en.wikipedia.org/wiki/N-sphere
@@ -100,19 +106,24 @@ dtheta <- function(theta, lambda, theta.base, H.elements) {
 #' @details
 #' compute C1 using 'theta2C' on theta  with
 #'  \deqn{KLD = 0.5( tr(C0^{-1}C1) -p + ... - log(|C1|) + log(|C0|) )}
-KLD10 <- function(C1, C0) {
-### imput C1, C0 ouptut KLD
+KLD10 <- function(C1, C0, L1, L0) {
+### input: C1, C0 (alternatively L1, L0)
+### output: KLD
     p <- nrow(C1)
-    l1 <- chol(C1)
-    hld1 <- sum(log(diag(l1)))
-    if(missing(C0)) {
-        warning("Missing base model!")
+    if(missing(L1)) {
+      L1 <- chol(C1)
+    }
+    hld1 <- sum(log(diag(L1)))
+    if(missing(C0) && missing(L0)) {
+        warning("Missing C0,L0: using 'I'!")
         C0 <- diag(rep(1, p), p, p)
     }
-    l0 <- chol(C0)
-    hld0 <- sum(log(diag(l0)))
-    tr <- sum(diag(chol2inv(l0) %*% C1))
-    0.5*(tr -p) + hld0 - hld1
+    if(missing(L0)) {
+      L0 <- chol(C0)
+    }
+    hld0 <- sum(log(diag(L0)))
+    tr <- sum(diag(chol2inv(L0) %*% C1))
+    return(0.5*(tr -p) + hld0 - hld1)
 }
 #' @describeIn param-utils
 #' Compute the hessian, its svd and some elements
@@ -135,4 +146,84 @@ theta2H <- function(theta) {
          h.5 = h.5,
          hneg.5 = hneg.5,
          svdH = sv)
+}
+#' Evaluate the hessian of the KLD for a
+#' correlation model around a base model.
+#' @inheritParams pcor
+#' @param decomposition character to specify which
+#' decomposition is to be applied on H in order to
+#' compute \eqn{\mathbf{H}^{1/2}} and
+#' \eqn{\mathbf{H}^{-1/2}}. The options are
+#' 'eigen', 'svd' and 'chol'
+#' @param ... use to pass the decomposition method,
+#' as a character to specify which one is to be used
+#' to compute H^0.5 and H^(1/2), and arguments
+#' for [numDeriv::hessian()]
+#' @return list containing the hessian,
+#' its 'square root', inverse 'square root' along
+#' with the decomposition used
+#' @examples
+#' theta0 <- rnorm(3)
+#' Hcorrel(theta = theta0)
+#' Hcorrel(parametrization = 'itp',
+#'   theta = theta0, p = 4, itheta = c(2,3,8,12))
+#' @importFrom stats cov2cor
+#' @importFrom numDeriv hessian
+#' @export
+Hcorrel <- function(theta, p,
+                    parametrization,
+                    itheta, d0,
+                    decomposition,
+                    C0,
+                    ...) {
+  if(missing(C0)) {
+    C0 <- theta2correl(
+      theta = theta,
+      p = p,
+      parametrization = parametrization,
+      itheta = itheta,
+      d0 = d0)
+  }
+    H <- hessian(
+      func = function(x) KLD10(
+        theta2correl(
+          theta = x,
+          p = p,
+          parametrization = parametrization,
+          itheta = itheta,
+          d0 = d0),
+        C0),
+      x = theta,
+      ...)
+    ## next bit follows mvtnorm:::rmvnorm()
+    t0 <- sqrt(.Machine$double.eps)
+    if(decomposition == "eigen") {
+      Hd <- eigen(H)
+      if(!all(Hd$values >= (t0 * abs(Hd$values[1]))))
+        warning("'H' is numerically not positive semidefinite")
+      s <- sqrt(pmax(Hd$values, 0.0))
+      h.5 <- t(Hd$vectors %*% (t(Hd$vectors) * s))
+      hneg.5 <- t(Hd$vectors %*% (t(Hd$vectors) / s))
+    }
+    if(decomposition == "svd") {
+      Hd <- svd(H)
+      if(any(Hd$d<(t0 * abs(Hd$d[1]))))
+        warning("'H' is numerically not positive semidefinite")
+      s <- sqrt(pmax(Hd$d, 0.0))
+      h.5 <- t(Hd$v %*% (t(Hd$u) * s))
+      hneg.5 <- t(Hd$v %*% (t(Hd$u) / s))
+    }
+    if(decomposition == "chol") {
+      Hd <- chol(H, pivot = TRUE)
+      h.5 <- matrix(Hd[, order(attr(Hd, "pivot")), ], nrow(H))
+      hn <- chol2inv(chol(H))
+      hn.5 <- chol(hn, pivot = TRUE)
+      hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
+    }
+    stopifnot(all.equal(H, tcrossprod(h.5)))
+    attr(H, "base") <- x
+    attr(H, "h.5") < h.5
+    attr(H, "hneg.5") <- hneg.5
+    attr(H, "decomposition") <- Hd
+    return(H)
 }
