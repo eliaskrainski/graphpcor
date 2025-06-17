@@ -38,8 +38,10 @@ typedef struct {
 	int nth1;
 } cache_tp;
 
-double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
-				inla_cgeneric_data_tp *data)
+double *inla_cgeneric_kronecker(
+    inla_cgeneric_cmd_tp cmd,
+    double *theta,
+		inla_cgeneric_data_tp *data)
 {
 	// concatenated data approach of the lists
 
@@ -51,7 +53,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 	// Q2 is the precision for M2
 
 	// cmd: length 1 string
-	// theta: {theta1, theta2}
+	// theta: {&theta[0], &theta[d12cache->nth1]}
 	// data: {data1, data2}, but data1->ints[0]->ints[0...10] contains
 	// n1, ni1, nd1, nc1, nm1, nsm1, m1,
 	// ni2, nd2, nc2, nm2, nsm2, m2, n, M}
@@ -182,7 +184,7 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 		} else {
 			d12cache->handle2 = d12cache->handle1;
 		}
-		*(void **)(&d12cache->model1_func) = 
+		*(void **)(&d12cache->model1_func) =
 		     lt_dlsym(d12cache->handle1,
 			   &d12cache->dataM1->chars[0]->chars[0]);
 		*(void **)(&d12cache->model2_func) =
@@ -197,14 +199,6 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 
 	assert(data->cache);
 	cache_tp *d12cache = (cache_tp *) data->cache;
-
-	double *theta1;
-	if (d12cache->nth1 > 0) {
-		theta1 = &theta[0];
-	} else {
-		theta1 = NULL;
-	}
-	double *theta2 = &theta[d12cache->nth1];
 
 	switch (cmd) {
 	case INLA_CGENERIC_VOID:
@@ -241,10 +235,14 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 			ret[1] = M;
 
 			ret1 =
-			    d12cache->model1_func(INLA_CGENERIC_Q, theta1,
+			    d12cache->model1_func(
+			        INLA_CGENERIC_Q,
+			        &theta[0],
 						  d12cache->dataM1);
 			ret2 =
-			    d12cache->model2_func(INLA_CGENERIC_Q, theta2,
+			    d12cache->model2_func(
+			        INLA_CGENERIC_Q,
+			        &theta[d12cache->nth1],
 						  d12cache->dataM2);
 
 			int nu1 = data->ints[ni1 + ni2]->len;
@@ -303,10 +301,14 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 			// where M is the number of hyperparameters
 
 			ret1 =
-			    d12cache->model1_func(INLA_CGENERIC_INITIAL, NULL,
+			    d12cache->model1_func(
+			        INLA_CGENERIC_INITIAL,
+			        NULL,
 						  d12cache->dataM1);
 			ret2 =
-			    d12cache->model2_func(INLA_CGENERIC_INITIAL, NULL,
+			    d12cache->model2_func(
+			        INLA_CGENERIC_INITIAL,
+			        NULL,
 						  d12cache->dataM2);
 
 			int nth1 = (int)ret1[0], nth2 = (int)ret2[0];
@@ -334,11 +336,15 @@ double *inla_cgeneric_kronecker(inla_cgeneric_cmd_tp cmd, double *theta,
 		{
 			// return c(LOG_PRIOR)
 			ret1 =
-			    d12cache->model1_func(INLA_CGENERIC_LOG_PRIOR,
-						  theta1, d12cache->dataM1);
+			    d12cache->model1_func(
+			        INLA_CGENERIC_LOG_PRIOR,
+						  &theta[0],
+              d12cache->dataM1);
 			ret2 =
-			    d12cache->model2_func(INLA_CGENERIC_LOG_PRIOR,
-						  theta2, d12cache->dataM2);
+			    d12cache->model2_func(
+			        INLA_CGENERIC_LOG_PRIOR,
+						  &theta[d12cache->nth1],
+              d12cache->dataM2);
 
 			ret = Calloc(1, double);
 			ret[0] = ret1[0] + ret2[0];
