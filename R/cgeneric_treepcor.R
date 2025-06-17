@@ -3,19 +3,16 @@
 #' This set the necessary data to implement the penalized
 #' complexity prior for a correlation matrix considering
 #' a three as proposed in
-#' [Sterrantino et. al. 2025](https://arxiv.org/abs/2312.06289)
+#' [Sterrantino et. al. 2025](https://doi.org/10.1007/s10260-025-00788-y)
 #' @param model object of class `treepcor` for the model specification.
 #' @param lambda the lambda parameter for the graph correlation prior.
 #' @param sigma.prior.reference a vector with the reference values
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
 #' to define the prior for the standard deviation parameters.
-#' @param debug integer, default is zero, indicating the verbose level.
-#' Will be used as logical by INLA.
-#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
-#' be used the shared object pre-compiled by INLA.
-#' This is not considered if 'libpath' is provided.
-#' @param libpath string, default is NULL, with the path to the shared object.
+#' @param ... additional arguments that will be passed on to
+#' [INLAtools::cgeneric()] such as
+#' `debug`, `useINLAprecomp` and `libpath`.
 #' @details
 #'  The correlation prior as in the paper depends on the lambda value.
 #'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
@@ -30,17 +27,27 @@
 #'  sigma.prior.reference = c(1, 2, 3) and
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
 #' then the sigma is fixed to 2 and not estimated.
-#' @seealso [treepcor()] and [cgeneric()]
-#' @return a `inla.cgeneric`, [cgeneric()] object.
+#' @seealso [treepcor()] and [INLAtools::cgeneric()]
+#' @returns `cgeneric`/`inla.cgeneric` object.
 #' @useDynLib graphpcor, .registration = TRUE
 cgeneric_treepcor <-
   function(model,
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
-           debug = FALSE,
-           useINLAprecomp = TRUE,
-           libpath = NULL) {
+           ...) {
+
+    d.args <- list(...)
+    id.args <- pmatch(
+      x = names(d.args),
+      table = c("debug", "useINLAprecomp", "libpath"),
+      nomatch = NA_integer_,
+      duplicates.ok = FALSE)
+    if(is.na(id.args[1])) {
+      debug <- FALSE
+    } else {
+      debug <- as.integer(d.args$debug)
+    }
 
     dd <- dim(model)
     d.el <- edges(model)[1:dd[2]]
@@ -79,49 +86,41 @@ cgeneric_treepcor <-
     stopifnot(length(sigma.prior.probability) == nc)
     stopifnot(all(sigma.prior.probability>0.0))
     stopifnot(all(sigma.prior.probability<1.0))
-    slambdas <- -log(sigma.prior.probability) / sigma.prior.reference
+    slambdas <- -log(sigma.prior.probability) /
+      sigma.prior.reference
 
     stopifnot(lambda>0)
 
-    cgmodel <- "inla_cgeneric_treepcor"
-    the_model <- list(
-      f=list(model = "cgeneric",
-             n = as.integer(nc),
-             cgeneric = list(
-               model = cgmodel,
-               shlib = libpath,
-               n = as.integer(nc),
-               debug = as.integer(debug)),
-             data = list(
-               ints = list(
-                 n = as.integetr(nc),
-                 debug = as.integer(debug),
-                 np = as.integer(np),
-                 nv = as.integer(nv),
-                 ipar = as.integer(d.elc$iparent-1L),
-                 iiv = as.integer(iiv-1L),
-                 jjv = as.integer(jjv-1L),
-                 itop = as.integer(itop-1L),
-                 ii = as.integer(ii-1L),
-                 jj = as.integer(jj-1L)),
-               doubles = list(
-                 lambda = as.double(lambda),
-                 slambdas = as.double(slambdas),
-                 schildren = as.double(sch)
-               ),
-               characters = list(
-                 model = cgmodel,
-                 shlib = libpath
-               ),
-               matrices = list(),
-               smatrices = list()
-             )
+    if(is.na(id.args[2])) {
+      useINLAprecomp <- TRUE
+    } else {
+      useINLAprecomp <- d.args$useINLAprecomp
+    }
+    if(is.na(id.args[3])) {
+      libpath <- NULL
+    } else {
+      libpath <- d.args$libpath
+    }
+
+    return(
+      cgeneric(
+        model = "inla_cgeneric_treepcor",
+        n = as.integer(nc),
+        debug = as.integer(debug),
+        useINLAprecomp = as.integer(useINLAprecomp),
+        package = "graphpcor",
+        libpath = libpath,
+        np = as.integer(np),
+        nv = as.integer(nv),
+        ipar = as.integer(d.elc$iparent-1L),
+        iiv = as.integer(iiv-1L),
+        jjv = as.integer(jjv-1L),
+        itop = as.integer(itop-1L),
+        ii = as.integer(ii-1L),
+        jj = as.integer(jj-1L),
+        lambda = as.double(lambda),
+        slambdas = as.double(slambdas),
+        schildren = as.double(sch)
       )
     )
-
-    class(the_model) <- c("cgeneric", ## INLAtools
-                          "inla.cgeneric") ## this is needed in INLA::f()
-    class(the_model$f$cgeneric) <- class(the_model)
-
-    return(the_model)
 }

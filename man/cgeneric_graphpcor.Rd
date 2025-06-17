@@ -77,17 +77,12 @@ and equal to 1. NOTE: \code{params.id} will be applied here as
 examples give \verb{NA -1 -1 NA} and so the second and third low L
 parameters are fixed to \code{-1}.}
 
-\item{debug}{integer, default is zero, indicating the verbose level.
-Will be used as logical by INLA.}
-
-\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
-be used the shared object pre-compiled by INLA.
-This is not considered if 'libpath' is provided.}
-
-\item{libpath}{string, default is NULL, with the path to the shared object.}
+\item{...}{additional arguments that will be passed on to
+\code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}} such as
+\code{debug}, \code{useINLAprecomp} and \code{libpath}.}
 }
 \value{
-a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
+\code{cgeneric}/\code{inla.cgeneric} object.
 }
 \description{
 From either a \code{graph} (see \code{\link[=graph]{graph()}}) or

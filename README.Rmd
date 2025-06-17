@@ -24,7 +24,8 @@ knitr::opts_chunk$set(
 This package implement an approach for 
 constructing models for correlation matrices 
 with a user-defined graphical structure, 
-proposed in <https://arxiv.org/abs/2312.06289>.
+proposed in Sterrantino et. al. (2025), 
+<https://doi.org/10.1007/s10260-025-00788-y>.
 The graphical structure makes correlation matrices 
 interpretable and avoids the quadratic increase of 
 parameters as a function of the dimension. 

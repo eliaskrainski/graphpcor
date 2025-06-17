@@ -57,13 +57,11 @@
 #' `low.params.fixed[params.id[(n+1:m)]-n+1]`, thus the provided
 #' examples give `NA -1 -1 NA` and so the second and third low L
 #' parameters are fixed to `-1`.
-#' @param debug integer, default is zero, indicating the verbose level.
-#' Will be used as logical by INLA.
-#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
-#' be used the shared object pre-compiled by INLA.
-#' This is not considered if 'libpath' is provided.
-#' @param libpath string, default is NULL, with the path to the shared object.
-#' @return a `inla.cgeneric`, [cgeneric()] object.
+#' @param ... additional arguments that will be passed on to
+#' [INLAtools::cgeneric()] such as
+#' `debug`, `useINLAprecomp` and `libpath`.
+#' @returns `cgeneric`/`inla.cgeneric` object.
+#' @useDynLib graphpcor, .registration = TRUE
 cgeneric_graphpcor <-
   function(model,
            lambda,

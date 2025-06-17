@@ -9,9 +9,7 @@ cgeneric_treepcor(
   lambda,
   sigma.prior.reference,
   sigma.prior.probability,
-  debug = FALSE,
-  useINLAprecomp = TRUE,
-  libpath = NULL
+  ...
 )
 }
 \arguments{
@@ -25,23 +23,18 @@ to define the prior for the standard deviation parameters.}
 \item{sigma.prior.probability}{a vector with the probability values
 to define the prior for the standard deviation parameters.}
 
-\item{debug}{integer, default is zero, indicating the verbose level.
-Will be used as logical by INLA.}
-
-\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
-be used the shared object pre-compiled by INLA.
-This is not considered if 'libpath' is provided.}
-
-\item{libpath}{string, default is NULL, with the path to the shared object.}
+\item{...}{additional arguments that will be passed on to
+\code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}} such as
+\code{debug}, \code{useINLAprecomp} and \code{libpath}.}
 }
 \value{
-a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
+\code{cgeneric}/\code{inla.cgeneric} object.
 }
 \description{
 This set the necessary data to implement the penalized
 complexity prior for a correlation matrix considering
 a three as proposed in
-\href{https://arxiv.org/abs/2312.06289}{Sterrantino et. al. 2025}
+\href{https://doi.org/10.1007/s10260-025-00788-y}{Sterrantino et. al. 2025}
 }
 \details{
 The correlation prior as in the paper depends on the lambda value.
@@ -59,5 +52,5 @@ sigma.prior.probability = c(0.05, 0.0, 0.01)
 then the sigma is fixed to 2 and not estimated.
 }
 \seealso{
-\code{\link[=treepcor]{treepcor()}} and \code{\link[=cgeneric]{cgeneric()}}
+\code{\link[=treepcor]{treepcor()}} and \code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}}
 }
