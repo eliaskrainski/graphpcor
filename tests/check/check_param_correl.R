@@ -1,42 +1,54 @@
-## this illustrates the theta2gamma2R parametrization
-## using the hypershere decomposition,
-## Rapisarda, Brigo and Mercurio (2007)
-
-## 1. random C (correlation matrix), summary properties
-## 2. C samples considering PC-prior with different lambda
-## 3. how to permute C?
+## this illustrates the correlation parametrization
 
 library(graphpcor)
 
+args(theta2correl)
+
+## compare the "SAP" in corgraph with the one in INLA: pi/(1+exp(-theta))
 nrepl <- 5000
 table(replicate(nrepl, {
-    th1 <- pi/(1 + exp(rnorm(10)))
-    all.equal(tcrossprod(graphpcor:::theta2gamma2L(th1, fromR=FALSE)),
-              INLA:::inla.pc.cormat.theta2R(th1))   
+    th1 <- rnorm(10)
+    all.equal(theta2correl(th1, parametrization = 'sap'),
+              INLA:::inla.pc.cormat.theta2R(pi/(1+exp(-th1))))   
 }))
 
-table(replicate(nrepl, {
-    th1 <- pi/(1 + exp(rnorm(10,0,10)))
-    all.equal(tcrossprod(graphpcor:::theta2gamma2L(th1, fromR=FALSE)),
-              INLA:::inla.pc.cormat.theta2R(th1))   
-}))
+c0 <- matrix(c(1,0.7,0.1, 0.7,1,-0.3, 0.1,-0.3,1), 3)
+c0
 
-theta2correl(c(0))
-theta2correl(c(-1))
-theta2correl(c(1))
-theta2correl(c(-3))
-theta2correl(c(3))
+lc <- t(chol(c0))
+lc
 
-theta2correl(c(0,0,0))
+lq <- t(chol(chol2inv(t(lc))))
+lq
 
-theta2correl(c(0,1,1))
-theta2correl(c(1,0,1))
-theta2correl(c(1,1,0))
-theta2correl(c(1,1,-1))
+findtheta <- function(cc, parametrization = 'cpc') {
+    p <- nrow(cc)
+    L <- t(chol(cc))
+    il <- which(lower.tri(cc))
+    m <- length(il)
+    l <- L[il]
+    if(parametrization=="itp") {
+        lq <- t(chol(chol2inv(t(L))))
+        r <- lq[il]
+        attr(r, 'd0') <- diag(lq)
+        return(r)
+    }
+    return(
+        optim(rep(0, m), 
+              function(x) mean((theta2L(x, p, parametrization)[il]-l)^2),
+              method = 'BFGS')$par)
+}
 
-rcorrel(2)
-rcorrel(3)
-rcorrel(5)
+th0a <- findtheta(c0, "itp")
+th0b <- findtheta(c0, "cpc")
+th0c <- findtheta(c0, "sap")
+
+c0
+theta2correl(th0a, 3, 'itp')
+theta2correl(th0b, 3, 'cpc')
+theta2correl(th0c, 3, 'sap')
+
+rbind(th0a, th0b, lq[lower.tri(lq)])
 
 ## 1.  random correlation matrices
 

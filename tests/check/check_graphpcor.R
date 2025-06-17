@@ -10,6 +10,8 @@ g <- graphpcor(x1~x2+x3, x2~x4, x3~x4)
 ## base model (theta for L)
 theta0l <- rep(-0.3, ne[2])
 
+hessian(g, theta0l)
+
 ## build the cgeneric model
 ## Note: here 'model' is a 'graphpcor'
 cmodel <- cgeneric(
@@ -140,4 +142,124 @@ fit1 <- inla(
 )
 
 all.equal(Q1c, prec(fit1))
+
+
+## PRIOR
+library(INLA)
+library(graphpcor)
+
+## graph in Example 2.6 of the GMRF book
+g <- graphpcor(x1~x2+x3, x2~x4, x3~x4)
+(ne <- dim(g))
+Laplacian(g)
+
+th.base <- c(-1,0.5,1,0)
+c.base <- vcov(g, theta = th.base)
+c.base
+
+lambs <- c(0.1, 0.5, 2, 10
+           ); names(lambs) <- paste0("l", lambs)
+lmodels <- lapply(lambs, function(l)
+    cgeneric(
+        model = g, ## use the graphpcor
+        lambda = l, base = th.base,
+        sigma.prior.reference = rep(1, ne[1]),
+        sigma.prior.probability = rep(0.0, ne[1]),
+        useINLAprecomp = FALSE)
+    )
+
+sapply(lmodels, function(x) x$f$cgeneric$data$doubles$lconst)
+
+sapply(lmodels, initial)
+
+ifits <- lapply(
+    lmodels, function(mc) {
+        inla(y ~ 0 + f(i, model = mc),
+             data = data.frame(i=1:ne[1], y = NA),
+             control.family = list(
+                 hyper = list(prec = list(initial = 10, fixed = TRUE))
+             )
+             )
+    }
+)
+sapply(ifits, function(r) r$mode$theta)
+
+lapply(ifits, function(x) grep("aluations =", x$logfile, value = TRUE))
+
+vcov(g, theta = ifits[[1]]$mode$theta)
+g2c <- function(th) vcov(g, theta=th)[lower.tri(diag(ne[1]))]
+g2c(ifits[[1]]$mode$theta)
+
+inla.cgeneric.sample(n = 2, result = ifits[[1]], name = 'i', from.theta = g2c)
+
+sr <- lapply(ifits, function(r)
+    inla.cgeneric.sample(
+        n = 2000, result = r, name = 'i',
+        from.theta = g2c, simplify = TRUE))
+str(sr,1)
+
+cnams <- c("c[2,1]", "c[3,1]", "c[4,1]",
+           "c[3,2]", "c[4,2]", "c[4,3]")
+
+png("corr4priors.png", width = 1600, height=1000, res = 100)
+par(mfrow = c(length(sr), 6), mar = c(4,4,2,1), mgp = c(3,1,0))
+for(i in 1:length(sr)) {
+    for(k in 1:6) {
+        ck0 <- c.base[lower.tri(diag(ne[1]))][k]
+        r <- range(ck0, sr[[i]][k,])+c(-0.1, 0.1)
+        r[r<(-1)] <- -1
+        r[r>1] <- 1
+##        r <- c(-1,1)
+        hist(sr[[i]][k,], seq(r[1], r[2], length = 30),
+             freq=FALSE,
+        main = paste0("lambda = ", lambs[i], " : ", cnams[k]), xlab = '')
+        abline(v=ck0, lwd = 2, col = 2)
+    }
+}
+dev.off()
+
+system("eog corr4priors.png &")
+
+###
+
+## marginalizing the cgneric prior, not through inla
+m <- dim(g)[2]
+hth <- 0.2
+th0 <- seq(-4, 4, hth)
+ths0 <- t(as.matrix(do.call("expand.grid", lapply(1:(m-1), function(x)
+    th0))))
+str(ths0)
+
+## number of evals /M
+length(th0) * ncol(ths0) * m /1e6
+
+str(prior(lmodels[[1]], theta = matrix(rnorm(m*3), m)))
+
+library(parallel)
+system.time(pth <- mclapply(lmodels, function(cm) {
+    sapply(1:m, function(i) {
+        thr <- rbind(0, ths0)
+        thr[1, ] <- thr[i, ]
+        thr[i, ] <- 0.0
+        sapply(th0, function(th) {
+            thr[i, ] <- th
+            sum(exp(prior(cm, theta = thr) + log(hth)*(m-1)))
+        })
+    })
+}, mc.cores = length(lmodels)))
+
+str(pth)
+
+sapply(pth, apply, 2, function(x)
+       sum(hth * x, na.rm = TRUE))
+
+par(mfrow = c(length(lambs),m), mar = c(3,3,1,1),
+    mgp = c(2,1,0), las = 1, bty = "n")
+for(i in 1:length(lambs)) {
+    for(k in 1:m) {
+        plot(th0, pth[[i]][, k], type = 'o', xlab = '', ylab = '',
+             main = paste0("lambda = ", lambs[i]))
+        abline(v=th.base[k])
+    }
+}
 

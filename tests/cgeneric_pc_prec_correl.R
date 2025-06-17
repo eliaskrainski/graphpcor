@@ -10,6 +10,8 @@ model <- cgeneric(
     n = n,
     lambda = lambda)
 
+class(model)
+
 graph(model, optimize = TRUE)
 
 graph(model)
@@ -24,39 +26,20 @@ theta1 <- rnorm(m)
 
 (vv <- solve(qq))
 
-dat1 <- data.frame(    
-    i = 1:n,
-    y = rep(NA, n)
-)
-
 cinla <- list(int.strategy = 'eb')
 cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 cmode <- list(theta = theta1, fixed = TRUE)
 
-fit <- inla(
+## fit with no data
+fit.fix <- inla(
     y ~ 0 + f(i, model = model),
-    data = dat1,
+    data = list(i = 1:n, y = rep(NA,n)),
     control.family = cfam,
     control.inla = cinla,
     control.mode = cmode
 )
 
-all.equal(qq, prec(fit))
-
-pc1 <- prior(model, theta = theta1)
-pc1
-
-thetapi <- pi/(1+exp(-theta1))
-pc0 <- INLA:::inla.pc.cormat.dtheta(thetapi, lambda = lambda, log = TRUE)
-pc0 +sum(pi * exp(-theta1) / ( (1 + exp(-theta1))^2 ) ) ## 1st Jacobian
-
-if(FALSE) {
-    INLA:::inla.pc.cormat.dtheta
-    INLA:::inla.pc.multvar.simplex.d
-    INLA:::inla.pc.multvar.simplex.core
-    INLA:::inla.pc.multvar.simplex.d.core
-    INLA:::inla.pc.multvar.h.default
-}
+all.equal(qq, prec(fit.fix))
 
 ### fit some data
 nrep <- 200
@@ -74,13 +57,28 @@ fitr <- inla(
     y ~ 0 + f(i, model = model, replicate = r),
     data = dat2,
     control.family = cfam,
-    control.inla = cinla,
-    control.mode = cmode
+    control.inla = cinla
 )
 
-(Lfitted <- graphpcor:::c4theta(fitr$mode$theta))
+(Lfitted <- Lcorrel(fitr$mode$theta))
 round(crossprod(Lfitted), 2)
 round(vv, 2)
+
+idxc <- which(lower.tri(diag(n)))
+fncorr <- function(th) {
+    crossprod(Lcorrel(th))[idxc]
+}
+
+scorrels <- t(inla.cgeneric.sample(
+    n = 1000, result = fitr, name = 'i', 
+    from.theta = fncorr, simplify = TRUE
+))
+
+par(mfrow = c(2, 3))
+for(i in 1:6) {
+    hist(scorrels[, i])
+    abline(v = vv[idxc[i]])
+}
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)

@@ -9,7 +9,8 @@ model <- cgeneric(
     model = "pc_prec_correl", 
     n = n,
     lambda = lambda,
-    debug = 1e9)
+##    debug = 1e9,
+    useINLAprecomp = FALSE)
 
 graph(model, optimize = TRUE)
 
@@ -51,17 +52,92 @@ all.equal(qq, prec(fit))
 pc1 <- prior(model, theta = theta1)
 pc1
 
-thetapi <- pi/(1+exp(-theta1))
-pc0 <- INLA:::inla.pc.cormat.dtheta(thetapi, lambda = lambda, log = TRUE)
-pc0
-pc0 +sum(pi * exp(-theta1) / ( (1 + exp(-theta1))^2 ) ) ## 1st Jacobian
+thb <- rep(0, length(theta1))
+Hb <- graphpcor:::theta2H(thb)
+graphpcor:::dtheta(theta1, lambda=lambda,
+                   theta.base = thb, 
+                   H.elements = Hb)
 
-if(FALSE) {
-    INLA:::inla.pc.cormat.dtheta
-    INLA:::inla.pc.multvar.simplex.d
-    INLA:::inla.pc.multvar.simplex.core
-    INLA:::inla.pc.multvar.simplex.d.core
-    INLA:::inla.pc.multvar.h.default
+lseq <- c(0.2, 0.5, 1, 2, 5, 20); names(lseq) <- paste0("lambda", lseq)
+lsm <- lapply(lseq, function(l) {
+    cgeneric(
+        model = "pc_prec_correl", 
+        n = n,
+        lambda = l)    
+})
+
+th2corr <- function(th, m)
+    chol2inv(chol(as.matrix(prec(m, theta = th))))[lower.tri(diag(n))]
+
+th2corr(rep(0,6), lsm[[1]])
+
+lfit <- lapply(lsm, function(cm) 
+    fit <- inla(
+        y ~ 0 + f(i, model = cm),
+        data = dat1,
+        control.family = cfam,
+        control.inla = cinla,
+        control.mode = cmode
+    )
+    )
+
+ssl <- lapply(1:length(lsm), function(i)
+    inla.cgeneric.sample(
+        n=1000, result = lfit[[i]], name = 'i',
+        from.theta = function(th) th2corr(th, lsm[[i]]),
+        simplify = TRUE
+    )
+)
+
+str(ssl)
+
+par(mfrow = c(6,6), mar = c(3,3,1,1), mgp = c(2,1,0), las = 1, bty = "n")
+for(m in 1:6) {
+    for(k in 1:6) {
+        hist(ssl[[m]][k, ], 30, main = '', xlab = '', ylab = '', freq = FALSE)
+    }
+}
+
+## marginals
+sapply(lfit, function(fit) 
+    sapply(fit$internal.marginals.hyperpar, function(m)
+           inla.pmarginal(10, m)))
+
+par(mfrow = c(6,6), mar = c(3,3,1,1), mgp = c(2,1,0), las = 1, bty = "n")
+for(m in 1:length(lsm)) {
+    for(k in 1:6) {
+        plot(lfit[[m]]$internal.marginals.hyperpar[[k]])
+    }
+}
+
+## marginalizing the cgneric prior, not through inla
+ths0 <- t(as.matrix(do.call("expand.grid", lapply(1:5, function(x) seq(-2,2,.5)))))
+str(ths0)
+
+length(th0 <- seq(-3, 3, 0.1)+0.0001)
+
+system.time(pth <- lapply(lsm, function(cm) {
+    sapply(1:6, function(i) {
+        thr <- rbind(0, ths0)
+        thr[1, ] <- thr[i, ]
+        thr[i, ] <- 0.0
+        sapply(th0, function(th) {
+            thr[i, ] <- th
+            mean(exp(prior(cm, theta = thr)))
+        })
+    })
+}))
+
+str(pth)
+
+sapply(pth, apply, 2, function(x)
+       sum(0.1 * x))
+
+par(mfrow = c(6,6), mar = c(3,3,1,1), mgp = c(2,1,0), las = 1, bty = "n")
+for(m in 1:6) {
+    for(k in 1:6)
+        plot(th0, pth[[m]][, 1], type = 'o', xlab = '', ylab = '',
+             main = paste0("lambda = ", lseq[m]))
 }
 
 ### fit some data

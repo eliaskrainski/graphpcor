@@ -1,17 +1,17 @@
 library(INLA)
-
 library(graphpcor)
 
 n <- 4
 (m <- n*(n-1)/2)
 
-eta <- 10
+eta <- 3.0
 
 cmodel <- cgeneric(
     model = "LKJ", 
     n = n,
     eta = eta,
-    debug = 1e9
+    debug = 1e9*0,
+    useINLAprecomp = FALSE
 )
 
 graph(cmodel, optimize = TRUE)
@@ -27,19 +27,78 @@ theta1 <- rnorm(m)
 (vv <- chol2inv(chol(qq)))
 (ll <- t(chol(vv)))
 
+all.equal(graphpcor:::c4theta(theta1),
+          t(as.matrix(ll)))
+
 all.equal(as.matrix(vv),
-          tcrossprod(graphpcor:::theta2gamma2L(theta1)))
+          crossprod(graphpcor:::c4theta(theta1)))
 
-prior(cmodel, theta = theta1)
-t(ll)
-vv
+lconst <- function(n, e) {
+    e1 <- e - 1.0
+    lres <- log(2)*n*(n-1) * (e1 + (n+n-1)/6)
+    j <- 1:(n-1)
+    a <- 2.0 * e1 + j+1
+    lres <- lres + sum(2*j*lgamma(0.5*a)-j*lgamma(a))
+    return(lres)
+}
 
+thU <- function(x) graphpcor:::c4theta(x)
 
-jR1 <- jacobian(function(th) {
-    graphpcor:::theta2correl(th)[lower.tri(diag(n))]
-}, theta1)
-jR1
-determinant(jR1)
+thC <- function(th)
+    crossprod(graphpcor:::c4theta(th))
+
+thD <- function(th) {
+    d1 <- -2*sum(log(cosh(th))) 
+    x <- thC(th)
+    p <- ncol(z)
+    lrk <- matrix(0, p, p)
+    for(i in 1:(p-2)) { ## p - (p-1) -1  == 0
+    ##    cat(i, '')
+        for(j in (i+1):p) {
+            lrk[i, j] <- (p-i-1)*log(1 - x[i,j]^2)
+  ##          cat(j, '')
+        }
+##        cat('\n')
+    }
+    lrk
+}
+
+thetaJacobian <- function(theta) {
+    aux <- thD(theta) 
+    return(-2*sum(log(cosh(theta))) +
+           0.5 * sum(aux[upper.tri(aux)]))
+}
+
+th1 <- rnorm(n*(n-1)/2)
+t(l1 <- graphpcor:::c4theta(th1))
+c1 <- crossprod(l1)
+c1
+
+prior(cmodel, theta = th1)
+c(sum(log(diag(l1))),
+  (eta-1)*2*sum(log(diag(l1))),
+  lconst(n, eta), 
+  thetaJacobian(th1))
+dLKJ(c1, eta, TRUE) + thetaJacobian(th1)
+
+ths <- matrix(rnorm(1000 * m), m)
+
+ds <- sapply(1:1000, function(j)
+    dLKJ(crossprod(graphpcor:::c4theta(ths[, j])),
+         eta = eta, log = TRUE))
+
+lj <- prior(cmodel, theta = ths) - ds
+
+ljn <- sapply(1:1000, function(j) 
+    log(det(
+        jacobian(function(x)
+            crossprod(graphpcor:::c4theta(x))[lower.tri(diag(4))],
+            x = ths[, j])))
+    )
+
+ljr <- sapply(1:1000, function(j) thetaJacobian(ths[, j]))
+
+pairs(data.frame(cg=lj, R=ljr, num=ljn), upper.panel = NULL)
 
 ## fake data
 dat1 <- data.frame(    
@@ -67,7 +126,7 @@ par(mfrow = c(1,1), mar = c(4,4,1,1), mgp = c(2,0.5,0))
 plot(fit$internal.marginals.hyperpar[[1]],
      type = 'n', bty = 'n',
      xlab = '', ylab = '', main = '')
-for(i in 1:6) {
+for(i in 1:m) {
     lines(fit$internal.marginals.hyperpar[[i]], col = i)
     abline(v=theta1[i], col = i, lwd = 2)
 }
@@ -92,8 +151,11 @@ fitr <- inla(
     control.mode = cmode
 )
 
-(Lfitted <- graphpcor:::theta2gamma2L(fitr$mode$theta))
-round(tcrossprod(Lfitted), 2)
+if(nrep<4)
+    round(solve(prec(fitr)), 2)
+
+(Lfitted <- graphpcor:::c4theta(fitr$mode$theta))
+round(crossprod(Lfitted), 2)
 round(vv, 2)
 
 detach("package:graphpcor", unload = TRUE)
