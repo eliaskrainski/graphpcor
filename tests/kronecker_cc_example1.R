@@ -1,11 +1,10 @@
-
 library(INLA)
-library(graphpcor)
-
 inla.setOption(
     num.threads = 1L,
     safe = FALSE
 )
+
+library(graphpcor)
 
 ## Model 1: iid
 n <- 100
@@ -14,10 +13,11 @@ n <- 100
 m1 <- cgeneric(
     model = 'iid',
     n = n, 
-    param = c(1, 0.0) ## to fix it at this value
+    param = c(1, 0) ## to fix it at this value
 )
 
-prior(m1, theta = -1.0)
+prior(m1, theta = as.numeric(0.3))
+
 prior(m1, theta = +1.0)
 
 initial(m1)
@@ -33,6 +33,7 @@ m2.graph <- treepcor(
     p2 ~ c3 + c4
 )
 
+
 theta.p <- c(-0.5, -1)
 prec(m2.graph, theta = theta.p)
 vcov(m2.graph, theta = theta.p)
@@ -40,10 +41,13 @@ chol2inv(chol(prec(m2.graph, theta = theta.p)))
 
 ## m2 definition
 m2 <- cgeneric(
-    model = m2.graph,
+    model = m2.graph, 
     sigma.prior.reference = c(1,1,1,1),
     sigma.prior.probability = c(.5,.5,0.5,0.5),
     lambda = 1)
+
+str(m2)
+
 (n2 <- m2$f$n)
 
 initial(m2)

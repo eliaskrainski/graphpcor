@@ -74,19 +74,6 @@ cgeneric_graphpcor <-
            useINLAprecomp = TRUE,
            libpath = NULL) {
 
-    if (is.null(libpath)) {
-      if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("graphpcor")
-      } else {
-        libpath <- system.file("libs", package = "graphpcor")
-        if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "graphpcor.dll")
-        } else {
-          libpath <- file.path(libpath, "graphpcor.so")
-        }
-      }
-    }
-
     if(inherits(model, "matrix")) {
       model <- graphpcor(model)
     }
@@ -208,52 +195,34 @@ cgeneric_graphpcor <-
       cat('log C', lc, '\n')
     }
 
-    cgmodel <- "inla_cgeneric_graphpcor"
-    the_model <- list(
-      f = list(
-        model = "cgeneric",
-        n = as.integer(n),
-        cgeneric = list(
-          model = cgmodel,
-          shlib = libpath,
-          n = as.integer(n),
-          debug = as.integer(debug)),
-        data = list(
-          ints = list(
-            n = as.integer(n),
-            debug = as.integer(debug),
-            ne = as.integer(nEdges),
-            nfi = as.integer(nfi),
-            ii = as.integer(jj-1),
-            jj = as.integer(ii-1),
-            iuq = as.integer(iuq-1),
-            iuqpac = as.integer(iuqpac-1),
-            ifi = as.integer(ifi-1),
-            jfi = as.integer(jfi-1),
-            itheta = as.integer(params.id -1),
-            sfixed = as.integer(sigma.fixed)),
-          doubles = list(
-            lambda = as.numeric(lambda),
-            sigmaref = as.numeric(sigma.prior.reference),
-            sigmaprob = as.numeric(sigma.prior.probability),
-            lconst = as.numeric(lc),
-            thetabasescaled = as.numeric(thetabasescaled),
-            thetab = as.numeric(base)),
-          characters = list(
-            model = cgmodel,
-            shlib = libpath
-          ),
-          matrices = list(
-            hHneg = attr(Ibase, "hneg.5"),
-            H = matrix(new("numeric", Ibase), nrow(Ibase))),
-          smatrices = list()
-        )
-      )
+    the_model <- cgeneric(
+      model = "inla_cgeneric_graphpcor",
+      n = as.integer(n),
+      debug = as.integer(debug),
+      package = "graphpcor",
+      useINLAprecomp = useINLAprecomp,
+      libpath = libpath,
+      ne = as.integer(nEdges),
+      nfi = as.integer(nfi),
+      ii = as.integer(jj-1),
+      jj = as.integer(ii-1),
+      iuq = as.integer(iuq-1),
+      iuqpac = as.integer(iuqpac-1),
+      ifi = as.integer(ifi-1),
+      jfi = as.integer(jfi-1),
+      itheta = as.integer(params.id -1),
+      sfixed = as.integer(sigma.fixed),
+      lambda = as.numeric(lambda),
+      sigmaref = as.numeric(sigma.prior.reference),
+      sigmaprob = as.numeric(sigma.prior.probability),
+      lconst = as.numeric(lc),
+      thetabasescaled = as.numeric(thetabasescaled),
+      thetab = as.numeric(base),
+      hHneg = attr(Ibase, "hneg.5"),
+      H = matrix(new("numeric", Ibase),
+                 nrow(Ibase))
     )
 
-    class(the_model) <- c("cgeneric", ## INLAtools
-                          "inla.cgeneric") ## this is needed in INLA::f()
-    class(the_model$f$cgeneric) <- class(the_model)
     return(the_model)
 
   }

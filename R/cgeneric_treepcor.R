@@ -35,19 +35,9 @@ cgeneric_treepcor <-
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
-           ...) {
-
-    d.args <- list(...)
-    id.args <- pmatch(
-      x = names(d.args),
-      table = c("debug", "useINLAprecomp", "libpath"),
-      nomatch = NA_integer_,
-      duplicates.ok = FALSE)
-    if(is.na(id.args[1])) {
-      debug <- FALSE
-    } else {
-      debug <- as.integer(d.args$debug)
-    }
+           debug = FALSE,
+           useINLAprecomp = TRUE,
+           libpath = NULL) {
 
     dd <- dim(model)
     d.el <- edges(model)[1:dd[2]]
@@ -59,14 +49,18 @@ cgeneric_treepcor <-
     if(debug) {
       cat(c(sch = sch), "\n")
     }
+
     d.elc <- etreepcor2variance(d.el[1:dd[2]])
     if(debug) {
       print(str(d.elc))
     }
+
     np <- dd[2]
     nv <- sapply(d.elc$iv, length)
-    if(debug)
+    if(debug) {
       cat("np = ", np, " and nv: ", nv, "\n")
+    }
+
     iiv <- rep(1:np, nv)
     jjv <- unlist(lapply(d.elc$iv, sort))
     itop <- d.elc$itop
@@ -75,6 +69,7 @@ cgeneric_treepcor <-
       cat(c(jjv=jjv), "\nitop:\n")
       print(itop)
     }
+
     nc <- nrow(itop)
     ii <- col(itop)[!upper.tri(itop)]
     jj <- row(itop)[!upper.tri(itop)]
@@ -91,24 +86,13 @@ cgeneric_treepcor <-
 
     stopifnot(lambda>0)
 
-    if(is.na(id.args[2])) {
-      useINLAprecomp <- TRUE
-    } else {
-      useINLAprecomp <- d.args$useINLAprecomp
-    }
-    if(is.na(id.args[3])) {
-      libpath <- NULL
-    } else {
-      libpath <- d.args$libpath
-    }
-
     return(
       cgeneric(
         model = "inla_cgeneric_treepcor",
         n = as.integer(nc),
-        debug = as.integer(debug),
-        useINLAprecomp = as.integer(useINLAprecomp),
+        debug = debug,
         package = "graphpcor",
+        useINLAprecomp = useINLAprecomp,
         libpath = libpath,
         np = as.integer(np),
         nv = as.integer(nv),
@@ -123,4 +107,6 @@ cgeneric_treepcor <-
         schildren = as.double(sch)
       )
     )
+
 }
+
