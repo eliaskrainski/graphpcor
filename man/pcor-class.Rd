@@ -4,6 +4,7 @@
 \name{pcor-class}
 \alias{pcor-class}
 \alias{rcorrel}
+\alias{pcor}
 \alias{pcor.numeric}
 \alias{pcor.matrix}
 \alias{print.pcor}
@@ -12,9 +13,11 @@ complexity prior for correlation matrices}
 \usage{
 rcorrel(lambda, theta0, p, parametrization, itheta, d0)
 
-\method{pcor}{numeric}(base, p, parametrization, itheta, d0)
+pcor(base, p, parametrization = "cpc", itheta, d0, decomposition, ...)
 
-\method{pcor}{matrix}(base, p, parametrization, itheta, d0)
+\method{pcor}{numeric}(base, p, parametrization = "cpc", itheta, d0, decomposition, ...)
+
+\method{pcor}{matrix}(base, p, parametrization = "cpc", itheta, d0, decomposition, ...)
 
 \method{print}{pcor}(x, ...)
 }
@@ -31,40 +34,46 @@ Compute \deqn{\theta = r\mathbf{H}^{-1/2}\textbf{s}+\theta_0},
 where \deqn{\mathbf{H}} is the Hessian of the
 KLD around the base model.}
 
-\item{base}{numeric/matrix to define the base
-correlation matrix.}
+\item{p}{integer with the dimention, number of rows
+and columns of the correlation matrix.}
+
+\item{parametrization}{character to specify the
+parametrization choice: "ITP" (or "itp"),
+"SAP" (or "sap"), "CPC" (or "cpc"), see details.}
+
+\item{itheta}{integer vector to specify the position
+'theta' will be placed in the (initial, before fill-in)
+Cholesky factor in the IT. Default is missing.}
+
+\item{d0}{numeric vector to specify the diagonal
+for the (initial) Cholesky factor in the ITP.
+Default consider 'd0=p:1'.}
+
+\item{base}{numeric/matrix used to define the base
+correlation matrix. If numeric vector with length 'm',
+'m' should be 'p(p-1)/2' in the dense case and
+'length(itheta)' in the sparse case.}
+
+\item{decomposition}{character to specify which
+decomposition is to be applied on H in order to
+compute \eqn{\mathbf{H}^{1/2}} and
+\eqn{\mathbf{H}^{-1/2}}. The options are
+'eigen', 'svd' and 'chol'}
+
+\item{...}{used to pass the arguments
+for \code{\link[numDeriv:hessian]{numDeriv::hessian()}}}
 }
 \value{
 a pcor object
 
-a pcor object
+a \code{pcor} object
 }
 \description{
-Contain information needed to define the penalized
-complexity prior for correlation matrices
+Organize information to buidl a correlation prior
+that penalizes the divergence from a base correlation matrix,
+and helper functions to work with correlation matrices.
 }
 \details{
-For 'parametrization' = "SAP" or 'parametrization' = "sap":
-The Standard Angles Parametrization - SAP, as described in
-Rapisarda, Brigo and Mercurio (2007), compute
-\eqn{x[k] = \pi/(1+\exp(-\theta[k]))}, for \eqn{k=1,...,m},
-and the two \eqn{p\times p} matrices
-\deqn{A = \left[
-\begin{array}{ccccc}
-  1 & & & & \\
-  \cos(x_1) & 1 & & & \\
-  \cos(x_2) & \cos(x_p) & 1 & & \\
-  \vdots & \vdots & \ddots & \ddots & \\
-  \cos(x_{p-1}) & \cos(x_{2p-3}) & \ldots & \cos(x_m) & 1
-\end{array} \right] \textrm{ and } B = \left[
-\begin{array}{ccccc}
-  1 & & & & \\
-  \sin(x_1) & 1 & & & \\
-  \sin(x_2) & \sin(x_p) & 1 & & \\
-  \vdots & \vdots & \ddots & \ddots & \\
-  \sin(x_{p-1}) & \sin(x_{2p-3}) & \ldots & \sin(x_m) & 1
-\end{array} \right]}
-
 For 'parametrization' = "CPC" or 'parametrization' = "cpc":
 The Canonical Partial Correlation - CPC parametrization,
 Lewandowski, Kurowicka, and Joe (2009), compute
@@ -101,26 +110,80 @@ given as
 \end{array} \right]}
 Note: The determinant of the correlation matriz is
 \deqn{\prod_{i=2}^p\prod_{j=1}^{i-1}B_{i,j} = \prod_{i=2}^pL_{i,i}}
+For 'parametrization' = "SAP" or 'parametrization' = "sap":
+The Standard Angles Parametrization - SAP, as described in
+Rapisarda, Brigo and Mercurio (2007), compute
+\eqn{x[k] = \pi/(1+\exp(-\theta[k]))}, for \eqn{k=1,...,m},
+and the two \eqn{p\times p} matrices
+\deqn{A = \left[
+\begin{array}{ccccc}
+  1 & & & & \\
+  \cos(x_1) & 1 & & & \\
+  \cos(x_2) & \cos(x_p) & 1 & & \\
+  \vdots & \vdots & \ddots & \ddots & \\
+  \cos(x_{p-1}) & \cos(x_{2p-3}) & \ldots & \cos(x_m) & 1
+\end{array} \right] \textrm{ and } B = \left[
+\begin{array}{ccccc}
+  1 & & & & \\
+  \sin(x_1) & 1 & & & \\
+  \sin(x_2) & \sin(x_p) & 1 & & \\
+  \vdots & \vdots & \ddots & \ddots & \\
+  \sin(x_{p-1}) & \sin(x_{2p-3}) & \ldots & \sin(x_m) & 1
+\end{array} \right]}
+
+For 'parametrization' = "itp" or parametrization' = "ITP":
+The Inverse Transform Parametrization - ITP, is applied
+by starting with a
+\deqn{\mathbf{L}^{(0)} = \left[ \begin{array}{ccccc}
+\textrm{p} & 0 & 0 & \ldots & 0 \\
+\theta_1 & \textrm{p-}1 & 0 & \ldots & 0 \\
+\theta_2 & \theta_p & \textrm{p-}2 & \ddots & \vdots \\
+\vdots & \vdots & \ddots & \ddots & 0 \\
+\theta_{p-1} & \theta_{2p-3} & \ldots & \theta_m & 1
+\end{array}\right] .}
+
+Then compute \eqn{\mathbf{Q}^{(0)}} =
+\eqn{\mathbf{L}\mathbf{L}^{T}},
+\eqn{\mathbf{V}^{(0)}} = \eqn{(\mathbf{Q}^{(0)})^{-1}} and
+\eqn{s_{i}^{(0)}} = \eqn{\sqrt{\mathbf{V}_{i,i}^{(0)}}}, and
+define \eqn{\mathbf{S}^{(0)}} = diag\eqn{(s_1^{(0)},\ldots,s_p^{(0)})}
+in order to have \eqn{\mathbf{C}}=
+\eqn{\mathbf{S}^{-1}\mathbf{V}^{(0)}\mathbf{S}^{-1}}.
 }
 \section{Functions}{
 \itemize{
 \item \code{rcorrel()}: Drawn a random sample correlation matrix.
 
-\item \code{pcor(numeric)}: Build a pcor from a theta vector as the
-correlation matrix parameter.
-
-\item \code{pcor(matrix)}: Build a pcor from a correlation matrix as base model.
-
 \item \code{print(pcor)}: Print method for 'pcor'
 
 }}
 \examples{
-pc3 <- pcor(c(0.5,-0.1,0.1), p = 3, parametrization = "cpc")
-vcov(pc3)
-pc3$H
+
+## Base correlation matrix
 c0 <- matrix(c(1,.9,.5, .9,1,.2, .5,.2,1), 3)
-pc3 <- pcor(c0, parametrization = "cpc")
-pc3$H
+
+## build the 'pcor'
+pc.c0 <- pcor(base = c0) ## base as matrix
+pc.c0
+
+## using 'theta' instead (numerically the same)
+th0 <- pc.c0$theta
+pc.th0 <- pcor(base = th0) ## base as vector
+pc.th0
+
+all.equal(pc.c0, pc.th0)
+
+## other way around
+all.equal(pc.th0, pcor(base = pc.th0$base))
+
+## ITP
+th <- c(0.5,-1,0.5,-0.3)
+ith <- c(2,3,8,12)
+pc2 <- pcor(base = th, p=4, parametrization='itp', itheta = ith)
+pc2
+
+Sparse(solve(pc2$base), zeros.rm = TRUE)
+
 }
 \references{
 Rapisarda, Brigo and Mercurio (2007).

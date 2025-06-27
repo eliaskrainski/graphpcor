@@ -27,9 +27,7 @@ graphpcor.formula <- function(...) {
   for(i in 1:m) {
     x <- gsub(" ", "", ch[[i]][3])
     schi <- strsplit(x, "-", fixed = TRUE)[[1]]
-    ##    print(schi)
     schi <- unlist(strsplit(schi, "+", fixed = TRUE))
-    ##  print(schi)
     if(schi[1]=="") schi <- schi[-1]
     terms.r[[i]] <- schi
   }

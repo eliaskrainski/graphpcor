@@ -30,12 +30,3 @@ Laplacian <- function(graph) {
 Laplacian.default <- function(graph) {
   stop("No Laplacian for this graph!")
 }
-#' @rdname pcor
-#' @title Information needed for a prior that penalizes
-#' the divergence from a base correlation matrix.
-#' @returns a pcor object
-#' @export
-pcor <- function(base, p, parametrization,
-                 itheta, d0) {
-  UseMethod("pcor")
-}

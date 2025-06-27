@@ -5,13 +5,9 @@
 \title{Evaluate the hessian of the KLD for a
 correlation model around a base model.}
 \usage{
-Hcorrel(theta, p, parametrization, itheta, d0, decomposition, C0, ...)
+Hcorrel(theta, p, parametrization, itheta, d0, C0, decomposition, ...)
 }
 \arguments{
-\item{theta}{numeric vector with length equal 'm'.
-In the dense case 'm=p(p-1)/2' whereas in the
-sparse case 'm=length(itheta)'.}
-
 \item{p}{integer with the dimention, number of rows
 and columns of the correlation matrix.}
 
@@ -33,9 +29,7 @@ compute \eqn{\mathbf{H}^{1/2}} and
 \eqn{\mathbf{H}^{-1/2}}. The options are
 'eigen', 'svd' and 'chol'}
 
-\item{...}{use to pass the decomposition method,
-as a character to specify which one is to be used
-to compute H^0.5 and H^(1/2), and arguments
+\item{...}{used to pass the arguments
 for \code{\link[numDeriv:hessian]{numDeriv::hessian()}}}
 }
 \value{

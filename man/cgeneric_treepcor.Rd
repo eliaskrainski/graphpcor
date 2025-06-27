@@ -9,7 +9,9 @@ cgeneric_treepcor(
   lambda,
   sigma.prior.reference,
   sigma.prior.probability,
-  ...
+  debug = FALSE,
+  useINLAprecomp = TRUE,
+  libpath = NULL
 )
 }
 \arguments{
@@ -24,7 +26,7 @@ to define the prior for the standard deviation parameters.}
 to define the prior for the standard deviation parameters.}
 
 \item{...}{additional arguments that will be passed on to
-\code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}} such as
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} such as
 \code{debug}, \code{useINLAprecomp} and \code{libpath}.}
 }
 \value{
@@ -52,5 +54,5 @@ sigma.prior.probability = c(0.05, 0.0, 0.01)
 then the sigma is fixed to 2 and not estimated.
 }
 \seealso{
-\code{\link[=treepcor]{treepcor()}} and \code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}}
+\code{\link[=treepcor]{treepcor()}} and \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}
 }

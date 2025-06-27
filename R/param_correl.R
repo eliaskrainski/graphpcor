@@ -6,7 +6,9 @@
 #' with diagonal elements as 'd0'.
 #' @keywords internal
 #' @noRd
-theta2L <- function(theta, p, parametrization, itheta, d0) {
+theta2L <- function(theta, p,
+                    parametrization = "cpc",
+                    itheta, d0) {
   parametrization <- match.arg(
     arg = tolower(parametrization),
     choices = c("cpc", "sap", "itp")
@@ -25,7 +27,7 @@ theta2L <- function(theta, p, parametrization, itheta, d0) {
   stopifnot(all(itheta %in% which(lower.tri(
     diag(x = rep(1, p), nrow = p, ncol = p)))))
   if(missing(d0)) {
-    d0 <- d:1
+    d0 <- p:1
   }
   if(parametrization == "itp") {
     L <- Lprec(
@@ -44,8 +46,10 @@ theta2L <- function(theta, p, parametrization, itheta, d0) {
       A[itheta] <- cos(theta)
       B[itheta] <- sin(theta)
     }
-    for(j in 2:(p-1)) {
-      B[, j] <- B[, j] * B[, j-1]
+    if(p>2) {
+      for(j in 2:(p-1)) {
+        B[, j] <- B[, j] * B[, j-1]
+      }
     }
     L <- A * cbind(1, B[, 1:(p-1)])
   }

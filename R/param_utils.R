@@ -150,15 +150,6 @@ theta2H <- function(theta) {
 #' Evaluate the hessian of the KLD for a
 #' correlation model around a base model.
 #' @inheritParams pcor
-#' @param decomposition character to specify which
-#' decomposition is to be applied on H in order to
-#' compute \eqn{\mathbf{H}^{1/2}} and
-#' \eqn{\mathbf{H}^{-1/2}}. The options are
-#' 'eigen', 'svd' and 'chol'
-#' @param ... use to pass the decomposition method,
-#' as a character to specify which one is to be used
-#' to compute H^0.5 and H^(1/2), and arguments
-#' for [numDeriv::hessian()]
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used
@@ -173,8 +164,8 @@ theta2H <- function(theta) {
 Hcorrel <- function(theta, p,
                     parametrization,
                     itheta, d0,
-                    decomposition,
                     C0,
+                    decomposition,
                     ...) {
   if(missing(C0)) {
     C0 <- theta2correl(
@@ -221,9 +212,10 @@ Hcorrel <- function(theta, p,
       hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
     }
     stopifnot(all.equal(H, tcrossprod(h.5)))
-    attr(H, "base") <- x
+    attr(H, "base") <- theta
     attr(H, "h.5") < h.5
     attr(H, "hneg.5") <- hneg.5
+    attr(Hd, "decomposition") <- decomposition
     attr(H, "decomposition") <- Hd
     return(H)
 }

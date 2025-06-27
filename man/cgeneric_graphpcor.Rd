@@ -78,7 +78,7 @@ examples give \verb{NA -1 -1 NA} and so the second and third low L
 parameters are fixed to \code{-1}.}
 
 \item{...}{additional arguments that will be passed on to
-\code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}} such as
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} such as
 \code{debug}, \code{useINLAprecomp} and \code{libpath}.}
 }
 \value{

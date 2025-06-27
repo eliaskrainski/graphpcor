@@ -12,7 +12,7 @@
 #' total number of children variables.
 #' The variables are identified as `p1`, ..., `pm`,
 #' where the `m` is the number of parent variables.
-#' The main parent (fist) should be identified as `p1`.
+#' The main parent (first) should be identified as `p1`.
 #' Parent variables (except `p1`) have an ancestor,
 #' which is a parent variable.
 #' @return a `treepcor` object

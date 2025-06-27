@@ -30,7 +30,7 @@ and are identified as \code{c1}, ..., \code{cn}, where \code{n} is the
 total number of children variables.
 The variables are identified as \code{p1}, ..., \code{pm},
 where the \code{m} is the number of parent variables.
-The main parent (fist) should be identified as \code{p1}.
+The main parent (first) should be identified as \code{p1}.
 Parent variables (except \code{p1}) have an ancestor,
 which is a parent variable.
 }
