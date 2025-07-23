@@ -69,7 +69,32 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	assert(!strcasecmp(data->doubles[1]->name, "lc"));
 	double lc = data->doubles[1]->doubles[0];
 
-/*
+	assert(!strcasecmp(data->ints[2]->name, "sfixed"));   // this will always be the case
+	int nsigmas = data->ints[2]->len;
+	int nsfixed = 0, sfixed[nsigmas];
+	for (i = 0; i < nsigmas; i++) {
+	  sfixed[i] = data->ints[2]->ints[i];
+	  nsfixed += sfixed[i];
+	}
+
+	assert(!strcasecmp(data->doubles[2]->name, "sigmaref"));
+	inla_cgeneric_vec_tp *sigmaref = data->doubles[2];
+	assert(sigmaref->len > 0);
+	assert(nsigmas == sigmaref->len);
+	for (i = 0; i < nsigmas; i++) {
+	  assert(sigmaref->doubles[i] > 0);
+	}
+	assert(!strcasecmp(data->doubles[3]->name, "sigmaprob"));
+	inla_cgeneric_vec_tp *sigmaprob = data->doubles[3];
+	assert(sigmaprob->len > 0);
+	assert(nsigmas == sigmaprob->len);
+	int nunkparams[3];
+	nunkparams[0] = nsigmas - nsfixed;
+	nunkparams[1] = nth;	// num params low L
+	nunkparams[2] = nunkparams[0] + nunkparams[1];
+
+
+	/*
 	if (debug > 999) {
 		printf("N=%d, nth=%d, M=%d, eta=%f, lc=%f\n", N, nth, M, eta, lc);
 	}

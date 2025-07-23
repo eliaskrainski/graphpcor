@@ -81,8 +81,15 @@ cgeneric_LKJ <-
     if(any(pp.na)) {
       sigma.prior.probability[pp.na] <- 0.0
     }
-    stopifnot(!any(sigma.prior.reference<0))
-    stopifnot(!any(sigma.prior.reference>1))
+    stopifnot(!any(sigma.prior.probability<0))
+    stopifnot(!any(sigma.prior.probability>1))
+    sigma.fixed <- is.zero(sigma.prior.probability) |
+      is.zero(1-sigma.prior.probability)
+    if(dotArgs$debug) {
+      print(list(sigmaref = sigma.prior.reference,
+                 sigmaprob = sigma.prior.probability,
+                 sfixed = sigma.fixed))
+    }
 
     k <- 1:(n-1)
     lc <- sum((2*eta-2+n-k)*(n-k))*log(2) +
@@ -107,8 +114,11 @@ cgeneric_LKJ <-
         debug = dotArgs$debug,
         eta = as.double(eta),
         lc = as.double(lc),
-        shlib = dotArgs$shlib
-        )
+        shlib = dotArgs$shlib,
+        sfixed = as.integer(sigma.fixed),
+        sigmaref = as.numeric(sigma.prior.reference),
+        sigmaprob = as.numeric(sigma.prior.probability)
+      )
     )
 
     return(the_model)
