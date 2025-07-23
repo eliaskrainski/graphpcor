@@ -7,8 +7,8 @@
 #' Will be used as logical by INLA.
 #' @param useINLAprecomp logical, default is TRUE, indicating if it is to
 #' be used the shared object pre-compiled by INLA.
-#' This is not considered if 'libpath' is provided.
-#' @param libpath string, default is NULL, with the path to the shared object.
+#' This is not considered if 'shlib' is provided.
+#' @param shlib string, default is NULL, with the path to the shared object.
 #' @details
 #' For a random \eqn{p\times p} precision matrix \eqn{Q},
 #' given the parameters \eqn{d} and \eqn{R},
@@ -23,21 +23,21 @@ cgeneric_Wishart <-
            R,
            debug = FALSE,
            useINLAprecomp = TRUE,
-           libpath = NULL) {
+           shlib = NULL) {
 
-    if(is.null(libpath)) {
+    if(is.null(shlib)) {
       if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("graphpcor")
+        shlib <- INLA::inla.external.lib("graphpcor")
       } else {
-        libpath <- system.file("libs", package = "graphpcor")
+        shlib <- system.file("libs", package = "graphpcor")
         if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "graphpcor.dll")
+          shlib <- file.path(shlib, "graphpcor.dll")
         } else {
-          libpath <- file.path(libpath, "graphpcor.so")
+          shlib <- file.path(shlib, "graphpcor.so")
         }
       }
     }
-    stopifnot(file.exists(libpath))
+    stopifnot(file.exists(shlib))
 
     stopifnot(n>=1)
     stopifnot(dof>(n+1))
@@ -77,7 +77,7 @@ cgeneric_Wishart <-
         n = as.integer(n),
         cgeneric = list(
           model = cmodel,
-          shlib = libpath,
+          shlib = shlib,
           n = as.integer(n),
           debug = as.logical(debug),
           data = list(
@@ -92,7 +92,7 @@ cgeneric_Wishart <-
             ),
             characters = list(
               model = cmodel,
-              shlib = libpath
+              shlib = shlib
             ),
             matrices = list(
             ),

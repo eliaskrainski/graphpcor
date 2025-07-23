@@ -8,8 +8,8 @@
 #' Will be used as logical by INLA.
 #' @param useINLAprecomp logical, default is TRUE, indicating if it is to
 #' be used the shared object pre-compiled by INLA.
-#' This is not considered if 'libpath' is provided.
-#' @param libpath string, default is NULL, with the path to the shared object.
+#' This is not considered if 'shlib' is provided.
+#' @param shlib string, default is NULL, with the path to the shared object.
 #' @details
 #' The Canonical Partial Correlation - CPC parametrization,
 #'  Lewandowski, Kurowicka, and Joe (2009).
@@ -59,17 +59,17 @@ cgeneric_pc_prec_correl <-
            theta.base,
            debug = FALSE,
            useINLAprecomp = TRUE,
-           libpath = NULL) {
+           shlib = NULL) {
 
-    if(is.null(libpath)) {
+    if(is.null(shlib)) {
       if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("graphpcor")
+        shlib <- INLA::inla.external.lib("graphpcor")
       } else {
-        libpath <- system.file("libs", package = "graphpcor")
+        shlib <- system.file("libs", package = "graphpcor")
         if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "graphpcor.dll")
+          shlib <- file.path(shlib, "graphpcor.dll")
         } else {
-          libpath <- file.path(libpath, "graphpcor.so")
+          shlib <- file.path(shlib, "graphpcor.so")
         }
       }
     }
@@ -109,7 +109,7 @@ cgeneric_pc_prec_correl <-
         n = as.integer(n),
         cgeneric = list(
           model = cmodel,
-          shlib = libpath,
+          shlib = shlib,
           n = as.integer(n),
           debug = as.logical(debug),
           data = list(
@@ -124,7 +124,7 @@ cgeneric_pc_prec_correl <-
             ),
             characters = list(
               model = cmodel,
-              shlib = libpath
+              shlib = shlib
             ),
             matrices = list(
               hHn = c(m,m,H.el$h.5)

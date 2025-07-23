@@ -12,9 +12,7 @@ cgeneric_graphpcor(
   sigma.prior.probability,
   params.id,
   low.params.fixed,
-  debug = FALSE,
-  useINLAprecomp = TRUE,
-  libpath = NULL
+  ...
 )
 }
 \arguments{
@@ -78,8 +76,7 @@ examples give \verb{NA -1 -1 NA} and so the second and third low L
 parameters are fixed to \code{-1}.}
 
 \item{...}{additional arguments that will be passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} such as
-\code{debug}, \code{useINLAprecomp} and \code{libpath}.}
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgenericBuilder()}}.}
 }
 \value{
 \code{cgeneric}/\code{inla.cgeneric} object.
@@ -90,4 +87,7 @@ a square matrix (used as a graph),
 creates an \code{inla.cgeneric} (see \code{\link[=cgeneric]{cgeneric()}})
 to implement the Penalized Complexity prior using the
 Kullback-Leibler divergence - KLD from a base graphpcor.
+}
+\seealso{
+\code{\link[=graphpcor]{graphpcor()}}
 }

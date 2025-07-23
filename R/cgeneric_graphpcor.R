@@ -58,8 +58,8 @@
 #' examples give `NA -1 -1 NA` and so the second and third low L
 #' parameters are fixed to `-1`.
 #' @param ... additional arguments that will be passed on to
-#' [INLAtools::cgeneric()] such as
-#' `debug`, `useINLAprecomp` and `libpath`.
+#' [INLAtools::cgenericBuilder()].
+#' @seealso [graphpcor()]
 #' @returns `cgeneric`/`inla.cgeneric` object.
 #' @useDynLib graphpcor, .registration = TRUE
 cgeneric_graphpcor <-
@@ -70,17 +70,22 @@ cgeneric_graphpcor <-
            sigma.prior.probability,
            params.id,
            low.params.fixed,
-           debug = FALSE,
-           useINLAprecomp = TRUE,
-           libpath = NULL) {
+           ...) {
 
+    dotArgs <- list(...)
+    if(!any(names(dotArgs)=="debug")) {
+      dotArgs$debug <- FALSE
+    }
     if(inherits(model, "matrix")) {
+      if(dotArgs$debug) {
+        cat("Building 'graphpcor' from 'matrix'!")
+      }
       model <- graphpcor(model)
     }
     Q0 <- Laplacian(model)
     n <- nrow(Q0)
     stopifnot(n>0)
-    if(debug>99) {
+    if(dotArgs$debug>99) {
       print(model)
       cat("Laplacian is\n")
       print(Q0)
@@ -111,7 +116,7 @@ cgeneric_graphpcor <-
     sigma.fixed <- is.zero(sigma.prior.probability) |
       is.zero(1-sigma.prior.probability)
 
-    if(debug) {
+    if(dotArgs$debug) {
       print(list(sigmaref = sigma.prior.reference,
                  sigmaprob = sigma.prior.probability,
                  sfixed = sigma.fixed))
@@ -128,7 +133,7 @@ cgeneric_graphpcor <-
     qij$ilqpac <- which(qnz[lower.tri(Q0, diag = TRUE)])
     ll <- t(chol(Q0 + diag(n)))
     qij$ifil <- setdiff(which(ll!=0), qij$ilq)
-    if(debug>99) {
+    if(dotArgs$debug>99) {
       print(qij)
     }
 
@@ -177,7 +182,7 @@ cgeneric_graphpcor <-
     }
 
     Ibase <- hessian(model, base)
-    if(debug) {
+    if(dotArgs$debug) {
       cat("I(base model) elements\n")
       print(str(Ibase))
     }
@@ -191,38 +196,48 @@ cgeneric_graphpcor <-
     lc <- lc -log(nEdges)-(0.5*nEdges)*log(pi)
     lc <- lc #+ sum(log(attr(Ibase, "decomposition")$values))
 
-    if(debug) {
+    if(dotArgs$debug) {
       cat('log C', lc, '\n')
     }
 
-    the_model <- cgeneric(
-      model = "inla_cgeneric_graphpcor",
-      n = as.integer(n),
-      debug = as.integer(debug),
-      package = "graphpcor",
-      useINLAprecomp = useINLAprecomp,
-      libpath = libpath,
-      ne = as.integer(nEdges),
-      nfi = as.integer(nfi),
-      ii = as.integer(jj-1),
-      jj = as.integer(ii-1),
-      iuq = as.integer(iuq-1),
-      iuqpac = as.integer(iuqpac-1),
-      ifi = as.integer(ifi-1),
-      jfi = as.integer(jfi-1),
-      itheta = as.integer(params.id -1),
-      sfixed = as.integer(sigma.fixed),
-      lambda = as.numeric(lambda),
-      sigmaref = as.numeric(sigma.prior.reference),
-      sigmaprob = as.numeric(sigma.prior.probability),
-      lconst = as.numeric(lc),
-      thetabasescaled = as.numeric(thetabasescaled),
-      thetab = as.numeric(base),
-      hHneg = attr(Ibase, "hneg.5"),
-      H = matrix(new("numeric", Ibase),
-                 nrow(Ibase))
-    )
+    if(is.null(dotArgs$shlib)) {
+      if(dotArgs$debug){
+        cat("searching shlib...\n")
+      }
+      dotArgs$shlib <- do.call(
+        what = INLAtools::cgeneric_shlib,
+        args = c(list(package = "graphpcor"),
+                 dotArgs))
+    }
 
+    the_model <- do.call(
+      what = INLAtools::cgenericBuilder,
+      args = list(
+        model = "inla_cgeneric_graphpcor",
+        n = as.integer(n),
+        debug = as.integer(dotArgs$debug),
+        shlib = dotArgs$shlib,
+        ne = as.integer(nEdges),
+        nfi = as.integer(nfi),
+        ii = as.integer(jj-1),
+        jj = as.integer(ii-1),
+        iuq = as.integer(iuq-1),
+        iuqpac = as.integer(iuqpac-1),
+        ifi = as.integer(ifi-1),
+        jfi = as.integer(jfi-1),
+        itheta = as.integer(params.id -1),
+        sfixed = as.integer(sigma.fixed),
+        lambda = as.numeric(lambda),
+        sigmaref = as.numeric(sigma.prior.reference),
+        sigmaprob = as.numeric(sigma.prior.probability),
+        lconst = as.numeric(lc),
+        thetabasescaled = as.numeric(thetabasescaled),
+        thetab = as.numeric(base),
+        hHneg = attr(Ibase, "hneg.5"),
+        H = matrix(new("numeric", Ibase),
+                   nrow(Ibase))
+      )
+    )
     return(the_model)
 
   }

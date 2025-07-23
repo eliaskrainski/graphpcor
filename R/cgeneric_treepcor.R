@@ -10,9 +10,8 @@
 #' to define the prior for the standard deviation parameters.
 #' @param sigma.prior.probability a vector with the probability values
 #' to define the prior for the standard deviation parameters.
-#' @param ... additional arguments that will be passed on to
-#' [INLAtools::cgeneric()] such as
-#' `debug`, `useINLAprecomp` and `libpath`.
+#' @param ... additional arguments passed on to
+#' [INLAtools::cgenericBuilder()].
 #' @details
 #'  The correlation prior as in the paper depends on the lambda value.
 #'  The prior for each \eqn{sigma_i} is the Penalized-complexity prior
@@ -35,9 +34,7 @@ cgeneric_treepcor <-
            lambda,
            sigma.prior.reference,
            sigma.prior.probability,
-           debug = FALSE,
-           useINLAprecomp = TRUE,
-           libpath = NULL) {
+           ...) {
 
     dd <- dim(model)
     d.el <- edges(model)[1:dd[2]]
@@ -46,25 +43,30 @@ cgeneric_treepcor <-
     sch <- unlist(lapply(d.el, function(x)
       x$sign[!x$parent]))
     sch <- sch[ich]
-    if(debug) {
+
+    dotArgs <- list(...)
+    if(!any(names(dotArgs)=="debug")) {
+      dotArgs$debug <- FALSE
+    }
+    if(dotArgs$debug) {
       cat(c(sch = sch), "\n")
     }
 
     d.elc <- etreepcor2variance(d.el[1:dd[2]])
-    if(debug) {
+    if(dotArgs$debug) {
       print(str(d.elc))
     }
 
     np <- dd[2]
     nv <- sapply(d.elc$iv, length)
-    if(debug) {
+    if(dotArgs$debug) {
       cat("np = ", np, " and nv: ", nv, "\n")
     }
 
     iiv <- rep(1:np, nv)
     jjv <- unlist(lapply(d.elc$iv, sort))
     itop <- d.elc$itop
-    if(debug) {
+    if(dotArgs$debug) {
       cat(c(iiv=iiv), "\n")
       cat(c(jjv=jjv), "\nitop:\n")
       print(itop)
@@ -73,7 +75,7 @@ cgeneric_treepcor <-
     nc <- nrow(itop)
     ii <- col(itop)[!upper.tri(itop)]
     jj <- row(itop)[!upper.tri(itop)]
-    if(debug) {
+    if(dotArgs$debug) {
       print(str(list(nc=nc,ii=ii,jj=jj)))
     }
 
@@ -86,14 +88,22 @@ cgeneric_treepcor <-
 
     stopifnot(lambda>0)
 
+    if(is.null(dotArgs$shlib)) {
+      if(dotArgs$debug){
+        cat("searching shlib...\n")
+      }
+      dotArgs$shlib <- do.call(
+        what = INLAtools::cgeneric_shlib,
+        args = c(list(package = "graphpcor"),
+                 dotArgs))
+    }
+
     return(
-      cgeneric(
+      INLAtools::cgenericBuilder(
         model = "inla_cgeneric_treepcor",
         n = as.integer(nc),
-        debug = debug,
-        package = "graphpcor",
-        useINLAprecomp = useINLAprecomp,
-        libpath = libpath,
+        debug = dotArgs$debug,
+        shlib = dotArgs$shlib,
         np = as.integer(np),
         nv = as.integer(nv),
         ipar = as.integer(d.elc$iparent-1L),

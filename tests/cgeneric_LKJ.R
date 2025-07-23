@@ -1,17 +1,17 @@
 library(INLA)
-
 library(graphpcor)
 
 n <- 4
 (m <- n*(n-1)/2)
-
 eta <- 10
 
 cmodel <- cgeneric(
     model = "LKJ",
     n = n,
-    eta = eta
+    eta = eta, debug = !TRUE
 )
+
+str(cmodel)
 
 graph(cmodel, optimize = TRUE)
 
@@ -26,7 +26,7 @@ theta1 <- rnorm(m)
 (vv <- solve(qq))
 
 all.equal(as.matrix(vv),
-          tcrossprod(Lprec(theta1)))
+          graphpcor:::theta2correl(theta1, n, 'cpc'))
 
 ## fake data
 dat1 <- data.frame(
@@ -79,8 +79,8 @@ fitr <- inla(
     control.mode = cmode
 )
 
-(Lfitted <- Lprec(fitr$mode$theta))
-round(tcrossprod(Lfitted), 2)
+(Cfitted <- graphpcor:::theta2correl(
+                          fitr$mode$theta, n, 'cpc'))
 round(vv, 2)
 
 detach("package:graphpcor", unload = TRUE)

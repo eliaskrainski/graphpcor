@@ -18,16 +18,28 @@ dLKJ <- function(R, eta, log = FALSE) {
     o <- exp(o)
   return(o)
 }
-#' Build an `inla.cgeneric` object to implement the
-#' LKG prior for the correlation matrix.
+#' Build an `cgeneric`/`inla.cgeneric` for
+#' the LKG prior on correlation matrix.
 #' @param n integer to define the size of the matrix
 #' @param eta numeric greater than 1, the parameter
-#' @param debug integer, default is zero, indicating the verbose level.
-#' Will be used as logical by INLA.
-#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
-#' be used the shared object pre-compiled by INLA.
-#' This is not considered if 'libpath' is provided.
-#' @param libpath string, default is NULL, with the path to the shared object.
+#' @param sigma.prior.reference numeric vector with length `n`,
+#' `n` is the number of nodes (variables) in the graph, as the
+#' reference standard deviation to define the PC prior for each
+#' marginal variance parameters. If missing, the model will be
+#' assumed for a correlation. If a length `n` vector is given
+#' and `sigma.prior.reference` is missing, it will be used as
+#' known square root of the variances.
+#' @param sigma.prior.probability numeric vector with length `n`
+#' to set the probability statement of the PC prior for each
+#' marginal variance parameters. The probability statement is
+#' P(sigma < `sigma.prior.reference`) = p. If missing, all the
+#' marginal variances are considered as known, as described in
+#' `sigma.prior.reference`.
+#' If a vector is given and a probability is NA, 0 or 1, the
+#' corresponding `sigma.prior.reference` will be used as fixed.
+#' @param ... additional arguments passed on to
+#' [INLAtools::cgeneric].
+#' @seealso [dLKJ()] and [pcor()]
 #' @details
 #' The parametrization uses the
 #' hypershere decomposition, as proposed in
@@ -52,70 +64,52 @@ dLKJ <- function(R, eta, log = FALSE) {
 cgeneric_LKJ <-
   function(n,
            eta,
-           debug = FALSE,
-           useINLAprecomp = TRUE,
-           libpath = NULL) {
-
-    if(is.null(libpath)) {
-      if (useINLAprecomp) {
-        libpath <- INLA::inla.external.lib("graphpcor")
-      } else {
-        libpath <- system.file("libs", package = "graphpcor")
-        if (Sys.info()["sysname"] == "Windows") {
-          libpath <- file.path(libpath, "graphpcor.dll")
-        } else {
-          libpath <- file.path(libpath, "graphpcor.so")
-        }
-      }
-    }
+           sigma.prior.reference = rep(1, n),
+           sigma.prior.probability = rep(NA, n),
+           ...) {
 
     stopifnot(n>1)
     stopifnot(eta>0)
+
+    dotArgs <- list(...)
+    if(!any(names(dotArgs)=="debug")) {
+      dotArgs$debug <- FALSE
+    }
+
+    stopifnot(all(sigma.prior.reference>0))
+    pp.na <- is.na(sigma.prior.probability)
+    if(any(pp.na)) {
+      sigma.prior.probability[pp.na] <- 0.0
+    }
+    stopifnot(!any(sigma.prior.reference<0))
+    stopifnot(!any(sigma.prior.reference>1))
 
     k <- 1:(n-1)
     lc <- sum((2*eta-2+n-k)*(n-k))*log(2) +
       sum(lbeta(eta + (n-k-1)/2,
                 eta + (n-k-1)/2)*(n-k))
 
-    if(debug) {
-      cat('log C', lc, '\n')
+    if(is.null(dotArgs$shlib)) {
+      if(dotArgs$debug){
+        cat("searching shlib...\n")
+      }
+      dotArgs$shlib <- do.call(
+        what = INLAtools::cgeneric_shlib,
+        args = c(list(package = "graphpcor"),
+                    dotArgs))
     }
 
-    cmodel = "inla_cgeneric_LKJ"
-
-    the_model <- list(
-      f = list(
-        model = "cgeneric",
+    the_model <- do.call(
+      what = INLAtools::cgenericBuilder,
+      args = list(
+        model = "inla_cgeneric_LKJ",
         n = as.integer(n),
-        cgeneric = list(
-          model = cmodel,
-          shlib = libpath,
-          n = as.integer(n),
-          debug = as.logical(debug),
-          data = list(
-            ints = list(
-              n = as.integer(n),
-              debug = as.integer(debug)
-            ),
-            doubles = list(
-              eta = as.double(eta),
-              lc = as.double(lc)
-            ),
-            characters = list(
-              model = cmodel,
-              shlib = libpath
-            ),
-            matrices = list(
-              ),
-            smatrices = list(
-              )
-            )
-          )
+        debug = dotArgs$debug,
+        eta = as.double(eta),
+        lc = as.double(lc),
+        shlib = dotArgs$shlib
         )
-      )
-
-    class(the_model) <- "inla.cgeneric"
-    class(the_model$f$cgeneric) <- "inla.cgeneric"
+    )
 
     return(the_model)
 

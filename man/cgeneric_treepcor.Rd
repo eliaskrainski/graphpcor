@@ -9,9 +9,7 @@ cgeneric_treepcor(
   lambda,
   sigma.prior.reference,
   sigma.prior.probability,
-  debug = FALSE,
-  useINLAprecomp = TRUE,
-  libpath = NULL
+  ...
 )
 }
 \arguments{
@@ -25,9 +23,8 @@ to define the prior for the standard deviation parameters.}
 \item{sigma.prior.probability}{a vector with the probability values
 to define the prior for the standard deviation parameters.}
 
-\item{...}{additional arguments that will be passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} such as
-\code{debug}, \code{useINLAprecomp} and \code{libpath}.}
+\item{...}{additional arguments passed on to
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgenericBuilder()}}.}
 }
 \value{
 \code{cgeneric}/\code{inla.cgeneric} object.
