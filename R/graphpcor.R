@@ -15,36 +15,37 @@
 #' prec(g1)
 graphpcor.formula <- function(...) {
   fch <- as.character(match.call())[-1]
-  if(length(fch)<1)
+  m <- length(fch)
+  if(m<1)
     stop("Please provide an argument!")
   ch <- lapply(fch, function(x)
     as.character(as.formula(x)))
-  nodesL <- unique(unlist(
-    lapply(ch, function(x) x[2])))
   ## right side check, and collect terms
-  m <- length(ch)
-  terms.r <- vector("list", m)
-  for(i in 1:m) {
-    x <- gsub(" ", "", ch[[i]][3])
+  terms.r <- lapply(ch, function(x) {
+    x <- gsub(" ", "", x[3])
     schi <- strsplit(x, "-", fixed = TRUE)[[1]]
     schi <- unlist(strsplit(schi, "+", fixed = TRUE))
     if(schi[1]=="") schi <- schi[-1]
-    terms.r[[i]] <- schi
-  }
-  nodesR <- unique(unlist(terms.r))
-  nodes <- unique(unlist(lapply(1:m, function(i)
+    return(schi)
+  })
+  nodesL <- sapply(ch, function(x) x[2])
+  allNodes <- unique(unlist(lapply(1:m, function(i)
     c(nodesL[i], terms.r[[i]]))))
-  nNodes <- length(nodes)
-  grel <- matrix(
-    0, m, length(nodesR),
-    dimnames = list(nodesL, nodesR))
+  nNodes <- length(allNodes)
+  ## graph
+  grel <- matrix(0, nNodes, nNodes,
+                 dimnames = list(allNodes, allNodes))
   for(i in 1:m) {
-    jj <- pmatch(terms.r[[i]], nodesR)
-    grel[i, jj] <- 1
+    ii <- pmatch(nodesL[i], allNodes)
+    jj <- pmatch(terms.r[[i]], allNodes)
+    if((length(ii)>0) & (length(jj)>0)) {
+      grel[ii, jj] <- 1
+      grel[jj, ii] <- 1
+    }
   }
   class(fch) <- 'graphpcor'
-  attr(fch, 'nodes') <- nodes
-  attr(fch, 'relationship') <- grel
+  attr(fch, 'nodes') <- allNodes
+  attr(fch, 'graph') <- grel
   return(fch)
 }
 #' @describeIn graphpcor
@@ -63,18 +64,17 @@ graphpcor.matrix <- function(...) {
   }
   argl <- list()
   adde <- 0
-  for(i in 1:(ne[2]-1)) {
+  for(i in 1:(ne[1]-1)) {
     ii <- which(!iz[i, ])
     if(length(ii)>0) {
       jj <- intersect((i+1):ne[1], ii)
       argl[[i]] <- paste(
         vnams[i], "~",
         paste(vnams[jj], collapse = " + "))
-      adde <- adde + length(ii)
+      adde <- adde + length(jj)
     }
-    if(adde>=ne[2])
-      break
   }
+  stopifnot(adde==ne[2])
   return(do.call(what = 'graphpcor',
                  args = lapply(argl, as.formula)))
 }
@@ -85,14 +85,14 @@ graphpcor.matrix <- function(...) {
 print.graphpcor <- function(x, ...) {
   cat("A graphpcor for",
       length(attr(x, 'nodes')), "variables",
-      "with", sum(attr(x, 'relationship')), "edges.\n")
+      "with", sum(attr(x, 'graph')), "edges.\n")
 }
 #' @describeIn graphpcor
 #' The summary method for `graphpcor`
 #' @param object graphpcor
 #' @export
 summary.graphpcor <- function(object, ...) {
-  attr(object, "relationship")
+  attr(object, "graph")
 }
 #' @describeIn graphpcor
 #' The dim method for `graphpcor`
@@ -100,7 +100,7 @@ summary.graphpcor <- function(object, ...) {
 #' @export
 dim.graphpcor <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
-    edges=sum(attr(x, 'relationship')))
+    edges=sum(attr(x, 'graph'))/2)
 }
 #' @describeIn graphpcor
 #' Extract the edges of a `graphcor` to be used for plot
@@ -223,18 +223,8 @@ Laplacian.matrix <- function(graph) {
 Laplacian.graphpcor <- function(graph) {
   ne <- dim(graph)
   nodes <- attr(graph, "nodes")
-  grel <- attr(graph, "relationship")
-  L <- matrix(
-    0.0, ne[1], ne[1],
-    dimnames = list(nodes, nodes)
-  )
-  for(i in 1:nrow(grel)) {
-    ii <- pmatch(rownames(grel)[i], nodes)
-    jj <- pmatch(colnames(grel)[grel[i, ]!=0], nodes)
-    L[ii, jj] <- (-1)
-  }
-  L <- L + t(L)
-  diag(L) <- -rowSums(L)
+  L <- -attr(graph, "graph")
+  diag(L) <- -colSums(L)
   return(L)
 }
 #' @describeIn graphpcor
@@ -293,12 +283,12 @@ prec.graphpcor <- function(model, ...) {
     V <- vcov(model, theta = theta)
     Q <- chol2inv(chol(V))
     Q[is.zero(Q)] <- 0
-    return(INLA::inla.as.sparse(
-      Q, zeros.rm = TRUE))
   } else {
     warning("missing `theta`, returning Laplacian!")
   }
-  return(Q)
+  return(forceSymmetric(
+    Sparse(Matrix(Q),
+           zeros.rm = TRUE)))
 }
 #' Evaluate the hessian of the KLD for a `graphpcor`
 #' correlation model around a base model.
@@ -344,6 +334,9 @@ hessian.graphpcor <-
     z0 <- is.zero(Q0)
     n <- nrow(Q0)
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
+    if(inherits(x, "Matrix")) {
+      x <- as.matrix(x)
+    }
     if(inherits(x, "matrix")) {
       ## maybe optim() to get theta that
       ## give it close to C0?
@@ -351,13 +344,13 @@ hessian.graphpcor <-
       C0 <- cov2cor(x)
       qq0 <- chol2inv(chol(C0))
       ll0 <- t(chol(qq0))
+      for(i in 1:n)
+        ll0[i, ] <- (n+1-i)*ll0[i, ]/ll0[i, i]
       c0.ok <- all(which(abs(ll0)>sqrt(.Machine$double.eps)) %in%
                      which(abs(l1)>0))
       if(!c0.ok) {
         stop("Provided base correlation not in the graphpcor model class!")
       }
-      for(i in 1:nrow(C0))
-        ll0[i, ] <- ll0[i, ]/ll0[i, i]
       x <- ll0[lower.tri(ll0) & (!z0)]
     } else {
       stopifnot(length(x) == nEdges)
@@ -369,8 +362,7 @@ hessian.graphpcor <-
         KLD10(vcov(func, theta = th), C0),
       x = x,
       method = method,
-      method.args = method.args,
-      ...)
+      method.args = method.args)
     ## next bit follows mvtnorm:::rmvnorm()
     t0 <- sqrt(.Machine$double.eps)
     if(decomposition == "eigen") {
@@ -409,6 +401,15 @@ hessian.graphpcor <-
 cgeneric.graphpcor <- function(model, ...) {
   args <- list(...)
   args$model <- model
+  do.call(what = 'cgeneric_graphpcor',
+          args = args)
+}
+#' @describeIn graphpcor
+#' The `cgeneric` method for `matrix` uses [cgeneric_graphpcor()]
+#' @export
+cgeneric.matrix <- function(model, ...) {
+  args <- list(...)
+  args$model <- graphpcor(model)
   do.call(what = 'cgeneric_graphpcor',
           args = args)
 }

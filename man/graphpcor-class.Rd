@@ -14,6 +14,7 @@
 \alias{vcov,graphpcor-method}
 \alias{prec.graphpcor}
 \alias{cgeneric.graphpcor}
+\alias{cgeneric.matrix}
 \title{Set a graph whose nodes and edges represent variables and
 conditional distributions, respectively.}
 \usage{
@@ -38,6 +39,8 @@ conditional distributions, respectively.}
 \method{prec}{graphpcor}(model, ...)
 
 \method{cgeneric}{graphpcor}(model, ...)
+
+\method{cgeneric}{matrix}(model, ...)
 }
 \arguments{
 \item{...}{list of formula used to define the edges.}
@@ -89,6 +92,8 @@ a variable and an edge a conditional distribution.
 \item \code{prec(graphpcor)}: The precision method for 'graphpcor'
 
 \item \code{cgeneric(graphpcor)}: The \code{cgeneric} method for \code{graphpcor} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
+
+\item \code{cgeneric(matrix)}: The \code{cgeneric} method for \code{matrix} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
 
 }}
 \examples{

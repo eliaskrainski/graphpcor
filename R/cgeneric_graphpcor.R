@@ -232,7 +232,7 @@ cgeneric_graphpcor <-
         sigmaprob = as.numeric(sigma.prior.probability),
         lconst = as.numeric(lc),
         thetabasescaled = as.numeric(thetabasescaled),
-        thetab = as.numeric(base),
+        thetab = as.numeric(attr(Ibase, "base")),
         hHneg = attr(Ibase, "hneg.5"),
         H = matrix(new("numeric", Ibase),
                    nrow(Ibase))
