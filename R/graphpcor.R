@@ -57,7 +57,7 @@ graphpcor.matrix <- function(...) {
   stopifnot(all.equal(x, t(x)))
   ne <- c(nrow(x), NA)
   iz <- is.zero(x)
-  ne[2] <- (sum(!iz)-ne[1])/2
+  ne[2] <- sum(lower.tri(iz) & (!iz))
   vnams <- rownames(x)
   if(is.null(vnams)) {
     vnams <- letters[1:ne[1]]
@@ -65,9 +65,10 @@ graphpcor.matrix <- function(...) {
   argl <- list()
   adde <- 0
   for(i in 1:(ne[1]-1)) {
-    ii <- which(!iz[i, ])
-    if(length(ii)>0) {
-      jj <- intersect((i+1):ne[1], ii)
+    jj <- intersect(
+      (i+1):ne[1],
+      which(!iz[i, ]))
+    if(length(jj)>0) {
       argl[[i]] <- paste(
         vnams[i], "~",
         paste(vnams[jj], collapse = " + "))
@@ -83,9 +84,10 @@ graphpcor.matrix <- function(...) {
 #' @param x graphpcor
 #' @export
 print.graphpcor <- function(x, ...) {
-  cat("A graphpcor for",
-      length(attr(x, 'nodes')), "variables",
-      "with", sum(attr(x, 'graph')), "edges.\n")
+  n <- length(attr(x, 'nodes'))
+  g <- !is.zero(attr(x, 'graph'))
+  cat("A graphpcor for", n, "variables",
+      "with", sum(lower.tri(g) & g), "edges.\n")
 }
 #' @describeIn graphpcor
 #' The summary method for `graphpcor`
@@ -390,7 +392,7 @@ hessian.graphpcor <-
     }
     stopifnot(all.equal(H, tcrossprod(h.5)))
     attr(H, "base") <- x
-    attr(H, "h.5") < h.5
+    attr(H, "h.5") <- h.5
     attr(H, "hneg.5") <- hneg.5
     attr(H, "decomposition") <- Hd
     return(H)

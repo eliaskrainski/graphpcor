@@ -35,9 +35,8 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	// PC-prior for a correlation matrix C with dimension N,
 	// given (scalar) parameter 'lambda'.
 	// The correlation matrix is parametrized using the
-	// hypershere decomposition, Rapisarda, Brigo and Mercurio (2007).
-	// See section 6.2 of the PC-prior paper for details
-	// on the prior specification.
+	//  1. Canonical Partial Correlation, Lewandowski-Kurowicka-Joe (2009).
+	//  2. hypershere decomposition, Rapisarda, Brigo and Mercurio (2007).
 	// It returns for if 'cmd' is
 	// 'graph': i,j index set for the upper triangle of Q;
 	// 'Q': the inverse of C;
@@ -59,7 +58,10 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
 //	int debug = data->ints[1]->ints[0];
 
-	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
+  assert(!strcasecmp(data->ints[2]->name, "parametrization"));
+  int parametrization = data->ints[2]->ints[0];
+
+  assert(!strcasecmp(data->doubles[0]->name, "lambda"));
 	double lambda = data->doubles[0]->doubles[0];
 	assert(lambda > 0);
 
@@ -99,8 +101,13 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret[0] = -1;				       /* REQUIRED */
 		ret[1] = M;				       /* REQUIRED */
 
-		double hld;
-		theta2gamma2Lcorr(N, &hld, &theta[0], &ret[offset]);
+// Cholesky of the correlation matrix
+    if(parametrization==1) {
+      cpc2correlCholesky(&N, &theta[0], &ret[offset]);
+    } else {
+      double hld;
+      theta2gamma2Lcorr(N, &hld, &theta[0], &ret[offset]);
+    }
 
 /*
 		if (debug > 999) {

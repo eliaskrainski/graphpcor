@@ -8,12 +8,12 @@ correlation model around a base model.}
 Hcorrel(theta, p, parametrization, itheta, d0, C0, decomposition, ...)
 }
 \arguments{
-\item{p}{integer with the dimention, number of rows
+\item{p}{integer with the dimension, number of rows
 and columns of the correlation matrix.}
 
 \item{parametrization}{character to specify the
 parametrization choice: "ITP" (or "itp"),
-"SAP" (or "sap"), "CPC" (or "cpc"), see details.}
+"SAP" (or "tap"), "CPC" (or "cpc"), see details.}
 
 \item{itheta}{integer vector to specify the position
 'theta' will be placed in the (initial, before fill-in)

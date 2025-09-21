@@ -181,20 +181,19 @@ cgeneric_graphpcor <-
       base <- rep(0, nEdges)
     }
 
-    Ibase <- hessian(model, base)
+    Ibase <- hessian(model, base, decomposition = "eigen")
     if(dotArgs$debug) {
       cat("I(base model) elements\n")
       print(str(Ibase))
     }
     stopifnot(all(dim(Ibase) == c(nEdges, nEdges)))
-    ## this is I(\theta_0)^{-0.5} * \theta_0
-    thetabasescaled <- drop(attr(Ibase, "hneg.5") %*%
+    ##  I(\theta_0) * \theta_0
+    thetabasescaled <- drop(attr(Ibase, "h.5") %*%
                               attr(Ibase, "base"))
 
-    ## constant
-    lc <- log(lambda) + lgamma(1.0+nEdges/2)
-    lc <- lc -log(nEdges)-(0.5*nEdges)*log(pi)
-    lc <- lc #+ sum(log(attr(Ibase, "decomposition")$values))
+    ## store abs(det(H^{1/2}))
+    eval.5 <- sqrt(attr(Ibase, "decomposition")$values)
+    lc <- sum(log(eval.5[eval.5>sqrt(.Machine$double.eps)]))
 
     if(dotArgs$debug) {
       cat('log C', lc, '\n')
@@ -231,11 +230,10 @@ cgeneric_graphpcor <-
         sigmaref = as.numeric(sigma.prior.reference),
         sigmaprob = as.numeric(sigma.prior.probability),
         lconst = as.numeric(lc),
+        thetabase = as.numeric(attr(Ibase, "base")),
         thetabasescaled = as.numeric(thetabasescaled),
-        thetab = as.numeric(attr(Ibase, "base")),
-        hHneg = attr(Ibase, "hneg.5"),
-        H = matrix(new("numeric", Ibase),
-                   nrow(Ibase))
+        Ihalf = attr(Ibase, "h.5"),
+        Inegh = attr(Ibase, "hneg.5")
       )
     )
     return(the_model)

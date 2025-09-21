@@ -2,10 +2,14 @@ library(graphpcor)
 
 ## graph in Example 2.6 of the GMRF book
 g <- graphpcor(x1~x2+x3, x2~x4, x3~x4)
+g
 (ne <- dim(g))
 
 ## Laplacian
 (G <- Laplacian(g))
+
+all.equal(g, graphpcor(G))
+all.equal(g, graphpcor(G!=0))
 
 ## base model (theta for L)
 theta0l <- rep(-0.3, ne[2])
@@ -99,18 +103,18 @@ cmodel$f$cgeneric$data$doubles$thetabasescaled
 drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta0l)
 
 round(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]), 3)
-##        [,1]   [,2]   [,3]   [,4]
-## [1,]  0.928 -0.112 -0.078 -0.008
-## [2,] -0.112  0.945 -0.035 -0.046
-## [3,] -0.078 -0.035  1.014 -0.004
-## [4,] -0.008 -0.046 -0.004  1.001
+###        [,1]   [,2]   [,3]   [,4]
+### [1,]  2.855 -0.126 -0.052 -0.002
+### [2,] -0.126  1.916 -0.018 -0.029
+### [3,] -0.052 -0.018  1.005 -0.001
+### [4,] -0.002 -0.029 -0.001  1.003
 
 drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta.low)
-## [1] -0.7301962 -0.7520235 -0.8969525 -0.9432227
+##[1] -2.6759597 -1.7432539 -0.9338943 -0.9716843
 
 drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta.low) -
     cmodel$f$cgeneric$data$doubles$thetabase
-## [1] -0.5111374 -0.5264165 -0.6278668 -0.6602559
+## [1] -1.873172 -1.220278 -0.653726 -0.680179
 
 Q1c <- prec(cmodel, theta = theta1)
 
@@ -262,4 +266,84 @@ for(i in 1:length(lambs)) {
         abline(v=th.base[k])
     }
 }
+
+
+
+#############################################################################
+####
+
+rho0 <- c(-0.3, 0.7)
+C0 <- matrix(c(1, rho0, 
+               rho0[1], 1, prod(rho0), 
+               rho0[2], prod(rho0), 1), 3)
+
+library(graphpcor)
+gpc <- graphpcor(x1 ~ x2 + x3)
+
+H <- hessian(gpc, x = C0)
+(theta0 <- attr(H, "base"))
+
+ptheta <- function(theta, H) {
+    xi <- attr(H, "h.5") %*% (theta - attr(H, "base"))
+    rphi <- graphpcor:::x2rphi(xi)
+    
+}
+
+all.equal(C0,
+          vcov(gpc, theta = theta0))
+prec(gpc, theta = theta0)
+
+cpc <- cgeneric(gpc, base = theta0, lambda = 5,
+          ##      debug = 100000,
+                useINLAprecomp = FALSE)
+
+graph(cpc)
+
+all.equal(prec(cpc, theta = theta0),
+          prec(gpc, theta = theta0))
+
+all.equal(prec(cpc, theta = theta0+c(0.33, -0.1)),
+          prec(gpc, theta = theta0+c(0.33, -0.1)))
+
+prior(cpc, theta = cbind(c(0,0), c(1,1)))
+
+h0 <- 0.05
+x0 <- seq(-10+h0/2, 10-h0/2, h0)
+nx0 <- length(x0)
+xx <- t(expand.grid(x0 + theta0[1],
+                    x0 + theta0[2]))
+
+summary(t(xx))
+
+dxx <- prior(cpc, theta = xx)
+
+dxx2 <- matrix(exp(dxx), nx0)
+
+sum(h0 * rowSums(dxx2*h0))
+sum(h0 * colSums(dxx2*h0))
+
+par(mfrow = c(1, 2))
+plot(x0+theta0[1], rowSums(dxx2*h0))
+plot(x0+theta0[2], colSums(dxx2*h0))
+
+
+library(plot3D)
+
+surf3D(matrix(xx[1, ], nx0),
+       matrix(xx[2, ], nx0),
+       matrix(exp(dxx), nx0), 
+       colkey = !TRUE,
+       xlab = '', ylab  = '', zlab = '',
+       box = TRUE, bty = "b")
+
+  text(-0.15, -0.43, expression(xi[1]), adj = 1)
+  text(0.28, -0.37, expression(xi[2]), adj = 1)
+  legend("topleft", bty = "n", as.expression(llab[[i]]), cex = 2)
+
+
+ribbon3D(x0+theta0[1], x0+theta0[2],
+         matrix(exp(dxx), nx0),
+         ticktype = 'detailed',
+         curtain = TRUE)
+
 

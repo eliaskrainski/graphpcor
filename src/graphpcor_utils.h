@@ -88,6 +88,7 @@
 
 double cov2kld(int n, double *C0, double *C1);
 double pclogsigma(double lsigma, double lam);
+double pcmultivar0(int m, double lam, double *theta);
 void L2Cupper(int n, double *ll, double *cc);
 void correlation_parent_children(int np, int N, int niiv, int *iiv, int *jjv, int *ipar, int *itop, double *sch, double *v2, double *CC);
 void cov2cor(int n, double *cc);

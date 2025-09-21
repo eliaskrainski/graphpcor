@@ -7,6 +7,8 @@ x <- rnorm(m)
 to.x <- graphpcor:::rphi2x
 to.rphi <- graphpcor:::x2rphi
 
+table(replicate(1000, {x <- rnorm(10); all.equal(x, to.x(to.rphi(x)))}))
+
 print(mean(abs(to.x(to.rphi(x)) - x)))
 
 jacobian(to.rphi, x)
@@ -22,8 +24,20 @@ print(1/abs(det(jacobian(to.x, xx))))
 r <- xx[1]
 phi <- xx[-1]
 
-print(ld.a <- (m-1) * log(r) + (m-2) * log(sin(phi[1]))  +
-      (m-3) * log(sin(phi[2])) + (m-4) * log(sin(phi[3])) +
+ldJfn <- function(rphi) {
+    m <- length(rphi)
+    out <- (m-1)*log(rphi[1])
+    if(m>2)
+        out <- out + sum( (m-2):1 * log(sin(rphi[2:(m-1)])) )
+    return(out)
+}
+
+ldJfn(xx)
+
+print(ld.a <- (m-1) * log(r) +
+          (m-2) * log(sin(phi[1])) +
+          (m-3) * log(sin(phi[2])) +
+          (m-4) * log(sin(phi[3])) +
           (m-5) * log(sin(phi[4])))
 print(ld.num <- determinant(jacobian(to.x, xx))$modulus)
 

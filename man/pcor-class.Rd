@@ -34,12 +34,12 @@ Compute \deqn{\theta = r\mathbf{H}^{-1/2}\textbf{s}+\theta_0},
 where \deqn{\mathbf{H}} is the Hessian of the
 KLD around the base model.}
 
-\item{p}{integer with the dimention, number of rows
+\item{p}{integer with the dimension, number of rows
 and columns of the correlation matrix.}
 
 \item{parametrization}{character to specify the
 parametrization choice: "ITP" (or "itp"),
-"SAP" (or "sap"), "CPC" (or "cpc"), see details.}
+"SAP" (or "tap"), "CPC" (or "cpc"), see details.}
 
 \item{itheta}{integer vector to specify the position
 'theta' will be placed in the (initial, before fill-in)
@@ -69,7 +69,7 @@ a pcor object
 a \code{pcor} object
 }
 \description{
-Organize information to buidl a correlation prior
+Organize information to build a correlation prior
 that penalizes the divergence from a base correlation matrix,
 and helper functions to work with correlation matrices.
 }
@@ -84,7 +84,7 @@ and the two \eqn{p\times p} matrices
   1 & & & & \\
   r_1 & 1 & & & \\
   r_2 & r_p & 1 & & \\
-  \vdots & \vdots & \ddots & \ddots & \\
+  \vdots & \vdots & \ddo & \ddots & \\
   r_{p-1} & r_{2p-3} & \ldots & r_m & 1
 \end{array} \right]
 \textrm{ and } B = \left[

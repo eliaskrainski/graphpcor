@@ -1,17 +1,17 @@
 #' @rdname pcor-class
 #' @description
-#' Organize information to buidl a correlation prior
+#' Organize information to build a correlation prior
 #' that penalizes the divergence from a base correlation matrix,
 #' and helper functions to work with correlation matrices.
 #' @param base numeric/matrix used to define the base
 #' correlation matrix. If numeric vector with length 'm',
 #' 'm' should be 'p(p-1)/2' in the dense case and
 #' 'length(itheta)' in the sparse case.
-#' @param p integer with the dimention, number of rows
+#' @param p integer with the dimension, number of rows
 #' and columns of the correlation matrix.
 #' @param parametrization character to specify the
 #' parametrization choice: "ITP" (or "itp"),
-#' "SAP" (or "sap"), "CPC" (or "cpc"), see details.
+#' "SAP" (or "tap"), "CPC" (or "cpc"), see details.
 #' @param itheta integer vector to specify the position
 #' 'theta' will be placed in the (initial, before fill-in)
 #' Cholesky factor in the IT. Default is missing.
@@ -36,7 +36,7 @@
 #'   1 & & & & \\
 #'   r_1 & 1 & & & \\
 #'   r_2 & r_p & 1 & & \\
-#'   \vdots & \vdots & \ddots & \ddots & \\
+#'   \vdots & \vdots & \ddo & \ddots & \\
 #'   r_{p-1} & r_{2p-3} & \ldots & r_m & 1
 #' \end{array} \right]
 #' \textrm{ and } B = \left[
