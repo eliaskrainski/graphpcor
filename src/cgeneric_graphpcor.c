@@ -147,14 +147,14 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 			sigmas[i] = exp(actualtheta[i]);
 		}
-
+/*
 		if (debug > 99) {
 			printf("number of fixed sigma = %d\n", nsfixed);
 			for (i = 0; i < N; i++)
 				printf("%d ", sfixed[i]);
 			printMat(sigmas, 1, N, "\nsigmas\n");
 		}
-
+*/
 		for (i = 0; i < ne; i++) {
 			actualtheta[itheta->ints[N + i]] = theta[k++];
 		}
@@ -163,11 +163,13 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			bxi[i] =  data->doubles[5]->doubles[i];
 		}
 
+		/*
 		 if (debug > 99) {
 		   printMat(bxi, 1, ne, "bxi:\n");
 		   printMat(data->mats[0]->x, ne, ne, "I.5\n");
 		   printMat(data->mats[1]->x, ne, ne, "Ineg.5\n");
 		 }
+*/
 
 		int one = 1;
 		char trans = 'N';
@@ -178,9 +180,11 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		dgemv_(&trans, &ne, &ne, &alpha, &data->mats[0]->x[0],
          &ne, &actualtheta[N], &one, &beta, &bxi[0], &one, F_ONE);
 
-		if (debug > 99) {
+		/*
+		 if (debug > 99) {
 			printMat(bxi, 1, ne, "actual bxi:\n");
 		}
+*/
 
 	} else {
 		for (i = 0; i < N; i++) {
@@ -235,9 +239,10 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 
+		/*
 		 if (debug > 9999) {
 			printMat(ll, N, N, "L[i,j]:\n");
-		}
+		 }*/
 
 		// add low theta to L
 		k = 0;
@@ -253,17 +258,17 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 		if (nfi > 0) {
 
-
+		  /*
 	    if (debug > 9999) {
 				printf("filling %d entries\n", nfi);
-			}
+			}*/
 
 			fillL(&N, &nfi, &ifi->ints[0], &jfi->ints[0], &ll[0]);
 
-
+		  /*
 		   if (debug > 9999) {
 				printMat(ll, N, N, "L[i,j]:\n");
-			}
+		   }*/
 
 
 		}
@@ -275,7 +280,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 
-
+		/*
 		 if (debug > 9999) {
 			printf("L0 (upper)\n");
 			k = 0;
@@ -285,7 +290,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
+		 } */
 
 
 		// chol2inv: to compute V0 = Q_0^{-1}
@@ -293,7 +298,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		char uplo = 'L';
 		dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-
+		/*
 		 if (debug > 9999) {
 			printf("V0 (upper)\n");
 			k = 0;
@@ -304,7 +309,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("\n");
 			}
 		}
-
+*/
 
 		// si = diag(V0)^{1/2}
 		// C = diag(1/si) V0 diag(1/si)
@@ -315,9 +320,10 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			k += (N - i);
 		}
 
-		if (debug > 999) {
+		/*
+		 if (debug > 999) {
 			printMat(si, 1, N, "si:\n");
-  	}
+		 } */
 
 		k = 0;
 		for (i = 0; i < N; i++) {
@@ -326,7 +332,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 
-		if (debug > 9999) {
+		/*
+		 if (debug > 9999) {
 			printf("V (upper)\n");
 			k = 0;
 			for (i = 0; i < N; i++) {
@@ -335,12 +342,12 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
+		 } */
 
 		// chol(V)
 		dpptrf_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-
+		/*
 		if (debug > 9999) {
 			printf("chol(V) (upper)\n");
 			k = 0;
@@ -350,13 +357,13 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
+		} */
 
 
 		// Q = chol2inv(chol(V))
 		dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-
+		/*
 		 if (debug > 9999) {
 			printf("Q (upper)\n");
 			k = 0;
@@ -366,7 +373,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
+		 } */
 
 
 		// copy the non-zero to return
@@ -428,17 +435,16 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		  }
 		}
 		r = sqrt(r);
-		if(debug>0) {
-		  printf("r = %2.5f", r);
+
+		if(debug>99999) {
+		  printf("r = %2.5f \n", r);
 		}
 
 		double smallr = 0.00001;
 		if(r<smallr) {
-		  r = 0.5*smallr + (r-0.5*smallr)/(smallr - 0.5*smallr);
+		  r += (smallr - r)* 0.5;
 		}
-		if(debug>0) {
-		  printf(" r' = %2.5f", r);
-		}
+
 		pxi -= lambda * r;
 		if(ne>1) { // sphere surface area ( already added 1/2 )
 		  pxi += lgamma(((double)ne) * 0.5);
