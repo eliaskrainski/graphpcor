@@ -1,0 +1,839 @@
+---
+title: "Multivariate Penalized Complexity Prior"
+output: 
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+author: "Elias T Krainski and Håvard Rue"
+date: "Updated in `r format(Sys.time(), '%B, %d - %Y')`"
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  include = TRUE, 
+  message = FALSE,
+  warning = FALSE,
+  fig.align='center',
+  fig.width = 7, 
+  fig.height = 4, 
+  out.width = '0.59\\textwidth')
+library(graphpcor)
+library(plot3D)
+
+```
+
+# Abstract
+
+The derivation of the 
+multivariate penalized complexity prior 
+is detailed and some illustrative examples given.
+
+# Introduction
+
+A key ingredient in statistical models is the distribution 
+assumed for a random variable in the model.
+A probability density function, (in short) distribution, is 
+a non-negative mathematical function whose domain is 
+the random variable and integrates to one.
+For a random vector $\bx$, where each 
+element is a random variable,  
+a chosen distribution to model $\bx$,
+$\pi_{\bx}(\bxi|\bgamma)$, is indexed by 
+a $m$ dimentional vector $\bgamma$, 
+the model parameters.
+When learning about the model parameters through Bayesian 
+inference, prior information about it is considered.
+The prior information is represented by a distribution itself, 
+which has parameters as well.
+
+The aim to construct a prior distribution for $\bgamma$, 
+$\pi_{\bgamma}(\bgamma|\lambda)$, 
+where $\lambda$ is the prior parameter,
+assumed here to be a scalar.
+@simpsonetal2017 proposed a new concept. 
+Instead of searching for a distribution for $\bgamma$, 
+that better represent the prior beliefs, 
+it was proposed to start with a base model, 
+which is understood as a simpler model when 
+$\bgamma=\bgamma_0$ in $\pi_{\bx}(\bx|\bgamma_0)$. 
+Then, define the prior from a distribution to
+penalize deviations from the base model, 
+the penalized complexity prior, or PC-prior.
+
+The domain of $\bgamma$ may be bounded. 
+This is the case of variance parameters that are positive and
+correlations which are between $-1$ and $1$.
+In such case, a practical approach is to consider a mapping 
+$\bgamma = \mathbf{h}(\btheta)$ such that
+$\mathbf{h}^{-1}(\bgamma)$ = 
+$\btheta \in \mathbf{R}^{m}$. 
+By considering this mapping to be defined by
+$m$ univariate transformations
+$\btheta=
+\{\theta_1=h_1(\gamma_1), \ldots, \theta_m = h_m(\gamma_m)\}$, 
+where $h_j()$ is the identity function if $\gamma_j$ is unbounded,
+we have 
+\[
+\pi_{\bgamma}(\bgamma|\lambda|\bgamma_0) =
+\pi_{\btheta}(\mathbf{h}^{-1}(\bgamma)|\lambda,\mathbf{h}^{-1}(\bgamma_0)) 
+\prod_{k=1}^{m}\frac{\partial h_k^{-1}(\gamma_k)}{\partial \gamma_k} .
+\]
+
+The proposal is to penalize a Kullback-Leibler divergence (KLD).
+The KLD is not a metric but a divergence, a statistical distance, 
+used to measure how much a model is different from the true model.
+The approach is to replace the true model by the base model.
+If $\mathbf{x}$ follows a multivariate Gaussian distribution, 
+$\mathbf{x}\sim N(\bmu, \Sigma)$, the KLD of model
+$\pi_\mathbf{x}(\mathbf{x}|\btheta)$
+to the base model, $\pi_{\mathbf{x}}(\mathbf{x}|\btheta_0)$, is
+\[\textrm{KLD}(\btheta,\btheta_0) = 
+\frac{1}{2}\left\{ \textrm{trace}(\Sigma_0^{-1}\Sigma) +
+(\bmu-\bmu_0)^T\Sigma_0(\bmu-\bmu_0)-m
+-\log{|\Sigma|} + \log{|\Sigma_0|} \right\} \]
+where $\bmu$ and $\Sigma$ are functions of $\btheta$.
+
+For $\theta_0$ in the interior of the parameter space,
+the KLD behaves quadratically, which leads to 
+\[\textrm{KLD}(\btheta,\btheta_0) \approx 
+\frac{1}{2}(\btheta-\btheta_0)^T\mathbf{I}(\btheta_0)
+(\btheta-\btheta_0) \]
+where $\mathbf{I}(\btheta_0)$ is the Hessian,
+or Fisher information matrix, around $\btheta_0$.
+The goodness of such approximation depends on the chosen
+model's parametrization for $\pi_{\bx}(\mathbf{x}|\btheta)$.
+This led us to define a location scale transformation 
+$\bxi = \mathbf{I}(\btheta_0)^{1/2}(\btheta-\btheta_0)$, 
+along with $\btheta = \mathbf{I}(\btheta_0)^{-1/2}\bxi + \btheta_0$.
+This scaling makes $\bxi$ unitless, scale-invariant, and takes into 
+account the correlations between $\btheta$, 
+in the information geometric sense 
+because the natural gradient through 
+$\mathbf{I}(\btheta_0)$ was used for the scaling.
+The prior for $\btheta$ is then computed as
+\[\pi_{\btheta}(\btheta|\lambda) = 
+\pi_{\bxi}(\bxi|\lambda)
+|\textrm{det}(\mathbf{I}(\btheta_0)^{1/2})| \]
+where $\pi_{\bxi}(\bxi|\lambda)$ is the PC-prior for $\bxi$, 
+and, as the determinant of $\mathbf{I}(\btheta_0)^{1/2}$
+does not depend on $\btheta$, it need to be computed only once.
+If $\theta_0$ does not represent a simpler model, 
+the approach can still be considered. 
+Such cases may lead the assignment of an informative prior, 
+and such approximation makes $\theta_0$ its mode.
+
+# The univariate PC-prior
+
+From the aforementioned assumptions and definitions we consider
+$\sqrt{2\textrm{KLD}(\btheta,\btheta_0)} \approx \sqrt{\bxi^T\bxi} = d(\bxi)$. 
+We have that $d(\btheta_0)=0$ and 
+$d(\btheta)>0$ if $\btheta \neq \btheta_0$.
+The proposal in @simpsonetal2017 assume 
+$d(\bxi)\sim\textrm{Exponential}(\lambda)$.
+Considering
+$\xi \in \mathbb{R}$ and $r$ = $d(\xi)$ = $\sqrt{\xi^2}$ = $|\xi|>0$ gives $\pi_{\xi}(\xi|\lambda)$ = 
+$\frac{1}{2}\pi_{d(\xi)}(d(\xi)|\lambda)$ =
+$\frac{\lambda}{2}\textrm{e}^{-\lambda|\xi|}$
+which is the Laplace distribution 
+with zero mean and precision $\lambda$.
+Applying $m=1$ in the formula for the multivariate PC-prior 
+in the next section gives the same result.
+In Figure 1 we show this density 
+for some values of $\lambda$.
+
+\begin{figure}
+\label{fdm1}
+```{r m1}
+lseq <- c(0.3, 1, 5)
+llab <- lapply(lseq, function(l) 
+  bquote(lambda == .(l)))
+nl <- length(lseq)
+lcol <- c(1,1,1)#2, 4)
+b <- 3; a <- -b
+h  <- 0.05
+x0 <- seq(a+h/2, b-h/2, h)
+nx0 <- length(x0)
+
+par(mfrow = c(1,1), mar = c(3,3,0,0), mgp = c(2,0.5,0), 
+    las = 1, bty = "n")
+plot(function(x) 0.5*lseq[nl]*exp(-abs(x)*lseq[nl]), 
+     a, b, n = 2001, type = 'n',
+     xlab = expression(xi), 
+     ylab = expression(pi[xi](xi~"|"~lambda)),
+     main = '')
+for(i in 1:nl) {
+  plot(function(x) 0.5*lseq[i]*exp(-abs(x)*lseq[i]), 
+       a, b, n = 2001, add = TRUE, 
+       col = lcol[i], lty = i, lwd = 2)
+}
+legend("topleft", bty = "n", 
+       as.expression(llab), 
+       col = lcol, lty = 1:nl, lwd = 2) 
+```
+\caption{The Laplace density function for some values of $\lambda$.}
+\end{figure}
+
+## Example 
+
+Suppose we want to model a bivariate random vector 
+$\mathbf{x}=\{x_1, x_2\}$ and assume that it follows a
+bivariate Gaussian distribution.
+We assume that the mean of both variables is zero and 
+unit marginal variances. 
+In this case we have the correlation parameter to infer, $\rho$.
+We define
+\[ \mathbf{C}(\rho) = \left[ \begin{array}{cc} 
+1 & \rho \\
+\rho & 1 
+\end{array} \right] \]
+so we have
+$\mathbf{x}|\rho \sim \textrm{N}(0, \mathbf{C}(\rho))$. 
+
+The first step is to consider the map from the 
+(bounded) model parameter, $\rho\in(-1,1)$ to $\theta$. 
+We choose to define 
+$g(\rho)=\textrm{tanh}(\rho)=\theta$ and 
+$g^{-1}(\theta) = \textrm{tanh}^{-1}(\rho)=\textrm{atanh}(\rho)$,
+which gives $\partial g^{-1}(\rho)=1/(1-\rho^2)$
+leading to 
+\[
+\pi_\rho(\rho|\lambda) = \pi_\theta(\theta|\lambda)/(1-\rho^2).
+\]
+
+The next step is to define a base model as a model 
+when the parameter assume a particular value in 
+the interior of the parametric domain.
+We assume a $\textrm{N}(0, \mathbf{C}(\theta_0))$. 
+This gives the Kullback-Leibler divergence as
+\[
+\textrm{KLD}(\theta,\theta_0) = \frac{1}{2} \left(
+\frac{1-\textrm{tanh}(\theta)\textrm{tanh}(\theta_0)}
+{1-\textrm{tanh}(\theta_0)^2} - 2
+-\textrm{log}(1-\textrm{tanh}(\theta)^2) +
+\textrm{log}(1-\textrm{tanh}(\theta_0)^2) \right) .\]
+and
+\[ \begin{array}{rcl}
+\mathbf{I}(\theta_0) & = &  
+\frac{\partial^2}{\partial\theta^2}\frac{1}{2}
+\left(
+  \frac{1-\textrm{tanh}(\theta_0)\tanh{\theta}}{1-\textrm{tanh}(\theta_0)^2}-2
+-\textrm{log}(1-\textrm{tanh}^2(\theta))+\textrm{log}(1-\textrm{tanh}(\theta_0)^2) \right)\\
+ & = & \frac{\partial}{\partial\theta} \left( \frac{(1-\textrm{tanh}^2(\theta))\textrm{tanh}(\theta_0)}{1-\textrm{tanh}(\theta_0)^2}+\textrm{tanh}(\theta) \right) \\
+ & = & \frac{2\textrm{tanh}(\theta)(1-\textrm{tanh}^2(\theta))\textrm{tanh}(\theta_0)}{1-\textrm{tanh}(\theta_0)^2} + 
+ 1-\textrm{tanh}^2(\theta)
+ \overset{\theta=\theta_0}{=}
+1 - \textrm{tanh}^2(\theta_0) 
+ \end{array} \]
+This gives
+\[
+\pi_\theta(\theta|\lambda) = \pi_\xi(\xi|\lambda)\sqrt{1-\textrm{tanh}^2(\theta_0)}. 
+\]
+
+Following the steps we have 
+$\bxi = \mathbf{I}(\theta_0)^{1/2}(\theta - \theta_0)$ = 
+$\sqrt{(1-\textrm{tanh}^2(\theta_0))}(\theta-\theta_0)$, 
+which gives 
+\[ \pi_\rho(\rho|\lambda) = 
+\frac{\lambda\sqrt{(1-\rho_0^2)}}{2(1-\rho^2)}\textrm{e}^{-\lambda
+|\sqrt{(1-\rho_0^2)}(\textrm{atanh}(\rho)-\textrm{atanh}(\rho_0))|}.
+\]
+We can see this density computed at different base models, 
+for some values of $\lambda$ in Figure 3.
+
+
+\begin{figure}
+\label{fdrho}
+```{r rho0, out.width='0.99\\textwidth', fig.width=9, fig.height=3}
+drho <- function(rho, rho0, l) {
+  x0 <- atanh(rho0)
+  I0 <- 1-rho0^2
+  x <- atanh(rho)
+  sI0 <- sqrt(I0)
+  xi <- sI0 * (x - x0)
+  ld <- log(l*sI0/2) -l*abs(xi) -log(1-rho^2)
+  exp(ld) 
+}
+rho0s <- c(-0.5, 0, 0.7)
+
+if(FALSE)
+  sapply(rho0s, function(r)
+    sapply(lseq, function(l)
+        integrate(function(x) drho(x,r,l),-1,1)$val))
+
+par(mfrow = c(1, 3), mar = c(4,4,1,1), mgp = c(3,1,0), las = 1)
+for(k in 1:3) {
+  plot(function(x) drho(x,rho0s[k],lseq[nl]), 
+       -1, 1, n=1001, type = "n", bty = "n", 
+       xlab = expression(rho), 
+       ylab = expression(pi[rho](rho~"|"~lambda~","~rho[0])))
+  for(i in 1:nl) {
+    plot(function(x) drho(x, rho0s[k], lseq[i]), 
+         -1, 1, n=1001, add = TRUE, col = lcol[i], lty = i, lwd = 2)
+  }
+}
+legend("top", bty = "n", 
+       as.expression(llab), 
+       ##title = expression(lambda), 
+       col = lcol, lty = 1:nl, lwd = 2) 
+```
+\caption{Penalized complexity prior for $\rho$, 
+for different base models: $\rho_0=-0.5$ (left), 
+$\rho_0=0$ (center), and $\rho_0=0.9$ (rigth),
+for some $\lambda$ values.}
+\end{figure}
+
+
+# The multivariate penalized complexity prior
+
+The multivariate penalized complexity prior (MPCP) for $\bxi$ 
+is an extension of the univariate penalized complexity prior. 
+For $m>1$, let a manifold $\mathcal{M}$, 
+where $\bxi\in\mathcal{M}$, 
+be defined so that for each $d(\bxi) = r \geq 0$, the level sets
+$\bxi \in S_r=\{\bxi\in\mathcal{M}:d(\bxi)=r\}$,
+are embedded sub-manifolds decomposing
+$\mathcal{M}$ = $\mathbb{R}^+(\cup_{r\geq 0}S_r)$.
+The MPCP definition is completed by assuming that
+for each $d(\bxi) = r>0$, the coordinates $\bxi$ 
+are uniformly distributed in $S_r$.
+
+A convenient option is to consider 
+$\mathbf{g}(\bxi) = (r,\bvphi)$ to be
+a map from Cartesian to spherical coordinates,
+where $r$ is the radius and $\bvphi$ = 
+$\varphi_1,\ldots,\varphi_{m-1}$ the $m-1$ angles.
+The interpretation is that, for $r>0$, $\bxi$ lay on an $m-1$
+dimensional sphere surface with radius $r$. 
+With $m=2$, for each $r$, $S_r$ is a circle and 
+$\{r,S_r\}$ make up a cone like those shown in Figure 3.
+
+Under the uniform distribution assumption for the coordinates, 
+which lay on the ($m-1$)-surface area with radius $r=d(\bxi)$,
+in the Euclidean space, we have 
+\[
+\pi_{\bxi}(\bxi|\lambda) = 
+\frac{\lambda \textrm{e}^{-\lambda r}}{|S_r|} =
+\frac{\Gamma(m/2)}{2\pi^{m/2}r^{m-1}}
+\lambda \textrm{e}^{-\lambda r} 
+\]
+and, in the spherical space which is 
+useful for analytical computations, we have
+\[
+\pi_{r,\bvphi}(r,\bvphi|\lambda) = 
+\frac{\Gamma(m/2)}{2\pi^{m/2}r^{m-1}}
+\lambda \textrm{e}^{-\lambda r} 
+|\textrm{det}(\mathbf{J})|
+\]
+where $\mathbf{J}$
+is the Jacobian of $\mathbf{g}$, 
+$\mathbf{J}_{ij} = \frac{\partial g_i}{\partial \varepsilon_j}$,
+that gives
+$\textrm{det}(\mathbf{J})$ =
+$r^{m-1}$ 
+$\sin^{m-2}(\varphi_1)$ 
+$\sin^{m-3}(\varphi_2)$ ... 
+$\sin(\varphi_{m-2})$.
+
+For $m=2$ we have $|S_{d(\bxi)}|$ = $2\pi r$, 
+giving
+\[
+\pi_{\bxi}(\xi_1,\xi_2|\lambda) =
+\frac{\lambda}{2\pi r}\textrm{e}^{-\lambda r}
+\]
+and we can use the polar coordinates case as
+\[\begin{array}{ccl|ccl}
+r & = & \sqrt{\xi_1^2+\xi_2^2} &
+\xi_1 & = & r\textrm{cos}(\varphi_1) \\
+\varphi_1 & = & 
+\textrm{atan2}(\xi_2,\xi_1) & 
+\xi_2 & = & r\textrm{sin}(\varphi_1) 
+\end{array}\]
+which gives $|\mathbf{J}|$ = $r$, so that
+\[ \begin{array}{rcl}
+\int_{\mathbb{R}} \int_\mathbb{R} 
+\frac{\lambda}{2\pi r}\textrm{e}^{-\lambda r}
+\partial \xi_1 \partial \xi_2  & = &
+\int_{0}^{2\pi}\int_{0}^{\infty}
+\frac{\lambda}{2\pi r}\textrm{e}^{-\lambda \sqrt{r^2\textrm{cos}^2(\theta)+r^2\textrm{sin}^2(\theta)}} 
+r \partial r \partial \theta \\
+ & = & \int_{0}^{2\pi}\int_{0}^{\infty}
+\frac{\lambda}{2\pi}
+\textrm{e}^{-\lambda r} 
+\partial r \partial \theta 
+\;\; = \;\; \int_{0}^{2\pi} 
+\frac{-1}{2\pi}
+\textrm{e}^{-\lambda r} {|}_{r=0}^{r=\infty} \partial \theta  \\
+ & = & \int_{0}^{2\pi} 
+\frac{1}{2\pi} \partial \theta 
+\;\; = \;\; \frac{\theta}{2\pi} {|}_{\theta=0}^{\theta=2\pi} = 1
+\end{array} \]
+We can visualize it in Figure 3, 
+for some values of $\lambda$.
+
+\begin{figure}
+\label{fdm2}
+```{r m2, out.width='0.99\\textwidth', fig.width=12, fig.height=5}
+dfn <- function(lambda) {
+  outer(x0, x0, function(a,b) {
+        r <- sqrt(a^2+b^2)
+        lambda*exp(-lambda*r)/(2*pi*r)})
+}
+d2 <- lapply(lseq, function(l) dfn(l))
+par(mfcol = c(1, 3), mar = c(0,0,3,0))
+for(i in 1:nl) {
+  bkz <- exp(seq(log(min(d2[[i]]))-1e-9, 
+                 log(max(d2[[i]]))+1e-9, length = 65))
+  surf3D(matrix(x0, nx0, nx0), 
+         matrix(rep(x0, each = nx0), nx0), 
+         matrix(d2[[i]], nx0), 
+         breaks = bkz, colkey = !TRUE,
+         xlab = "", 
+         ylab  = "", 
+         zlab = 'Density',
+         box = TRUE, bty = "b", phi = 20, theta = 30)
+  text(-0.15, -0.43, expression(xi[1]), adj = 1)
+  text(0.28, -0.37, expression(xi[2]), adj = 1)
+  legend("topleft", bty = "n", as.expression(llab[[i]]), cex = 2)
+}
+
+```
+\caption{Bivariate Penalized Complexity prior, around $\bxi_0$,
+for some values of $\lambda$.}
+\end{figure}
+
+For $m=3$ we have $|S_{d(\bxi)}|$ = $4\pi r^2$, giving
+\[
+\pi_{\bxi}(\xi_1,\xi_2,\xi_3|\lambda) =
+\frac{\lambda\textrm{sin}(\varphi_1)}{4\pi}
+\textrm{e}^{-\lambda r} .
+\]
+The mapping is defined as
+\[\begin{array}{ccl|ccl}
+r & = & \sqrt{\xi_1^2+\xi_2^2+\xi_3^2} &
+\xi_1 & = & r\textrm{cos}(\varphi_1) \\
+\varphi_1 & = & 
+\textrm{atan2}(\sqrt{\xi_2+\xi_3^2},\xi_1) & 
+\xi_2 & = & r\textrm{sin}(\varphi_1)\textrm{cos}(\varphi_2) \\
+\varphi_2 & = & 
+\textrm{atan2}(\xi_3,\xi_2) & 
+\xi_3 & = & r\textrm{sin}(\varphi_1)\textrm{sin}(\varphi_2) .
+\end{array}\]
+Considering
+\[ \begin{array}{rcl}
+r^2 & = & \xi_1^2+\xi_2^2+\xi_3^2 \\
+ & = & r^2\textrm{cos}^2(\varphi_1) + 
+r^2\textrm{sin}^2(\varphi_1)\textrm{cos}^2(\varphi_2) +
+r^2\textrm{sin}^2(\varphi_1)\textrm{sin}^2(\varphi_2) \\
+& = & r^2 \{ \textrm{cos}^2(\varphi_1) +
+r^2\textrm{sin}^2(\varphi_1)[\textrm{cos}^2(\varphi_2)+\textrm{sin}^2(\varphi_2)]\} \\
+& = & r^2[\textrm{cos}^2(\varphi_1) +
+r^2\textrm{sin}^2(\varphi_1)] = r^2
+\end{array}\]
+and $|\mathbf{J}|$ = $r^2\textrm{sin}(\varphi_1)$,
+we verify that
+\[ \begin{array}{rcl}
+ \int_\mathbb{R} \int_\mathbb{R} \int_\mathbb{R} 
+\frac{\lambda \textrm{e}^{-\lambda r}}{4\pi r^2}
+\partial \xi_1 \partial \xi_2 \partial \xi_3 & = & 
+\int_0^{2\pi} \int_0^\pi \int_0^\infty 
+\frac{\textrm{sin}(\varphi_1)}{4\pi}
+\lambda \textrm{e}^{-\lambda r} 
+\partial r \partial \varphi_1 \partial \varphi_2 \\
+& = &
+\int_{0}^{2\pi} \int_{0}^{\pi}
+\frac{\textrm{sin}(\varphi_1)}{4\pi}
+(-\textrm{e}^{-\lambda r})|_{r=0}^\infty 
+\partial \varphi_1 \partial \varphi_2 =
+ \int_{0}^{2\pi} \int_{0}^{\pi}
+\frac{\textrm{sin}(\varphi_1)}{4\pi} \partial \varphi_1 \partial \varphi_2  \\
+ & = & \int_{0}^{2\pi} \frac{(-\textrm{cos}(x))}{4\pi}
+ |_{x=0}^{x=\pi} \partial \varphi_2 
+\;\; = \;\; \int_0^{2\pi} \frac{1}{2\pi} \partial \varphi_2
+\;\; = \;\; \frac{x}{2\pi}{|}_{x=0}^{x=2\pi} = 1
+\end{array} \]
+
+For $m>3$ we have the mapping defined as
+\[\begin{array}{ccl|ccl}
+r & = & \sqrt{\xi_1^2+\xi_2^2+\ldots+\xi_m^2} &
+\xi_1 & = & r\textrm{cos}(\varphi_1) \\
+\varphi_1 & = & 
+\textrm{atan2}(\sqrt{\xi_2^2+\ldots+\xi_m^2},\xi_1) & 
+\xi_2 & = & r\textrm{sin}(\varphi_1)\textrm{cos}(\varphi_2) \\
+& \vdots & & & \vdots & \\
+\varphi_{m-2} & = & 
+\textrm{atan2}(\sqrt{\xi_{m-1}^2+\xi_{m}^2},\xi_{m-2}) & 
+\xi_{m-1} & = &  r\textrm{sin}(\varphi_1)\ldots\textrm{sin}(\varphi_{m-2})\textrm{cos}(\varphi_{m-1}) \\
+\varphi_{m-1} & = & \textrm{atan2}(\xi_{m},\xi_{m-1}) &
+\xi_{m} & = & r\textrm{sin}(\varphi_1)\ldots\textrm{sin}(\varphi_{m-2})\textrm{sin}(\varphi_{m-1})
+\end{array} .\]
+
+
+## Example with $m=2$
+
+We consider a three dimentional random vector 
+$\mathbf{x}=\{x_1, x_2, x_3\}$ and assume that it follows a
+bivariate Gaussian distribution with zero mean vector
+and unit marginal variances. 
+Therefore, remains three correlations to be modeled:
+$\rho_{1,2}$ = Cor($x_1,x_2$),
+$\rho_{1,3}$ = Cor($x_1,x_3$) and
+$\rho_{2,3}$ = Cor($x_2,x_3$). 
+We assume that conditional on $x_1$, 
+the other two variables are independent, Cor($x_2,x_3|x_1$)=0. 
+This assumption can be taken by modeling the
+correlation matrix from the decomposition 
+$\mathbf{C}(\brho) = \mathbf{L}(\brho)\mathbf{L}(\brho)^T$, where
+\[ \mathbf{L}(\brho) = \left[ \begin{array}{ccc} 
+1 & 0 & 0 \\
+\rho_{1,2} & \sqrt{1-\rho_{1,2}^2} & 0 \\
+\rho_{1,3} & 0 & \sqrt{1-\rho_{1,3}^2}
+\end{array} \right] \textrm{ which gives } 
+\mathbf{C}(\brho) = \left[ \begin{array}{ccc} 
+1 & \rho_{1,2} & \rho_{1,3} \\
+\rho_{1,2} & 1 & \rho_{1,2}\rho_{1,3} \\
+\rho_{1,3} & \rho_{1,2}\rho_{1,3} & 1
+\end{array} \right]  \]
+giving a model with two parameters because 
+Cor($x_2,x_3$) now became $\rho_{1,2}\rho_{1,3}$.
+
+The next step is to consider the mapping from the model parameter. 
+We consider $\rho_1=\rho_{1,2}$, $\rho_2=\rho_{1,3}$ in 
+$\brho=\{\rho_1, \rho_2\}$ and 
+$\btheta=\{\textrm{atan}(\rho_1),
+\theta_2=\textrm{atan}(\rho_2)\}$.
+This gives 
+\[ \pi_{\brho}(\brho|\lambda) = 
+\frac{\pi_{\btheta}(\btheta|\lambda)}
+{\sqrt{(1-\rho_1^2)(1-\rho_2^2)}}.\]
+In the next step, 
+although possible to do it analytically,
+the computation of $\mathbf{I}(\btheta_0)$, 
+the Hessian for KLD($\btheta,\btheta_0$)
+will be performed numerically.
+
+The prior distribution for $\brho$, 
+computed for $\brho_0$=$\{-0.3,0.7\}$,
+can be seen in Figure 4,
+for some values of $\lambda$.
+
+\begin{figure}\label{frho2}
+```{r m2ex, out.width='0.99\\textwidth', fig.width=9, fig.height=3}
+c3m2r <- function(r) {
+  matrix(c(1,r[1],r[2], r[1],1,r[1]*r[2], r[2],r[1]*r[2],1), 3)
+}
+c3m2 <- function(x) {
+  c3m2r(tanh(x))
+}
+drho2 <- function(rho, rho0, l, H) {
+  x <- atanh(rho)
+  x0 <- atanh(rho0)
+  xi <- H$h.5 %*% (x - x0)
+  r <- sqrt(sum(xi^2))
+  ld <- log(l/r) + sum(log(H$s)) -0.5*sum(log(1-rho^2)) -l*r -log(2*pi)
+  exp(ld) 
+}
+
+rs0 <- seq(-0.99, 0.99, 0.03)
+nr0 <- length(rs0)
+rs0x <- as.matrix(expand.grid(a=rs0, b=rs0))
+rho0 <- c(-0.3, 0.7)
+
+C0 <- c3m2r(rho0)
+H <- list(
+    I0=hessian(function(x) 
+        graphpcor:::KLD10(c3m2(x), C0), 
+        x = atanh(rho0)))
+H$Hd <- svd(H$I0)
+H$s <- sqrt(pmax(H$Hd$d, 0.0))
+H$h.5 <- t(H$Hd$v %*% (t(H$Hd$u) * H$s))
+H$hneg.5 <- t(H$Hd$v %*% (t(H$Hd$u) / H$s))
+
+par(mfrow = c(1, 3), mar = c(0,1,0,2))
+for(i in 1:nl) {
+  d2 <- sapply(1:nrow(rs0x), function(j) 
+    drho2(rs0x[j, ], rho0, lseq[i], H))
+  bkz <- exp(seq(log(min(d2))-1e-9, 
+                 log(max(d2))+1e-9, length = 65))
+   surf3D(matrix(rs0, nr0, nr0), 
+          matrix(rep(rs0, each = nr0), nr0), 
+          matrix(d2, nr0), 
+          breaks = bkz, colkey = !TRUE,
+          xlab = '', ylab  = '', zlab = '',
+          box = TRUE, bty = "b")
+  text(-0.15, -0.43, expression(rho[1]), adj = 1)
+  text(0.28, -0.37, expression(rho[2]), adj = 1)
+  legend("topleft", bty = "n", as.expression(llab[[i]]), cex = 2)
+}
+
+```
+\caption{Joint prior for $\brho$, 
+  computed around $\brho_0$=$\{-0.3,0.7\}$, 
+  for some values of $\lambda$.}
+\end{figure}
+
+One way to look at the marginal priors for each 
+correlation pairs, including Cor($x_2$,$x_3$), is through sampling. 
+We can sample from the MPCP as suggested in @simpsonetal2017.
+Then we can evaluate $\mathbf{C}(\brho)$ at each sample
+and visualize histograms like in Figure 5.
+
+\begin{figure}\label{fcor3}
+```{r rm, out.width='0.99\\textwidth', fig.width=9, fig.height=3}
+rsphere <- function(n, m=2) {
+    t(sapply(1:n, function(i) {
+        z <- rnorm(m)
+        z <- z / sqrt(sum(z^2))
+    }))
+}
+rmpcp <- function(n, m, lambda = 1, Hneg.5, theta0) {
+  out <- rsphere(n, m) * rexp(n, lambda)
+  if(!missing(Hneg.5)) {
+    out <- out %*% Hneg.5
+  }
+  if(!missing(theta0)) {
+    out <- sweep(out, 2, -theta0)
+  }
+  return(out)
+}
+
+r2l <- lapply(1:nl, function(i) {
+  rx <- rmpcp(1000, 2, lseq[i], H$hneg.5, atanh(rho0))
+  r2 <- cbind(tanh(rx[, 1]), tanh(rx[, 2]))
+})
+
+h3l <- lapply(r2l, function(x)
+  list(h1 = hist(x[, 1], -20:20/20, plot = FALSE), 
+       h2 = hist(x[, 2], -20:20/20, plot = FALSE), 
+       h3 = hist(x[, 1] * x[, 2], -20:20/20, plot = FALSE)))
+yl <- c(0, max(unlist(lapply(h3l, lapply, function(x) max(x$density)))))
+
+lfill <- c(gray(0.3, 0.5), rgb(0:1, 0, 1:0, 0.5))
+
+par(mfrow = c(1, 3), mar = c(3,3,0,0), mgp = c(2,0.5,0))
+xlb <- c("Cor(X1,X2)", "Cor(X1,X3)", "Cor(X2,X3)")
+for(k in 1:3) {
+  plot(h3l[[1]][[k]], freq = FALSE, 
+       col = lfill[1], border = lfill[1], ylim = yl,
+       xlab = xlb[k], main = '')
+  for(i in 2:3)
+    plot(h3l[[i]][[k]], freq = FALSE, 
+         add = TRUE, col = lfill[i], border = lfill[i])
+}
+legend('topright', as.expression(llab), 
+       fill = lfill, border = lfill)
+```
+\caption{Histograms for the three correlation pairs computed from 
+samples of the MCPC prior, for some values of $\lambda$.}
+\end{figure}
+
+We now consider a more natural way to consider the assumption
+Cor($X_2$, $X_3$ |, $X_1$)=0.
+This assumption can be represented in the precision matrix, 
+$\mathbf{Q}(\btheta)$.
+which is a symmetric positive definite matrix and is zero 
+for the entries $\mathbf{Q}(\btheta)_{2,3}=\mathbf{Q}(\btheta)_{3,2}=0$.
+We start with the Cholesky decomposition of an initial precision matrix 
+$\mathbf{Q}_0(\btheta) = \mathbf{L}_0(\btheta)\mathbf{L}_0(\btheta)^{T}$
+where 
+\[\mathbf{L}_0(\btheta) = \left[
+\begin{array}{ccc}
+1 & 0 & 0 \\
+\theta_1 & 1 & 0 \\
+\theta_2 &  {\color{red} -\theta_{1}\theta_{2}} & 1 
+\end{array} \right] \textrm{ and so }
+\mathbf{Q}_0(\btheta) = \left[
+\begin{array}{ccc}
+1 & \theta_1 & \theta_2 \\
+\theta_1 & 1+\theta_1^2 & 0 \\
+\theta_2 &  0 & 1+(1+\theta_1^2)\theta_2^2
+\end{array} \right]
+\]
+and scale it in order to have 
+a precision matrix whose inverse is a correlation matrix. 
+This is done by defining 
+$\mathbf{C}(\btheta) = 
+\mathbf{S}_{0}^{-1}(\btheta) \Sigma_{0}(\btheta) \mathbf{S}_0^{-1}\btheta$, 
+where $\Sigma_0(\btheta) =\mathbf{Q}_0(\btheta)$ and 
+$\mathbf{S}_0(\btheta)$ is a diagonal matrix whose diagonal elements 
+are the square root of the diagonal elements of $\Sigma_0(\btheta)$.
+Notice that the model parameter space, for $\btheta$, is unbounded
+and we do not need to to the first mapping.
+
+The choice of a base model is not straightforward. 
+The model parameters are elements of the Cholesky factor
+of the initial precision matrix, thus not easy to interpret.
+However, we can compute $\btheta_0$ from a given 
+base correlation matrix. 
+But, not all correlation matrices are allowed because of the
+conditional independence assumption.
+Thus, for a given correlation matrix we check if it fulfill 
+the model assumption by checking if its inverse is zero at 
+its entries $[2,3]$ and $[3,2]$.
+If so, $\btheta_0$ can be computed by doing the reverse of the computations from a given base correlation matrix. 
+
+We can do it with the following script
+```{r gpc, echo = TRUE}
+rho0 <- c(-0.3, 0.7)
+C0 <- matrix(c(1, rho0, 
+               rho0[1], 1, prod(rho0), 
+               rho0[2], prod(rho0), 1), 3)
+
+library(graphpcor)
+gpc <- graphpcor(x1 ~ x2 + x3)
+H <- hessian(gpc, x = C0)
+(theta0 <- attr(H, "base")) 
+all.equal(C0,
+          vcov(gpc, theta = theta0))
+```
+
+We evaluate $\pi_{\btheta}(\btheta|\lambda)$ 
+with the `cgeneric` query function from the 
+\textsf{\textbf{INLAtools}} package. 
+For that, we consider a grid of values around $\btheta_0$. 
+The marginals can be computed by numerical integration.
+
+```{r cprior, out.width='0.99\\textwidth', fig.width=9, fig.height=3}
+## set up a grid of theta around theta0
+h <- 0.01
+th0s <- seq(-1.5+h/2, 1.5-h/2, h)
+nth0 <- length(th0s) 
+th0x <- t(expand.grid(th0s + theta0[1], 
+                      th0s + theta0[2])) ## each column: theta
+
+dth <- lapply(lseq, function(lambda) {
+  cm <- cgeneric(gpc, base = C0, 
+                 lambda = lambda, 
+                 useINLAprecomp = FALSE)  ## under development vs
+  matrix(exp(prior(cm, theta = th0x)), nth0)
+})
+
+par(mfrow = c(1, 2), mar = c(4,4,1,1), mgp = c(3,1,0))
+plot(th0s + theta0[1], rowSums(dth[[nl]])*h, type = 'n', 
+     xlab = expression(theta[1]), 
+     ylab = expression(pi[theta[1]](theta[1]~"|"~lambda)))
+for(i in 1:nl) {
+  lines(th0s + theta0[1], 
+        rowSums(dth[[i]])*h, lty = i)
+}
+plot(th0s + theta0[2], colSums(dth[[nl]])*h, type = 'n', 
+     xlab = expression(theta[2]), 
+     ylab = expression(pi[theta[2]](theta[2]~"|"~lambda)))
+for(i in 1:nl) {
+  lines(th0s + theta0[2], 
+        colSums(dth[[i]])*h, lty = i)
+}
+legend('topright', as.expression(llab), lty = 1:nl, bty = 'n')
+```
+
+
+```{r cprior2, out.width='0.99\\textwidth', fig.width=9, fig.height=3}
+par(mfrow = c(1, 3), mar = c(0,1,0,2))
+for(i in 1:nl) {
+  bkz <- exp(seq(log(min(dth[[i]]))-1e-9, 
+                 log(max(dth[[i]]))+1e-9, length = 65))
+   surf3D(matrix(th0x[1, ], nth0),
+          matrix(th0x[2, ], nth0), dth[[i]], 
+          breaks = bkz, colkey = !TRUE,
+          xlab = '', ylab  = '', zlab = '',
+          box = TRUE, bty = "b")
+  text(-0.15, -0.43, expression(theta[1]), adj = 1)
+  text(0.28, -0.37, expression(theta[2]), adj = 1)
+  legend("topleft", bty = "n", as.expression(llab[[i]]), cex = 2)
+}
+
+```
+
+To evaluate $\pi_{\brho}(\brho|\lambda)$ 
+we need to add the Jacobian for the transformation 
+from $\btheta$ to $\brho$.
+This mapping is not given by two univariate transformation, 
+but bivariate. 
+
+
+# Example with $m=3$
+
+```{r exm3, echo=TRUE, results='markup'}
+library(graphpcor)
+
+## the model as 'graphpcor'
+gph_model <- graphpcor(
+    graph = matrix(1, 3, 3) ## dense
+)
+
+## base model (base correlation matrix)
+C0 <- matrix(c(1,0.5,0.5,0.5,1,0.4,0.5,0.4,1), nrow = 3)
+
+## Hessian around a base model
+Ith0 <- hessian(gph_model, C0)
+str(Ith0)
+
+### check: evaluating theta0 gives the base model
+th0 <- attr(Ith0, 'base')
+vcov(gph_model, theta = th0)
+
+## H^0.5: "SQRT" of the Hessian of KLD around the base model
+h.5 <- attr(Ith0, 'h.5')
+
+## its determinant
+(dh.5 <- prod(attr(Ith0, 'decomposition')$values^0.5))
+
+
+## set up a grid of theta around theta0
+h <- 0.01
+th0s <- seq(-1.5+h/2, 1.5-h/2, h)
+th0x <- t(expand.grid(th0s, th0s, th0s)) ## each column ... 
+ncol(th0x)/1e6 ## size of the grid
+
+## eval, in R
+R <- sqrt(colSums( (h.5 %*% th0x)^2 ))
+Sr <- 2 * (pi^(3/2)) * R^2 / gamma(3/2)
+
+param <- 5
+dthR <- param * exp(-param * R) * dh.5 / Sr
+
+## define a `cgeneric`
+c_model <- cgeneric(
+    model = gph_model,
+    lambda = param,
+    base = C0,
+    useINLAprecomp = FALSE ## under development version
+    ##, debug = 99999 ## print loooots of details
+)
+
+## check: evaluate at the base model
+solve(prec(c_model, theta = th0))
+
+## eval, in C (through 'cgeneric' query method in INLAtools)
+dth <- exp(
+    prior(
+        c_model, 
+        theta = rbind(th0x[1,] + th0[1],
+                      th0x[2,] + th0[2],
+                      th0x[3,] + th0[3])
+    )
+)
+
+all.equal(dthR, dth)
+
+## organize into an array
+d3th <- array(dth, dim = rep(length(th0s), 3))
+
+d1th <- apply(d3th * h*h, 1, sum)
+d2th <- apply(d3th * h*h, 2, sum)
+d3th <- apply(d3th * h*h, 3, sum)
+
+c(sum(d1th*h), sum(d2th*h), sum(d3th*h))
+
+par(mfrow = c(1, 3), bty = 'n')
+plot(th0s + th0[1], d1th); abline(v = th0[1])
+plot(th0s + th0[2], d2th); abline(v = th0[2])
+plot(th0s + th0[3], d3th); abline(v = th0[3])
+```
+
+# Example with $m>3$
+
+
+# References
+
