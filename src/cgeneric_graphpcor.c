@@ -123,20 +123,13 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
 	assert(data->doubles[4]->len == ne);
 
-	assert(!strcasecmp(data->doubles[5]->name, "thetabasescaled"));
-	assert(data->doubles[5]->len == ne);
-
 	assert(!strcasecmp(data->mats[0]->name, "Ihalf"));
 	assert(data->mats[0]->nrow == ne);
 	assert(data->mats[0]->ncol == ne);
 
-	assert(!strcasecmp(data->mats[1]->name, "Inegh"));
-	assert(data->mats[1]->nrow == ne);
-	assert(data->mats[1]->ncol == ne);
-
 	double actualtheta[M];
 	double sigmas[N];
-	double bxi[ne];
+
 	if (theta) {
 		k = 0;
 		for (i = 0; i < N; i++) {
@@ -158,33 +151,13 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		for (i = 0; i < ne; i++) {
 			actualtheta[itheta->ints[N + i]] = theta[k++];
 		}
-		// bxi = H^0.5\theta_0 (for now, complete later)
-		for (i = 0; i < ne; i++) {
-			bxi[i] =  data->doubles[5]->doubles[i];
-		}
 
 		/*
 		 if (debug > 99) {
-		   printMat(bxi, 1, ne, "bxi:\n");
 		   printMat(data->mats[0]->x, ne, ne, "I.5\n");
-		   printMat(data->mats[1]->x, ne, ne, "Ineg.5\n");
 		 }
 */
 
-		int one = 1;
-		char trans = 'N';
-		double alpha = 1.0, beta = -1.0;
-		// (complete) bxi = I(\theta_0)^{1/2} ( \theta - \theta_0)
-		//                = I(\theta_0)^{1/2}\theta - \thetabasescaled
-		// y = alpha * A * x + beta * y
-		dgemv_(&trans, &ne, &ne, &alpha, &data->mats[0]->x[0],
-         &ne, &actualtheta[N], &one, &beta, &bxi[0], &one, F_ONE);
-
-		/*
-		 if (debug > 99) {
-			printMat(bxi, 1, ne, "actual bxi:\n");
-		}
-*/
 
 	} else {
 		for (i = 0; i < N; i++) {
@@ -193,7 +166,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		}
 		for (i = 0; i < ne; i++) {
 			actualtheta[i] = NAN;
-			bxi[i] = NAN;
 		}
 	}
 
@@ -410,9 +382,13 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	{
 		ret = Calloc(1, double);
 
-		// the log prior:
+		// p(theta|lambda) = p(xi|lambda) |det(I(theta0))|
 		// lconst = |det(I)^{1/2}|
-		ret[0] = lconst;
+		ret[0] = pcmultivar(ne, lambda,
+                      &data->doubles[4]->doubles[0],
+                      &data->mats[0]->x[0],
+                      &lconst,
+                      &theta[nunkparams[0]]);
 
 		// PC prior for sigma[i]
 		double lam;
@@ -423,37 +399,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			  ret[0] += pclogsigma(theta[i], lam);
 		  }
 		}
-
-		// p(xi|lambda): \lambda e^{-lambda r} / |S_r|
-		double pxi = log(lambda * 0.5);
-
-		// (radius) r:
-		double r = SQR(bxi[0]);
-		if(ne>1) {
-		  for (i=(ne-1); i>0; i--) {
-		    r += SQR(bxi[i]);
-		  }
-		}
-		r = sqrt(r);
-
-		if(debug>99999) {
-		  printf("r = %2.5f \n", r);
-		}
-
-		double smallr = 0.00001;
-		if(r<smallr) {
-		  r += (smallr - r)* 0.5;
-		}
-
-		pxi -= lambda * r;
-		if(ne>1) { // sphere surface area ( already added 1/2 )
-		  pxi += lgamma(((double)ne) * 0.5);
-		  pxi -= ((double)ne)*0.5 * log(M_PI);
-		  pxi -= ((double)ne - 1.0) * log(r);
-		}
-
-		// p(theta|lambda) = p(xi|lambda) |det(I)^{1/2}|
-		ret[0] += pxi;
 
 	}
 		break;

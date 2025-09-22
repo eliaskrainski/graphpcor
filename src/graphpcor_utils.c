@@ -36,31 +36,40 @@ double pclogsigma(double lsigma, double lam)
 	return log(lam) + lsigma - lam * exp(lsigma);
 }
 
-double pcmultivar0(int m, double lam, double *theta) {
-  double ldens=0.0;
-  double llam = log(lam);
-  double l2 = log(2.0);
-  double lpi = log(M_PI);
-  double r = 0.0;
-  if(m==1) {
-    ldens += llam -l2 -lam * fabs(theta[0]);
+double pcmultivar(int m, double param, double *theta0, double *halfI, double *ldhI, double *theta) {
+  // pi(theta|lamba) = p(xi|lambda)|det(I(theta0))|
+  double ldens = ldhI[0] + log(param * 0.5);
+  double r = 0.0, dm = (double)m;
+  double thd[m], xi[m];
+  int i;
+
+  // theta - theta0
+  for(i=0; i<m; i++) {
+    thd[i] = theta[i] - theta0[i];
   }
-  if(m==2) {
-    r += sqrt(SQR(theta[0]) + SQR(theta[1]));
-    ldens += llam -l2 - lpi -lam*r;
-  }
-  if(m>2) {
-    r = SQR(theta[m-1]);
-    double phi;
-    for(int i=m-2; i>0; i--) {
-      r += SQR(theta[i]);
-      phi = atan2(sqrt(r), theta[i-1]);
-      ldens += ((double)(m-i-1))*log(sin(phi));
+
+  // xi = I^0.5(theta - theta0)
+  int one = 1;
+  char trans = 'N';
+  double alpha = 1.0, beta = 0.0;
+  // y = alpha * A * x + beta * y
+  dgemv_(&trans, &m, &m, &alpha, &halfI[0], &m,
+         &thd[0], &one, &beta, &xi[0], &one, F_ONE);
+
+  r = SQR(xi[0]);
+  if(m>1) {
+    for(i=1; i<m; i++) {
+      r += SQR(xi[i]);
     }
-    double dm05 = ((double)(m))*0.5;
-    ldens += llam -lam*sqrt(r);
-    ldens += lgamma(dm05) -l2 -dm05*lpi;
+    ldens += lgamma(dm*0.5);
+    ldens -= dm*0.5 * log(M_PI);
   }
+  r = sqrt(r);
+  double smallr = 0.00001;
+  if(r<smallr) {
+    r += (smallr - r)* 0.5;
+  }
+  ldens -= (dm -1.0) * log(r) +param * r;
   return ldens;
 }
 

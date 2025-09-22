@@ -66,7 +66,6 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(lambda > 0);
 
 	assert(!strcasecmp(data->doubles[1]->name, "lconst"));
-	double lconst = data->doubles[1]->doubles[0];
 
 /*
 	if (debug > 999) {
@@ -153,20 +152,14 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	case INLA_CGENERIC_LOG_PRIOR:
 	{
 		ret = Calloc(1, double);
-
-		double daux, r = 0.0, d, lJacobian = 0.0;
-		for (i = 0; i < nth; i++) {
-			daux = pow2(theta[i]);//exp(-theta[i]);
-			r += daux; //gamma[i];
-		}
-		d = sqrt(r);
-		lJacobian += log(1/d);
-
-		// the log prior
-		// lconst should be equal to (m=nth)
-		// log(lambda) + lgamma(1+m/2)-log(m)-m/2*log(pi)
-		ret[0] = lconst - lambda * d; // + lJacobian;
-		ret[0] -= ((double) (nth - 2)) * log(r);
+	  // p(theta|lambda) = p(xi|lambda) |det(I(theta0))|
+	  // lconst = |det(I)^{1/2}|
+	  ret[0] = pcmultivar(
+	    nth, lambda,
+	    &data->doubles[4]->doubles[0],
+      &data->mats[0]->x[0],
+      &data->doubles[1]->doubles[0],
+      &theta[0]);
 
 	}
 		break;
