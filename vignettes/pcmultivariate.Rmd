@@ -113,11 +113,13 @@ where $\mathbf{I}(\btheta_0)$ is the Hessian of
 KLD($\btheta,\btheta_0$) around $\btheta_0$.
 Actually, $\mathbf{I}(\btheta_0)$ is the
 Fisher information matrix, around $\btheta_0$, 
-because both models are both 
-common and share a common parametrization.
-The goodness of such approximation depends on the chosen
+because the two models are in the same family and 
+have a common parametrization. 
+However, the goodness of such approximation depends on the chosen
 model's parametrization for $\pi_{\bx}(\mathbf{x}|\btheta)$.
-This led us to define a location scale transformation 
+
+We take the second order approximation for KLD($\btheta,\btheta_0$) 
+to define a location scale transformation 
 $\bxi = \mathbf{I}(\btheta_0)^{1/2}(\btheta-\btheta_0)$, 
 along with $\btheta = \mathbf{I}(\btheta_0)^{-1/2}\bxi + \btheta_0$.
 This scaling makes $\bxi$ unitless, scale-invariant, and takes into 
