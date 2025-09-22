@@ -39,7 +39,7 @@ dLKJ <- function(R, eta, log = FALSE) {
 #' corresponding `sigma.prior.reference` will be used as fixed.
 #' @param ... additional arguments passed on to
 #' [INLAtools::cgeneric].
-#' @seealso [dLKJ()] and [pcor()]
+#' @seealso [dLKJ()] and [basecor()]
 #' @details
 #' The parametrization uses the
 #' hypershere decomposition, as proposed in

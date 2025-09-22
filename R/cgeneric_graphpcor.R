@@ -187,9 +187,8 @@ cgeneric_graphpcor <-
       print(str(Ibase))
     }
     stopifnot(all(dim(Ibase) == c(nEdges, nEdges)))
-    ##  I(\theta_0) * \theta_0
-    thetabasescaled <- drop(attr(Ibase, "h.5") %*%
-                              attr(Ibase, "base"))
+
+    theta0 <- attr(Ibase, "base")
 
     ## store abs(det(H^{1/2}))
     eval.5 <- sqrt(attr(Ibase, "decomposition")$values)
@@ -230,10 +229,8 @@ cgeneric_graphpcor <-
         sigmaref = as.numeric(sigma.prior.reference),
         sigmaprob = as.numeric(sigma.prior.probability),
         lconst = as.numeric(lc),
-        thetabase = as.numeric(attr(Ibase, "base")),
-        thetabasescaled = as.numeric(thetabasescaled),
-        Ihalf = attr(Ibase, "h.5"),
-        Inegh = attr(Ibase, "hneg.5")
+        thetabase = as.numeric(theta0),
+        Ihalf = attr(Ibase, "h.5")
       )
     )
     return(the_model)

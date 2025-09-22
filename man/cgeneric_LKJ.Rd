@@ -68,5 +68,5 @@ IMA Journal of Management Mathematics (2007) 18, 55-73.
 <doi 10.1093/imaman/dpl010>
 }
 \seealso{
-\code{\link[=dLKJ]{dLKJ()}} and \code{\link[=pcor]{pcor()}}
+\code{\link[=dLKJ]{dLKJ()}} and \code{\link[=basecor]{basecor()}}
 }

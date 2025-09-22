@@ -10,6 +10,7 @@ hypershere decomposition, see details.}
 cgeneric_pc_correl(
   n,
   lambda,
+  base,
   debug = FALSE,
   useINLAprecomp = TRUE,
   shlib = NULL

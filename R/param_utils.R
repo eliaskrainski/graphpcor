@@ -149,7 +149,7 @@ theta2H <- function(theta) {
 }
 #' Evaluate the hessian of the KLD for a
 #' correlation model around a base model.
-#' @inheritParams pcor
+#' @inheritParams basecor
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used

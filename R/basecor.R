@@ -1,30 +1,32 @@
-#' @rdname pcor-class
+#' @rdname basecor-class
 #' @description
-#' Organize information to build a correlation prior
-#' that penalizes the divergence from a base correlation matrix,
-#' and helper functions to work with correlation matrices.
+#' Build and organize information to build a base model
+#' for correlation matrices. This will be used to build a prior
+#' that penalizes the divergence from a base correlation matrix.
 #' @param base numeric/matrix used to define the base
 #' correlation matrix. If numeric vector with length 'm',
-#' 'm' should be 'p(p-1)/2' in the dense case and
-#' 'length(itheta)' in the sparse case.
-#' @param p integer with the dimension, number of rows
-#' and columns of the correlation matrix.
+#' 'm' should be 'p(p-1)/2' in the dense model case and
+#' 'length(itheta)' in the sparse model case.
+#' @param p integer with the dimension,
+#' number of rows/columns, of the correlation matrix.
 #' @param parametrization character to specify the
-#' parametrization choice: "ITP" (or "itp"),
+#' parametrization used: "ITP" (or "itp"),
 #' "SAP" (or "tap"), "CPC" (or "cpc"), see details.
+#' @param decomposition character to specify which
+#' decomposition to use to decompose the hessian
+#' matrix around the base model,
+#' \eqn{\mathbf{I}(\theta_0)}, in order to compute
+#' \eqn{\mathbf{I}^{1/2}(\theta_0)} and
+#' \eqn{\mathbf{I}^{-1/2}(\theta_0)}.
+#' The options are eigen' (default), 'svd' and 'chol'.
 #' @param itheta integer vector to specify the position
 #' 'theta' will be placed in the (initial, before fill-in)
-#' Cholesky factor in the IT. Default is missing.
+#' Cholesky factor in the ITP case. Default is missing.
 #' @param d0 numeric vector to specify the diagonal
-#' for the (initial) Cholesky factor in the ITP.
+#' for the (initial) Cholesky factor in the ITP case.
 #' Default consider 'd0=p:1'.
-#' @param decomposition character to specify which
-#' decomposition is to be applied on H in order to
-#' compute \eqn{\mathbf{H}^{1/2}} and
-#' \eqn{\mathbf{H}^{-1/2}}. The options are
-#' 'eigen', 'svd' and 'chol'
-#' @param ... used to pass the arguments
-#' for [numDeriv::hessian()]
+#' @param ... used to pass arguments further to
+#' [numDeriv::hessian()]
 #' @details
 #' For 'parametrization' = "CPC" or 'parametrization' = "cpc":
 #' The Canonical Partial Correlation - CPC parametrization,
@@ -36,7 +38,7 @@
 #'   1 & & & & \\
 #'   r_1 & 1 & & & \\
 #'   r_2 & r_p & 1 & & \\
-#'   \vdots & \vdots & \ddo & \ddots & \\
+#'   \vdots & \vdots & \ddots & \ddots & \\
 #'   r_{p-1} & r_{2p-3} & \ldots & r_m & 1
 #' \end{array} \right]
 #' \textrm{ and } B = \left[
@@ -120,46 +122,46 @@
 #' A Principled, Practical Approach to Constructing Priors.
 #'  Statist. Sci. 32(1): 1-28 (February 2017).
 #'  <doi: 10.1214/16-STS576>
-#' @returns a pcor object
+#' @returns a basecor object
 #' @export
-pcor <- function(base, p,
+basecor <- function(base, p,
                  parametrization = 'cpc',
                  itheta, d0,
                  decomposition,
                  ...) {
-  UseMethod("pcor")
+  UseMethod("basecor")
 }
-#' @rdname pcor-class
-#' @returns a `pcor` object
+#' @rdname basecor-class
+#' @returns a `basecor` object
 #' @export
 #' @examples
 #'
 #' ## Base correlation matrix
 #' c0 <- matrix(c(1,.9,.5, .9,1,.2, .5,.2,1), 3)
 #'
-#' ## build the 'pcor'
-#' pc.c0 <- pcor(base = c0) ## base as matrix
+#' ## build the 'basecor'
+#' pc.c0 <- basecor(base = c0) ## base as matrix
 #' pc.c0
 #'
 #' ## using 'theta' instead (numerically the same)
 #' th0 <- pc.c0$theta
-#' pc.th0 <- pcor(base = th0) ## base as vector
+#' pc.th0 <- basecor(base = th0) ## base as vector
 #' pc.th0
 #'
 #' all.equal(pc.c0, pc.th0)
 #'
 #' ## other way around
-#' all.equal(pc.th0, pcor(base = pc.th0$base))
+#' all.equal(pc.th0, basecor(base = pc.th0$base))
 #'
 #' ## ITP
 #' th <- c(0.5,-1,0.5,-0.3)
 #' ith <- c(2,3,8,12)
-#' pc2 <- pcor(base = th, p=4, parametrization='itp', itheta = ith)
+#' pc2 <- basecor(base = th, p=4, parametrization='itp', itheta = ith)
 #' pc2
 #'
 #' Sparse(solve(pc2$base), zeros.rm = TRUE)
 #'
-pcor.numeric <- function(base, p,
+basecor.numeric <- function(base, p,
                          parametrization = 'cpc',
                          itheta, d0,
                          decomposition,
@@ -206,7 +208,7 @@ pcor.numeric <- function(base, p,
     C0 <- tcrossprod(L)
   }
   return(
-    pcor(
+    basecor(
       base = C0,
       p = p,
       parametrization = parametrization,
@@ -216,9 +218,9 @@ pcor.numeric <- function(base, p,
       ...)
     )
 }
-#' @rdname pcor-class
+#' @rdname basecor-class
 #' @export
-pcor.matrix <- function(base, p,
+basecor.matrix <- function(base, p,
                         parametrization = 'cpc',
                         itheta, d0,
                         decomposition,
@@ -289,13 +291,13 @@ pcor.matrix <- function(base, p,
     C0 = base,
     decomposition = decomposition,
     ...)
-  class(out) <- "pcor"
+  class(out) <- "basecor"
   return(out)
 }
-#' @describeIn pcor
-#' Print method for 'pcor'
+#' @describeIn basecor
+#' Print method for 'basecor'
 #' @export
-print.pcor <- function(x, ...) {
+print.basecor <- function(x, ...) {
   cat("Parameters (", toupper(x$parametrization),
       " parametrization):\n", sep = "")
   print(x$theta)

@@ -41,6 +41,7 @@
 cgeneric_pc_correl <-
   function(n,
            lambda,
+           base,
            debug = FALSE,
            useINLAprecomp = TRUE,
            shlib = NULL) {
@@ -62,11 +63,15 @@ cgeneric_pc_correl <-
     stopifnot(lambda>0)
     m <- n*(n-1)/2
 
-    lc <- log(lambda) + lgamma(1+m/2)-log(m)-m/2*log(pi)
+    lc <- log(lambda/2) + lgamma(m/2) - m*log(pi)/2
 
     if(debug) {
       cat('log C', lc, '\n')
     }
+
+    pcm <- basecor(base)
+    theta0 <- pcm$theta
+    stopifnot(length(theta0) == m)
 
     cmodel = "inla_cgeneric_pc_correl"
 

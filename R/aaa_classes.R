@@ -6,10 +6,9 @@ setClass("treepcor")
 #' conditional distributions, respectively.
 setClass("graphpcor")
 
-#' Contain information needed to define the penalized
-#' complexity prior for correlation matrices
+#' Information for a base model for correlation matrices
 setClass(
-  "pcor",
+  "basecor",
   slots = c("base", "theta", "p", "parametrization",
             "itheta", "H"),
   validity = function(object) {

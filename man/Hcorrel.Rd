@@ -8,29 +8,31 @@ correlation model around a base model.}
 Hcorrel(theta, p, parametrization, itheta, d0, C0, decomposition, ...)
 }
 \arguments{
-\item{p}{integer with the dimension, number of rows
-and columns of the correlation matrix.}
+\item{p}{integer with the dimension,
+number of rows/columns, of the correlation matrix.}
 
 \item{parametrization}{character to specify the
-parametrization choice: "ITP" (or "itp"),
+parametrization used: "ITP" (or "itp"),
 "SAP" (or "tap"), "CPC" (or "cpc"), see details.}
 
 \item{itheta}{integer vector to specify the position
 'theta' will be placed in the (initial, before fill-in)
-Cholesky factor in the IT. Default is missing.}
+Cholesky factor in the ITP case. Default is missing.}
 
 \item{d0}{numeric vector to specify the diagonal
-for the (initial) Cholesky factor in the ITP.
+for the (initial) Cholesky factor in the ITP case.
 Default consider 'd0=p:1'.}
 
 \item{decomposition}{character to specify which
-decomposition is to be applied on H in order to
-compute \eqn{\mathbf{H}^{1/2}} and
-\eqn{\mathbf{H}^{-1/2}}. The options are
-'eigen', 'svd' and 'chol'}
+decomposition to use to decompose the hessian
+matrix around the base model,
+\eqn{\mathbf{I}(\theta_0)}, in order to compute
+\eqn{\mathbf{I}^{1/2}(\theta_0)} and
+\eqn{\mathbf{I}^{-1/2}(\theta_0)}.
+The options are eigen' (default), 'svd' and 'chol'.}
 
-\item{...}{used to pass the arguments
-for \code{\link[numDeriv:hessian]{numDeriv::hessian()}}}
+\item{...}{used to pass arguments further to
+\code{\link[numDeriv:hessian]{numDeriv::hessian()}}}
 }
 \value{
 list containing the hessian,

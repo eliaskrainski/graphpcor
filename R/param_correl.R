@@ -1,5 +1,5 @@
 #' Build the Cholesky (lower triangular) matrix from theta.
-#' @inheritParams pcor
+#' @inheritParams basecor
 #' @returns matrix with lower triangle as the Cholesky factor
 #' of a correlation matrix (if parametrization is 'sap' or 'cpc')
 #' or of a precision matrix (if parametrization is 'itp')
@@ -62,7 +62,7 @@ theta2L <- function(theta, p,
   return(L)
 }
 #' Build a correlation matrix from theta
-#' @inheritParams pcor
+#' @inheritParams basecor
 #' @keywords internal
 #' @noRd
 theta2correl <- function(theta, p, parametrization, itheta, d0) {
@@ -84,7 +84,7 @@ theta2correl <- function(theta, p, parametrization, itheta, d0) {
     return(tcrossprod(L))
   }
 }
-#' @describeIn pcor
+#' @describeIn basecor
 #' Drawn a random sample correlation matrix.
 #' @param lambda numeric to specify the PC-prior parameter,
 #' see Simpson et. al. (2017).
