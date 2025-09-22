@@ -76,10 +76,19 @@ $\btheta=
 where $h_j()$ is the identity function if $\gamma_j$ is unbounded,
 we have 
 \[
-\pi_{\bgamma}(\bgamma|\lambda|\bgamma_0) =
+\pi_{\bgamma}(\bgamma|\lambda,\bgamma_0) =
 \pi_{\btheta}(\mathbf{h}^{-1}(\bgamma)|\lambda,\mathbf{h}^{-1}(\bgamma_0)) 
-\prod_{k=1}^{m}\frac{\partial h_k^{-1}(\gamma_k)}{\partial \gamma_k} .
+\prod_{k=1}^{m}
+|\frac{\partial h_k^{-1}(\gamma_k)}{\partial \gamma_k}|
 \]
+and in a more general form of $\mathbf{h}(\btheta)$ we have
+\[
+\pi_{\bgamma}(\bgamma|\lambda,\bgamma_0) =
+\pi_{\btheta}(\mathbf{h}^{-1}(\bgamma)|\lambda,\mathbf{h}^{-1}(\bgamma_0)) 
+|\textrm{det}(\textbf{G})|.
+\]
+where $\mathbf{G}_{ij}$ is 
+$\frac{\partial \textbf{h}^{-1}_i(\bgamma)}{\partial \bgamma_j}$.
 
 The proposal is to penalize a Kullback-Leibler divergence (KLD).
 The KLD is not a metric but a divergence, a statistical distance, 
@@ -100,8 +109,12 @@ the KLD behaves quadratically, which leads to
 \[\textrm{KLD}(\btheta,\btheta_0) \approx 
 \frac{1}{2}(\btheta-\btheta_0)^T\mathbf{I}(\btheta_0)
 (\btheta-\btheta_0) \]
-where $\mathbf{I}(\btheta_0)$ is the Hessian,
-or Fisher information matrix, around $\btheta_0$.
+where $\mathbf{I}(\btheta_0)$ is the Hessian of
+KLD($\btheta,\btheta_0$) around $\btheta_0$.
+Actually, $\mathbf{I}(\btheta_0)$ is the
+Fisher information matrix, around $\btheta_0$, 
+because both models are both 
+common and share a common parametrization.
 The goodness of such approximation depends on the chosen
 model's parametrization for $\pi_{\bx}(\mathbf{x}|\btheta)$.
 This led us to define a location scale transformation 
