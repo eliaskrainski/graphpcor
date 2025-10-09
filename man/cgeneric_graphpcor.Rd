@@ -82,9 +82,9 @@ parameters are fixed to \code{-1}.}
 \code{cgeneric}/\code{inla.cgeneric} object.
 }
 \description{
-From either a \code{graph} (see \code{\link[=graph]{graph()}}) or
+From either a \code{graph} (see \code{\link[INLAtools:methods]{INLAtools::graph()}}) or
 a square matrix (used as a graph),
-creates an \code{inla.cgeneric} (see \code{\link[=cgeneric]{cgeneric()}})
+creates an \code{inla.cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
 to implement the Penalized Complexity prior using the
 Kullback-Leibler divergence - KLD from a base graphpcor.
 }

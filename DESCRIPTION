@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.13.916
+Version: 0.1.13.917
 Maintainer: Elias Teixeira Krainski <eliaskrainski@gmail.com>
 Authors@R: c(
  person(given = c("Elias"),
@@ -48,7 +48,7 @@ Description: Implement some models for
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 License: GPL (>=2) 
 Encoding: UTF-8
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Depends:
@@ -68,4 +68,3 @@ BuildVignettes: true
 VignetteBuilder: knitr
 LazyData: true
 LazyDataCompression: xz
-

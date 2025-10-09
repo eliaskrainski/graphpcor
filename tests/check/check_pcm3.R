@@ -81,3 +81,36 @@ par(mfrow = c(1, 3), bty = 'n')
 plot(th0s + th0[1], d1th); abline(v = th0[1])
 plot(th0s + th0[2], d2th); abline(v = th0[2])
 plot(th0s + th0[3], d3th); abline(v = th0[3])
+
+## sampling from the p(theta|lambda)
+fakedata <- data.frame(y = NA, i = 1:c_model$f$n)
+library(INLA)
+out.inla <- inla(
+    y ~ 0 + f(i, model = c_model),
+    control.family = list(hyper = list(prec = list(initial = 10, fixed = TRUE))),
+    data = fakedata)
+
+str(inla.hyperpar.sample(1000, out.inla))
+
+(th.r2 <- inla.cgeneric.sample(
+     n = 2,
+     result = out.inla,
+     name = 'i', model = c_model))
+    
+qu2corr <- function(qu)
+    solve(matrix(qu[c(1,2,3, 2,4,5, 3,5,6)], 3))[c(2,3,6)]
+qu2corr(th.r2[[1]])
+qu2corr(th.r2[[2]])
+
+r.corr <- sapply(inla.cgeneric.sample(
+    result = out.inla,
+    name = 'i', model = c_model), qu2corr)
+str(r.corr)
+
+par(mfrow = c(1, 3), bty = 'n')
+for(i in 1:3) {
+    hist(r.corr[i, ], freq = FALSE)
+    abline(v=C0[c(2,3,6)[i]], col = 2, lty = 2)
+}
+
+## sampling direclty from the sphere with radius r

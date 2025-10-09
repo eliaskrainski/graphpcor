@@ -253,9 +253,10 @@ setMethod(
       stopifnot(length(theta)==sum(ne))
     }
     itheta <- which(lower.tri(G) & (!is.zero(G)))
-    L <- t(Lprec(
+    L <- t(theta2L(
       theta = theta[-(1:ne[1])],
       p = ne[1],
+      parametrization = "itp",
       itheta = itheta,
       d0 = ne[1]:1))
     V <- chol2inv(L)

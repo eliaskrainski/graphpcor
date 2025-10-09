@@ -6,8 +6,6 @@
 \alias{x2rphi}
 \alias{rtheta}
 \alias{dtheta}
-\alias{KLD10}
-\alias{theta2H}
 \title{Internal functions to map between Euclidean
 and spherical coordinates}
 \usage{
@@ -18,10 +16,6 @@ x2rphi(x)
 rtheta(n, lambda = 1, R, theta.base)
 
 dtheta(theta, lambda, theta.base, H.elements)
-
-KLD10(C1, C0, L1, L0)
-
-theta2H(theta)
 }
 \arguments{
 \item{rphi}{numeric vector where the first element
@@ -42,10 +36,6 @@ around the base model)}
 \item{theta}{numeric vector of length \code{m}.}
 
 \item{H.elements}{list output of theta2H}
-
-\item{C1}{is a correlation matrix.}
-
-\item{C0}{is a correlation matrix of the base model.}
 }
 \description{
 Internal functions to map between Euclidean
@@ -54,9 +44,6 @@ and spherical coordinates
 \details{
 For details, please see the wikipedia entry on 'N-sphere' at
 \href{https://en.wikipedia.org/wiki/N-sphere}{N-sphere}
-
-compute C1 using 'theta2C' on theta  with
-\deqn{KLD = 0.5( tr(C0^{-1}C1) -p + ... - log(|C1|) + log(|C0|) )}
 }
 \section{Functions}{
 \itemize{
@@ -67,9 +54,5 @@ compute C1 using 'theta2C' on theta  with
 \item \code{rtheta()}: Drawn samples from the PC-prior for correlation
 
 \item \code{dtheta()}: PC-prior density for the correlation matrix
-
-\item \code{KLD10()}: Compute the KLD with respect to a base model
-
-\item \code{theta2H()}: Compute the hessian, its svd and some elements
 
 }}

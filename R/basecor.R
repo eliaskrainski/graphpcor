@@ -1,4 +1,3 @@
-#' @rdname basecor-class
 #' @description
 #' Build and organize information to build a base model
 #' for correlation matrices. This will be used to build a prior
@@ -8,10 +7,11 @@
 #' 'm' should be 'p(p-1)/2' in the dense model case and
 #' 'length(itheta)' in the sparse model case.
 #' @param p integer with the dimension,
-#' number of rows/columns, of the correlation matrix.
+#' the number of rows/columns of the correlation matrix.
 #' @param parametrization character to specify the
-#' parametrization used: "ITP" (or "itp"),
-#' "SAP" (or "tap"), "CPC" (or "cpc"), see details.
+#' parametrization used. The available ones are
+#' "cpc" (or "CPC"), "sap" (or "SAP"), and "itp" (or "ITP"),
+#' see Details. The default is "cpc".
 #' @param decomposition character to specify which
 #' decomposition to use to decompose the hessian
 #' matrix around the base model,
@@ -19,14 +19,15 @@
 #' \eqn{\mathbf{I}^{1/2}(\theta_0)} and
 #' \eqn{\mathbf{I}^{-1/2}(\theta_0)}.
 #' The options are eigen' (default), 'svd' and 'chol'.
-#' @param itheta integer vector to specify the position
-#' 'theta' will be placed in the (initial, before fill-in)
-#' Cholesky factor in the ITP case. Default is missing.
-#' @param d0 numeric vector to specify the diagonal
-#' for the (initial) Cholesky factor in the ITP case.
-#' Default consider 'd0=p:1'.
-#' @param ... used to pass arguments further to
-#' [numDeriv::hessian()]
+#' @param itheta integer vector to specify the (vectorized) position
+#' where 'theta' will be placed in the (initial, before fill-in)
+#' Cholesky (lower triangle) factor. Default is missing and assumes
+#' the dense case for when `itheta = which(lower.tri(...))`.
+#' @param d0 numeric vector to specify the diagonal of the
+#' (initial) Cholesky factor in the ITP parametrization.
+#' Default consider `d0 = p:1`.
+#' @param ... used to pass arguments to [numDeriv::hessian()],
+#' which is used to compute \eqn{\mathbf{I}(\theta_0)}.
 #' @details
 #' For 'parametrization' = "CPC" or 'parametrization' = "cpc":
 #' The Canonical Partial Correlation - CPC parametrization,
@@ -124,11 +125,14 @@
 #'  <doi: 10.1214/16-STS576>
 #' @returns a basecor object
 #' @export
-basecor <- function(base, p,
-                 parametrization = 'cpc',
-                 itheta, d0,
-                 decomposition,
-                 ...) {
+basecor <- function(
+    base,
+    p,
+    parametrization = 'cpc',
+    decomposition,
+    itheta,
+    d0,
+    ...) {
   UseMethod("basecor")
 }
 #' @rdname basecor-class
@@ -161,14 +165,19 @@ basecor <- function(base, p,
 #'
 #' Sparse(solve(pc2$base), zeros.rm = TRUE)
 #'
-basecor.numeric <- function(base, p,
-                         parametrization = 'cpc',
-                         itheta, d0,
-                         decomposition,
-                         ...) {
+basecor.numeric <- function(
+    base,
+    p,
+    parametrization = "cpc",
+    decomposition = "svd",
+    itheta,
+    d0,
+    ...) {
+  theta <- base
+  m <- length(theta)
   if(missing(p)) {
     if(missing(itheta)) {
-      p <- (1 + sqrt(1+8*length(base)))/2
+      p <- (1 + sqrt(1+8*m))/2
       stopifnot(floor(p)==ceiling(p))
     } else {
       stop("please provid 'p'!")
@@ -176,18 +185,14 @@ basecor.numeric <- function(base, p,
   }
   stopifnot(p>1)
   if(missing(itheta)) {
-    stopifnot(length(base)==(p*(p-1)/2))
-    itheta <- which(lower.tri(diag(p)))
+    itheta <- which(lower.tri(diag(
+      x = rep(1, p), nrow = p, ncol = p)))
   }
-  stopifnot(length(base)==length(itheta))
-  theta <- base
+  stopifnot(length(itheta) == m)
   parametrization <- match.arg(
     arg = tolower(parametrization),
     choices = c("cpc", "sap", "itp")
   )
-  if(missing(decomposition)) {
-    decomposition <- "svd"
-  }
   decomposition <- match.arg(
     arg = tolower(decomposition),
     choices = c("svd", "eigen", "chol")
@@ -203,40 +208,47 @@ basecor.numeric <- function(base, p,
     d0 = d0
   )
   if(attr(L, "parametrization") == 'itp') {
-    C0 <- cov2cor(chol2inv(t(L)))
+    base <- cov2cor(chol2inv(t(L)))
   } else {
-    C0 <- tcrossprod(L)
+    base <- tcrossprod(L)
   }
-  return(
-    basecor(
-      base = C0,
-      p = p,
-      parametrization = parametrization,
-      itheta = itheta,
-      d0 = d0,
-      decomposition = decomposition,
-      ...)
-    )
+  out <- list(
+    base = base,
+    theta = theta,
+    p = p,
+    parametrization = parametrization,
+    itheta = itheta)
+  if(parametrization == 'itp') {
+    out$d0 <- d0
+  }
+  out$Ibase <- Hcorrel(
+    theta = theta,
+    p = p,
+    parametrization = parametrization,
+    itheta = itheta,
+    d0 = d0,
+    C0 = base,
+    decomposition = decomposition,
+    ...)
+  class(out) <- "basecor"
+  return(out)
 }
 #' @rdname basecor-class
 #' @export
-basecor.matrix <- function(base, p,
-                        parametrization = 'cpc',
-                        itheta, d0,
-                        decomposition,
-                        ...) {
+basecor.matrix <- function(
+    base,
+    p,
+    parametrization = "cpc",
+    itheta,
+    d0,
+    decomposition = "svd",
+    ...) {
   parametrization <- match.arg(
     arg = tolower(parametrization),
     choices = c("cpc", "sap", "itp")
   )
   stopifnot(all.equal(base, t(base)))
   p <- as.integer(nrow(base))
-  if(missing(itheta)) {
-    itheta <- which(lower.tri(diag(p)))
-  }
-  if(missing(d0)) {
-    d0 <- p:1
-  }
   if(missing(decomposition)) {
     decomposition <- "svd"
   }
@@ -244,6 +256,9 @@ basecor.matrix <- function(base, p,
     arg = tolower(decomposition),
     choices = c("svd", "eigen", "chol")
   )
+  if(missing(d0)) {
+    d0 <- p:1
+  }
   if(parametrization == 'itp') {
     Q <- chol2inv(chol(base))
     ilQ <- intersect(
@@ -267,6 +282,9 @@ basecor.matrix <- function(base, p,
     }
     theta <- L[itheta]
   } else {
+    if(missing(itheta)) {
+      itheta <- which(lower.tri(diag(p)))
+    }
     il <- which(lower.tri(base))
     l <- t(chol(base))[il]
     theta <- optim(
@@ -280,9 +298,11 @@ basecor.matrix <- function(base, p,
     theta = theta,
     p = p,
     parametrization = parametrization,
-    itheta = itheta,
-    d0 = d0)
-  out$H <- Hcorrel(
+    itheta = itheta)
+  if(parametrization == 'itp') {
+    out$d0 <- d0
+  }
+  out$Ibase <- Hcorrel(
     theta = theta,
     p = p,
     parametrization = parametrization,
@@ -303,4 +323,105 @@ print.basecor <- function(x, ...) {
   print(x$theta)
   cat("Base correlation matrix:\n")
   print(x$base)
+}
+#' @describeIn basecor Cholesky (lower triangular) matrix from theta.
+#' @returns matrix with lower triangle as the Cholesky factor
+#' of a correlation matrix if parametrization is
+#' "cpc" or "sap" and of a precision matrix if
+#' parametrization is 'itp' (with 'd0' as the diagonal elements).
+theta2L <- function(
+    theta,
+    p,
+    parametrization = "cpc",
+    itheta,
+    d0) {
+  parametrization <- match.arg(
+    arg = tolower(parametrization),
+    choices = c("cpc", "sap", "itp")
+  )
+  stopifnot((m <- length(theta))>0)
+  if(missing(p)) {
+    p <- (1 + sqrt(1+8*m))/2
+  }
+  stopifnot(floor(p)==ceiling(p))
+  stopifnot(p>1)
+  if(missing(itheta)) {
+    itheta <- which(lower.tri(
+      diag(x = rep(1, p), nrow = p, ncol = p)))
+  } else {
+    stopifnot(all(itheta %in% which(lower.tri(
+      diag(x = rep(1, p), nrow = p, ncol = p)))))
+  }
+  stopifnot(length(theta)==length(itheta))
+  if(missing(d0)) {
+    d0 <- p:1
+  }
+  if(parametrization == "itp") {
+    L <- diag(x = d0, nrow = p, ncol = p)
+    L[itheta] <- theta
+    L <- fillLprec(L)
+  } else {
+    B <- A <- diag(p)
+    itheta  <- which(lower.tri(A))
+    if(parametrization == 'cpc') {
+      A[itheta] <- tanh(theta)
+      B[itheta] <- sqrt(1-A[itheta]^2)
+    } else {
+      theta <- pi/(1+exp(-theta))
+      A[itheta] <- cos(theta)
+      B[itheta] <- sin(theta)
+    }
+    if(p>2) {
+      for(j in 2:(p-1)) {
+        B[, j] <- B[, j] * B[, j-1]
+      }
+    }
+    L <- A * cbind(1, B[, 1:(p-1)])
+  }
+  attr(L, "parametrization") <- parametrization
+  attr(L, "theta") <- theta
+  if(parametrization == 'itp') {
+    attr(L, "itheta") <- itheta
+    attr(L, "d0") <- d0
+  }
+  return(L)
+}
+#' Function to fill-in a Cholesky matrix
+#' @param L matrix as the lower triangle
+#' containing the Cholesky decomposition of
+#' a precision matrix
+#' @param lfi integer vector used as indicator of the
+#' position in the lower matrix where are the
+#' fill-in elements. Must be col then row ordered.
+fillLprec <- function(L, lfi) {
+  L <- as.matrix(L)
+  p <- nrow(L)
+  if(missing(lfi)) {
+    i0 <- is.zero(L)
+    G <- i0 - 1.0
+    G <- G + t(G)
+    diag(G) <- 1 - colSums(G)
+    lG <- t(chol(G))
+    lfi <- which(i0 & (!is.zero(lG)))
+  }
+  if(length(lfi)>0) {
+    if(length(lfi)>1)
+      stopifnot(all(diff(lfi)>0))
+    ii <- row(L)[lfi]
+    jj <- col(L)[lfi]
+    for(v in 1:length(ii)) {
+      i <- ii[v]
+      j <- jj[v]
+      if(j==1) {
+        warning("j = 1!\n")
+        L[i,1] <- 0.0
+      } else {
+        stopifnot((i>1) & (j>1)) ## L_{11} not allowed
+        stopifnot(j>1) ## j=1 is not allowed
+        k <- 1:(j-1)
+        L[i, j] <- -sum(L[i, k] * L[j, k]) / L[j, j]
+      }
+    }
+  }
+  return(L)
 }

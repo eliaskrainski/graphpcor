@@ -39,7 +39,7 @@ corresponding \code{sigma.prior.reference} will be used as fixed.}
 \link[INLAtools:cgeneric-class]{INLAtools::cgeneric}.}
 }
 \value{
-a \code{inla.cgeneric}, \code{\link[=cgeneric]{cgeneric()}} object.
+a \code{inla.cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.
 }
 \description{
 Build an \code{cgeneric}/\code{inla.cgeneric} for
