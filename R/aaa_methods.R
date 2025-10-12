@@ -1,5 +1,5 @@
-#' @rdname graphpcor
-#' @title The `graphpcor` generic method for [graphpcor-class]
+#' @describeIn graphpcor
+#' The `graphpcor` generic method for [graphpcor-class]
 #' @param ... either a list of formulae or a matrix
 #' @return a `graphpcor` object
 #' @export
@@ -28,5 +28,5 @@ Laplacian <- function(graph) {
 #' The Laplacian default method (none)
 #' @export
 Laplacian.default <- function(graph) {
-  stop("No Laplacian for this graph!")
+  stop("No Laplacian method for", class(graph), "!")
 }

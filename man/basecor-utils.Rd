@@ -2,11 +2,14 @@
 % Please edit documentation in R/basecor_utils.R
 \name{basecor-utils}
 \alias{basecor-utils}
+\alias{theta2L}
 \alias{fillLprec}
 \alias{KLD10}
 \alias{Hcorrel}
-\title{Internal functions to basecor}
+\title{Internal functions used by basecor}
 \usage{
+theta2L(theta, p, parametrization = "cpc", itheta, d0)
+
 fillLprec(L, lfi)
 
 KLD10(C1, C0, L1, L0)
@@ -14,21 +17,7 @@ KLD10(C1, C0, L1, L0)
 Hcorrel(theta, p, parametrization, itheta, d0, C0, decomposition, ...)
 }
 \arguments{
-\item{L}{matrix as the lower triangle
-containing the Cholesky decomposition of
-a precision matrix}
-
-\item{lfi}{integer vector used as indicator of the
-position in the lower matrix where are the
-fill-in elements. Must be col then row ordered.}
-
-\item{C1}{is a correlation matrix.}
-
-\item{C0}{is a correlation matrix of the base model.}
-
-\item{L1}{is the Cholesky of \code{C1}.}
-
-\item{L0}{is the Cholesky of \code{C0}.}
+\item{theta}{numeric vector with the model parameters.}
 
 \item{p}{integer with the dimension,
 the number of rows/columns of the correlation matrix.}
@@ -47,6 +36,22 @@ the dense case for when \code{itheta = which(lower.tri(...))}.}
 (initial) Cholesky factor in the ITP parametrization.
 Default consider \code{d0 = p:1}.}
 
+\item{L}{matrix as the lower triangle
+containing the Cholesky decomposition of
+a precision matrix}
+
+\item{lfi}{integer vector used as indicator of the
+position in the lower matrix where are the
+fill-in elements. Must be col then row ordered.}
+
+\item{C1}{is a correlation matrix.}
+
+\item{C0}{is a correlation matrix of the base model.}
+
+\item{L1}{is the Cholesky of \code{C1}.}
+
+\item{L0}{is the Cholesky of \code{C0}.}
+
 \item{decomposition}{character to specify which
 decomposition to use to decompose the hessian
 matrix around the base model,
@@ -59,12 +64,17 @@ The options are eigen' (default), 'svd' and 'chol'.}
 which is used to compute \eqn{\mathbf{I}(\theta_0)}.}
 }
 \value{
+matrix with lower triangle as the Cholesky factor
+of a correlation matrix if parametrization is
+"cpc" or "sap" and of a precision matrix if
+parametrization is 'itp' (with 'd0' as the diagonal elements).
+
 list containing the hessian,
 its 'square root', inverse 'square root' along
 with the decomposition used
 }
 \description{
-Internal functions to basecor
+Internal functions used by basecor
 }
 \details{
 By assuming equal mean vector we have
@@ -72,6 +82,8 @@ By assuming equal mean vector we have
 }
 \section{Functions}{
 \itemize{
+\item \code{theta2L()}: Cholesky (lower triangular) matrix from theta.
+
 \item \code{fillLprec()}: Function to fill-in a Cholesky matrix
 
 \item \code{KLD10()}: Compute the KLD between two multivariate Gaussian

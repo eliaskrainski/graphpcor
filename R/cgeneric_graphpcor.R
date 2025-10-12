@@ -124,9 +124,10 @@ cgeneric_graphpcor <-
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
+    itheta <- which(qnz & lower.tri(Q0, diag = FALSE))
     qij <- list(
-      ii = row(Q0)[qnz & lower.tri(Q0, diag = FALSE)],
-      jj = col(Q0)[qnz & lower.tri(Q0, diag = FALSE)],
+      ii = row(Q0)[itheta],
+      jj = col(Q0)[itheta],
       iq = which(Q0!=0))
     qij$ilq <- which(qnz & lower.tri(Q0, diag = TRUE))
     qij$iuq <- which(qnz & upper.tri(Q0, diag = TRUE))
@@ -181,17 +182,25 @@ cgeneric_graphpcor <-
       base <- rep(0, nEdges)
     }
 
-    Ibase <- hessian(model, base, decomposition = "eigen")
+##    Ibase <- hessian(model, base, decomposition = "eigen")
+    basemodel <- basecor(
+      base,
+      p = n,
+      parametrization = "itp",
+      decomposition = "svd",
+      itheta = itheta,
+      d0 = n:1
+    )
     if(dotArgs$debug) {
-      cat("I(base model) elements\n")
-      print(str(Ibase))
+      cat("Ibase model:\n")
+      print(str(basemodel))
     }
-    stopifnot(all(dim(Ibase) == c(nEdges, nEdges)))
+    stopifnot(all(dim(basemodel$H) == c(nEdges, nEdges)))
 
-    theta0 <- attr(Ibase, "base")
+    theta0 <- basemodel$theta
 
     ## store abs(det(H^{1/2}))
-    eval.5 <- sqrt(attr(Ibase, "decomposition")$values)
+    eval.5 <- sqrt(attr(basemodel$Ibase, "decomposition")$d)
     lc <- sum(log(eval.5[eval.5>sqrt(.Machine$double.eps)]))
 
     if(dotArgs$debug) {

@@ -1,4 +1,12 @@
-#' @describeIn basecor Cholesky (lower triangular) matrix from theta.
+#' Internal functions used by basecor
+#' @name basecor-utils
+NULL
+#> NULL
+
+#' @describeIn basecor-utils
+#' Cholesky (lower triangular) matrix from theta.
+#' @inheritParams basecor
+#' @param theta numeric vector with the model parameters.
 #' @returns matrix with lower triangle as the Cholesky factor
 #' of a correlation matrix if parametrization is
 #' "cpc" or "sap" and of a precision matrix if
@@ -61,12 +69,6 @@ theta2L <- function(
   }
   return(L)
 }
-
-#' Internal functions to basecor
-#' @name basecor-utils
-NULL
-#> NULL
-
 #' @describeIn basecor-utils
 #' Function to fill-in a Cholesky matrix
 #' @param L matrix as the lower triangle
@@ -145,7 +147,6 @@ KLD10 <- function(C1, C0, L1, L0) {
 #' @describeIn basecor-utils
 #' Evaluate the hessian of the KLD for a
 #' correlation model around a base model.
-#' @inheritParams basecor
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used

@@ -318,13 +318,13 @@ prec.graphpcor <- function(model, ...) {
 #' @importFrom stats cov2cor
 #' @importFrom numDeriv hessian
 #' @export
-hessian.graphpcor <-
-  function(func,
-           x,
-           method = "Richardson",
-           method.args = list(),
-           ...) {
-    decomposition <- c("eigen", "svd", "chol")
+hessian.graphpcor <- function(
+    func,
+    x,
+    method = "Richardson",
+    method.args = list(),
+    ...) {
+    decomposition <- c("svd", "eigen", "chol")
     if(is.null(list(...)$decomposition)) {
       decomposition <- "eigen"
     } else {

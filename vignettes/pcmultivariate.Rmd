@@ -1,11 +1,24 @@
 ---
 title: "Multivariate Penalized Complexity Prior"
-output: 
-  pdf_document:
-    includes:
-      in_header: preamble.tex
-author: "Elias T Krainski and Håvard Rue"
-date: "Updated in `r format(Sys.time(), '%B, %d - %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Multivariate Penalized Complexity Prior}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{amsfonts}
+  - \usepackage{amssymb}
+  - \usepackage{graphicx}
+  - \usepackage{mathtools}
+  - \usepackage{calc}
+  - \newcommand{\bx}{\textbf{x}}
+  - \newcommand{\bmu}{\boldsymbol{\mu}}
+  - \newcommand{\bgamma}{\boldsymbol{\gamma}}
+  - \newcommand{\btheta}{\boldsymbol{\theta}}
+  - \newcommand{\bxi}{\boldsymbol{\xi}}
+  - \newcommand{\brho}{\boldsymbol{\rho}}
+  - \newcommand{\bvphi}{\boldsymbol{\varphi}}
 bibliography: references.bib
 ---
 

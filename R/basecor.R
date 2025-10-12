@@ -1,4 +1,4 @@
-#' @description
+#' @describeIn basecor
 #' Build and organize information to build a base model
 #' for correlation matrices. This will be used to build a prior
 #' that penalizes the divergence from a base correlation matrix.
@@ -135,7 +135,6 @@ basecor <- function(
     ...) {
   UseMethod("basecor")
 }
-#' @rdname basecor-class
 #' @returns a `basecor` object
 #' @export
 #' @examples
@@ -165,6 +164,8 @@ basecor <- function(
 #'
 #' Sparse(solve(pc2$base), zeros.rm = TRUE)
 #'
+#' @describeIn basecor
+#' Method for basecor when base is a numeric vector, treated as `theta`.
 basecor.numeric <- function(
     base,
     p,
@@ -233,7 +234,8 @@ basecor.numeric <- function(
   class(out) <- "basecor"
   return(out)
 }
-#' @rdname basecor-class
+#' @describeIn basecor
+#' Method for basecor when base is a matrix.
 #' @export
 basecor.matrix <- function(
     base,
@@ -276,8 +278,7 @@ basecor.matrix <- function(
     } else {
       stopifnot((length(d0)==p) && (all(d0>0)))
       for(i in 1:p) {
-        L[i, ] <- L[i, ]/L[i, i]
-        L[i, ] <- L[i, ]*d0[i]
+        L[i, ] <- (d0[i]/L[i, i]) * L[i, ]
       }
     }
     theta <- L[itheta]
@@ -323,105 +324,4 @@ print.basecor <- function(x, ...) {
   print(x$theta)
   cat("Base correlation matrix:\n")
   print(x$base)
-}
-#' @describeIn basecor Cholesky (lower triangular) matrix from theta.
-#' @returns matrix with lower triangle as the Cholesky factor
-#' of a correlation matrix if parametrization is
-#' "cpc" or "sap" and of a precision matrix if
-#' parametrization is 'itp' (with 'd0' as the diagonal elements).
-theta2L <- function(
-    theta,
-    p,
-    parametrization = "cpc",
-    itheta,
-    d0) {
-  parametrization <- match.arg(
-    arg = tolower(parametrization),
-    choices = c("cpc", "sap", "itp")
-  )
-  stopifnot((m <- length(theta))>0)
-  if(missing(p)) {
-    p <- (1 + sqrt(1+8*m))/2
-  }
-  stopifnot(floor(p)==ceiling(p))
-  stopifnot(p>1)
-  if(missing(itheta)) {
-    itheta <- which(lower.tri(
-      diag(x = rep(1, p), nrow = p, ncol = p)))
-  } else {
-    stopifnot(all(itheta %in% which(lower.tri(
-      diag(x = rep(1, p), nrow = p, ncol = p)))))
-  }
-  stopifnot(length(theta)==length(itheta))
-  if(missing(d0)) {
-    d0 <- p:1
-  }
-  if(parametrization == "itp") {
-    L <- diag(x = d0, nrow = p, ncol = p)
-    L[itheta] <- theta
-    L <- fillLprec(L)
-  } else {
-    B <- A <- diag(p)
-    itheta  <- which(lower.tri(A))
-    if(parametrization == 'cpc') {
-      A[itheta] <- tanh(theta)
-      B[itheta] <- sqrt(1-A[itheta]^2)
-    } else {
-      theta <- pi/(1+exp(-theta))
-      A[itheta] <- cos(theta)
-      B[itheta] <- sin(theta)
-    }
-    if(p>2) {
-      for(j in 2:(p-1)) {
-        B[, j] <- B[, j] * B[, j-1]
-      }
-    }
-    L <- A * cbind(1, B[, 1:(p-1)])
-  }
-  attr(L, "parametrization") <- parametrization
-  attr(L, "theta") <- theta
-  if(parametrization == 'itp') {
-    attr(L, "itheta") <- itheta
-    attr(L, "d0") <- d0
-  }
-  return(L)
-}
-#' Function to fill-in a Cholesky matrix
-#' @param L matrix as the lower triangle
-#' containing the Cholesky decomposition of
-#' a precision matrix
-#' @param lfi integer vector used as indicator of the
-#' position in the lower matrix where are the
-#' fill-in elements. Must be col then row ordered.
-fillLprec <- function(L, lfi) {
-  L <- as.matrix(L)
-  p <- nrow(L)
-  if(missing(lfi)) {
-    i0 <- is.zero(L)
-    G <- i0 - 1.0
-    G <- G + t(G)
-    diag(G) <- 1 - colSums(G)
-    lG <- t(chol(G))
-    lfi <- which(i0 & (!is.zero(lG)))
-  }
-  if(length(lfi)>0) {
-    if(length(lfi)>1)
-      stopifnot(all(diff(lfi)>0))
-    ii <- row(L)[lfi]
-    jj <- col(L)[lfi]
-    for(v in 1:length(ii)) {
-      i <- ii[v]
-      j <- jj[v]
-      if(j==1) {
-        warning("j = 1!\n")
-        L[i,1] <- 0.0
-      } else {
-        stopifnot((i>1) & (j>1)) ## L_{11} not allowed
-        stopifnot(j>1) ## j=1 is not allowed
-        k <- 1:(j-1)
-        L[i, j] <- -sum(L[i, k] * L[j, k]) / L[j, j]
-      }
-    }
-  }
-  return(L)
 }
