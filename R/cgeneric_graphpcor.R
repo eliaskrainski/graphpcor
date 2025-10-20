@@ -239,7 +239,7 @@ cgeneric_graphpcor <-
         sigmaprob = as.numeric(sigma.prior.probability),
         lconst = as.numeric(lc),
         thetabase = as.numeric(theta0),
-        Ihalf = attr(Ibase, "h.5")
+        Ihalf = attr(basemodel$Ibase, "h.5")
       )
     )
     return(the_model)

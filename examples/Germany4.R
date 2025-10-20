@@ -62,7 +62,7 @@ m1f <- Obs ~
 
 vnames <- c("oral", "osph", "lary", "lung")
 
-lres.m1 <-lapply(vnames, function(v) {
+lres.m1 <- lapply(vnames, function(v) {
     inla(formula = m1f, 
          family = "poisson",
          data = data.frame(
@@ -113,7 +113,8 @@ tree3model <- cgeneric(
 ### The kronecker product model: besag with treepcor
 R.spatial <- inla.as.sparse(
     Diagonal(n.areas, x = colSums(graphGermany)) - graphGermany)
-## define the cgeneric 'besag' model
+
+## define the cgeneric 'besag' model with R.spatial as the precision structure
 cBesag <- cgeneric(
     model = "generic0",
     R = R.spatial,  
@@ -466,3 +467,5 @@ legend("topleft", c("graph 4", "graph 5", "graph 5b"),
        dens = c(20,NA,NA),
        fill = c(1, rgb(1,0.5,0.3), rgb(0.3,0.5,1)),
        bty = 'n', border = 'transparent', cex = 1.5)
+
+sessionInfo()
