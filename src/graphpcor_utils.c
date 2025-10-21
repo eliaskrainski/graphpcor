@@ -36,6 +36,43 @@ double pclogsigma(double lsigma, double lam)
 	return log(lam) + lsigma - lam * exp(lsigma);
 }
 
+double pcmultivar(int m, double param, double *theta0, double *halfI, double *ldhI, double *theta) {
+  // pi(theta|lamba) = p(xi|lambda)|det(I(theta0))|
+  double ldens = ldhI[0] + log(param * 0.5);
+  double r = 0.0, dm = (double)m;
+  double thd[m], xi[m];
+  int i;
+
+  // theta - theta0
+  for(i=0; i<m; i++) {
+    thd[i] = theta[i] - theta0[i];
+  }
+
+  // xi = I^0.5(theta - theta0)
+  int one = 1;
+  char trans = 'N';
+  double alpha = 1.0, beta = 0.0;
+  // y = alpha * A * x + beta * y
+  dgemv_(&trans, &m, &m, &alpha, &halfI[0], &m,
+         &thd[0], &one, &beta, &xi[0], &one, F_ONE);
+
+  r = SQR(xi[0]);
+  if(m>1) {
+    for(i=1; i<m; i++) {
+      r += SQR(xi[i]);
+    }
+    ldens += lgamma(dm*0.5);
+    ldens -= dm*0.5 * log(M_PI);
+  }
+  r = sqrt(r);
+  double smallr = 0.00001;
+  if(r<smallr) {
+    r += (smallr - r)* 0.5;
+  }
+  ldens -= (dm -1.0) * log(r) +param * r;
+  return ldens;
+}
+
 void cpc2correlCholesky(int *N, double *theta, double *L) {
 // canonical partial correlation z[k] = tanh(theta[k])
 // return the Cholesky of a correlation matrix

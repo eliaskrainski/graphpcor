@@ -36,8 +36,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	// actualtheta : vector of n+m model parameters
 	// actualtheta = { log(sigmas), lowtheta }
 	// sigmas[i] = exp(actualtheta[i])
-	// lowtheta[1:m] = H^{-1/2}(actualtheta[n+1:m] - base[1:m])
-	// = H^{-1/2} actualtheta[n+1:m] - thetabasescaled
+	// actualtheta[n+1:m] = H^{1/2}(actualtheta[n+1:m] - base[1:m])
+	// = H^{1/2} actualtheta[n+1:m] - thetabasescaled
 
 	double *ret = NULL;
 	int i, j, k;
@@ -49,7 +49,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(N > 0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-//	int debug = data->ints[1]->ints[0];
+	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->ints[2]->name, "ne"));	       // this will always be the case
 	int ne = data->ints[2]->ints[0];
@@ -96,7 +96,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	}
 	int nunkparams[3];
 	nunkparams[0] = nsigmas - nsfixed;
-	nunkparams[1] = ne;				       // to do lowparamfix
+	nunkparams[1] = ne;				       // TO DO: lowparamfixed
 	nunkparams[2] = nunkparams[0] + nunkparams[1];
 
 	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
@@ -118,16 +118,18 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->doubles[3]->name, "lconst"));
 	double lconst = data->doubles[3]->doubles[0];
 
-	assert(!strcasecmp(data->doubles[4]->name, "thetabasescaled"));
+	// printf("lconst = %2.5f \n", lconst);
+
+	assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
 	assert(data->doubles[4]->len == ne);
 
-	assert(!strcasecmp(data->mats[0]->name, "hHneg"));
+	assert(!strcasecmp(data->mats[0]->name, "Ihalf"));
 	assert(data->mats[0]->nrow == ne);
 	assert(data->mats[0]->ncol == ne);
 
 	double actualtheta[M];
 	double sigmas[N];
-	double lowtheta[ne], thetat[ne];
+
 	if (theta) {
 		k = 0;
 		for (i = 0; i < N; i++) {
@@ -145,32 +147,18 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				printf("%d ", sfixed[i]);
 			printMat(sigmas, 1, N, "\nsigmas\n");
 		}
- */
+*/
 		for (i = 0; i < ne; i++) {
 			actualtheta[itheta->ints[N + i]] = theta[k++];
 		}
-		// this is I(\theta_0)^{-0.5} \theta_0
-		for (i = 0; i < ne; i++) {
-			thetat[i] = data->doubles[4]->doubles[i];
-			lowtheta[i] = actualtheta[itheta->ints[N + i]];
-		}
-/*
+
+		/*
 		 if (debug > 99) {
-			printMat(thetat, 1, ne, "thetat:\n");
-			printMat(lowtheta, 1, ne, "lowtheta:\n");
-			printMat(data->mats[0]->x, ne, ne, "hHneg\n");
-		}
+		   printMat(data->mats[0]->x, ne, ne, "I.5\n");
+		 }
 */
-		int one = 1;
-		char trans = 'N';
-		double alpha = 1.0, beta = -1.0;
-		// (complete) thetat: I(\theta_0)^{-0.5} ( \theta - \theta_0)
-		dgemv_(&trans, &ne, &ne, &alpha, &data->mats[0]->x[0], &ne, &lowtheta[0], &one, &beta, &thetat[0], &one, F_ONE);
-/*
-		if (debug > 99) {
-			printMat(thetat, 1, ne, "actual thetat:\n");
-		}
-*/
+
+
 	} else {
 		for (i = 0; i < N; i++) {
 			actualtheta[i] = NAN;
@@ -178,8 +166,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		}
 		for (i = 0; i < ne; i++) {
 			actualtheta[i] = NAN;
-			lowtheta[i] = NAN;
-			thetat[i] = NAN;
 		}
 	}
 
@@ -224,37 +210,38 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				k++;
 			}
 		}
-/*
+
+		/*
 		 if (debug > 9999) {
 			printMat(ll, N, N, "L[i,j]:\n");
-		}
-*/
+		 }*/
+
 		// add low theta to L
 		k = 0;
 		for (i = 0; i < M; i++) {
 			if (ii->ints[i] != jj->ints[i]) {
-				ll[iuq->ints[i]] = lowtheta[k++];
+				ll[iuq->ints[i]] = actualtheta[N+k++];
 			}
 		}
-/*
+
 		 if (debug > 9999) {
 			printMat(ll, N, N, "L[i,j]:\n");
 		}
-*/
+
 		if (nfi > 0) {
 
-/*
+		  /*
 	    if (debug > 9999) {
 				printf("filling %d entries\n", nfi);
-			}
-*/
+			}*/
+
 			fillL(&N, &nfi, &ifi->ints[0], &jfi->ints[0], &ll[0]);
 
-/*
+		  /*
 		   if (debug > 9999) {
 				printMat(ll, N, N, "L[i,j]:\n");
-			}
- */
+		   }*/
+
 
 		}
 		// copy L to q (to be worked later in-place)
@@ -265,7 +252,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 
-/*
+		/*
 		 if (debug > 9999) {
 			printf("L0 (upper)\n");
 			k = 0;
@@ -275,15 +262,15 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
-*/
+		 } */
+
 
 		// chol2inv: to compute V0 = Q_0^{-1}
 		int info;
 		char uplo = 'L';
 		dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-/*
+		/*
 		 if (debug > 9999) {
 			printf("V0 (upper)\n");
 			k = 0;
@@ -304,19 +291,21 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			si[i] = sigmas[i] / sqrt(qtemp[k]);
 			k += (N - i);
 		}
-/*
-		if (debug > 999) {
+
+		/*
+		 if (debug > 999) {
 			printMat(si, 1, N, "si:\n");
-		}
-*/
+		 } */
+
 		k = 0;
 		for (i = 0; i < N; i++) {
 			for (j = i; j < N; j++) {
 				qtemp[k++] *= (si[i] * si[j]);
 			}
 		}
-/*
-		if (debug > 9999) {
+
+		/*
+		 if (debug > 9999) {
 			printf("V (upper)\n");
 			k = 0;
 			for (i = 0; i < N; i++) {
@@ -325,12 +314,12 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
-*/
+		 } */
+
 		// chol(V)
 		dpptrf_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-/*
+		/*
 		if (debug > 9999) {
 			printf("chol(V) (upper)\n");
 			k = 0;
@@ -340,13 +329,13 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
-*/
+		} */
+
 
 		// Q = chol2inv(chol(V))
 		dpptri_(&uplo, &N, &qtemp[0], &info, F_ONE);
 
-/*
+		/*
 		 if (debug > 9999) {
 			printf("Q (upper)\n");
 			k = 0;
@@ -356,8 +345,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				}
 				printf("\n");
 			}
-		}
-*/
+		 } */
+
 
 		// copy the non-zero to return
 		for (i = 0; i < M; i++) {
@@ -393,62 +382,23 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	{
 		ret = Calloc(1, double);
 
-		// the log prior:
-		// lconst should be equal to
-		// log(lambda) -(m-1)*log(pi)-log(2)+log(|H|)
-		ret[0] = lconst;
+		// p(theta|lambda) = p(xi|lambda) |det(I(theta0))|
+		// lconst = |det(I)^{1/2}|
+		ret[0] = pcmultivar(ne, lambda,
+                      &data->doubles[4]->doubles[0],
+                      &data->mats[0]->x[0],
+                      &lconst,
+                      &theta[nunkparams[0]]);
 
 		// PC prior for sigma[i]
 		double lam;
 		for (i = 0; i < nunkparams[0]; i++) {
-			k = itheta->ints[i];
-			lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
-			ret[0] += pclogsigma(theta[i], lam);
+		  if (!sfixed[i]) {
+		    k = itheta->ints[i];
+			  lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
+			  ret[0] += pclogsigma(theta[i], lam);
+		  }
 		}
-
-/*
-		// the low L params Jacobian
-		double val, pparams[ne];
-		// last angle
-		pparams[ne - 1] = atan2(thetat[ne - 1], thetat[ne - 2]);
-//    printf("ne = %d, pparams[ne-1] = %2.5f (%2.7f)\n",
-		// ne, pparams[ne-1], atan2(0.0, 0.0));
-		if (pparams[ne - 1] < 0) {
-			pparams[ne - 1] += 2.0 * M_PI;
-		}
-		val = SQR(thetat[ne - 1]) + SQR(thetat[ne - 2]);
-		// remaining angles
-		for (i = (ne - 2); i >= 0; i--) {
-			pparams[i] = atan2(sqrt(val), thetat[i - 1]);
-			val += SQR(thetat[i - 1]);
-		}
-		// r
-		pparams[0] = sqrt(val);
-
-		double ldJacobian = 0.0;
- 		ldJacobian += ((double) (ne - 1)) * log(pparams[0]);
-		if (ne > 2) {
-			for (i = 1; i < (ne - 1); i++) {       // not the last one
-				ldJacobian += ((double) (ne - 1 - i)) * log(sin(pparams[i]));
-			}
-		}
-		ret[0] += ldJacobian;
-*/
-
-		double z[ne];
-		for(i=0; i<ne; i++) {
-		  z[i] = lowtheta[i]-data->doubles[5]->doubles[i];
-		}
-		int one = 1;
-		char trans = 'T';
-		double alpha = 1.0, beta = 0.0;
-		dgemv_(&trans, &ne, &ne, &alpha, &data->mats[1]->x[0], &ne, &z[0], &one, &beta, &thetat[0], &one, F_ONE);
-		double h = 0.0;
-		for(i=0; i<ne; i++) {
-		  h += thetat[i]*z[i];
-		}
-		ret[0] -= ((double) (ne - 2)) * log(fabs(h));
-		ret[0] -= lambda * sqrt(2*h) + log(fabs(h));
 
 	}
 		break;

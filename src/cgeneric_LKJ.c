@@ -69,7 +69,45 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	assert(!strcasecmp(data->doubles[1]->name, "lc"));
 	double lc = data->doubles[1]->doubles[0];
 
-/*
+	assert(!strcasecmp(data->ints[2]->name, "sfixed"));   // this will always be the case
+	int nsigmas = data->ints[2]->len;
+	assert(nsigmas==N);
+	double sigmas[N];
+	int nsfixed = 0, sfixed[nsigmas];
+	for (i = 0; i < nsigmas; i++) {
+	  sfixed[i] = data->ints[2]->ints[i];
+	  nsfixed += sfixed[i];
+	}
+
+	assert(!strcasecmp(data->doubles[2]->name, "sigmaref"));
+	inla_cgeneric_vec_tp *sigmaref = data->doubles[2];
+	assert(sigmaref->len > 0);
+	assert(nsigmas == sigmaref->len);
+	for (i = 0; i < nsigmas; i++) {
+	  assert(sigmaref->doubles[i] > 0);
+	}
+	assert(!strcasecmp(data->doubles[3]->name, "sigmaprob"));
+	inla_cgeneric_vec_tp *sigmaprob = data->doubles[3];
+	assert(sigmaprob->len > 0);
+	assert(nsigmas == sigmaprob->len);
+	int nunkparams[3];
+	nunkparams[0] = nsigmas - nsfixed;
+	nunkparams[1] = nth;	// num params low L
+	nunkparams[2] = nunkparams[0] + nunkparams[1];
+
+	if(theta) {
+	  k = 0;
+	  for (i = 0; i < N; i++) {
+	    if (sfixed[i]) {
+	      sigmas[i] = sigmaref->doubles[i];
+	    } else {
+	      sigmas[i] = exp(theta[k++]);
+	    }
+	  }
+	  assert(nunkparams[0]==k);
+	}
+
+	/*
 	if (debug > 999) {
 		printf("N=%d, nth=%d, M=%d, eta=%f, lc=%f\n", N, nth, M, eta, lc);
 	}
@@ -102,7 +140,14 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		ret[1] = M;				       /* REQUIRED */
 
     // Cholesky of the correlation matrix
-    cpc2correlCholesky(&N, &theta[0], &ret[offset]);
+    cpc2correlCholesky(&N, &theta[nunkparams[0]], &ret[offset]);
+
+    k = 0;
+    for(i=0; i<N; i++) {
+      for(j=i; j<N; j++) {
+        ret[offset+k] *= (sigmas[i] * sigmas[j]);
+      }
+    }
 
     int info;
     char uplo = 'L';
