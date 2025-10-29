@@ -8,7 +8,7 @@ eta <- 10
 cmodel <- cgeneric(
     model = "LKJ",
     n = n,
-    eta = eta, debug = !TRUE
+    eta = eta
 )
 
 str(cmodel)
@@ -26,7 +26,7 @@ theta1 <- rnorm(m)
 (vv <- solve(qq))
 
 all.equal(as.matrix(vv),
-          graphpcor:::theta2correl(theta1, n, 'cpc'))
+          basecor(theta1, n)$base)
 
 ## fake data
 dat1 <- data.frame(
@@ -79,8 +79,7 @@ fitr <- inla(
     control.mode = cmode
 )
 
-(Cfitted <- graphpcor:::theta2correl(
-                          fitr$mode$theta, n, 'cpc'))
+(Cfitted <- basecor(fitr$mode$theta, n))
 round(vv, 2)
 
 detach("package:graphpcor", unload = TRUE)

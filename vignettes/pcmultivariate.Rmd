@@ -731,7 +731,7 @@ th0x <- t(expand.grid(th0s + theta0[1],
                       th0s + theta0[2])) ## each column: theta
 
 dth <- lapply(lseq, function(lambda) {
-  cm <- cgeneric_graphpcor(gpc, base = C0, 
+  cm <- cgeneric(gpc, base = C0, 
                  lambda = lambda, 
                  useINLAprecomp = FALSE)  ## under development vs
   matrix(exp(prior(cm, theta = th0x)), nth0)

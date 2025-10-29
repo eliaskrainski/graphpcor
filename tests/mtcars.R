@@ -217,7 +217,10 @@ round(mypc*100)
 round(cc.fit1*100)
 round(cc.fit2*100)
 
-ff3 <- update(ff0, .~.+f(i, model = "iidkd", order = nc, n = n*nc, vb.correct = FALSE))
+ff3 <- update(
+    ff0,
+    .~.+f(i, model = "iidkd", order = nc,
+          n = n*nc, vb.correct = FALSE))
 
 lcc <- t(chol(solve(mypc)))
 ini3 <- c(log(diag(lcc)), lcc[lower.tri(lcc)])

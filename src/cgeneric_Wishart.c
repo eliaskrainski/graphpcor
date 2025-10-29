@@ -83,7 +83,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	assert(data->doubles[1]->len == (N * N));
 	double *R = &data->doubles[1]->doubles[0];
 
-	assert(!strcasecmp(data->doubles[0]->name, "lcprior"));
+	assert(!strcasecmp(data->doubles[2]->name, "lcprior"));
 	double lcprior = data->doubles[2]->doubles[0];
 	assert(lcprior > 0);
 

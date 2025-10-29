@@ -22,6 +22,7 @@ model$f$cgeneric$data$characters <-
       list("test1", 'test2', 'last')
       )
 model$f$cgeneric$data$characters
+class(model) <- c("cgeneric", "inla.cgeneric")
 
 (ini <- initial(model))
 prior(model, theta = ini)

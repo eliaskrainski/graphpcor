@@ -21,24 +21,25 @@ knitr::opts_chunk$set(
 \centering
 ![](graphpcor_logo.png){width=3in} 
 
-This package implement an approach for 
-constructing models for correlation matrices 
-with a user-defined graphical structure, 
-proposed in Sterrantino et. al. (2025), 
-<https://doi.org/10.1007/s10260-025-00788-y>.
-The graphical structure makes correlation matrices 
-interpretable and avoids the quadratic increase of 
-parameters as a function of the dimension. 
-We suggest an automatic approach to define a prior 
-using a natural sequence of simpler models 
-within the Penalized Complexity framework 
-for the unknown parameters in these models.
-Models are implemented in a C code template for 
-the 'cgeneric' interface with the 'INLA' package 
-(<https://www.r-inla.org>). 
-This allows one to use 'INLA' to build and fit 
-complex data models using the models in this 
-package as building blocks.
+This package implement some models for 
+  correlation/covariance matrices including two approaches 
+  to model correlation matrices from a graphical structure.
+  One use latent parent variables as proposed in
+  Sterrantino et. al. (2024) <doi:10.48550/arXiv.2312.06289>.
+  The other uses a graph to specify conditional 
+  relations between the variables.
+  The graphical structure makes correlation matrices 
+  interpretable and avoids the quadratic increase of 
+  parameters as a function of the dimension. 
+  In the first approach a natural sequence of simpler 
+  models along with a complexity penalization is used.
+  The second penalizes deviations from a base model.
+  These can be used as prior for model parameters,
+  considering C code through the 'cgeneric' interface 
+  for the 'INLA' package (<https://www.r-inla.org>). 
+  This allows one to use these models as building 
+  blocks combined and to other latent Gaussian models 
+  in order to build complex data models.
 
 ## Installing dependencies
 

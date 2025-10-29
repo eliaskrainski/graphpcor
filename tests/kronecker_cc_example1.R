@@ -1,4 +1,5 @@
 library(INLA)
+
 inla.setOption(
     num.threads = 1L,
     safe = FALSE
@@ -32,7 +33,6 @@ m2.graph <- treepcor(
     p1 ~ p2 + c1 - c2,
     p2 ~ c3 + c4
 )
-
 
 theta.p <- c(-0.5, -1)
 prec(m2.graph, theta = theta.p)

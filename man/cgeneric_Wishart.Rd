@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_Wishart.R
 \name{cgeneric_Wishart}
 \alias{cgeneric_Wishart}
-\title{Build an \code{inla.cgeneric} to implement the Wishart
+\title{Build an \code{cgeneric} to implement the Wishart
 prior for a precision matrix.}
 \usage{
 cgeneric_Wishart(n, dof, R, debug = FALSE, useINLAprecomp = TRUE, shlib = NULL)
@@ -24,10 +24,10 @@ This is not considered if 'shlib' is provided.}
 \item{shlib}{string, default is NULL, with the path to the shared object.}
 }
 \value{
-a \code{inla.cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.
+a \code{cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.
 }
 \description{
-Build an \code{inla.cgeneric} to implement the Wishart
+Build an \code{cgeneric} to implement the Wishart
 prior for a precision matrix.
 }
 \details{
