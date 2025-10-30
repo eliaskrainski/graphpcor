@@ -172,22 +172,47 @@ plot(graph4)
 plot(graph5)
 plot(graph5b)
 
+nsim1 <- 500
+il4 <- which(lower.tri(diag(4)))
+names(il4) <- c(paste0("Or_", c("Os", "La", "Lu")),
+                paste0("Os_", c("La", "Lu")), "La_Lu")
+vc3 <- sapply(1:nsim1, function(x)
+    cov2cor(vcov(tree3, theta = runif(3, -3, 3)))[il4])
+vc4 <- sapply(1:nsim1, function(x)
+    cov2cor(vcov(graph4, theta = runif(4, -3, 3)))[il4])
+vc5 <- sapply(1:nsim1, function(x)
+    cov2cor(vcov(graph5, theta = runif(5, -3, 3)))[il4])
+vc5b <- sapply(1:nsim1, function(x)
+    cov2cor(vcov(graph5b, theta = runif(5, -3, 3)))[il4])
+
+par(mfcol = c(4, 6), mar = c(3.5,3.5,1.5,0.5), mgp = c(2,0.5,0), bty = "n")
+for(k in 1:6) {
+    hist(vc3[k, ], main = paste("Tree:", names(il4)[k]),
+         xlab = 'Correlation', freq = FALSE)
+    hist(vc4[k, ], main = paste("Graph 4:", names(il4)[k]),
+         xlab = 'Correlation', freq = FALSE)
+    hist(vc5[k, ], main = paste("Graph 5:", names(il4)[k]),
+         xlab = 'Correlation', freq = FALSE)
+    hist(vc5b[k, ], main = paste("Graph 5b:", names(il4)[k]),
+         xlab = 'Correlation', freq = FALSE)
+}
+
 ### Two cgeneric graphpcor models
 g4model <- cgeneric(
     model = graph4, 
-    lambda = 5,
+    lambda = 1,
     sigma.prior.reference = rep(1, K),
     sigma.prior.probability = rep(0.1, K)
 )
 g5model <- cgeneric(
     model = graph5, 
-    lambda = 5,
+    lambda = 1,
     sigma.prior.reference = rep(1, K),
     sigma.prior.probability = rep(0.1, K)
 )
 g5bmodel <- cgeneric(
     model = graph5b, 
-    lambda = 5,
+    lambda = 1,
     sigma.prior.reference = rep(1, K),
     sigma.prior.probability = rep(0.1, K)
 )
@@ -273,8 +298,6 @@ ije <- list(pmatch(edg.g4, edg.all[lower.tri(lg4)]),
            pmatch(edg.g5b, edg.all[lower.tri(lg5b)]))
 ije
 
-png("../slides/graphpcor25march/figures/marginals_std_correl.png",
-    width = 1600, height = 1200, res = 200)
 par(mfrow = c(2,5), mar = c(3,3,1,0.5), mgp = c(2,0.5,0))
 for(i in 1:K) {
     nami <- vnames[i]
@@ -310,7 +333,7 @@ plot(inla.smarginal(res.m5$internal.marginals.hyperpar[[K+ii[[3]][5]]]),
      type = "l", bty = "n", lwd = 4, lty = 3,
      xlab = edg.l[ije[[3]][3]], ylab = "Density")
 abline(v=0, col=gray(0.5), lwd = 2, lty = 2)
-dev.off()
+
 
 ## covariance, correlation and std for the fitted log(smr)
 svcor.m3 <- scc.fn(
@@ -401,8 +424,7 @@ scc.m4 <- t(apply(th.m4.samples, 2, function(x)
 scc.m5 <- t(apply(th.m5.samples, 2, function(x)
     scc.fn(vcov(graph5b, theta=x), mat = TRUE)))
 
-png("../slides/graphpcor25march/figures/posterior_correlations_histogram.png",
-    width = 1600, height = 1200, res = 200)
+
 par(mfrow = c(K, K), mar = c(3,2,2,0.5), mgp = c(2,0.5,0), las = 1)
 for(i in 1:K) {
     nami <- vnames[i]
@@ -449,12 +471,12 @@ for(i in 1:K) {
         }
     }
 }
-dev.off()
+
 
 nrepl <- 3e3
-prec4 <- replicate(nrepl, prec(graph4, theta = rnorm(4))[lower.tri(diag(4))])
-prec5 <- replicate(nrepl, prec(graph5, theta = rnorm(5))[lower.tri(diag(4))])
-prec5b <- replicate(nrepl, prec(graph5b, theta = rnorm(5))[lower.tri(diag(4))])
+prec4 <- replicate(nrepl, prec(graph4, theta = rnorm(4))[il4])
+prec5 <- replicate(nrepl, prec(graph5, theta = rnorm(5))[il4])
+prec5b <- replicate(nrepl, prec(graph5b, theta = rnorm(5))[il4])
 
 par(mfrow = c(2, 3), mar = c(4,4,1,1), mgp = c(3, 0.5, 0))
 for(i in 1:6) {
