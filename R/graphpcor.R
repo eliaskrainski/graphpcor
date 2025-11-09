@@ -392,7 +392,7 @@ hessian.graphpcor <- function(
       hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
     }
     stopifnot(all.equal(H, tcrossprod(h.5)))
-    attr(H, "base") <- x
+    attr(H, "theta") <- x
     attr(H, "h.5") <- h.5
     attr(H, "hneg.5") <- hneg.5
     attr(H, "decomposition") <- Hd

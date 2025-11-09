@@ -262,24 +262,19 @@ basecor.matrix <- function(
     d0 <- p:1
   }
   if(parametrization == 'itp') {
+    stopifnot((length(d0)==p) && (all(d0>0)))
     Q <- chol2inv(chol(base))
-    ilQ <- intersect(
-      which(lower.tri(matrix(1, p, p))),
-      which(!is.zero(Q))
-    )
+    ilQ <-  which(
+      lower.tri(matrix(1, p, p)) &
+        (!is.zero(Q)))
     if(missing(itheta)) {
       itheta <- ilQ
     } else {
       stopifnot(all(itheta %in% ilQ))
     }
     L <- t(chol(Q))
-    if(missing(d0)) {
-      d0 <- diag(L)
-    } else {
-      stopifnot((length(d0)==p) && (all(d0>0)))
-      for(i in 1:p) {
-        L[i, ] <- (d0[i]/L[i, i]) * L[i, ]
-      }
+    for(i in 1:p) {
+      L[i, ] <- (d0[i]/L[i, i]) * L[i, ]
     }
     theta <- L[itheta]
   } else {
