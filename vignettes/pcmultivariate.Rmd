@@ -1,6 +1,10 @@
 ---
 title: "Multivariate Penalized Complexity Prior"
-output: pdf_document
+output:
+  pdf_document: 
+    keep_tex: yes
+  html_document:
+    df_print: paged
 vignette: >
   %\VignetteIndexEntry{Multivariate Penalized Complexity Prior}
   %\VignetteEngine{knitr::rmarkdown}
@@ -715,7 +719,7 @@ C0 <- matrix(c(1, rho0,
 library(graphpcor)
 gpc <- graphpcor(x1 ~ x2 + x3)
 H <- hessian(gpc, x = C0)
-(theta0 <- attr(H, "base")) 
+(theta0 <- attr(H, "theta")) 
 all.equal(C0,
           vcov(gpc, theta = theta0))
 ```
@@ -799,7 +803,7 @@ Ith0 <- hessian(gph_model, C0)
 str(Ith0)
 
 ### check: evaluating theta0 gives the base model
-th0 <- attr(Ith0, 'base')
+th0 <- attr(Ith0, 'theta')
 vcov(gph_model, theta = th0)
 
 ## H^0.5: "SQRT" of the Hessian of KLD around the base model
