@@ -359,10 +359,12 @@ hessian.graphpcor <- function(
       stopifnot(length(x) == nEdges)
       C0 <- vcov(func, theta = x)
     }
+    print(list(x=x))
     ## hessian uses graphpcor:::KLD10
     H <- hessian(
       func = function(th)
-        KLD10(vcov(func, theta = th), C0),
+        KLD10(C1 = vcov(func, theta = th),
+              C0 = C0),
       x = x,
       method = method,
       method.args = method.args)

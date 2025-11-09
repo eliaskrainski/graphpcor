@@ -120,13 +120,16 @@ fillLprec <- function(L, lfi) {
 #' By assuming equal mean vector we have
 #'  \deqn{KLD = 0.5( tr(C0^{-1}C1) -p - log(|C1|) + log(|C0|) )}
 KLD10 <- function(C1, C0, L1, L0) {
-  ### input: C1, C0 (alternatively L1, L0)
+  ### input: C1, C0 or, alternatively, L1, L0 (upper triangles)
   ### output: KLD
   if(missing(L1)) {
     if(missing(C1)) {
       stop("Please provide either 'C1' or 'L1'!")
     }
     L1 <- chol(C1)
+  }
+  if(missing(C1)) {
+    C1 <- crossprod(L1)
   }
   p <- nrow(L1)
   hld1 <- sum(log(diag(L1)))
@@ -170,7 +173,7 @@ Hcorrel <- function(
       itheta = itheta,
       d0 = d0
     )
-    if("parametrization" == 'itp') {
+    if(parametrization == 'itp') {
       return(cov2cor(chol2inv(t(L))))
     } else {
       return(tcrossprod(L))
@@ -182,7 +185,7 @@ Hcorrel <- function(
   L0 <- chol(C0)
   H <- hessian(
     func = function(x)
-      KLD10(theta2correl(x), L0=L0),
+      KLD10(C1 = theta2correl(x), L0 = L0),
     x = theta,
     ...)
   ## next bit follows mvtnorm:::rmvnorm()

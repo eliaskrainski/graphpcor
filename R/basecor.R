@@ -170,9 +170,9 @@ basecor.numeric <- function(
     base,
     p,
     parametrization = "cpc",
-    decomposition = "svd",
     itheta,
     d0,
+    decomposition = "svd",
     ...) {
   theta <- base
   m <- length(theta)
