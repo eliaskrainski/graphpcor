@@ -15,9 +15,9 @@ basecor(base, p, parametrization = "cpc", decomposition, itheta, d0, ...)
   base,
   p,
   parametrization = "cpc",
-  decomposition = "svd",
   itheta,
   d0,
+  decomposition = "svd",
   ...
 )
 

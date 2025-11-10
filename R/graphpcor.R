@@ -352,52 +352,23 @@ hessian.graphpcor <- function(
       c0.ok <- all(which(abs(ll0)>sqrt(.Machine$double.eps)) %in%
                      which(abs(l1)>0))
       if(!c0.ok) {
-        stop("Provided base correlation not in the graphpcor model class!")
+        stop("Provided base correlation is not in the graphpcor model class!")
       }
       x <- ll0[lower.tri(ll0) & (!z0)]
     } else {
       stopifnot(length(x) == nEdges)
       C0 <- vcov(func, theta = x)
     }
-    print(list(x=x))
+    itheta <- which(lower.tri(Q0) & (!is.zero(Q0)))
     ## hessian uses graphpcor:::KLD10
-    H <- hessian(
-      func = function(th)
-        KLD10(C1 = vcov(func, theta = th),
-              C0 = C0),
-      x = x,
-      method = method,
-      method.args = method.args)
-    ## next bit follows mvtnorm:::rmvnorm()
-    t0 <- sqrt(.Machine$double.eps)
-    if(decomposition == "eigen") {
-      Hd <- eigen(H)
-      if(!all(Hd$values >= (t0 * abs(Hd$values[1]))))
-        warning("'H' is numerically not positive semidefinite")
-      s <- sqrt(pmax(Hd$values, 0.0))
-      h.5 <- t(Hd$vectors %*% (t(Hd$vectors) * s))
-      hneg.5 <- t(Hd$vectors %*% (t(Hd$vectors) / s))
-    }
-    if(decomposition == "svd") {
-      Hd <- svd(H)
-      if(any(Hd$d<(t0 * abs(Hd$d[1]))))
-        warning("'H' is numerically not positive semidefinite")
-      s <- sqrt(pmax(Hd$d, 0.0))
-      h.5 <- t(Hd$v %*% (t(Hd$u) * s))
-      hneg.5 <- t(Hd$v %*% (t(Hd$u) / s))
-    }
-    if(decomposition == "chol") {
-      Hd <- chol(H, pivot = TRUE)
-      h.5 <- matrix(Hd[, order(attr(Hd, "pivot")), ], nrow(H))
-      hn <- chol2inv(chol(H))
-      hn.5 <- chol(hn, pivot = TRUE)
-      hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
-    }
-    stopifnot(all.equal(H, tcrossprod(h.5)))
-    attr(H, "theta") <- x
-    attr(H, "h.5") <- h.5
-    attr(H, "hneg.5") <- hneg.5
-    attr(H, "decomposition") <- Hd
+    H <- Hcorrel(
+      theta = x,
+      p = n,
+      parametrization = "itp",
+      itheta = itheta,
+      d0 = n:1,
+      C0 = C0,
+      decomposition = decomposition)
     return(H)
   }
 #' @describeIn graphpcor

@@ -69,7 +69,8 @@ double pcmultivar(int m, double param, double *theta0, double *halfI, double *ld
   if(r<smallr) {
     r += (smallr - r)* 0.5;
   }
-  ldens -= (dm -1.0) * log(r) +param * r;
+  ldens -= param * r;
+  ldens -= (dm -1.0) * log(r);
   return ldens;
 }
 
