@@ -266,11 +266,11 @@ basecor.matrix <- function(
     Q <- chol2inv(chol(base))
     ilQ <-  which(
       lower.tri(matrix(1, p, p)) &
-        (!is.zero(Q)))
+        (!is.zero(Q, tol = 1e-9)))
     if(missing(itheta)) {
       itheta <- ilQ
     } else {
-      stopifnot(all(itheta %in% ilQ))
+      stopifnot(all(ilQ %in% itheta))
     }
     L <- t(chol(Q))
     for(i in 1:p) {

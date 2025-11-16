@@ -63,6 +63,7 @@ Imports:
     utils,
     Rgraphviz
 Suggests:
+    knitr,
     INLA (>= 24.02.09)
 BuildVignettes: true
 VignetteBuilder: knitr

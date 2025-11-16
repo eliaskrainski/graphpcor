@@ -326,7 +326,7 @@ hessian.graphpcor <- function(
     ...) {
     decomposition <- c("svd", "eigen", "chol")
     if(is.null(list(...)$decomposition)) {
-      decomposition <- "eigen"
+      decomposition <- "svd"
     } else {
       decomposition <- match.arg(
         list(...)$decomposition,

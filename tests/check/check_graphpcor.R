@@ -26,12 +26,12 @@ cmodel <- cgeneric(
     sigma.prior.probability = rep(0.5, ne[1]),
     debug = 1e9)
 
-graph(cmodel)
+gexraph(cmodel)
 
 ## define initial L
 theta.low <- rep(-1, ne[2])
 idx.low <- (!is.zero(G) & lower.tri(G))
-L1a <- diag(ne[1]); L1a[idx.low] <- theta.low
+L1a <- diag(ne[1]:1); L1a[idx.low] <- theta.low
 L1a
 
 ## the C code to fill.in
@@ -98,33 +98,22 @@ round(chol(V1), 4)
 theta1 <- c(d = logsigmas,
             l = theta.low)
 
-cmodel$f$cgeneric$data$doubles$thetabasescaled
-## [1] -0.2190589 -0.2256071 -0.2690858 -0.2829668
-drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta0l)
-
-round(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]), 3)
-###        [,1]   [,2]   [,3]   [,4]
-### [1,]  2.855 -0.126 -0.052 -0.002
-### [2,] -0.126  1.916 -0.018 -0.029
-### [3,] -0.052 -0.018  1.005 -0.001
-### [4,] -0.002 -0.029 -0.001  1.003
-
-drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta.low)
-##[1] -2.6759597 -1.7432539 -0.9338943 -0.9716843
-
-drop(matrix(cmodel$f$cgeneric$data$matrices$h[-(1:2)], ne[2]) %*% theta.low) -
-    cmodel$f$cgeneric$data$doubles$thetabase
-## [1] -1.873172 -1.220278 -0.653726 -0.680179
+round(matrix(cmodel$f$cgeneric$data$matrices$Ihalf[-(1:2)], ne[2]), 3)
+###        [,1]   [,2]   [,3]  [,4]
+### [1,]  1.056 -0.004 -0.014 0.000
+### [2,] -0.004  1.061 -0.014 0.000
+### [3,] -0.014 -0.014  1.086 0.000
+### [4,]  0.000  0.000  0.000 1.086
 
 Q1c <- prec(cmodel, theta = theta1)
 
 round(Q1c, 4)
 round(Q1 <- chol2inv(chol(V1)), 4)
-##          [,1]     [,2]     [,3]    [,4]
-## [1,] 166.6667 -45.1754 -12.1716  0.0000
-## [2,] -45.1754  24.4898   0.0000 -3.8881
-## [3,] -12.1716   0.0000   2.6667  0.0000
-## [4,]   0.0000  -3.8881   0.0000  3.7037
+##         [,1]    [,2]    [,3]    [,4]
+## [1,] 24.5542 -3.6470 -2.3359  0.0000
+## [2,] -3.6470  5.4170  0.0000 -2.4533
+## [3,] -2.3359  0.0000  1.1358 -0.8730
+## [4,]  0.0000 -2.4533 -0.8730  3.7037
 
 all.equal(Q1, as.matrix(Q1c))
 
@@ -157,7 +146,7 @@ g <- graphpcor(x1~x2+x3, x2~x4, x3~x4)
 (ne <- dim(g))
 Laplacian(g)
 
-th.base <- c(-1,0.5,1,0)
+th.base <- c(-1,0.5,1,0.3)
 c.base <- vcov(g, theta = th.base)
 c.base
 
@@ -194,11 +183,11 @@ vcov(g, theta = ifits[[1]]$mode$theta)
 g2c <- function(th) vcov(g, theta=th)[lower.tri(diag(ne[1]))]
 g2c(ifits[[1]]$mode$theta)
 
-inla.cgeneric.sample(n = 2, result = ifits[[1]], name = 'i', from.theta = g2c)
+inla.cgeneric.sample(n = 2, result = ifits[[1]], name = 'i', model=g,from.theta = g2c)
 
 sr <- lapply(ifits, function(r)
     inla.cgeneric.sample(
-        n = 2000, result = r, name = 'i',
+        n = 2000, result = r, name = 'i', model = g,
         from.theta = g2c, simplify = TRUE))
 str(sr,1)
 
@@ -281,10 +270,10 @@ library(graphpcor)
 gpc <- graphpcor(x1 ~ x2 + x3)
 
 H <- hessian(gpc, x = C0)
-(theta0 <- attr(H, "base"))
+(theta0 <- attr(H, "theta"))
 
 ptheta <- function(theta, H) {
-    xi <- attr(H, "h.5") %*% (theta - attr(H, "base"))
+    xi <- attr(H, "h.5") %*% (theta - attr(H, "theta"))
     rphi <- graphpcor:::x2rphi(xi)
     
 }

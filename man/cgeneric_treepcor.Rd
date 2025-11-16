@@ -32,8 +32,8 @@ to define the prior for the standard deviation parameters.}
 \description{
 This set the necessary data to implement the penalized
 complexity prior for a correlation matrix considering
-a three as proposed in
-\href{https://doi.org/10.1007/s10260-025-00788-y}{Sterrantino et. al. 2025}
+a three as proposed in Sterrantino et. al. 2025
+\url{doi:https://doi.org/10.1007/s10260-025-00788-y}.
 }
 \details{
 The correlation prior as in the paper depends on the lambda value.

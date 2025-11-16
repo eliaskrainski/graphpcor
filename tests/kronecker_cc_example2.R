@@ -50,8 +50,8 @@ Q1 <- prec(m1, theta = theta1)
 summary(diag(inla.qinv(Q1 + Diagonal(n, 1e-5), cntr)))
 
 ## Model 2: 
-m2.graph <- treepcor(
-    p1 ~ c1 + c2
+m2.graph <- graphpcor(
+    x1 ~ x2 + x3
 )
 
 d2 <- dim(m2.graph)
@@ -66,7 +66,7 @@ m2 <- cgeneric(
     lambda = 1)
 
 str(initial(m2))
-length(theta2 <- c(0.5, 0.3, 0))
+length(theta2 <- c(0.5, 0.3, 0, -1, 1))
 
 Q2 <- prec(m2, theta = theta2)
 Q2
@@ -74,7 +74,7 @@ Q2
 solve(Q2)
 
 cov2cor(solve(Q2))
-cov2cor(vcov(m2.graph, theta2[-(1:n2)]))
+cov2cor(vcov(m2.graph, theta = theta2[-(1:n2)]))
 
 ## The M1 (x) M2 Kronecker product model definition
 k12 <- kronecker(m1, m2)
