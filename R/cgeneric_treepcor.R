@@ -1,6 +1,7 @@
 #' Build an `cgeneric` for [treepcor()])
 #' @description
-#' This set the necessary data to implement the penalized
+#' This creates an `cgeneric` (see [INLAtools::cgeneric()])
+#' containing the necessary data to implement the penalized
 #' complexity prior for a correlation matrix considering
 #' a three as proposed in Sterrantino et. al. 2025
 #' <doi:https://doi.org/10.1007/s10260-025-00788-y>.
@@ -27,8 +28,7 @@
 #'  sigma.prior.probability = c(0.05, 0.0, 0.01)
 #' then the sigma is fixed to 2 and not estimated.
 #' @seealso [treepcor()] and [INLAtools::cgeneric()]
-#' @returns `cgeneric`/`inla.cgeneric` object.
-#' @useDynLib graphpcor, .registration = TRUE
+#' @returns `cgeneric`/`cgeneric` object.
 cgeneric_treepcor <-
   function(model,
            lambda,
@@ -54,7 +54,7 @@ cgeneric_treepcor <-
 
     d.elc <- etreepcor2variance(d.el[1:dd[2]])
     if(dotArgs$debug) {
-      print(str(d.elc))
+      print(utils::str(d.elc))
     }
 
     np <- dd[2]
@@ -76,7 +76,7 @@ cgeneric_treepcor <-
     ii <- col(itop)[!upper.tri(itop)]
     jj <- row(itop)[!upper.tri(itop)]
     if(dotArgs$debug) {
-      print(str(list(nc=nc,ii=ii,jj=jj)))
+      print(utils::str(list(nc=nc,ii=ii,jj=jj)))
     }
 
     stopifnot(length(sigma.prior.reference) == nc)

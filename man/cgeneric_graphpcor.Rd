@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_graphpcor.R
 \name{cgeneric_graphpcor}
 \alias{cgeneric_graphpcor}
-\title{Build an \code{inla.cgeneric} for a graph, see \code{\link[=graphpcor]{graphpcor()}}}
+\title{Build an \code{cgeneric} for a graph, see \code{\link[=graphpcor]{graphpcor()}}}
 \usage{
 cgeneric_graphpcor(
   model,
@@ -79,12 +79,12 @@ parameters are fixed to \code{-1}.}
 \code{\link[INLAtools:cgeneric-class]{INLAtools::cgenericBuilder()}}.}
 }
 \value{
-\code{cgeneric}/\code{inla.cgeneric} object.
+\code{cgeneric} object.
 }
 \description{
 From either a \code{graph} (see \code{\link[INLAtools:methods]{INLAtools::graph()}}) or
 a square matrix (used as a graph),
-creates an \code{inla.cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
+creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
 to implement the Penalized Complexity prior using the
 Kullback-Leibler divergence - KLD from a base graphpcor.
 }

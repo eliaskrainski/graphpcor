@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_pc_correl.R
 \name{cgeneric_pc_correl}
 \alias{cgeneric_pc_correl}
-\title{Build an \code{inla.cgeneric} to implement the PC prior,
+\title{Build an \code{cgeneric} object to implement the PC prior,
 proposed on Simpson et. al. (2007),
 for the correlation matrix parametrized from the
 hypershere decomposition, see details.}
@@ -21,6 +21,10 @@ cgeneric_pc_correl(
 
 \item{lambda}{numeric (positive), the penalization rate parameter}
 
+\item{base}{matrix with base correlation matrix,
+or numeric vector representing the parameters of a base correlation
+matrix. See \code{\link[=basecor]{basecor()}} for details.}
+
 \item{debug}{integer, default is zero, indicating the verbose level.
 Will be used as logical by INLA.}
 
@@ -31,10 +35,10 @@ This is not considered if 'shlib' is provided.}
 \item{shlib}{string, default is NULL, with the path to the shared object.}
 }
 \value{
-a \code{inla.cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.
+a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
 }
 \description{
-Build an \code{inla.cgeneric} to implement the PC prior,
+Build an \code{cgeneric} object to implement the PC prior,
 proposed on Simpson et. al. (2007),
 for the correlation matrix parametrized from the
 hypershere decomposition, see details.

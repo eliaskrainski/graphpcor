@@ -51,12 +51,13 @@ graphpcor.formula <- function(...) {
 #' @describeIn graphpcor
 #' Build a `graphpcor` from a matrix
 #' @importFrom stats as.formula
+#' @importFrom INLAtools is.zero
 #' @export
 graphpcor.matrix <- function(...) {
   x <- list(...)[[1]]
   stopifnot(all.equal(x, t(x)))
   ne <- c(nrow(x), NA)
-  iz <- is.zero(x)
+  iz <- is.zero(x, tol = 1e-9)
   ne[2] <- sum(lower.tri(iz) & (!iz))
   vnams <- rownames(x)
   if(is.null(vnams)) {
@@ -268,6 +269,8 @@ setMethod(
 #' @describeIn graphpcor
 #' The precision method for 'graphpcor'
 #' @param model graphpcor model object
+#' @importFrom Matrix Matrix forceSymmetric
+#' @importFrom INLAtools Sparse prec
 #' @export
 prec.graphpcor <- function(model, ...) {
   ne <- dim(model)
@@ -317,6 +320,7 @@ prec.graphpcor <- function(model, ...) {
 #' all.equal(hessian(g, C0), gH0)
 #' @importFrom stats cov2cor
 #' @importFrom numDeriv hessian
+#' @importFrom INLAtools is.zero
 #' @export
 hessian.graphpcor <- function(
     func,
@@ -333,16 +337,15 @@ hessian.graphpcor <- function(
         decomposition)
     }
     Q0 <- Laplacian(func)
-    nEdges <- sum((!is.zero(Q0)) & lower.tri(Q0))
-    z0 <- is.zero(Q0)
+    nEdges <- sum((!is.zero(Q0, tol = 1e-9)) & lower.tri(Q0))
+    z0 <- is.zero(Q0, tol = 1e-9)
     n <- nrow(Q0)
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     if(inherits(x, "Matrix")) {
       x <- as.matrix(x)
     }
     if(inherits(x, "matrix")) {
-      ## maybe optim() to get theta that
-      ## give it close to C0?
+      ## maybe find theta that gives it close to C0?
       ## For now check the elements of L from C0^{-1}
       C0 <- cov2cor(x)
       qq0 <- chol2inv(chol(C0))
@@ -373,6 +376,7 @@ hessian.graphpcor <- function(
   }
 #' @describeIn graphpcor
 #' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
+#' @importFrom INLAtools cgeneric
 #' @export
 cgeneric.graphpcor <- function(model, ...) {
   args <- list(...)

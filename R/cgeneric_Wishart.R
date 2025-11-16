@@ -69,7 +69,7 @@ cgeneric_Wishart <-
       cat('hldet = ', hldetr, ', log const = ', lcprior, '\n')
     }
 
-    cmodel = "inla_cgeneric_Wishart"
+    cmodel = "cgeneric_Wishart"
 
     the_model <- list(
       f = list(
@@ -104,7 +104,7 @@ cgeneric_Wishart <-
       )
 
     class(the_model) <- "cgeneric"
-    class(the_model$f$cgeneric) <- "inla.cgeneric"
+    class(the_model$f$cgeneric) <- "cgeneric"
 
     return(the_model)
 

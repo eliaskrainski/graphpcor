@@ -1,8 +1,8 @@
-#' Build an `inla.cgeneric` for a graph, see [graphpcor()]
+#' Build an `cgeneric` for a graph, see [graphpcor()]
 #' @description
 #' From either a `graph` (see [graph()]) or
 #' a square matrix (used as a graph),
-#' creates an `inla.cgeneric` (see [cgeneric()])
+#' creates an `cgeneric` (see [INLAtools::cgeneric()])
 #' to implement the Penalized Complexity prior using the
 #' Kullback-Leibler divergence - KLD from a base graphpcor.
 #' @param model  a `graphpcor` (see [graphpcor()]) or
@@ -60,8 +60,8 @@
 #' @param ... additional arguments that will be passed on to
 #' [INLAtools::cgenericBuilder()].
 #' @seealso [graphpcor()]
-#' @returns `cgeneric`/`inla.cgeneric` object.
 #' @useDynLib graphpcor, .registration = TRUE
+#' @returns `cgeneric` object.
 cgeneric_graphpcor <-
   function(model,
            lambda,
@@ -193,7 +193,7 @@ cgeneric_graphpcor <-
     )
     if(dotArgs$debug) {
       cat("Ibase model:\n")
-      print(str(basemodel))
+      print(utils::str(basemodel))
     }
     stopifnot(all(dim(basemodel$H) == c(nEdges, nEdges)))
 

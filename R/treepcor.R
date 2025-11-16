@@ -215,6 +215,7 @@ dim.treepcor <- function(x, ...) {
 #' @describeIn treepcor
 #' The `drop1` method for a `treepcor`
 #' @param object treepcor
+#' @importFrom INLAtools is.zero
 #' @export
 setMethod(
   "drop1",

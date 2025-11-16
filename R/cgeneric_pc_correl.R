@@ -1,9 +1,12 @@
-#' Build an `inla.cgeneric` to implement the PC prior,
+#' Build an `cgeneric` object to implement the PC prior,
 #' proposed on Simpson et. al. (2007),
 #' for the correlation matrix parametrized from the
 #' hypershere decomposition, see details.
 #' @param n integer to define the size of the matrix
 #' @param lambda numeric (positive), the penalization rate parameter
+#' @param base matrix with base correlation matrix,
+#' or numeric vector representing the parameters of a base correlation
+#' matrix. See [basecor()] for details.
 #' @param debug integer, default is zero, indicating the verbose level.
 #' Will be used as logical by INLA.
 #' @param useINLAprecomp logical, default is TRUE, indicating if it is to
@@ -37,7 +40,7 @@
 #'   IMA Journal of Management Mathematics (2007) 18, 55-73.
 #'   <doi 10.1093/imaman/dpl010>
 #'
-#' @return a `inla.cgeneric`, [cgeneric()] object.
+#' @return a `cgeneric` object, see [cgeneric()] for details.
 cgeneric_pc_correl <-
   function(n,
            lambda,
@@ -106,7 +109,7 @@ cgeneric_pc_correl <-
         )
       )
 
-    class(the_model) <- "inla.cgeneric"
+    class(the_model) <- "cgeneric"
     class(the_model$f$cgeneric) <- "inla.cgeneric"
 
     return(the_model)

@@ -18,7 +18,7 @@ dLKJ <- function(R, eta, log = FALSE) {
     o <- exp(o)
   return(o)
 }
-#' Build an `cgeneric`/`inla.cgeneric` for
+#' Build an `cgeneric` model for
 #' the LKG prior on correlation matrix.
 #' @param n integer to define the size of the matrix
 #' @param eta numeric greater than 1, the parameter
@@ -38,7 +38,7 @@ dLKJ <- function(R, eta, log = FALSE) {
 #' If a vector is given and a probability is NA, 0 or 1, the
 #' corresponding `sigma.prior.reference` will be used as fixed.
 #' @param ... additional arguments passed on to
-#' [INLAtools::cgeneric].
+#' [INLAtools::cgeneric()].
 #' @seealso [dLKJ()] and [basecor()]
 #' @details
 #' The parametrization uses the
@@ -60,7 +60,7 @@ dLKJ <- function(R, eta, log = FALSE) {
 #'   Parameterizing correlations: a geometric interpretation.
 #'   IMA Journal of Management Mathematics (2007) 18, 55-73.
 #'   <doi 10.1093/imaman/dpl010>
-#' @return a `inla.cgeneric`, [cgeneric()] object.
+#' @return a `cgeneric` object, see [INLAtools::cgeneric()] for details.
 cgeneric_LKJ <-
   function(n,
            eta,

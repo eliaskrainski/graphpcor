@@ -129,9 +129,9 @@ basecor <- function(
     base,
     p,
     parametrization = 'cpc',
-    decomposition,
     itheta,
     d0,
+    decomposition,
     ...) {
   UseMethod("basecor")
 }
@@ -283,7 +283,7 @@ basecor.matrix <- function(
     }
     il <- which(lower.tri(base))
     l <- t(chol(base))[il]
-    theta <- optim(
+    theta <- stats::optim(
       rep(0, length(il)),
       function(x)
         mean((theta2L(x, p, parametrization)[il]-l)^2),
@@ -312,6 +312,7 @@ basecor.matrix <- function(
 }
 #' @describeIn basecor
 #' Print method for 'basecor'
+#' @param x a basecor object.
 #' @export
 print.basecor <- function(x, ...) {
   cat("Parameters (", toupper(x$parametrization),

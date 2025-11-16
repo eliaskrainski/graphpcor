@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_pc_prec_correl.R
 \name{cgeneric_pc_prec_correl}
 \alias{cgeneric_pc_prec_correl}
-\title{Build an \code{inla.cgeneric} to implement the PC-prior of a
+\title{Build an \code{cgeneric} object to implement the PC-prior of a
 precision matrix as inverse of a correlation matrix.}
 \usage{
 cgeneric_pc_prec_correl(
@@ -32,10 +32,10 @@ This is not considered if 'shlib' is provided.}
 \item{shlib}{string, default is NULL, with the path to the shared object.}
 }
 \value{
-a \code{inla.cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.
+a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
 }
 \description{
-Build an \code{inla.cgeneric} to implement the PC-prior of a
+Build an \code{cgeneric} object to implement the PC-prior of a
 precision matrix as inverse of a correlation matrix.
 }
 \details{

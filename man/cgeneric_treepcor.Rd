@@ -27,10 +27,11 @@ to define the prior for the standard deviation parameters.}
 \code{\link[INLAtools:cgeneric-class]{INLAtools::cgenericBuilder()}}.}
 }
 \value{
-\code{cgeneric}/\code{inla.cgeneric} object.
+\code{cgeneric}/\code{cgeneric} object.
 }
 \description{
-This set the necessary data to implement the penalized
+This creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
+containing the necessary data to implement the penalized
 complexity prior for a correlation matrix considering
 a three as proposed in Sterrantino et. al. 2025
 \url{doi:https://doi.org/10.1007/s10260-025-00788-y}.

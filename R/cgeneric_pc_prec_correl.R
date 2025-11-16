@@ -1,4 +1,4 @@
-#' Build an `inla.cgeneric` to implement the PC-prior of a
+#' Build an `cgeneric` object to implement the PC-prior of a
 #' precision matrix as inverse of a correlation matrix.
 #' @param n integer to define the size of the matrix
 #' @param lambda numeric (positive), the penalization rate parameter
@@ -52,7 +52,7 @@
 #' 2009. “Generating Random Correlation Matrices Based
 #' on Vines and Extended Onion Method.”
 #' Journal of Multivariate Analysis 100: 1989–2001.
-#' @return a `inla.cgeneric`, [cgeneric()] object.
+#' @return a `cgeneric` object, see [cgeneric()] for details.
 cgeneric_pc_prec_correl <-
   function(n,
            lambda,
@@ -87,10 +87,15 @@ cgeneric_pc_prec_correl <-
               paste(theta.base, collapse = ", "))
     }
     stopifnot(length(theta.base)==m)
-      H.el <- theta2H(theta.base)
+      H.el <- Hcorrel(
+        theta = theta.base,
+        p = m,
+        parametrization = "itp",
+        itheta = which(lower.tri(diag(m))),
+        decomposition = "svd")
       if(debug) {
         cat("H elements\n")
-        print(str(H.el))
+        print(utils::str(H.el))
       }
 ##      lc <- lc - sum(log(H.el$svd$d))
 
@@ -127,7 +132,7 @@ cgeneric_pc_prec_correl <-
               shlib = shlib
             ),
             matrices = list(
-              hHn = c(m,m,H.el$h.5)
+              hHn = c(m,m,attr(H.el, "h.5"))
               ),
             smatrices = list(
               )
@@ -136,7 +141,7 @@ cgeneric_pc_prec_correl <-
         )
       )
 
-    class(the_model) <- "inla.cgeneric"
+    class(the_model) <- "cgeneric"
     class(the_model$f$cgeneric) <- "inla.cgeneric"
 
     return(the_model)

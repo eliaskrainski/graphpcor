@@ -9,7 +9,7 @@
 \alias{print.basecor}
 \title{Information for a base model for correlation matrices}
 \usage{
-basecor(base, p, parametrization = "cpc", decomposition, itheta, d0, ...)
+basecor(base, p, parametrization = "cpc", itheta, d0, decomposition, ...)
 
 \method{basecor}{numeric}(
   base,
@@ -47,14 +47,6 @@ parametrization used. The available ones are
 "cpc" (or "CPC"), "sap" (or "SAP"), and "itp" (or "ITP"),
 see Details. The default is "cpc".}
 
-\item{decomposition}{character to specify which
-decomposition to use to decompose the hessian
-matrix around the base model,
-\eqn{\mathbf{I}(\theta_0)}, in order to compute
-\eqn{\mathbf{I}^{1/2}(\theta_0)} and
-\eqn{\mathbf{I}^{-1/2}(\theta_0)}.
-The options are eigen' (default), 'svd' and 'chol'.}
-
 \item{itheta}{integer vector to specify the (vectorized) position
 where 'theta' will be placed in the (initial, before fill-in)
 Cholesky (lower triangle) factor. Default is missing and assumes
@@ -64,8 +56,18 @@ the dense case for when \code{itheta = which(lower.tri(...))}.}
 (initial) Cholesky factor in the ITP parametrization.
 Default consider \code{d0 = p:1}.}
 
+\item{decomposition}{character to specify which
+decomposition to use to decompose the hessian
+matrix around the base model,
+\eqn{\mathbf{I}(\theta_0)}, in order to compute
+\eqn{\mathbf{I}^{1/2}(\theta_0)} and
+\eqn{\mathbf{I}^{-1/2}(\theta_0)}.
+The options are eigen' (default), 'svd' and 'chol'.}
+
 \item{...}{used to pass arguments to \code{\link[numDeriv:hessian]{numDeriv::hessian()}},
 which is used to compute \eqn{\mathbf{I}(\theta_0)}.}
+
+\item{x}{a basecor object.}
 }
 \value{
 a basecor object

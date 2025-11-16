@@ -2,7 +2,7 @@
 % Please edit documentation in R/cgeneric_LKJ.R
 \name{cgeneric_LKJ}
 \alias{cgeneric_LKJ}
-\title{Build an \code{cgeneric}/\code{inla.cgeneric} for
+\title{Build an \code{cgeneric} model for
 the LKG prior on correlation matrix.}
 \usage{
 cgeneric_LKJ(
@@ -36,13 +36,13 @@ If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.}
 
 \item{...}{additional arguments passed on to
-\link[INLAtools:cgeneric-class]{INLAtools::cgeneric}.}
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}.}
 }
 \value{
-a \code{inla.cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.
+a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
 }
 \description{
-Build an \code{cgeneric}/\code{inla.cgeneric} for
+Build an \code{cgeneric} model for
 the LKG prior on correlation matrix.
 }
 \details{
