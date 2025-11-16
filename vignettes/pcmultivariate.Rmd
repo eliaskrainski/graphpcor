@@ -716,7 +716,6 @@ C0 <- matrix(c(1, rho0,
                rho0[1], 1, prod(rho0), 
                rho0[2], prod(rho0), 1), 3)
 
-library(graphpcor)
 gpc <- graphpcor(x1 ~ x2 + x3)
 H <- hessian(gpc, x = C0)
 (theta0 <- attr(H, "theta")) 
@@ -812,7 +811,6 @@ h.5 <- attr(Ith0, 'h.5')
 ## its determinant
 (dh.5 <- prod(attr(Ith0, 'decomposition')$values^0.5))
 
-
 ## set up a grid of theta around theta0
 h <- 0.01
 th0s <- seq(-1.5+h/2, 1.5-h/2, h)
@@ -863,6 +861,156 @@ plot(th0s + th0[3], d3th); abline(v = th0[3])
 ```
 
 # Example with $m>3$
+
+We now consider a four nodes graph to represent a four dimentional Gaussian random vector. We will model the correlation considering 
+a set of conditional distributions represented by a graph  
+```{r graph4, echo = TRUE}
+g4 <- graphpcor(x1 ~ x2 + x3, x4 ~ x2 + x3)
+(ne <- dim(g4))
+plot(g4)
+```
+
+This graph has 4 edges and so we will use a four parameters model.
+We use the inverse transform parametrization - ITP 
+for the correlation matrix where we parametrize the 
+Cholesky of the precision matrix.
+See `help(basecor)` for details. 
+
+```{r C4, echo = TRUE}
+thetaL <- c(-1.5, -1, -0.7, -1.3)
+(C4 <- vcov(g4, theta = thetaL))
+```
+
+
+```{r covariance4, echo = TRUE}
+sigmas <- c(5, 0.5, 1, 0.1)
+(V4 <- vcov(g4, theta = c(log(sigmas), thetaL))) 
+n <- 100
+x4 <- matrix(rnorm(n * 4), n) %*% chol(V4) 
+```
+
+We set a prior considering that an informative prior where the
+correlations are centered at the following correlation matrix 
+```{r prior4, echo = TRUE}
+b4 <- matrix(c(1,.8,.75,.6, .8,1,.6,.75, 
+               .75,.6,1,.45, .6,.75,.45,1), 4)
+```
+
+We can check if this correlation matrix belongs to the model, 
+or, in other words, if it can be generated from this model. 
+We can use the 'hessian' method for a `graphpcor`, 
+which find which parameters will give such correlation matrix as base model with
+```{r H4}
+hessian(g4, b4)
+```
+
+```{r cmodel}
+cmodel <- cgeneric(
+    model = g4,
+    lambda = 3,
+    base = b4, 
+    sigma.prior.reference = rep(1, ne[1]),
+    sigma.prior.probability = rep(0.5, ne[1]))
+```
+
+We consider that we have observed data as from the following model \[
+y_{ik} \sim \textrm{N}(\mu_{ik}, \sigma^2_e)
+\]
+Organize the data to fit the model
+```{r idata, echo = TRUE}
+theta.e <- 10 ##  = log(1/sigma^2_e)
+datar <- data.frame(
+    r = rep(1:n, ne[1]),
+    i = rep(1:ne[1], each = n),
+    y = rnorm(n*ne[1], 1 + x4, exp(-2*theta.e))
+)
+```
+
+Fit the model using INLA
+```{r fit4, echo = TRUE}
+mform <- y ~ f(i, model = cmodel, replicate = r)
+library(INLA)
+fit <- inla(
+    formula = mform,
+    data = datar,
+    control.family = list(hyper = list(prec = list(
+      initial = theta.e, fixed = TRUE)))
+)
+```
+
+Compute the fitted correlation/covariance matrix, 
+evaluating the correlation model at the posterior mode
+```{r fit4mode, echo = TRUE}
+vcov(g4, theta = fit$mode$theta[ne[1]+1:ne[2]]) ## correlation
+vcov(g4, theta = fit$mode$theta) ## covariance
+```
+
+Now we will draw simulations from the posterior of $\theta$ 
+and compute the correlation matrix at each sample.
+```{r csamples, echo = TRUE}
+ptheta.samples <- t(inla.hyperpar.sample(
+    n = 10000, result = fit, intern = TRUE))
+
+il4 <- which(lower.tri(diag(4)))
+
+csamples <- apply(ptheta.samples, 2, function(th) {
+  v <- vcov(g4, theta = th)
+  c(sqrt(diag(v)), cov2cor(v)[il4])
+})
+```
+
+We will visualize the posterior for each theta, 
+variances and correlation in the next Figure.
+
+```{r viz4, out.width="99%"}
+L4 <- Laplacian(g4)
+ii4 <- c(1, 5:7, 2, 8:9, 3, 10, 4)
+Vxx <- cov(x4)
+true.p <- c(sqrt(diag(V4)), cov2cor(V4)[il4])
+xx.p <- c(sqrt(diag(Vxx)), cov2cor(Vxx)[il4])
+
+par(mfrow = c(4, 4), mar = c(3,3,0.3,0.3), mgp = c(2, 0.5, 0), las = 1)
+k <- 0; k.th <- 0
+for(i in 1:4) {
+    for(j in 1:4) {
+        if(i>j) {
+            if(is.zero(L4[i,j])) {
+                plot(0, type = "n", xlab = "", ylab = "", 
+                     bty = "n", axes = FALSE)
+            } else {
+                k.th <- k.th + 1
+                plot(fit$internal.marginals.hyperpar[[4+k.th]],
+                     bty = "n", type = "l", 
+                     main = '', ylab = "Density",
+                     xlab = as.expression(bquote(theta[.(k.th)])))
+                abline(v = thetaL[k.th], lty = 1, lwd = 3)
+            }
+            if((i==4) & (j==1)) {
+                legend("bottomleft",
+                       c("true", "sample", "posterior", "post. sample"),
+                       lwd = c(3,3,1,0), lty = c(1,3,1,0), bty = "n",
+                       fill = rep(c("transparent", gray(0.4)), c(3,1)), 
+                       border = rep(c("transparent", "black"), c(3,1)))
+            }
+        } else {
+            k <- k + 1
+            if(i==j) {
+                hist(csamples[i, ], 30, freq = FALSE, main = '',
+                     xlab = as.expression(bquote(sigma[.(i)])),
+                     col = gray(0.3), border = 'transparent')
+                abline(v = c(true.p[i], xx.p[i]), lty = c(1,3), lwd = 3)
+            }
+            if(i<j) {
+                hist(csamples[ii4[k], ], 30, freq = FALSE, main = '',
+                     xlab = as.expression(bquote(rho[.(i)~.(j)])),
+                     col = gray(0.5), border = 'transparent')
+                abline(v = c(true.p[ii4[k]], xx.p[ii4[k]]), 
+                       lty = c(1,3), lwd = 3)
+            }
+        } 
+    }
+}
+```
 
 
 # References

@@ -2,11 +2,11 @@
 title: 'Supplement for "A graphical approach for multivariate modeling" by'
 author: "Anna Freni-Sterrantino, Denis Rustand, Janet van Niekerk, Elias T Krainski, and H\\aa vard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
-output:
-  pdf_document: 
-    keep_tex: yes
-  html_document:
-    df_print: paged
+output: pdf_document
+vignette: >
+  %\VignetteIndexEntry{Tree and latent variables model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 header-includes:
 - \usepackage{lscape}
 - \usepackage{multicol}
@@ -20,7 +20,7 @@ library(graphpcor)
 
 
 This material detail the model properties of the 
-graphical approach to model correlations proposed in @treepcor2024model.
+graphical approach to model correlations proposed in @sterrantino2025graphical.
 We first formalize the specific kind of graph used
 to define the model and provides an intuitive visualization.
 We also formalize simple rules for writing the joint distribution
@@ -28,6 +28,8 @@ for all the variables in the model.
 This gives also the precision matrix for the full model and the 
 covariance for the variables of interest.
 We use some examples as illustration.
+We recommend to look at the 'treepcor' vignette
+on the implementation details.
 
 ## The directed tree definition
 
