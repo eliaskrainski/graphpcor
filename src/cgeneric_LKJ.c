@@ -142,10 +142,12 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
     // Cholesky of the correlation matrix
     cpc2correlCholesky(&N, &theta[nunkparams[0]], &ret[offset]);
 
-    k = 0;
+    // include sigmas
+    k = 2;
     for(i=0; i<N; i++) {
       for(j=i; j<N; j++) {
-        ret[offset+k] *= (sigmas[i] * sigmas[j]);
+        ret[k] *= sigmas[j];
+        k++;
       }
     }
 
@@ -168,8 +170,8 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		// return c(P, initials)
 		// where P is the number of hyperparameters
 		ret = Calloc(nth + 1, double);
-		ret[0] = nth;
-		for (i = 0; i < nth; i++) {
+		ret[0] = nunkparams[2];
+		for (i = 0; i < nunkparams[2]; i++) {
 			ret[1 + i] = 0.0;
 		}
 	}
@@ -210,16 +212,20 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		  ldJacobian -= 2.0*log(cosh(theta[i]));
 		}
 		// store the log-prior
-		// 'lc' is a pre-computed constant, in R:
-		// 	k <- 1:(n-1)
-		//  lc <- sum((2*eta-2+n-k)*(n-k))*log(2) +
-		//    sum(lbeta(eta + (n-k-1)/2,
-    //              eta + (n-k-1)/2)*(n-k))
-    //printf("%2.5f, %2.5f, %2.5f, %2.5f\n",
-      //     lhdetC, 2.0*lhdetC*(eta-1.0),
-        //   lc, ldJacobian);
 		ret[0] = 2.0 * lhdetC * (eta - 1.0) -lc;
 		ret[0] += ldJacobian;
+
+		// PC prior for sigma[i]
+		if(nunkparams[0]>0) {
+		  double lam;
+		  for (i = 0; i < nunkparams[0]; i++) {
+		    if (!sfixed[i]) {
+		      k = i; //theta->ints[i];
+		      lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
+		      ret[0] += pclogsigma(theta[i], lam);
+		    }
+		  }
+		}
 
 	}
 		break;

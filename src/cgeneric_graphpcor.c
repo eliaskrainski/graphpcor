@@ -224,9 +224,10 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 			}
 		}
 
+/*
 		 if (debug > 9999) {
 			printMat(ll, N, N, "L[i,j]:\n");
-		}
+		 } */
 
 		if (nfi > 0) {
 
@@ -391,12 +392,14 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
                       &theta[nunkparams[0]]);
 
 		// PC prior for sigma[i]
-		double lam;
-		for (i = 0; i < nunkparams[0]; i++) {
-		  if (!sfixed[i]) {
-		    k = itheta->ints[i];
-			  lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
-			  ret[0] += pclogsigma(theta[i], lam);
+		if(nunkparams[0]>0) {
+		  double lam;
+		  for (i = 0; i < nunkparams[0]; i++) {
+		    if (!sfixed[i]) {
+		      k = itheta->ints[i];
+		      lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
+		      ret[0] += pclogsigma(theta[i], lam);
+		    }
 		  }
 		}
 
