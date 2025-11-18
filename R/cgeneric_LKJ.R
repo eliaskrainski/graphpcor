@@ -41,25 +41,8 @@ dLKJ <- function(R, eta, log = FALSE) {
 #' [INLAtools::cgeneric()].
 #' @seealso [dLKJ()] and [basecor()]
 #' @details
-#' The parametrization uses the
-#' hypershere decomposition, as proposed in
-#' Rapisarda, Brigo and Mercurio (2007).
-#' consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
-#' from \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
-#' compute \eqn{x[k] = pi/(1+exp(-theta[k]))}
-#' organize it as a lower triangle of a \eqn{n \times n} matrix
-#' \deqn{         | cos(x[i,j])                           ,      j=1}
-#' \deqn{B[i,j] = | cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]),  2 <= j <= i-1}
-#' \deqn{         | prod_{k=1}^{j-1}sin(x[i,k])           ,      j=i}
-#' \deqn{         | 0                                     , j+1 <= j <= n }
-#' Result
-#' \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
-#'  \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
-#' @references
-#' Rapisarda, Brigo and Mercurio (2007).
-#'   Parameterizing correlations: a geometric interpretation.
-#'   IMA Journal of Management Mathematics (2007) 18, 55-73.
-#'   <doi 10.1093/imaman/dpl010>
+#' It uses the Cannonical Partial Correlation (CPC),
+#' see [basecor()] for details.
 #' @return a `cgeneric` object, see [INLAtools::cgeneric()] for details.
 cgeneric_LKJ <-
   function(n,

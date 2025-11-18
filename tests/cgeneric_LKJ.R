@@ -5,27 +5,27 @@ n <- 4
 (m <- n*(n-1)/2)
 eta <- 10
 
-cmodel <- cgeneric(
+Cmodel <- cgeneric(
     model = "LKJ",
     n = n,
     eta = eta
 )
 
-str(cmodel)
+str(Cmodel)
 
-graph(cmodel, optimize = TRUE)
+graph(Cmodel, optimize = TRUE)
 
-graph(cmodel)
+graph(Cmodel)
 
-initial(cmodel)
+initial(Cmodel)
 
 theta1 <- rnorm(m)
 
-(qq <- prec(cmodel, theta = theta1))
+(qc <- prec(Cmodel, theta = theta1))
 
-(vv <- solve(qq))
+(cc <- solve(qc))
 
-all.equal(as.matrix(vv),
+all.equal(as.matrix(cc),
           basecor(theta1, n)$base)
 
 ## fake data
@@ -39,29 +39,34 @@ cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 cmode <- list(theta = theta1, fixed = TRUE)
 
 fit <- inla(
-    y ~ 0 + f(i, model = cmodel),
+    y ~ 0 + f(i, model = Cmodel),
     data = dat1,
     control.family = cfam,
     control.inla = cinla,
     control.mode = cmode
 )
 
-all.equal(qq, prec(fit))
+all.equal(qc, prec(fit))
 
-fit$summary.hy
+### now consider variances as well (PC-prior for this)
+Vmodel <- cgeneric(
+    model = "LKJ",
+    n = n,
+    eta = eta,
+    sigma.prior.reference = rep(1, n),
+    sigma.prior.probability = rep(0.5, n),
+    useINLAprecomp = FALSE
+)
 
-par(mfrow = c(1,1), mar = c(4,4,1,1), mgp = c(2,0.5,0))
-plot(fit$internal.marginals.hyperpar[[1]],
-     type = 'n', bty = 'n',
-     xlab = '', ylab = '', main = '')
-for(i in 1:6) {
-    lines(fit$internal.marginals.hyperpar[[i]], col = i)
-    abline(v=theta1[i], col = i, lwd = 2)
-}
+sigmas <- n:1/2
+diag(sigmas) %*% cc %*% diag(sigmas)
 
-### fit some data
+QiV <- prec(Vmodel, theta = c(log(sigmas), theta1))
+(V <- chol2inv(chol(QiV)))
+
+### simulate some data
 nrep <- 200
-xx <- matrix(rnorm(nrep * n), nrep) %*% as.matrix(chol(vv))
+xx <- matrix(rnorm(nrep * n), nrep) %*% as.matrix(chol(V))
 str(xx)
 
 dat2 <- data.frame(
@@ -72,15 +77,18 @@ dat2 <- data.frame(
 str(dat2)
 
 fitr <- inla(
-    y ~ 0 + f(i, model = cmodel, replicate = r),
+    y ~ 0 + f(i, model = Vmodel, replicate = r),
     data = dat2,
     control.family = cfam,
-    control.inla = cinla,
-    control.mode = cmode
+    control.inla = cinla
 )
 
-(Cfitted <- basecor(fitr$mode$theta, n))
-round(vv, 2)
+cc
+round(solve(prec(Cmodel, theta = tail(fitr$mode$theta, m))), 4)
+round(solve(prec(Vmodel, theta = c(rep(0, n), tail(fitr$mode$theta,m)))), 4)
+
+V
+round(solve(prec(Vmodel, theta = fitr$mode$theta)), 4)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)
