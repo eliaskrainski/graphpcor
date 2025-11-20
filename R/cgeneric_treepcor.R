@@ -4,7 +4,7 @@
 #' containing the necessary data to implement the penalized
 #' complexity prior for a correlation matrix considering
 #' a three as proposed in Sterrantino et. al. 2025
-#' <doi:https://doi.org/10.1007/s10260-025-00788-y>.
+#' \doi{https://doi.org/10.1007/s10260-025-00788-y}.
 #' @param model object of class `treepcor` for the model specification.
 #' @param lambda the lambda parameter for the graph correlation prior.
 #' @param sigma.prior.reference a vector with the reference values

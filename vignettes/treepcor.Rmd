@@ -1,13 +1,13 @@
 ---
-title: "The tree based correlation model implementation"
+title: "Tree based correlation model implementation"
 author: "Elias T Krainski, Denis Rustand, Anna Freni-Sterrantino, Janet van Niekerk,
   and Håvard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
-output:
-  pdf_document: 
-    keep_tex: yes
-  html_document:
-    df_print: paged
+output: rmarkdown::pdf_document
+ignette: >
+  %\VignetteIndexEntry{Tree based correlation model implementation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 bibliography: references.bib
 ---
 
@@ -24,7 +24,8 @@ library(graphpcor)
 
 # Abstract
 
-In this vignette we show how to work a tree based correlation matrix model proposed in @treepcor2024model.
+In this vignette we show how to work a tree based correlation
+model proposed in @sterrantino2025graphical.
 We recommend to look at the 'tree_model' vignette for details.
 
 # The model definition

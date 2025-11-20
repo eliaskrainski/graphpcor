@@ -1,10 +1,10 @@
 ---
-title: 'Supplement for "A graphical approach for multivariate modeling" by'
+title: 'Tree based latent variables model'
 author: "Anna Freni-Sterrantino, Denis Rustand, Janet van Niekerk, Elias T Krainski, and H\\aa vard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
-output: pdf_document
+output: rmarkdown::pdf_document
 vignette: >
-  %\VignetteIndexEntry{Tree and latent variables model}
+  %\VignetteIndexEntry{Tree based latent variables model}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 header-includes:

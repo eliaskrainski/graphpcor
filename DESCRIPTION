@@ -30,7 +30,7 @@ Description: Implement some models for
   correlation/covariance matrices including two approaches 
   to model correlation matrices from a graphical structure.
   One use latent parent variables as proposed in
-  Sterrantino et. al. (2024) <doi:10.48550/arXiv.2312.06289>.
+  Sterrantino et. al. (2024) <doi:10.1007/s10260-025-00788-y>.
   The other uses a graph to specify conditional 
   relations between the variables.
   The graphical structure makes correlation matrices 
