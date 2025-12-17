@@ -47,8 +47,15 @@ the LKG prior on correlation matrix.
 }
 \details{
 It uses the Cannonical Partial Correlation (CPC),
-see \code{\link[=basecor]{basecor()}} for details.
+see \code{\link[=basepcor]{basepcor()}} for details.
+}
+\examples{
+C0 <- matrix(c(1,.7,-.3, .7,1,.2, -.3,.2,1), 3)
+(b0 <- basecor(C0))
+cglkj <- cgeneric("LKJ", n = 3, eta = 2)
+dLKJ(C0, eta = 2, log = TRUE)
+prior(cglkj, theta = b0$theta)
 }
 \seealso{
-\code{\link[=dLKJ]{dLKJ()}} and \code{\link[=basecor]{basecor()}}
+\code{\link[=dLKJ]{dLKJ()}} and \code{\link[=basepcor]{basepcor()}}
 }

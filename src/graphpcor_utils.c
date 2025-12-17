@@ -74,25 +74,43 @@ double pcmultivar(int m, double param, double *theta0, double *halfI, double *ld
   return ldens;
 }
 
-void cpc2correlCholesky(int *N, double *theta, double *L) {
-// canonical partial correlation z[k] = tanh(theta[k])
-// return the Cholesky of a correlation matrix
+void cpcCholesky(int *N, double *theta,
+                 double *L, double *ldR, double *ldJ) {
+// given the canonical partial correlations
+//   z_{i,j} vectorized as z[k], k = 1, ..., m
+//   z[k] = tanh(theta[k])
+// return
+//   1. Cholesky of a correlation matrix: L
+//   2. log determinant of L: LL' = C
+//   3. log determinant of J: Jacobian of the transformation
 // See #correlation-matrix-inverse-transform at
 //  https://mc-stan.org/docs/reference-manual/transforms.html
   int i, j, k0=0, k=0;
 //  int m = (n*(n-1))/2;
   int n = (*N);
   int M = (n*(n+1))/2;
+  double aux, a1=0.0, a2=0.0;
   double z[M], p[n-1];
+  *ldR = 0.0;
   for(i=0; i<n; i++) {
     for(j=i; j<n; j++) {
       if(i==j) {
         z[k++] = 1.0;
       } else {
-        z[k++] = tanh(theta[k0++]);
+        aux = tanh(theta[k0++]);
+        z[k++] = aux;
+        aux = log(1.0 - SQR(aux));
+        *ldR += aux;
+        a1 += ((double)(n-i-2)) * aux;
+        aux = 2.0*exp(theta[k0-1])/(exp(2.0*theta[k0-1])+1.0);
+        a2 += log(aux)*2.0;
       }
     }
   }
+  *ldJ = 0.5*a1 + a2;
+  a1 = *ldR;
+  a2 = *ldJ;
+  //printf("k0: %d, k: %d, logDet = %2.4f, aJ = %2.4f\n", k0, k, a1, a2);
   for(i=0; i<n; i++) {
     L[i] = z[i];
     p[i] = sqrt(1-SQR(z[i]));
@@ -113,11 +131,12 @@ void theta2Qcorrel(int n, int std, double *theta, double *Qcorr)
 	int i, j, k, k0 = 0;
 
 	// build the lower triangle L_0, Q_0 = L_0(L_0')
+	// diag(Q0) = \{n, n-1, ..., 1}
 	for (i = 0; i < n; i++) {
 		for (j = 0; j <= i; j++) {
 			nij2Lk(n, i, j);
 			if (i == j) {
-				Qcorr[k] = 1.0;
+				Qcorr[k] = (double)(n-i);
 			} else {
 				Qcorr[k] = theta[k0++];
 			}

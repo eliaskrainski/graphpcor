@@ -1,10 +1,7 @@
 #' @describeIn graphpcor
-#' A `graphpcor` is a graph where a node represents
-#' a variable and an edge a conditional distribution.
-#' @param ... list of formula used to define the edges.
-#' @details
-#' The terms in the formula do represent the nodes.
-#' The `~` is taken as link.
+#' Each term to represent a node, and
+#' each `~` to represent an edge.
+#' @param ... a list of arguments
 #' @importFrom stats as.formula
 #' @export
 #' @examples
@@ -119,10 +116,10 @@ setMethod(
     nodes <- attr(object, "nodes")
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
-    L <- Laplacian(object)
+    Q1 <- Laplacian(object)
     edgl <- vector("list", ne[1])
     for(i in 1:ne[1]) {
-      jj <- setdiff(which(!is.zero(L[i, ])), i)
+      jj <- setdiff(which(!is.zero(Q1[i, ])), i)
       ni <- length(jj)
       if(ni>0) {
         edgl[[i]] <- list(
@@ -221,12 +218,11 @@ Laplacian.matrix <- function(graph) {
 }
 #' @describeIn graphpcor
 #' The Laplacian method for a `graphpcor`
-#' @param graph graphpcor object, see [`graphpcor`].
 #' @export
-Laplacian.graphpcor <- function(graph) {
-  ne <- dim(graph)
-  nodes <- attr(graph, "nodes")
-  L <- -attr(graph, "graph")
+Laplacian.graphpcor <- function(object) {
+  ne <- dim(object)
+  nodes <- attr(object, "nodes")
+  L <- -attr(object, "graph")
   diag(L) <- -colSums(L)
   return(L)
 }
@@ -238,31 +234,52 @@ setMethod(
   "vcov",
   "graphpcor",
   function(object, ...) {
+    ne <- dim(object)
+    p <- ne[1]
+    m <- ne[2]
+    stopifnot(p>0)
+    stopifnot(m>0)
+
+    G <- Laplacian(object)
+    names2 <- dimnames(G)
+    stopifnot(ne[1]==nrow(G))
+    stopifnot((2*ne[2])==(sum(!is.zero(G))-ne[1]))
+
+    ## collect theta
     mc <- list(...)
     nargs <- names(mc)
     if(!any(nargs == "theta")) {
       stop("Please provide 'theta'!")
     }
     theta <- mc$theta
-    ne <- dim(object)
-    G <- Laplacian(object)
-    stopifnot(ne[1]==nrow(G))
-    stopifnot((2*ne[2])==(sum(!is.zero(G))-ne[1]))
+    ## setup full theta
     if(length(theta)==ne[2]) {
       theta <- c(rep(0.0, ne[1]), theta)
     } else {
       stopifnot(length(theta)==sum(ne))
     }
+
+    ## collect/define 'd0'
+    if(any(nargs == "d0")) {
+      d0 <- mc$d0
+    } else {
+      d0 <- ne[1]:1
+    }
+
+    ## build lower Cholesky of Q0
     itheta <- which(lower.tri(G) & (!is.zero(G)))
-    L <- t(theta2L(
+    LQ0 <- lCholQ0(
       theta = theta[-(1:ne[1])],
       p = ne[1],
-      parametrization = "itp",
       itheta = itheta,
-      d0 = ne[1]:1))
-    V <- chol2inv(L)
+      d0 = ne[1]:1)
+
+    ## std
+    V <- chol2inv(t(LQ0))
     si <- exp(theta[1:ne[1]]) / sqrt(diag(V))
     V <- diag(si) %*% V %*% diag(si)
+    dimnames(V) <- names2
+
     return(V)
   }
 )
@@ -270,31 +287,14 @@ setMethod(
 #' The precision method for 'graphpcor'
 #' @param model graphpcor model object
 #' @importFrom Matrix Matrix forceSymmetric
-#' @importFrom INLAtools Sparse prec
+#' @importFrom INLAtools Sparse
 #' @export
 prec.graphpcor <- function(model, ...) {
-  ne <- dim(model)
-  Q <- Laplacian(model)
-  stopifnot(ne[1]==nrow(Q))
-  stopifnot((2*ne[2])==(sum(!is.zero(Q))-ne[1]))
-  mc <- list(...)
-  nargs <- names(mc)
-  if(any(nargs == "theta")) {
-    theta <- mc$theta
-    if(length(theta)==ne[2]) {
-      theta <- c(rep(0.0, ne[1]), theta)
-    } else {
-      stopifnot(length(theta)==sum(ne))
-    }
-    V <- vcov(model, theta = theta)
-    Q <- chol2inv(chol(V))
-    Q[is.zero(Q)] <- 0
-  } else {
-    warning("missing `theta`, returning Laplacian!")
-  }
-  return(forceSymmetric(
-    Sparse(Matrix(Q),
-           zeros.rm = TRUE)))
+  V <- vcov(model, ...)
+  Q <- chol2inv(chol(V))
+  Q[is.zero(Q)] <- 0
+  return(Sparse(forceSymmetric(Matrix(Q)),
+                zeros.rm = TRUE))
 }
 #' Evaluate the hessian of the KLD for a `graphpcor`
 #' correlation model around a base model.

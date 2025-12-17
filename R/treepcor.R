@@ -1,20 +1,21 @@
-#' Define a tree used to model correlation matrices
-#' using a shared latent variables method represented by a tree,
-#' whose nodes represent the two kind of variables:
-#' children and parent. See [treepcor-class].
+#' @describeIn treepcor
+#' A tree from a formula for each parent.
 #' @param ... a list of formula used as relationship
 #' to define a three for correlation modeling, see [treepcor()].
 #' Parent nodes shall be in the right side while children
 #' (or parent with a parent) in the left side.
 #' @details
+#' In the formula, the left side are parent variables,
+#' and the right side include all the children and
+#' parents that are also children.
 #' The children variables are those with an ancestor (parent),
 #' and are identified as `c1`, ..., `cn`, where `n` is the
 #' total number of children variables.
-#' The variables are identified as `p1`, ..., `pm`,
+#' The parent variables are identified as `p1`, ..., `pm`,
 #' where the `m` is the number of parent variables.
 #' The main parent (first) should be identified as `p1`.
-#' Parent variables (except `p1`) have an ancestor,
-#' which is a parent variable.
+#' Except `p1` all the other parent variables
+#' have an ancestor, which is a parent variable.
 #' @return a `treepcor` object
 #' @importFrom stats as.formula
 #' @export
@@ -469,7 +470,7 @@ etreepcor2precision <- function(d.el) {
 #' The `vcov` method for a `treepcor`
 #' @importFrom stats cov2cor
 #' @param object treepcor
-#' @param ... usde to pass `theta` as a numeric vector
+#' @param ... used to pass `theta` as a numeric vector
 #' with the model parameters
 #' @export
 setMethod(

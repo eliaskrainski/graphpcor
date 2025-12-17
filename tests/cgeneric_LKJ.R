@@ -26,7 +26,7 @@ theta1 <- rnorm(m)
 (cc <- solve(qc))
 
 all.equal(as.matrix(cc),
-          basecor(theta1, n)$base)
+          basecor(theta1, p=n)$base)
 
 ## fake data
 dat1 <- data.frame(

@@ -16,8 +16,7 @@
 \alias{prec.graphpcor}
 \alias{cgeneric.graphpcor}
 \alias{cgeneric.matrix}
-\title{Set a graph whose nodes and edges represent variables and
-conditional distributions, respectively.}
+\title{graphpcor: correlation from nodes and edges}
 \usage{
 graphpcor(...)
 
@@ -35,7 +34,7 @@ graphpcor(...)
 
 \S4method{plot}{graphpcor,ANY}(x, y, ...)
 
-\method{Laplacian}{graphpcor}(graph)
+\method{Laplacian}{graphpcor}(object)
 
 \S4method{vcov}{graphpcor}(object, ...)
 
@@ -46,7 +45,7 @@ graphpcor(...)
 \method{cgeneric}{matrix}(model, ...)
 }
 \arguments{
-\item{...}{list of formula used to define the edges.}
+\item{...}{a list of arguments}
 
 \item{x}{graphpcor}
 
@@ -56,20 +55,18 @@ graphpcor(...)
 
 \item{y}{graphpcor}
 
-\item{graph}{graphpcor object, see \code{\link{graphpcor}}.}
-
 \item{model}{graphpcor model object}
 }
 \value{
 a \code{graphpcor} object
 }
 \description{
-Set a graph whose nodes and edges represent variables and
-conditional distributions, respectively.
-}
-\details{
-The terms in the formula do represent the nodes.
-The \code{~} is taken as link.
+A graphpcor is a graph where
+a node represents a variable and an edge
+represent a conditional distribution.
+The correlation built from a \code{graphpcor} consider
+the parameters for the Cholesky of a precision matrix,
+whose non-zero pattern is given from the graph.
 }
 \section{Methods (by generic)}{
 \itemize{
@@ -84,8 +81,8 @@ The \code{~} is taken as link.
 \itemize{
 \item \code{graphpcor()}: The \code{graphpcor} generic method for \linkS4class{graphpcor}
 
-\item \code{graphpcor(formula)}: A \code{graphpcor} is a graph where a node represents
-a variable and an edge a conditional distribution.
+\item \code{graphpcor(formula)}: Each term to represent a node, and
+each \code{~} to represent an edge.
 
 \item \code{graphpcor(matrix)}: Build a \code{graphpcor} from a matrix
 

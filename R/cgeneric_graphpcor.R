@@ -182,30 +182,21 @@ cgeneric_graphpcor <-
       base <- rep(0, nEdges)
     }
 
-##    Ibase <- hessian(model, base, decomposition = "eigen")
-    basemodel <- basecor(
+##    I0 <- hessian(model, base, decomposition = "eigen")
+    basemodel <- basepcor(
       base,
       p = n,
-      parametrization = "itp",
-      decomposition = "svd",
       itheta = itheta,
       d0 = n:1
     )
     if(dotArgs$debug) {
-      cat("Ibase model:\n")
+      cat("base model:\n")
       print(utils::str(basemodel))
     }
-    stopifnot(all(dim(basemodel$H) == c(nEdges, nEdges)))
+    stopifnot(all(dim(basemodel$I0) == c(nEdges, nEdges)))
 
     theta0 <- basemodel$theta
-
-    ## store abs(det(H^{1/2}))
-    eval.5 <- sqrt(attr(basemodel$Ibase, "decomposition")$d)
-    lc <- sum(log(eval.5[eval.5>sqrt(.Machine$double.eps)]))
-
-    if(dotArgs$debug) {
-      cat('log C', lc, '\n')
-    }
+    I0 <- attr(basemodel, "I0")
 
     if(is.null(dotArgs$shlib)) {
       if(dotArgs$debug){
@@ -237,9 +228,9 @@ cgeneric_graphpcor <-
         lambda = as.numeric(lambda),
         sigmaref = as.numeric(sigma.prior.reference),
         sigmaprob = as.numeric(sigma.prior.probability),
-        lconst = as.numeric(lc),
+        lconst = as.numeric(attr(I0, "determinant")),
         thetabase = as.numeric(theta0),
-        Ihalf = attr(basemodel$Ibase, "h.5")
+        Ihalf = attr(I0, "h.5")
       )
     )
     return(the_model)

@@ -2,72 +2,34 @@
 % Please edit documentation in R/basecor_utils.R
 \name{basecor-utils}
 \alias{basecor-utils}
-\alias{theta2L}
-\alias{fillLprec}
-\alias{KLD10}
+\alias{cholcor}
 \alias{Hcorrel}
 \title{Internal functions used by basecor}
 \usage{
-theta2L(theta, p, parametrization = "cpc", itheta, d0)
+cholcor(theta, p, parametrization = "cpc", itheta)
 
-fillLprec(L, lfi)
-
-KLD10(C1, C0, L1, L0)
-
-Hcorrel(theta, p, parametrization, itheta, d0, C0, decomposition, ...)
+Hcorrel(theta, p, parametrization, itheta, C0, decomposition, ...)
 }
 \arguments{
-\item{theta}{numeric vector with the model parameters.}
-
 \item{p}{integer with the dimension,
 the number of rows/columns of the correlation matrix.}
 
 \item{parametrization}{character to specify the
 parametrization used. The available ones are
-"cpc" (or "CPC"), "sap" (or "SAP"), and "itp" (or "ITP"),
-see Details. The default is "cpc".}
+"cpc" (or "CPC") or "sap" (or "SAP").
+See Details. The default is "cpc".}
 
 \item{itheta}{integer vector to specify the (vectorized) position
 where 'theta' will be placed in the (initial, before fill-in)
 Cholesky (lower triangle) factor. Default is missing and assumes
 the dense case for when \code{itheta = which(lower.tri(...))}.}
-
-\item{d0}{numeric vector to specify the diagonal of the
-(initial) Cholesky factor in the ITP parametrization.
-Default consider \code{d0 = p:1}.}
-
-\item{L}{matrix as the lower triangle
-containing the Cholesky decomposition of
-a precision matrix}
-
-\item{lfi}{integer vector used as indicator of the
-position in the lower matrix where are the
-fill-in elements. Must be col then row ordered.}
-
-\item{C1}{is a correlation matrix.}
-
-\item{C0}{is a correlation matrix of the base model.}
-
-\item{L1}{is the Cholesky of \code{C1}.}
-
-\item{L0}{is the Cholesky of \code{C0}.}
-
-\item{decomposition}{character to specify which
-decomposition to use to decompose the hessian
-matrix around the base model,
-\eqn{\mathbf{I}(\theta_0)}, in order to compute
-\eqn{\mathbf{I}^{1/2}(\theta_0)} and
-\eqn{\mathbf{I}^{-1/2}(\theta_0)}.
-The options are eigen' (default), 'svd' and 'chol'.}
-
-\item{...}{used to pass arguments to \code{\link[numDeriv:hessian]{numDeriv::hessian()}},
-which is used to compute \eqn{\mathbf{I}(\theta_0)}.}
 }
 \value{
 matrix with lower triangle as the Cholesky factor
 of a correlation matrix if parametrization is
-"cpc" or "sap" and of a precision matrix if
-parametrization is 'itp' (with 'd0' as the diagonal elements).
+"cpc" or "sap" and of a precision matrix
+(of a correlation matrix) if parametrization is
+'itp' (with 'd0' as the diagonal elements).
 
 list containing the hessian,
 its 'square root', inverse 'square root' along
@@ -76,18 +38,9 @@ with the decomposition used
 \description{
 Internal functions used by basecor
 }
-\details{
-By assuming equal mean vector we have
-\deqn{KLD = 0.5( tr(C0^{-1}C1) -p - log(|C1|) + log(|C0|) )}
-}
 \section{Functions}{
 \itemize{
-\item \code{theta2L()}: Cholesky (lower triangular) matrix from theta.
-
-\item \code{fillLprec()}: Function to fill-in a Cholesky matrix
-
-\item \code{KLD10()}: Compute the KLD between two multivariate Gaussian
-distributions, assuming equal mean vector
+\item \code{cholcor()}: Cholesky parametrization for a correlation matrix
 
 \item \code{Hcorrel()}: Evaluate the hessian of the KLD for a
 correlation model around a base model.

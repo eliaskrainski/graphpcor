@@ -3,6 +3,7 @@
 \docType{class}
 \name{treepcor-class}
 \alias{treepcor-class}
+\alias{treepcor}
 \alias{print.treepcor}
 \alias{summary.treepcor}
 \alias{dim.treepcor}
@@ -14,9 +15,10 @@
 \alias{vcov,treepcor-method}
 \alias{etreepcor2variance}
 \alias{cgeneric.treepcor}
-\title{Set a tree whose nodes represent the two kind of variables:
-children and parent.}
+\title{treepcor: correlation from tree}
 \usage{
+treepcor(...)
+
 \method{print}{treepcor}(x, ...)
 
 \method{summary}{treepcor}(object, ...)
@@ -40,10 +42,10 @@ etreepcor2variance(d.el)
 \method{cgeneric}{treepcor}(model, ...)
 }
 \arguments{
-\item{x}{treepcor object}
-
-\item{...}{usde to pass \code{theta} as a numeric vector
+\item{...}{used to pass \code{theta} as a numeric vector
 with the model parameters}
+
+\item{x}{treepcor object}
 
 \item{object}{treepcor}
 
@@ -55,9 +57,29 @@ with the model parameters}
 
 \item{d.el}{list of the first n edges of a \code{treepcor}.}
 }
+\value{
+a \code{treepcor} object
+}
 \description{
-Set a tree whose nodes represent the two kind of variables:
-children and parent.
+A tree with two kind of nodes,
+parents and children. The parents are nodes with
+children. The children are nodes with no children.
+This is used to model correlation matrices, where
+parents represent latent variables, and children
+represent the variables of interest.
+}
+\details{
+In the formula, the left side are parent variables,
+and the right side include all the children and
+parents that are also children.
+The children variables are those with an ancestor (parent),
+and are identified as \code{c1}, ..., \code{cn}, where \code{n} is the
+total number of children variables.
+The parent variables are identified as \code{p1}, ..., \code{pm},
+where the \code{m} is the number of parent variables.
+The main parent (first) should be identified as \code{p1}.
+Except \code{p1} all the other parent variables
+have an ancestor, which is a parent variable.
 }
 \section{Methods (by generic)}{
 \itemize{
@@ -72,6 +94,8 @@ children and parent.
 }}
 \section{Functions}{
 \itemize{
+\item \code{treepcor()}: A tree from a formula for each parent.
+
 \item \code{print(treepcor)}: The \code{print} method for a \code{treepcor}
 
 \item \code{summary(treepcor)}: The \code{summary} method for a \code{treepcor}
@@ -89,3 +113,27 @@ build the covariance matrix from a \code{treepcor}.
 \item \code{cgeneric(treepcor)}: The \code{cgeneric} method for \code{treepcor}, uses \code{\link[=cgeneric_treepcor]{cgeneric_treepcor()}}
 
 }}
+\examples{
+g1 <- treepcor(p1 ~ c1 + c2 - c3)
+g1
+summary(g1)
+plot(g1)
+prec(g1)
+prec(g1, theta = 0)
+
+g2 <- treepcor(p1 ~ c1 + c2 + p2,
+          p2 ~ c3 - c4)
+g2
+summary(g2)
+plot(g2)
+prec(g2)
+prec(g2, theta = c(0, 0))
+
+g3 <- treepcor(p1 ~ -p2 + c1 + c2,
+          p2 ~ c3)
+g3
+summary(g3)
+plot(g3)
+prec(g3)
+prec(g3, theta = c(0,0))
+}
