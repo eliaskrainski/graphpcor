@@ -50,28 +50,27 @@ assumed for a random variable in the model.
 A probability density function, (in short) distribution, is 
 a non-negative mathematical function whose domain is 
 the random variable and integrates to one.
-For a random vector $\bx$, where each 
-element is a random variable,  
-a chosen distribution to model $\bx$,
-$\pi_{\bx}(\bxi|\bgamma)$, is indexed by 
-a $m$ dimentional vector $\bgamma$, 
-the model parameters.
+For a random vector $\bx = \{x_1, \ldots, x_n\}$, 
+of dimension $n$, each element is a random variable. 
+A chosen distribution to model $\bx$,
+$\pi_{\bx}(\bx|\bgamma)$, is indexed by 
+a $m$ dimensional vector $\bgamma$, the model parameters.
 When learning about the model parameters through Bayesian 
-inference, prior information about it is considered.
-The prior information is represented by a distribution itself, 
-which has parameters as well.
+inference, the prior information about $\bgamma$ is considered.
+This prior information is represented by a distribution as well, 
+which has its on parameters.
 
-The aim to construct a prior distribution for $\bgamma$, 
+The aim is to construct a prior distribution for $\bgamma$, 
 $\pi_{\bgamma}(\bgamma|\lambda)$, 
-where $\lambda$ is the prior parameter,
-assumed here to be a scalar.
+where $\lambda$ is the prior parameter. 
+We will assumed here that $\lambda$ is a scalar.
 @simpsonetal2017 proposed a new concept. 
 Instead of searching for a distribution for $\bgamma$, 
 that better represent the prior beliefs, 
 it was proposed to start with a base model, 
 which is understood as a simpler model when 
 $\bgamma=\bgamma_0$ in $\pi_{\bx}(\bx|\bgamma_0)$. 
-Then, define the prior from a distribution to
+Then, define the prior as a distribution that
 penalize deviations from the base model, 
 the penalized complexity prior, or PC-prior.
 
@@ -500,7 +499,7 @@ r & = & \sqrt{\xi_1^2+\xi_2^2+\ldots+\xi_m^2} &
 
 ## Example with $m=2$
 
-We consider a three dimentional random vector 
+We consider a three dimensional random vector 
 $\mathbf{x}=\{x_1, x_2, x_3\}$ and assume that it follows a
 bivariate Gaussian distribution with zero mean vector
 and unit marginal variances. 
@@ -711,10 +710,23 @@ rho0 <- c(-0.3, 0.7)
 C0 <- matrix(c(1, rho0, 
                rho0[1], 1, prod(rho0), 
                rho0[2], prod(rho0), 1), 3)
+rownames(C0) <- colnames(C0) <- paste0("x", 1:3)
 
 gpc <- graphpcor(x1 ~ x2 + x3)
-H <- hessian(gpc, x = C0)
-(theta0 <- attr(H, "theta")) 
+b01 <- basepcor(C0, itheta = gpc, d0 = rep(1,3))
+b01
+```
+
+However, for a more stable parametrization, to
+work better for correlation matrices with 
+correlations far from zero, we suggest the 
+(initial) to be $\{p, p-1, \ldots, \}$, 
+which is the default.
+
+```{r gpc0, echo = TRUE}
+b0 <- basepcor(C0, itheta = gpc)
+b0
+theta0 <- b0$theta
 all.equal(C0,
           vcov(gpc, theta = theta0))
 ```
@@ -784,43 +796,67 @@ but bivariate.
 
 # Example with $m=3$
 
-```{r exm3, echo=TRUE, results='markup'}
-## the model as 'graphpcor'
+```{r ech1}
+knitr::opts_chunk$set(
+  echo = TRUE, results='markup'
+)
+```
+
+Consider a dense case with $p=3$
+
+```{r exm3}
+## the model as 'graphpcor' (change it to the dense code!!!)
 gph_model <- graphpcor(
     graph = matrix(1, 3, 3) ## dense
 )
+```
 
-## base model (base correlation matrix)
+A base correlation matrix
+```{r, b0p3dense}
 C0 <- matrix(c(1,0.5,0.5,0.5,1,0.4,0.5,0.4,1), nrow = 3)
+``` 
 
-## Hessian around a base model
-Ith0 <- hessian(gph_model, C0)
-str(Ith0)
+Build a base correlation model.
 
-### check: evaluating theta0 gives the base model
-th0 <- attr(Ith0, 'theta')
+```{r b0}
+b0 <- basepcor(C0)
+b0
+```
+
+Check: evaluating theta0 gives the base model
+```{r th0, echo=TRUE, results='markup'}
+(th0 <- b0$theta)
 vcov(gph_model, theta = th0)
+```
 
-## H^0.5: "SQRT" of the Hessian of KLD around the base model
-h.5 <- attr(Ith0, 'h.5')
+The matrix used for the scale transformation,
+$I(\theta_0)^{1/2}$, from the
+Hessian of KLD around the base model 
+and its determinant
+```{r h.5}
+h.5 <- attr(b0$I0, 'h.5')
+(dh.5 <- prod(attr(b0, 'decomposition')$values^0.5))
+```
 
-## its determinant
-(dh.5 <- prod(attr(Ith0, 'decomposition')$values^0.5))
-
-## set up a grid of theta around theta0
+Set up a grid of theta around theta0
+```{r th0s}
 h <- 0.01
 th0s <- seq(-1.5+h/2, 1.5-h/2, h)
 th0x <- t(expand.grid(th0s, th0s, th0s)) ## each column ... 
 ncol(th0x)/1e6 ## size of the grid
+```
 
-## eval, in R
+Evaluate the prior in R 
+```{r pR}
 R <- sqrt(colSums( (h.5 %*% th0x)^2 ))
 Sr <- 2 * (pi^(3/2)) * R^2 / gamma(3/2)
 
 param <- 5
 dthR <- param * exp(-param * R) * dh.5 / Sr
+```
 
-## define a `cgeneric`
+Define a `cgeneric` to evaluate the prior in C
+```{r pC}
 c_model <- cgeneric(
     model = gph_model,
     lambda = param,
@@ -828,8 +864,10 @@ c_model <- cgeneric(
 
 ## check: evaluate at the base model
 solve(prec(c_model, theta = th0))
+```
 
-## eval, in C (through 'cgeneric' query method in INLAtools)
+Now, query the `cgeneric` with
+```{r pCeval}
 dth <- exp(
     prior(
         c_model, 
@@ -838,10 +876,15 @@ dth <- exp(
                       th0x[3,] + th0[3])
     )
 )
+```
 
+```{r checkp}
 all.equal(dthR, dth)
+```
 
-## organize into an array
+Organize into an array and visualize
+
+```{r vis3}
 d3th <- array(dth, dim = rep(length(th0s), 3))
 
 d1th <- apply(d3th * h*h, 1, sum)
@@ -858,9 +901,9 @@ plot(th0s + th0[3], d3th); abline(v = th0[3])
 
 # Example with $m>3$
 
-We now consider a four nodes graph to represent a four dimentional Gaussian random vector. We will model the correlation considering 
+We now consider a four nodes graph to represent a four dimensional Gaussian random vector. We will model the correlation considering 
 a set of conditional distributions represented by a graph  
-```{r graph4, echo = TRUE}
+```{r graph4}
 g4 <- graphpcor(x1 ~ x2 + x3, x4 ~ x2 + x3)
 (ne <- dim(g4))
 plot(g4)
@@ -872,13 +915,13 @@ for the correlation matrix where we parametrize the
 Cholesky of the precision matrix.
 See `help(basecor)` for details. 
 
-```{r C4, echo = TRUE}
+```{r C4}
 thetaL <- c(-1.5, -1, -0.7, -1.3)
 (C4 <- vcov(g4, theta = thetaL))
 ```
 
 
-```{r covariance4, echo = TRUE}
+```{r covariance4}
 sigmas <- c(5, 0.5, 1, 0.1)
 (V4 <- vcov(g4, theta = c(log(sigmas), thetaL))) 
 n <- 100
@@ -887,7 +930,7 @@ x4 <- matrix(rnorm(n * 4), n) %*% chol(V4)
 
 We set a prior considering that an informative prior where the
 correlations are centered at the following correlation matrix 
-```{r prior4, echo = TRUE}
+```{r prior4}
 b4 <- matrix(c(1,.8,.75,.6, .8,1,.6,.75, 
                .75,.6,1,.45, .6,.75,.45,1), 4)
 ```
@@ -897,7 +940,7 @@ or, in other words, if it can be generated from this model.
 We can use the 'hessian' method for a `graphpcor`, 
 which find which parameters will give such correlation matrix as base model with
 ```{r H4}
-hessian(g4, b4)
+basepcor(b4, itheta = g4)
 ```
 
 ```{r cmodel}
@@ -913,7 +956,7 @@ We consider that we have observed data as from the following model \[
 y_{ik} \sim \textrm{N}(\mu_{ik}, \sigma^2_e)
 \]
 Organize the data to fit the model
-```{r idata, echo = TRUE}
+```{r idata}
 theta.e <- 10 ##  = log(1/sigma^2_e)
 datar <- data.frame(
     r = rep(1:n, ne[1]),
@@ -923,7 +966,7 @@ datar <- data.frame(
 ```
 
 Fit the model using INLA
-```{r fit4, echo = TRUE}
+```{r fit4}
 mform <- y ~ f(i, model = cmodel, replicate = r)
 library(INLA)
 fit <- inla(
@@ -936,14 +979,14 @@ fit <- inla(
 
 Compute the fitted correlation/covariance matrix, 
 evaluating the correlation model at the posterior mode
-```{r fit4mode, echo = TRUE}
+```{r fit4mode}
 vcov(g4, theta = fit$mode$theta[ne[1]+1:ne[2]]) ## correlation
 vcov(g4, theta = fit$mode$theta) ## covariance
 ```
 
 Now we will draw simulations from the posterior of $\theta$ 
 and compute the correlation matrix at each sample.
-```{r csamples, echo = TRUE}
+```{r csamples}
 ptheta.samples <- t(inla.hyperpar.sample(
     n = 10000, result = fit, intern = TRUE))
 
