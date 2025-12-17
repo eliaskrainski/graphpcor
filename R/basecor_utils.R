@@ -4,22 +4,22 @@ NULL
 #> NULL
 
 #' @describeIn basecor-utils
-#' Cholesky (lower triangular) matrix from theta.
+#' Cholesky parametrization for a correlation matrix
 #' @inheritParams basecor
-#' @param theta numeric vector with the model parameters.
 #' @returns matrix with lower triangle as the Cholesky factor
 #' of a correlation matrix if parametrization is
-#' "cpc" or "sap" and of a precision matrix if
-#' parametrization is 'itp' (with 'd0' as the diagonal elements).
-theta2L <- function(
+#' "cpc" or "sap" and of a precision matrix
+#' (of a correlation matrix) if parametrization is
+#' 'itp' (with 'd0' as the diagonal elements).
+#' @export
+cholcor <- function(
     theta,
     p,
     parametrization = "cpc",
-    itheta,
-    d0) {
+    itheta) {
   parametrization <- match.arg(
     arg = tolower(parametrization),
-    choices = c("cpc", "sap", "itp")
+    choices = c("sap", "cpc")
   )
   stopifnot((m <- length(theta))>0)
   if(missing(p)) {
@@ -35,81 +35,29 @@ theta2L <- function(
     stopifnot(all(itheta %in% ith0))
   }
   stopifnot(length(theta)==length(itheta))
-  if(parametrization == "itp") {
-    if(missing(d0)) {
-      warning("Using 'd0 = p:1'!")
-      d0 <- p:1
-    }
-    L <- diag(x = d0, nrow = p, ncol = p)
-    L[itheta] <- theta
-    L <- fillLprec(L)
+  B <- A <- diag(p)
+  if(parametrization == 'cpc') {
+    A[itheta] <- tanh(theta)
+    B[ith0] <- sqrt(1-A[ith0]^2)
   } else {
-    B <- A <- diag(p)
-    if(parametrization == 'cpc') {
-      A[itheta] <- tanh(theta)
-      B[ith0] <- sqrt(1-A[ith0]^2)
-    } else {
-      theta <- pi/(1+exp(-theta))
-      A[itheta] <- cos(theta)
-      B[ith0] <- 1.0
-      B[itheta] <- sin(theta)
-    }
-    if(p>2) {
-      for(j in 2:(p-1)) {
-        B[, j] <- B[, j] * B[, j-1]
-      }
-    }
-    L <- A * cbind(1, B[, 1:(p-1)])
+    theta <- pi/(1+exp(-theta))
+    A[itheta] <- cos(theta)
+    B[ith0] <- 1.0
+    B[itheta] <- sin(theta)
   }
+  if(p>2) {
+    for(j in 2:(p-1)) {
+      B[, j] <- B[, j] * B[, j-1]
+    }
+  }
+  L <- A * cbind(1, B[, 1:(p-1)])
   attr(L, "parametrization") <- parametrization
   attr(L, "theta") <- theta
   attr(L, "itheta") <- itheta
-  if(parametrization == 'itp') {
-    attr(L, "d0") <- d0
-  }
+  attr(L, "determinant") <- exp(sum(diag(L))*2)
   return(L)
 }
-#' @describeIn basecor-utils
-#' Function to fill-in a Cholesky matrix
-#' @param L matrix as the lower triangle
-#' containing the Cholesky decomposition of
-#' a precision matrix
-#' @param lfi integer vector used as indicator of the
-#' position in the lower matrix where are the
-#' fill-in elements. Must be col then row ordered.
-fillLprec <- function(L, lfi) {
-  L <- as.matrix(L)
-  p <- nrow(L)
-  if(missing(lfi)) {
-    i0 <- is.zero(L)
-    G <- i0 - 1.0
-    G <- G + t(G)
-    diag(G) <- 1 - colSums(G)
-    lG <- t(chol(G))
-    lfi <- which(i0 & (!is.zero(lG)))
-  }
-  if(length(lfi)>0) {
-    if(length(lfi)>1)
-      stopifnot(all(diff(lfi)>0))
-    ii <- row(L)[lfi]
-    jj <- col(L)[lfi]
-    for(v in 1:length(ii)) {
-      i <- ii[v]
-      j <- jj[v]
-      if(j==1) {
-        warning("j = 1!\n")
-        L[i,1] <- 0.0
-      } else {
-        stopifnot((i>1) & (j>1)) ## L_{11} not allowed
-        stopifnot(j>1) ## j=1 is not allowed
-        k <- 1:(j-1)
-        L[i, j] <- -sum(L[i, k] * L[j, k]) / L[j, j]
-      }
-    }
-  }
-  return(L)
-}
-#' @describeIn basecor-utils
+
 #' Compute the KLD between two multivariate Gaussian
 #' distributions, assuming equal mean vector
 #' @param C1 is a correlation matrix.
@@ -160,18 +108,16 @@ Hcorrel <- function(
     p,
     parametrization,
     itheta,
-    d0,
     C0,
     decomposition,
     ...) {
 
   theta2correl <- function(th) {
-    L <- theta2L(
+    L <- cholcor(
       theta = th,
       p = p,
       parametrization = parametrization,
-      itheta = itheta,
-      d0 = d0
+      itheta = itheta
     )
     if(parametrization == 'itp') {
       return(cov2cor(chol2inv(t(L))))
