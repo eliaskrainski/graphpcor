@@ -1,152 +1,302 @@
 library(INLA)
-
 library(graphpcor)
 
-dlkj <- function(R, eta, verbose = FALSE) {
-    lR <- chol(R)
-    ldR <- 2*sum(log(diag(lR)))
-    if(verbose) print(ldR)
-    d <- ncol(R)
-    k <- 1:(d-1)
-    lbk <- lbeta(eta + (d-k-1)/2,
-                 eta + (d-k-1)/2) * (d-k)
-    if(verbose) print(lbk)
-    p2 <- sum((2*eta -2 + d - k)*(d-k))
-    if(verbose) print(p2)
-    if(verbose) print(sum(lbk) + p2*log(2))
-    o <- sum(lbk) + p2*log(2) + (eta-1)*ldR
-    return(o)
-}
-
 ################################################################
-### n = 2
+### n = 2, m = 1
 n <- 2
 (m <- n*(n-1)/2)
 
 (theta1 <- rnorm(m))
 
-lR <- graphpcor:::theta2gamma2L(theta1)
+lR <- cholcor(theta1, 2)
 log(attr(lR, 'determinant'))
 R <- tcrossprod(lR)
+R
+basecor(theta1, p = 2)
 
-dlkj(R,1)
-dlkj(R,10)
+dLKJ(R, 1, log=TRUE)
+dLKJ(R, 10, log=TRUE)
 
-eta <- 5.01
+seq(-.9, .9, length = 19)
+head(seq(-.99, .99, length = 199))
+2e2-1
 
-cmodel <- cgeneric(
-    model = "LKJ", 
-    n = n,
-    eta = eta,
-    debug = 1e9)
+for(e in c(0.1, 0.2, 0.5, 1, 2, 10, 50))
+    print(integrate(function(x) sapply(x, function(xx)
+        dLKJ(matrix(c(1,xx,xx,1), 2), e)),
+        -.999, .999, subdivisions = 2e3-1))
 
-str(cmodel)
+etas <- c(0.1, 0.5, 1, 3, 30)
 
-p2 <- prior(cmodel, theta = theta1)
-p2
-
-log(attr(lR, 'determinant'))
-
-dlkj(R, eta, TRUE)
-
-j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
-j2fn <- function(x) {
-    m <- length(x)
-    r <- 0
-    if(m>1) {
-        r <- (m-1) * log(x[1])
-        for(i in 1:(m-1)) {
-            r <- r + (m-i-1) * log(sin(x[i+1]))
-        }
-    }
-    return(r)
+par(mfrow = c(1, 1), mar = c(3, 3, 1, 1), mgp = c(1.5, 0.5, 0),
+    las = 1, bty = "n")
+plot(function(x) sapply(x, function(xx)
+    dLKJ(matrix(c(1,xx,xx,1), 2), max(etas))),
+    -.99, .99, n = 199, type = "n",
+    xlab = expression(rho), ylab = 'p(R|eta)')
+for(i in 1:length(etas)) {
+    plot(function(x) sapply(x, function(xx)
+        dLKJ(matrix(c(1,xx,xx,1), 2), etas[i])),
+        -.99, .99, n = 199,
+        add = TRUE, col = i+1, lwd = 2)
+    plot(function(x)
+        dbeta((x+1)/2, etas[i] + (n-2)/2, etas[i] + (n-2)/2)/2,
+        -1, 1, n = 2001, 
+        add = TRUE, col = 1, lty = 2)
 }
-j2 <- j2fn(graphpcor:::x2rphi(pi/(1+exp(-theta1))))
-c(j1 = j1, j2 = j2)
 
-all.equal(p2, dlkj(R, eta) + j1 + j2)
+jacobian(function(x) tcrossprod(cholcor(x))[2], theta1)
+
+ptheta <- function(th, eta, p, iL = which(lower.tri(diag(p)))) {
+    L <- cholcor(th, p, itheta = iL)
+    R <- tcrossprod(L)
+    J <- jacobian(function(x) tcrossprod(cholcor(x))[iL], th)
+    exp(dLKJ(R, eta, log = TRUE) +
+        new("numeric", determinant(J)$modulus))
+}
+
+for(e in etas)
+    print(integrate(function(x) sapply(x, function(xx)
+        ptheta(xx, e, 2)), -5, 5, subdivisions = 2e3+1))
+
+hth <- 0.05
+length(sth <- seq(-4, 4, hth))
+(nsth <- length(sth))
+
+par(mfrow = c(1, 1), mar = c(3, 3, 1, 1), mgp = c(1.5, 0.5, 0),
+    las = 1, bty = "n")
+plot(function(x) sapply(x, function(xx)
+    ptheta(xx, max(etas), 2)),
+    -3, 3, n = 601, type = "n",
+    xlab = expression(theta), ylab = 'p(theta|eta)')
+for(i in 1:length(etas)) {
+    cm <- cgeneric("LKJ", n = n, eta = etas[i], useINLAprecomp = FALSE)
+    plot(function(x) sapply(x, function(xx)
+        ptheta(xx, etas[i], 2)), -3, 3, n = 601, 
+        add = TRUE, lwd = 3, col = i+1)
+    lines(sth, exp(prior(cm, theta = matrix(sth,1))), lty = 2)
+}
 
 ################################################################
-## n = 3
+## n = 3, m = 3
 n <- 3
 (m <- n*(n-1)/2)
 
 (theta1 <- rnorm(m))
 
-lR <- graphpcor:::theta2gamma2L(theta1)
-log(attr(lR, 'determinant'))
-R <- tcrossprod(lR)
-
-gamma1 <- pi/(1+exp(-theta1))
-gamma1
-
-co <- cbind(cos(gamma1[1:2]),
-            c(0, cos(gamma1[3])))
-co
-
-si <- cbind(sin(gamma1[1:2]),
-            c(0, sin(gamma1[3])))
-si
-psi <- cbind(si[,1], si[,1]*si[,2])
-psi
-
-cbind(c(1, co[,1]),
-      c(0, si[1,1], si[2,1]*co[2,2]),
-      c(0,0,psi[2,2]))
-
+lR <- cholcor(theta1, n)
 lR
 log(attr(lR, 'determinant'))
+R <- tcrossprod(lR)
+R
+basecor(theta1, p = n)
 
-
-dlkj(R,1)
-dlkj(R,10)
-
-eta <- 5.01
+### evaluate  fore one parameter
+eta <- 1 + rgamma(1, 10, 2)
+eta
 
 cmodel <- cgeneric(
     model = "LKJ", 
     n = n,
     eta = eta,
-    debug = 1e9)
+    useINLAprecomp = FALSE)
 
-str(cmodel)
+##str(cmodel)
 
-prec(cmodel)
-solve(prec(cmodel))
-solve(prec(cmodel, theta = theta1))
+graph(cmodel)
+
+initial(cmodel)
 
 prec(cmodel, theta = theta1)
-(Q1 <- chol2inv(t(graphpcor:::theta2gamma2L(theta1))))
 
-itest <- inla(y ~ 0 + f(i, model = cmodel),
-     data = list(y = rep(NA, n), i = 1:n),
-     control.family = list(
-         hyper = list(prec = list(initial = 10, fixed = TRUE))
-     ),
-     control.mode = list(theta = theta1, fixed = TRUE),
-     control.compute = list(config = TRUE),
-     verbose = !TRUE)
+all.equal(as.matrix(solve(prec(cmodel, theta = theta1))),
+          R)
 
-itest$mode$theta
-solve(prec(itest))
-solve(Q1)
+prior(cmodel, theta = theta1)
 
-p3 <- prior(cmodel, theta = theta1)
-p3
+th3 <- t(expand.grid(th1 = sth, th2 = sth, th3 = sth))
+str(th3)
 
-gamma1
-pi*exp(-theta1)/((1+exp(-theta1))^2)
+p3 <- array(prior(cmodel, theta = th3), rep(nsth, 3))
 
-j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
-rphi <- graphpcor:::x2rphi(pi/(1+exp(-theta1)))
-c(rphi=rphi)
-j2 <- j2fn(rphi)
-c(j1 = j1, j2 = j2)
+par(mfrow = c(2, 2), mar = c(3, 3, 0.5, 0.5),
+    mgp = c(2, 0.5, 0), bty = "n")
+image(sth, sth, p3[,,nsth/2])
+contour(sth, sth, p3[,,nsth/2], add = TRUE, nlevels = 5)
+image(sth, sth, p3[,nsth/2,])
+contour(sth, sth, p3[,nsth/2,], add = TRUE, nlevels = 5)
+image(sth, sth, p3[nsth/2,,])
+contour(sth, sth, p3[nsth/2,,], add = TRUE, nlevels = 5)
 
-dlkj(R, eta) + c(no=0, ok=j1 + j2)
-p3
+sum(exp(p3)*(hth^3))
 
-all.equal(p3, dlkj(R, eta) + j1 + j2)
+hth2 <- hth * hth
+
+array(2:30, c(3,5,2))
+apply(array(2:30, c(3,5,2)), 3, sum)
+
+sum(apply(exp(p3)*hth2, 2, sum) * hth)
+sum(apply(exp(p3)*hth2, 2, sum) * hth)
+sum(apply(exp(p3)*hth2, 3, sum) * hth)
+
+plot(sth, apply(exp(p3)*hth2, 1, sum),
+     xlab = expression(theta), ylab = "density",
+     type = "l", lwd = 2, lty = 2)
+lines(sth, apply(exp(p3)*hth2, 2, sum), col = 2)
+lines(sth, apply(exp(p3)*hth2, 3, sum), col = 3)
+
+## eval 3 different parameters
+## fit with no data: get back the prior
+
+pthlabs <- c(
+    expression(pi[theta[1]](theta[1]~"|"~eta)),
+    expression(pi[theta[2]](theta[2]~"|"~eta)),
+    expression(pi[theta[3]](theta[3]~"|"~eta))
+)
+rholabs <- c(
+    expression(rho[2~","~1]),
+    expression(rho[3~""~1]),
+    expression(rho[3~""~2])
+    )
+prholabs <- c(
+    expression(pi[rho[2~","~1]](rho[2~","~1]~"|"~eta)),
+    expression(pi[rho[3~","~1]](rho[3~","~1]~"|"~eta)),
+    expression(pi[rho[3~","~2]](rho[3~","~2]~"|"~eta))
+)
+
+par(mfrow = c(3, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
+for(e in c(1/2, 3, 30)) {
+    cm <- cgeneric("LKJ", n = n, eta = e)
+    p3a <- array(exp(prior(cm, theta = th3)), rep(nsth, 3))
+    itest <- inla(
+        y ~ 0 + f(i, model = cm),
+        data = list(y = rep(NA, n), i = 1:n),
+        control.family = list(
+            hyper = list(prec = list(initial = 10, fixed = TRUE))
+        )
+    )
+    for(i in 1:3) {
+        plot(itest$marginals.hyperpar[[i]], pch = 19, type = 'b',
+             xlab = as.expression(bquote(theta[.(i)])),
+             ylab = pthlabs[[i]], main = "")
+        lines(sth, apply(p3a*hth2, i, sum), col = i, lwd = 3)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   as.expression(bquote(eta == .(e))))
+    }
+    hprior3 <- inla.hyperpar.sample(10000, itest)
+    il3 <- which(lower.tri(diag(n)))
+    cprior3 <- apply(hprior3, 1, function(x)
+        tcrossprod(cholcor(x, n))[il3])
+    for(i in 1:3) {
+        hist(cprior3[i, ], seq(-1, 1, 0.05), freq = FALSE,
+             main = "",
+             xlab = rholabs[[i]],
+             ylab = prholabs[[i]])
+        plot(function(x)
+            dbeta((x+1)/2, e + (n-2)/2, e + (n-2)/2)/2,
+             -1, 1, n = 2001, 
+             add = TRUE, col = i, lwd = 3)
+    }
+}
+
+## draw samples, for two different sample size
+nsims <- c(50, 500)
+xxs <- lapply(nsims, function(ns) 
+    tcrossprod(matrix(rnorm(ns * n), ns), lR))
+
+R
+Rs <- lapply(xxs, cor)
+Rs
+
+## base model at the sample correlation (to get observed theta)
+Bs <- lapply(Rs, basecor, p = n)
+(oths <- sapply(Bs, function(b) b$theta))
+
+datf3 <- lapply(1:2, function(i)
+    data.frame(
+        y = as.vector(xxs[[i]]),
+        i = rep(1:n, each = nsims[i]),
+        r = rep(1:nsims[i], n)))
+
+fr <- y ~ 0 + f(i, model = cmodel, replicate = r)
+cfam <- list(
+    hyper = list(prec = list(initial = 10, fixed = TRUE))
+)
+
+## consider different priors for these 2 data
+par(mfrow = c(3, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
+for(e in c(1/2, 3, 30)) {
+    cmodel <- cgeneric("LKJ", n = n, eta = e)
+    p3a <- array(exp(prior(cmodel, theta = th3)), rep(nsth, 3))
+    itests <- lapply(datf3, function(ddf)
+        inla(formula = fr, 
+             data = ddf, 
+             control.family = cfam
+             )
+        )
+    for(i in 1:3) {
+        pm1 <- itests[[1]]$marginals.hyperpar[[i]]
+        pm2 <- itests[[2]]$marginals.hyperpar[[i]]
+        xlm <- range(theta1[i],
+                     Bs[[1]]$theta[i],
+                     Bs[[2]]$theta[i],
+                     pm1[, 1], pm2[, 1])
+        ylm <- c(0, max(pm1[, 2], pm2[, 2]))
+        plot(pm1, type = "l", col = 2, lwd = 2,
+             xlim = xlm, ylim = ylm, 
+             xlab = as.expression(bquote(theta[.(i)])),
+             ylab = pthlabs[[i]], main = "")
+        lines(pm2, col = 3, lwd = 2)
+        lines(sth, apply(p3a*hth2, i, sum), lty = 3, lwd = 3)
+        abline(v = theta1[i], col = 1, lty = 1)
+        abline(v = Bs[[1]]$theta[i], lty = 2, col = 2, lwd = 2)
+        abline(v = Bs[[2]]$theta[i], lty = 2, col = 3, lwd = 2)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   c("true", "prior",
+                     as.expression(
+                         lapply(nsims, function(ns)
+                             bquote("Obs."~theta~", n="~.(ns)))),
+                     as.expression(
+                         lapply(nsims, function(ns)
+                             bquote("Post."~theta~", n="~.(ns))))), 
+                   lty = c(1, 3, 2, 2, 1, 1),
+                   col = c(1, 1, 2:3, 2:3),
+                   lwd = c(1, 3, 2, 2, 2, 2),
+                   title = as.expression(bquote(eta == .(e))))
+    }
+    hpriors3 <- lapply(itests, function(r)
+                       inla.hyperpar.sample(10000, r))
+    cpriors3 <- lapply(hpriors3, apply, 1, function(x)
+        tcrossprod(cholcor(x, n))[il3])
+    hh <- 0.01
+    for(i in 1:3) {
+        h1 <- hist(cpriors3[[1]][i, ], seq(-1, 1, hh), plot = FALSE)
+        h2 <- hist(cpriors3[[2]][i, ], seq(-1, 1, hh), plot = FALSE)
+        ih <- which((h1$counts>0) | (h2$counts>0))
+        plot(h1, freq = FALSE, xlab = rholabs[[i]],
+             ylab = prholabs[[i]],
+             xlim = range(h1$mids[ih], h2$mids[ih]) + c(-1,1)*hh,
+             ylim = range(h1$dens[ih], h2$dens[ih]),
+             main = "", col = rgb(1,0,0,0.5))
+        plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
+        plot(function(x)
+            dbeta((x+1)/2, e + (n-2)/2, e + (n-2)/2)/2,
+             -1, 1, n = 2001, 
+            add = TRUE, col = 1, lty = 3, lwd = 3)
+        abline(v = R[il3[i]], lty = 1, col = 1)
+        rug(R[il3[i]], col = 1, lwd = 1)
+        rug(Rs[[1]][il3[i]], col = 2, lwd = 5, lty = 2)
+        rug(Rs[[2]][il3[i]], col = 3, lwd = 5, lty = 2)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   paste("n = ", nsims), 
+                   fill = c(2,3), border = 2:3,
+                   title = as.expression(bquote(eta == .(e))))
+    }
+}
+
 
 ################################################################
 ## n = 4
@@ -155,163 +305,88 @@ n <- 4
 
 (theta1 <- rnorm(m))
 
-lR <- graphpcor:::theta2gamma2L(theta1)
+lR <- cholcor(theta1, p = n)
 log(attr(lR, 'determinant'))
 R <- tcrossprod(lR)
+il4 <- which(lower.tri(R))
 
-gamma1 <- pi/(1+exp(-theta1))
+## simulate two datasets
+xxs <- lapply(nsims, function(ns) 
+    tcrossprod(matrix(rnorm(ns * n), ns), lR))
 
-co <- cbind(cos(gamma1[1:3]),
-            c(0, cos(gamma1[4:5])),
-            c(0,0,cos(gamma1[6])))
-co
+R
+Rs <- lapply(xxs, cor)
+Rs
 
-si <- cbind(sin(gamma1[1:3]),
-            c(0, sin(gamma1[4:5])),
-            c(0,0,sin(gamma1[6])))
-si
-psi <- cbind(si[,1], si[,1]*si[,2], si[,1]*si[,2]*si[,3])
-psi
+## base model at the sample correlation (to get observed theta)
+Bs <- lapply(Rs, basecor, p = n)
+(oths <- sapply(Bs, function(b) b$theta))
 
-cbind(c(1, co[,1]),
-      c(0, si[1,1], si[2:3,1]*co[2:3,2]),
-      c(0,0,psi[2,2], psi[3,2]*co[3,3]),
-      c(0,0,0,psi[3,3]))
+datfs <- lapply(1:2, function(i)
+    data.frame(
+        y = as.vector(xxs[[i]]),
+        i = rep(1:n, each = nsims[i]),
+        r = rep(1:nsims[i], n)))
 
-lR
-log(attr(lR, 'determinant'))
-
-dlkj(R,1)
-dlkj(R,10)
-
-eta <- 5.01
-
-cmodel <- cgeneric(
-    model = "LKJ", 
-    n = n,
-    eta = eta,
-    debug = 1e9)
-
-str(cmodel)
-
-p4 <- prior(cmodel, theta = theta1)
-p4
-
-gamma1
-pi*exp(-theta1)/((1+exp(-theta1))^2)
-
-j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
-rphi <- graphpcor:::x2rphi(pi/(1+exp(-theta1)))
-c(rphi=rphi)
-j2 <- j2fn(rphi)
-c(j1 = j1, j2 = j2)
-
-dlkj(R, eta) + c(no=0, ok=j1 + j2)
-p4
-
-all.equal(p4, dlkj(R, eta) + j1 + j2)
-
-
-#######################################################################
-### n = 5
-n <- 5
-(m <- n*(n-1)/2)
-
-(theta1 <- rnorm(m))
-
-lR <- graphpcor:::theta2gamma2L(theta1)
-log(attr(lR, 'determinant'))
-R <- tcrossprod(lR)
-
-eta <- 5.01
-
-cmodel <- cgeneric(
-    model = "LKJ", 
-    n = n,
-    eta = eta)
-
-p5 <- prior(cmodel, theta = theta1)
-p5
-
-gamma1
-pi*exp(-theta1)/((1+exp(-theta1))^2)
-
-j1 <- sum(log(pi*exp(-theta1)/((1+exp(-theta1))^2)))
-rphi <- graphpcor:::x2rphi(pi/(1+exp(-theta1)))
-c(rphi=rphi)
-j2 <- j2fn(rphi)
-c(j1 = j1, j2 = j2)
-
-dlkj(R, eta) + c(no=0, ok=j1 + j2)
-p5
-
-all.equal(p5, dlkj(R, eta) + j1 + j2)
-
-
-## other tests
-graph(cmodel, optimize = TRUE)
-
-graph(cmodel)
-
-round(ith <- initial(cmodel), 4)
-
-theta1 <- rnorm(m)
-x1 <- pi*plogis(theta1)
-
-x1
-cos(x1)
-sin(x1)
-
-(qq <- prec(cmodel, theta = theta1))
-
-(b1 <- graphpcor:::theta2gamma2L(theta1))
-all.equal(as.matrix(qq), solve(tcrossprod(b1)))
-
-(vv <- solve(qq))
-all.equal(as.matrix(vv), tcrossprod(b1))
-
-dat1 <- data.frame(    
-    i = 1:n,
-    y = rep(NA, n)
+rholabs4 <- c(
+    expression(rho[2~","~1]),
+    expression(rho[3~""~1]),
+    expression(rho[4~""~1]),
+    expression(rho[3~""~2]),
+    expression(rho[4~""~2]),
+    expression(rho[4~""~3])
+)
+prholabs4 <- c(
+    expression(pi[rho[2~","~1]](rho[2~","~1]~"|"~eta)),
+    expression(pi[rho[3~","~1]](rho[3~","~1]~"|"~eta)),
+    expression(pi[rho[4~","~1]](rho[4~","~1]~"|"~eta)),
+    expression(pi[rho[3~","~2]](rho[3~","~2]~"|"~eta)),
+    expression(pi[rho[4~","~2]](rho[4~","~2]~"|"~eta)),
+    expression(pi[rho[4~","~3]](rho[4~","~3]~"|"~eta))
 )
 
-cinla <- list(int.strategy = 'eb')
-cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
-cmode <- list(theta = theta1, fixed = TRUE)
+## consider different priors for these 2 data
+## visualize the posterior for each correlation
+par(mfrow = c(3, m), mar = c(3,3,0,0), mgp = c(1.5,0.5,0))
+for(e in c(1/2, 3, 30)) {
+    cmodel <- cgeneric("LKJ", n = n, eta = e)
+    itests <- lapply(datfs, function(ddf)
+        inla(formula = fr, 
+             data = ddf, 
+             control.family = cfam
+             )
+        )
+    hpriors <- lapply(itests, function(r)
+        inla.hyperpar.sample(10000, r))
+    cpriors <- lapply(hpriors, apply, 1, function(x)
+        tcrossprod(cholcor(x, n))[il4])
+    hh <- 0.01
+    for(i in 1:m) {
+        h1 <- hist(cpriors[[1]][i, ], seq(-1, 1, hh), plot = FALSE)
+        h2 <- hist(cpriors[[2]][i, ], seq(-1, 1, hh), plot = FALSE)
+        ih <- which((h1$counts>0) | (h2$counts>0))
+        plot(h1, freq = FALSE, xlab = rholabs4[[i]],
+             ylab = prholabs4[[i]],
+             xlim = range(h1$mids[ih], h2$mids[ih]) + c(-1,1)*hh,
+             ylim = range(h1$dens[ih], h2$dens[ih]),
+             main = "", col = rgb(1,0,0,0.5))
+        plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
+        plot(function(x)
+            dbeta((x+1)/2, e + (n-2)/2, e + (n-2)/2)/2,
+             -1, 1, n = 2001, 
+            add = TRUE, col = 1, lty = 3, lwd = 3)
+        abline(v = R[il4[i]], lty = 1, col = 1)
+        rug(R[il4[i]], col = 1, lwd = 1)
+        rug(Rs[[1]][il4[i]], col = 2, lwd = 5, lty = 2)
+        rug(Rs[[2]][il4[i]], col = 3, lwd = 5, lty = 2)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   paste("n = ", nsims), 
+                   fill = c(2,3), border = 2:3,
+                   title = as.expression(bquote(eta == .(e))))
+    }
+}
 
-fit <- inla(
-    y ~ 0 + f(i, model = cmodel),
-    data = dat1,
-    control.family = cfam,
-    control.inla = cinla,
-    control.mode = cmode
-)
-
-all.equal(qq, prec(fit))
-
-### 
-nrep <- 2
-xx <- matrix(rnorm(nrep * n), nrep) %*% chol(vv)
-str(xx)
-
-dat2 <- data.frame(
-    i = rep(1:n, each = nrep),
-    r = rep(1:nrep, n),
-    y = as.vector(xx)
-)
-str(dat2)
-
-fitr <- inla(
-    y ~ 0 + f(i, model = cmodel, replicate = r),
-    data = dat2,
-    control.family = cfam,
-    control.inla = cinla,
-    control.mode = cmode
-    ##, verbose = TRUE
-)
-
-round(qq, 2)
-round(prec(fitr), 2)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)
