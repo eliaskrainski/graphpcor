@@ -133,6 +133,7 @@ basepcor.numeric <- function(
   s <- sqrt(eI0$values)
   tv <- t(eI0$vectors)
   attr(I0, "decomposition") <- eI0
+  attr(I0, "determinant") <- prod(eI0$values)
   attr(I0, "h.5") <- crossprod(tv * s, tv)
   attr(I0, "hneg.5") <- crossprod(tv / s, tv)
 
@@ -201,6 +202,7 @@ basepcor.matrix <- function(
   s <- sqrt(eI0$values)
   tv <- t(eI0$vectors)
   attr(I0, "decomposition") <- eI0
+  attr(I0, "determinant") <- prod(eI0$values)
   attr(I0, "h.5") <- crossprod(tv * s, tv)
   attr(I0, "hneg.5") <- crossprod(tv / s, tv)
 

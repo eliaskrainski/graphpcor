@@ -4,16 +4,17 @@
 \alias{cgeneric_pc_correl}
 \title{Build an \code{cgeneric} object to implement the PC prior,
 proposed on Simpson et. al. (2007),
-for the correlation matrix parametrized from the
-hypershere decomposition, see details.}
+as an informative prior, see details in \code{\link[=basecor]{basecor()}}.}
 \usage{
 cgeneric_pc_correl(
   n,
   lambda,
   base,
-  debug = FALSE,
-  useINLAprecomp = TRUE,
-  shlib = NULL
+  sigma.prior.reference,
+  sigma.prior.probability,
+  params.id,
+  cor.params.fixed,
+  ...
 )
 }
 \arguments{
@@ -23,16 +24,53 @@ cgeneric_pc_correl(
 
 \item{base}{matrix with base correlation matrix,
 or numeric vector representing the parameters of a base correlation
-matrix. See \code{\link[=basecor]{basecor()}} for details.}
+matrix. See \code{\link[=basepcor]{basepcor()}} for details.}
 
-\item{debug}{integer, default is zero, indicating the verbose level.
-Will be used as logical by INLA.}
+\item{sigma.prior.reference}{numeric vector with length \code{n},
+\code{n} is the number of nodes (variables) in the graph, as the
+reference standard deviation to define the PC prior for each
+marginal variance parameters. If missing, the model will be
+assumed for a correlation. If a length \code{n} vector is given
+and \code{sigma.prior.probability} is missing, it will be used as
+known square root of the variances.
+NOTE: \code{params.id} will be applied here as
+\code{sigma.prior.reference[params.id[1:n]]}.}
 
-\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
-be used the shared object pre-compiled by INLA.
-This is not considered if 'shlib' is provided.}
+\item{sigma.prior.probability}{numeric vector with length \code{n}
+to set the probability statement of the PC prior for each
+marginal variance parameters. The probability statement is
+P(sigma < \code{sigma.prior.reference}) = p. If missing, all the
+marginal variances are considered as known, as described in
+\code{sigma.prior.reference}.
+If a vector is given and a probability is NA, 0 or 1, the
+corresponding \code{sigma.prior.reference} will be used as fixed.
+NOTE: \code{params.id} will be applied here as
+\code{sigma.prior.probability[params.id[1:n]]}.}
 
-\item{shlib}{string, default is NULL, with the path to the shared object.}
+\item{params.id}{integer ordered vector with length equals
+to \code{n+m} to specify common parameter values. If missing it
+is assumed \code{1:(n+m)} and all parameters are assumed distinct.
+The first \code{n} indexes the square root of the marginal
+variances and the remaining indexes the edges parameters.
+Example: By setting \code{params.id = c(1,1,2,3, 4,5,5,6)},
+the first two standard deviations are common and the
+second and third edges parameters are common as well,
+giving 6 unknown parameters in the model.}
+
+\item{cor.params.fixed}{numeric vector of length \code{m}
+providing the value(s) at which the lower parameter(s)
+of the L matrix to be fixed and not estimated.
+NA indicates not fixed and all are set to be estimated by default.
+Example: with \code{cor.params.fixed = c(NA, -1, NA, 1)} the first
+and the third of these parameters will be estimated while
+the second is fixed and equal to -1 and the forth is fixed
+and equal to 1. NOTE: \code{params.id} will be applied here as
+\code{cor.params.fixed[params.id[(n+1:m)]-n+1]}, thus the provided
+examples give \verb{NA -1 -1 NA} and so the second and third low L
+parameters are fixed to \code{-1}.}
+
+\item{...}{additional arguments passed on to
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}.}
 }
 \value{
 a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
@@ -40,34 +78,13 @@ a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::c
 \description{
 Build an \code{cgeneric} object to implement the PC prior,
 proposed on Simpson et. al. (2007),
-for the correlation matrix parametrized from the
-hypershere decomposition, see details.
-}
-\details{
-The hypershere decomposition, as proposed in
-Rapisarda, Brigo and Mercurio (2007)
-consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
-compute \eqn{x[k] = pi/(1+exp(-\theta[k]))}
-organize it as a lower triangle of a \eqn{n \times n} matrix
-\deqn{B[i,j] = \left\{\begin{array}{cc}
-cos(x[i,j]) & j=1 \\
-cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]) &  2 <= j <= i-1 \\
-prod_{k=1}^{j-1}sin(x[i,k])  & j=i \\
-0 &  j+1 <= j <= n \end{array}\right.}
-Result
-\deqn{\gamma[i,j] = -log(sin(x[i,j]))}
-\deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
+as an informative prior, see details in \code{\link[=basecor]{basecor()}}.
 }
 \references{
 Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
 Martins and Sigrunn H. S\\o rbye (2017).
 Penalising Model Component Complexity:
-A Principled, Practical Approach to Constructing Priors
+A Principled, Practical Approach to Constructing Priors.
 Statistical Science 2017, Vol. 32, No. 1, 1–28.
 <doi 10.1214/16-STS576>
-
-Rapisarda, Brigo and Mercurio (2007).
-Parameterizing correlations: a geometric interpretation.
-IMA Journal of Management Mathematics (2007) 18, 55-73.
-<doi 10.1093/imaman/dpl010>
 }

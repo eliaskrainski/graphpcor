@@ -34,20 +34,8 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 	// This is a cgeneric implementation for the
 	// PC-prior for a correlation matrix parametrized
 	// from the Canonical Partial Correlation - CPC.
-	//     cpc: x[j] = tanh(\theta[i])
-	// See #correlation-matrix-inverse-transform at
-	//  https://mc-stan.org/docs/reference-manual/transforms.html
-	// The prior of the correlation matrix is given as
-	//   p(C) = |J_m|*l*exp(-l*r)/(2*pi^(m-1)
-	// following a bijective transformation from
-	// theta[1:m] \in R^{m} to {r, \phi[1:(m-1)]}
-	// where \phi[1:(m-1)] are angles and r is the radius
-	// of a m-sphere (https://en.wikipedia.org/wiki/N-sphere).
-	// That is
-	//   r ~ Exponential(\lambda)
-	//   \phi[j] ~ Uniform(0, pi), j=1...m-2
-	//   \phi[m-1] ~ Uniform(0, 2pi)
-	//   J_m is the Jacobian of this transformation
+	// from its precision matrix
+
 	// It returns for if 'cmd' is
 	// 'graph': i,j index set for the upper triangle of Q;
 	// 'Q': the inverse of C;
@@ -177,7 +165,8 @@ double *inla_cgeneric_pc_prec_correl(inla_cgeneric_cmd_tp cmd, double *theta, in
 		ret[1] = M;				       /* REQUIRED */
 
 		// Cholesky of the correlation matrix
-		cpc2correlCholesky(&N, &param[0], &ret[offset]);
+		int std=1;
+		theta2Qcorrel(N, std, &param[0], &ret[offset]);
 
 		int info;
 		char uplo = 'L';

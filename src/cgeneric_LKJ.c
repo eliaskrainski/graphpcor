@@ -72,7 +72,6 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	assert(!strcasecmp(data->ints[2]->name, "sfixed"));   // this will always be the case
 	int nsigmas = data->ints[2]->len;
 	assert(nsigmas==N);
-	double sigmas[N];
 	int nsfixed = 0, sfixed[nsigmas];
 	for (i = 0; i < nsigmas; i++) {
 	  sfixed[i] = data->ints[2]->ints[i];
@@ -95,6 +94,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	nunkparams[1] = nth;	// num params low L
 	nunkparams[2] = nunkparams[0] + nunkparams[1];
 
+	double sigmas[N];
 	if(theta) {
 	  k = 0;
 	  for (i = 0; i < N; i++) {
@@ -145,7 +145,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	  cpcCholesky(&N, &theta[nunkparams[0]],
                &ret[offset], &ldet, &aJac);
 
-    // include sigmas
+    // include sigmas in the Cholesky
     k = 2;
     for(i=0; i<N; i++) {
       for(j=i; j<N; j++) {

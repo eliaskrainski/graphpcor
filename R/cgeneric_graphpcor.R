@@ -23,7 +23,7 @@
 #' reference standard deviation to define the PC prior for each
 #' marginal variance parameters. If missing, the model will be
 #' assumed for a correlation. If a length `n` vector is given
-#' and `sigma.prior.reference` is missing, it will be used as
+#' and `sigma.prior.probability` is missing, it will be used as
 #' known square root of the variances.
 #' NOTE: `params.id` will be applied here as
 #' `sigma.prior.reference[params.id[1:n]]`.
@@ -46,15 +46,15 @@
 #' the first two standard deviations are common and the
 #' second and third edges parameters are common as well,
 #' giving 6 unknown parameters in the model.
-#' @param low.params.fixed numeric vector of length `m`
+#' @param cor.params.fixed numeric vector of length `m`
 #' providing the value(s) at which the lower parameter(s)
 #' of the L matrix to be fixed and not estimated.
 #' NA indicates not fixed and all are set to be estimated by default.
-#' Example: with `low.params.fixed = c(NA, -1, NA, 1)` the first
+#' Example: with `cor.params.fixed = c(NA, -1, NA, 1)` the first
 #' and the third of these parameters will be estimated while
 #' the second is fixed and equal to -1 and the forth is fixed
 #' and equal to 1. NOTE: `params.id` will be applied here as
-#' `low.params.fixed[params.id[(n+1:m)]-n+1]`, thus the provided
+#' `cor.params.fixed[params.id[(n+1:m)]-n+1]`, thus the provided
 #' examples give `NA -1 -1 NA` and so the second and third low L
 #' parameters are fixed to `-1`.
 #' @param ... additional arguments that will be passed on to
@@ -69,7 +69,7 @@ cgeneric_graphpcor <-
            sigma.prior.reference,
            sigma.prior.probability,
            params.id,
-           low.params.fixed,
+           cor.params.fixed,
            ...) {
 
     dotArgs <- list(...)
@@ -90,11 +90,13 @@ cgeneric_graphpcor <-
       cat("Laplacian is\n")
       print(Q0)
     }
-    stopifnot(all(lambda>0))
+
     if(length(lambda)>1) {
       warning('length(lambda)>1, using lambda[1]!')
-      lambda <- as.numeric(lambda[1])
     }
+    lambda <- as.numeric(lambda[1])
+    stopifnot(lambda>0)
+
     if(missing(sigma.prior.reference)) {
        sigma.prior.reference <- rep(1, n)
     }
@@ -147,7 +149,7 @@ cgeneric_graphpcor <-
     } else {
       stopifnot(length(params.id)==nnz)
       stopifnot(all(params.id %in% (1:nnz)))
-      stopifnot(all(diff(sort(params.id))>0))
+      stopifnot(all(diff(sort(params.id))==1))
     }
     ## update sigmas.prior.*
     sigma.prior.reference <- sigma.prior.reference[params.id[(1:n)]]
@@ -155,13 +157,13 @@ cgeneric_graphpcor <-
     sigma.fixed <- sigma.fixed[params.id[(1:n)]]
     nUnkSigmas <- length(sigma.prior.reference)
 
-    if(missing(low.params.fixed)) {
-      low.params.fixed <- rep(NA, nEdges)
+    if(missing(cor.params.fixed)) {
+      cor.params.fixed <- rep(NA, nEdges)
     } else {
-      stopifnot(length(low.params.fixed)==nEdges)
+      stopifnot(length(cor.params.fixed)==nEdges)
     }
-    low.params.fixed[params.id[n+1:nEdges]-n]
-    if(any(!is.na(low.params.fixed)))  stop("WORK IN PROGRESS!")
+    cor.params.fixed[params.id[n+1:nEdges]-n]
+    if(any(!is.na(cor.params.fixed)))  stop("WORK IN PROGRESS!")
 
     ii <- c(1:n, qij$ii)
     jj <- c(1:n, qij$jj)

@@ -11,7 +11,7 @@ cgeneric_graphpcor(
   sigma.prior.reference,
   sigma.prior.probability,
   params.id,
-  low.params.fixed,
+  cor.params.fixed,
   ...
 )
 }
@@ -37,7 +37,7 @@ can generates this.}
 reference standard deviation to define the PC prior for each
 marginal variance parameters. If missing, the model will be
 assumed for a correlation. If a length \code{n} vector is given
-and \code{sigma.prior.reference} is missing, it will be used as
+and \code{sigma.prior.probability} is missing, it will be used as
 known square root of the variances.
 NOTE: \code{params.id} will be applied here as
 \code{sigma.prior.reference[params.id[1:n]]}.}
@@ -63,15 +63,15 @@ the first two standard deviations are common and the
 second and third edges parameters are common as well,
 giving 6 unknown parameters in the model.}
 
-\item{low.params.fixed}{numeric vector of length \code{m}
+\item{cor.params.fixed}{numeric vector of length \code{m}
 providing the value(s) at which the lower parameter(s)
 of the L matrix to be fixed and not estimated.
 NA indicates not fixed and all are set to be estimated by default.
-Example: with \code{low.params.fixed = c(NA, -1, NA, 1)} the first
+Example: with \code{cor.params.fixed = c(NA, -1, NA, 1)} the first
 and the third of these parameters will be estimated while
 the second is fixed and equal to -1 and the forth is fixed
 and equal to 1. NOTE: \code{params.id} will be applied here as
-\code{low.params.fixed[params.id[(n+1:m)]-n+1]}, thus the provided
+\code{cor.params.fixed[params.id[(n+1:m)]-n+1]}, thus the provided
 examples give \verb{NA -1 -1 NA} and so the second and third low L
 parameters are fixed to \code{-1}.}
 

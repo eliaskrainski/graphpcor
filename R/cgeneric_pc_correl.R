@@ -1,116 +1,162 @@
 #' Build an `cgeneric` object to implement the PC prior,
 #' proposed on Simpson et. al. (2007),
-#' for the correlation matrix parametrized from the
-#' hypershere decomposition, see details.
+#' as an informative prior, see details in [basecor()].
 #' @param n integer to define the size of the matrix
 #' @param lambda numeric (positive), the penalization rate parameter
 #' @param base matrix with base correlation matrix,
 #' or numeric vector representing the parameters of a base correlation
-#' matrix. See [basecor()] for details.
-#' @param debug integer, default is zero, indicating the verbose level.
-#' Will be used as logical by INLA.
-#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
-#' be used the shared object pre-compiled by INLA.
-#' This is not considered if 'shlib' is provided.
-#' @param shlib string, default is NULL, with the path to the shared object.
-#' @details
-#' The hypershere decomposition, as proposed in
-#' Rapisarda, Brigo and Mercurio (2007)
-#' consider \eqn{\theta[k] \in [0, \infty], k=1,...,m=n(n-1)/2}
-#' compute \eqn{x[k] = pi/(1+exp(-\theta[k]))}
-#' organize it as a lower triangle of a \eqn{n \times n} matrix
-#' \deqn{B[i,j] = \left\{\begin{array}{cc}
-#' cos(x[i,j]) & j=1 \\
-#' cos(x[i,j])prod_{k=1}^{j-1}sin(x[i,k]) &  2 <= j <= i-1 \\
-#' prod_{k=1}^{j-1}sin(x[i,k])  & j=i \\
-#' 0 &  j+1 <= j <= n \end{array}\right.}
-#' Result
-#' \deqn{\gamma[i,j] = -log(sin(x[i,j]))}
-#'  \deqn{KLD(R) = \sqrt(2\sum_{i=2}^n\sum_{j=1}^{i-1} \gamma[i,j]}
+#' matrix. See [basepcor()] for details.
+#' @param sigma.prior.reference numeric vector with length `n`,
+#' `n` is the number of nodes (variables) in the graph, as the
+#' reference standard deviation to define the PC prior for each
+#' marginal variance parameters. If missing, the model will be
+#' assumed for a correlation. If a length `n` vector is given
+#' and `sigma.prior.probability` is missing, it will be used as
+#' known square root of the variances.
+#' NOTE: `params.id` will be applied here as
+#' `sigma.prior.reference[params.id[1:n]]`.
+#' @param sigma.prior.probability numeric vector with length `n`
+#' to set the probability statement of the PC prior for each
+#' marginal variance parameters. The probability statement is
+#' P(sigma < `sigma.prior.reference`) = p. If missing, all the
+#' marginal variances are considered as known, as described in
+#' `sigma.prior.reference`.
+#' If a vector is given and a probability is NA, 0 or 1, the
+#' corresponding `sigma.prior.reference` will be used as fixed.
+#' NOTE: `params.id` will be applied here as
+#' `sigma.prior.probability[params.id[1:n]]`.
+#' @param params.id integer ordered vector with length equals
+#' to `n+m` to specify common parameter values. If missing it
+#' is assumed `1:(n+m)` and all parameters are assumed distinct.
+#' The first `n` indexes the square root of the marginal
+#' variances and the remaining indexes the edges parameters.
+#' Example: By setting `params.id = c(1,1,2,3, 4,5,5,6)`,
+#' the first two standard deviations are common and the
+#' second and third edges parameters are common as well,
+#' giving 6 unknown parameters in the model.
+#' @param cor.params.fixed numeric vector of length `m`
+#' providing the value(s) at which the lower parameter(s)
+#' of the L matrix to be fixed and not estimated.
+#' NA indicates not fixed and all are set to be estimated by default.
+#' Example: with `cor.params.fixed = c(NA, -1, NA, 1)` the first
+#' and the third of these parameters will be estimated while
+#' the second is fixed and equal to -1 and the forth is fixed
+#' and equal to 1. NOTE: `params.id` will be applied here as
+#' `cor.params.fixed[params.id[(n+1:m)]-n+1]`, thus the provided
+#' examples give `NA -1 -1 NA` and so the second and third low L
+#' parameters are fixed to `-1`.
+#' @param ... additional arguments passed on to
+#' [INLAtools::cgeneric()].
 #' @references
 #' Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
 #' Martins and Sigrunn H. S\\o rbye (2017).
 #' Penalising Model Component Complexity:
-#' A Principled, Practical Approach to Constructing Priors
+#' A Principled, Practical Approach to Constructing Priors.
 #' Statistical Science 2017, Vol. 32, No. 1, 1–28.
 #' <doi 10.1214/16-STS576>
-#'
-#' Rapisarda, Brigo and Mercurio (2007).
-#'   Parameterizing correlations: a geometric interpretation.
-#'   IMA Journal of Management Mathematics (2007) 18, 55-73.
-#'   <doi 10.1093/imaman/dpl010>
-#'
 #' @return a `cgeneric` object, see [cgeneric()] for details.
 cgeneric_pc_correl <-
   function(n,
            lambda,
            base,
-           debug = FALSE,
-           useINLAprecomp = TRUE,
-           shlib = NULL) {
-
-    if(is.null(shlib)) {
-      if (useINLAprecomp) {
-        shlib <- INLA::inla.external.lib("graphpcor")
-      } else {
-        shlib <- system.file("libs", package = "graphpcor")
-        if (Sys.info()["sysname"] == "Windows") {
-          shlib <- file.path(shlib, "graphpcor.dll")
-        } else {
-          shlib <- file.path(shlib, "graphpcor.so")
-        }
-      }
-    }
+           sigma.prior.reference,
+           sigma.prior.probability,
+           params.id,
+           cor.params.fixed,
+           ...) {
 
     stopifnot(n>1)
     stopifnot(lambda>0)
     m <- n*(n-1)/2
 
-    lc <- log(lambda/2) + lgamma(m/2) - m*log(pi)/2
-
-    if(debug) {
-      cat('log C', lc, '\n')
+    dotArgs <- list(...)
+    if(!any(names(dotArgs)=="debug")) {
+      dotArgs$debug <- FALSE
     }
 
-    pcm <- basecor(base)
-    theta0 <- pcm$theta
+    if(is.null(dotArgs$shlib)) {
+      if(dotArgs$debug){
+        cat("searching shlib...\n")
+      }
+      dotArgs$shlib <- do.call(
+        what = INLAtools::cgeneric_shlib,
+        args = c(list(package = "graphpcor"),
+                 dotArgs))
+    }
+
+    if(length(lambda)>1) {
+      warning('length(lambda)>1, using lambda[1]!')
+    }
+    lambda <- as.numeric(lambda[1])
+    stopifnot(lambda>0)
+
+    if(missing(sigma.prior.reference)) {
+      sigma.prior.reference <- rep(1, n)
+    }
+    if(length(sigma.prior.reference)==1) {
+      sigma.prior.reference <- rep(sigma.prior.reference, n)
+    }
+    if(missing(sigma.prior.probability)) {
+      sigma.prior.probability <- rep(0, n)
+    }
+    if(length(sigma.prior.probability)==1) {
+      sigma.prior.probability <- rep(sigma.prior.probability, n)
+    }
+    stopifnot(length(sigma.prior.reference) == n)
+    stopifnot(length(sigma.prior.probability) == n)
+    stopifnot(all(sigma.prior.reference>0))
+    sigma.prior.probability[is.na(sigma.prior.probability)] <- 0
+    stopifnot(all(sigma.prior.probability>=0.0))
+    stopifnot(all(sigma.prior.probability<=1.0))
+    sigma.fixed <- is.zero(sigma.prior.probability) |
+      is.zero(1-sigma.prior.probability)
+
+    if(dotArgs$debug) {
+      print(list(sigmaref = sigma.prior.reference,
+                 sigmaprob = sigma.prior.probability,
+                 sfixed = sigma.fixed))
+    }
+
+    if(missing(params.id)) {
+      params.id <- 1:(n+m)
+    } else {
+      stopifnot(length(params.id)==(n+m))
+      stopifnot(all(params.id %in% (1:(n+m))))
+      stopifnot(all(diff(sort(params.id))==1))
+    }
+    ## update sigmas.prior.*
+    sigma.prior.reference <- sigma.prior.reference[params.id[(1:n)]]
+    sigma.prior.probability <- sigma.prior.probability[params.id[(1:n)]]
+    sigma.fixed <- sigma.fixed[params.id[(1:n)]]
+    nUnkSigmas <- length(sigma.prior.reference)
+
+    if(missing(base)) {
+      warning("Missing base model! Using 'iid'.")
+      base <- rep(0, m)
+    }
+    if(!inherits(base, "basecor"))
+      base <- basecor(base, p = n)
+    theta0 <- base$theta
     stopifnot(length(theta0) == m)
+    I0 <- base$I0
 
-    cmodel = "inla_cgeneric_pc_correl"
-
-    the_model <- list(
-      f = list(
-        model = "cgeneric",
+    the_model <- do.call(
+      what = INLAtools::cgenericBuilder,
+      args = list(
+        model = "inla_cgeneric_pc_correl",
         n = as.integer(n),
-        cgeneric = list(
-          model = cmodel,
-          shlib = shlib,
-          n = as.integer(n),
-          debug = as.logical(debug),
-          data = list(
-            ints = list(
-              n = as.integer(n),
-              debug = as.integer(debug)
-            ),
-            doubles = list(
-              lambda = as.numeric(lambda),
-              lconst = as.numeric(lc)
-            ),
-            characters = list(
-              model = cmodel,
-              shlib = shlib
-            ),
-            matrices = list(
-              ),
-            smatrices = list(
-              )
-            )
-          )
-        )
+        debug = as.logical(dotArgs$debug),
+        shlib = dotArgs$shlib,
+        itheta = as.integer(params.id -1),
+        sfixed = as.integer(sigma.fixed),
+        lambda = as.numeric(lambda),
+        sigmaref = as.numeric(sigma.prior.reference),
+        sigmaprob = as.numeric(sigma.prior.probability),
+        lconst = as.numeric(attr(I0, "determinant")),
+        thetabase = as.numeric(theta0),
+        Ihalf = attr(I0, "h.5")
       )
-
-    class(the_model) <- "cgeneric"
-    class(the_model$f$cgeneric) <- "inla.cgeneric"
+    )
 
     return(the_model)
 
