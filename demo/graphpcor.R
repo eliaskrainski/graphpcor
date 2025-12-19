@@ -49,13 +49,13 @@ Q0
 all.equal(C0, as.matrix(solve(Q0)))
 
 ## the Hessian matrix around a base model
-H0 <- hessian(g, x = theta0l)
-H0
+I0 <- basepcor(theta0l, p = ne[1], itheta = g)
+I0
 
 ## a base model can also be a matrix
 ## however it shall give a precision with
 ## same sparse pattern as the graph
-all.equal(H0, hessian(g, x = C0))
+all.equal(I0, basepcor(C0, p = ne[1], itheta = g))
 
 ## the 'iid' case would be
 vcov(g, theta = rep(0, ne[2]))

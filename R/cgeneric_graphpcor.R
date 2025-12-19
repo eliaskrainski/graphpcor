@@ -198,7 +198,7 @@ cgeneric_graphpcor <-
     stopifnot(all(dim(basemodel$I0) == c(nEdges, nEdges)))
 
     theta0 <- basemodel$theta
-    I0 <- attr(basemodel, "I0")
+    I0 <- basemodel$I0
 
     if(is.null(dotArgs$shlib)) {
       if(dotArgs$debug){
