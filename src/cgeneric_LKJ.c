@@ -72,7 +72,6 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	assert(!strcasecmp(data->ints[2]->name, "sfixed"));   // this will always be the case
 	int nsigmas = data->ints[2]->len;
 	assert(nsigmas==N);
-	double sigmas[N];
 	int nsfixed = 0, sfixed[nsigmas];
 	for (i = 0; i < nsigmas; i++) {
 	  sfixed[i] = data->ints[2]->ints[i];
@@ -95,6 +94,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	nunkparams[1] = nth;	// num params low L
 	nunkparams[2] = nunkparams[0] + nunkparams[1];
 
+	double sigmas[N];
 	if(theta) {
 	  k = 0;
 	  for (i = 0; i < N; i++) {
@@ -139,10 +139,13 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		ret[0] = -1;				       /* REQUIRED */
 		ret[1] = M;				       /* REQUIRED */
 
-    // Cholesky of the correlation matrix
-    cpc2correlCholesky(&N, &theta[nunkparams[0]], &ret[offset]);
+	// Cholesky of the correlation matrix
+	// parametrized as correlation matrix inverse transform
+	  double ldet, aJac;
+	  cpcCholesky(&N, &theta[nunkparams[0]],
+               &ret[offset], &ldet, &aJac);
 
-    // include sigmas
+    // include sigmas in the Cholesky
     k = 2;
     for(i=0; i<N; i++) {
       for(j=i; j<N; j++) {
@@ -151,9 +154,10 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
       }
     }
 
+    // chol2inv
     int info;
     char uplo = 'L';
-    dpptri_(&uplo, &N, &ret[offset], &info, F_ONE);	// chol2inv
+    dpptri_(&uplo, &N, &ret[offset], &info, F_ONE);
 
 	}
 		break;
@@ -182,40 +186,18 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		ret = Calloc(1, double);
 
 		// ll : Cholesky of the correlation matrix
+		// ldet: its log determinant
+		// aJac: absolute of the determinant
 		double ll[N * (N + 1) / 2];
-		cpc2correlCholesky(&N, &theta[0], &ll[0]);
+		double ldR, ldJ;
+		cpcCholesky(&N, &theta[0], &ll[0], &ldR, &ldJ);
 
-		// half of the log determinant
-		double lhdetC = log(ll[N]);
-		if(N>2) {
-		  k = N;
-		  for(i=1; i<(N-1); i++) {
-		    k += (N-i);
-   		  lhdetC += log(ll[k]);
-		  }
-		}
-//		printf("half log det R = %2.5f\n", lhdetC);
-
-		// log determinant of the Jacobian
-		double daux, ldJacobian = 0.0;
-		k = 0;
-		for(i=1; i<(N-1); i++) {
-		  for(j=(i+1); j<=N; j++) {
-		    daux = (double)(N-i-1);
-		    daux *= log(1-SQR(tanh(theta[k])));
-		    ldJacobian += daux;
-		    k++;
-		  }
-		}
-		ldJacobian *= 0.5;
-		for(i=0; i<nth; i++) {
-		  ldJacobian -= 2.0*log(cosh(theta[i]));
-		}
 		// store the log-prior
-		ret[0] = 2.0 * lhdetC * (eta - 1.0) -lc;
-		ret[0] += ldJacobian;
+		ret[0] = ldR * (eta - 1.0) -lc;
+//		printf("p(R|eta) = %2.4f\n", ret[0]);
+		ret[0] += ldJ;
 
-		// PC prior for sigma[i]
+		// PC prior for sigma[i] (if not fixed)
 		if(nunkparams[0]>0) {
 		  double lam;
 		  for (i = 0; i < nunkparams[0]; i++) {

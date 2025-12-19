@@ -96,7 +96,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	}
 	int nunkparams[3];
 	nunkparams[0] = nsigmas - nsfixed;
-	nunkparams[1] = ne;				       // TO DO: lowparamfixed
+	nunkparams[1] = ne;				       // TO DO: corparamsfixed
 	nunkparams[2] = nunkparams[0] + nunkparams[1];
 
 	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
