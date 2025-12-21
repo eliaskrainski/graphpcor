@@ -8,7 +8,8 @@ eta <- 10
 Cmodel <- cgeneric(
     model = "LKJ",
     n = n,
-    eta = eta
+    eta = eta,
+    useINLAprecomp = FALSE
 )
 
 str(Cmodel)

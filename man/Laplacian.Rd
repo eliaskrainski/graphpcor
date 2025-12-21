@@ -6,14 +6,14 @@
 \alias{Laplacian.matrix}
 \title{The Laplacian of a graph}
 \usage{
-Laplacian(graph)
+Laplacian(x)
 
-\method{Laplacian}{default}(graph)
+\method{Laplacian}{default}(x)
 
-\method{Laplacian}{matrix}(graph)
+\method{Laplacian}{matrix}(x)
 }
 \arguments{
-\item{graph}{an object that inherits a matrix class}
+\item{x}{object defining a graph}
 }
 \value{
 matrix as the Laplacian of a graph

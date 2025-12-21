@@ -1,12 +1,13 @@
 #' Compute the (lower triangle) Cholesky of the initial precision `Q0`.
 #' @inheritParams basepcor
+#' @param theta numeric parameter vector.
 #' @returns lower triangular matrix
 #' @details The (lower triangle) Cholesky factor
 #' of the initial precision for a correlation matrix contains
 #' the parameters in the non-zero elements of the lower triangle side
 #' of the precision matrix.
 #' The filled-in elements are computed from them using [fillLprec()].
-lCholQ0 <- function(
+Lprec0 <- function(
     theta,
     p,
     itheta,

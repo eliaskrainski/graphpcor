@@ -8,7 +8,7 @@ graphpcor <- function(...) {
 }
 #' The Laplacian of a graph
 #' @rdname Laplacian
-#' @param graph object defining a graph
+#' @param x object defining a graph
 #' @description
 #' The (symmetric) Laplacian of a graph is a
 #' square matrix with dimention
@@ -21,12 +21,12 @@ graphpcor <- function(...) {
 #'  n_i is the number of edges including node i.
 #' @return matrix as the Laplacian of a graph
 #' @export
-Laplacian <- function(graph) {
+Laplacian <- function(x) {
   UseMethod("Laplacian")
 }
 #' @describeIn Laplacian
 #' The Laplacian default method (none)
 #' @export
-Laplacian.default <- function(graph) {
-  stop("No Laplacian method for", class(graph), "!")
+Laplacian.default <- function(x) {
+  stop("No Laplacian method for", class(x), "!")
 }

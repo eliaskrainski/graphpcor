@@ -34,7 +34,7 @@ graphpcor(...)
 
 \S4method{plot}{graphpcor,ANY}(x, y, ...)
 
-\method{Laplacian}{graphpcor}(object)
+\method{Laplacian}{graphpcor}(x)
 
 \S4method{vcov}{graphpcor}(object, ...)
 
@@ -53,7 +53,7 @@ graphpcor(...)
 
 \item{which}{not used}
 
-\item{y}{graphpcor}
+\item{y}{not used}
 
 \item{model}{graphpcor model object}
 }
@@ -104,7 +104,21 @@ each \code{~} to represent an edge.
 \examples{
 g1 <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
 g1
+
+g2 <- graphpcor(x ~ y + z, v ~ y + z)
+g2
+
 summary(g1)
+summary(g1)
+
+par(mfrow = c(1, 2))
 plot(g1)
-prec(g1)
+plot(g2)
+
+th1 <- c(-1.5, -1.2, -0.9, 0.5)
+vcov(g1, theta = th1)
+vcov(g2, theta = th1[c(1, 4, 2, 3)])
+
+prec(g1, theta = th1)
+prec(g2, theta = th1[c(1, 4, 2, 3)])
 }

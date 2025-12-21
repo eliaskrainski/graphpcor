@@ -6,6 +6,7 @@ NULL
 #' @describeIn basecor-utils
 #' Cholesky parametrization for a correlation matrix
 #' @inheritParams basecor
+#' @param theta numeric parameter vector.
 #' @returns matrix with lower triangle as the Cholesky factor
 #' of a correlation matrix if parametrization is
 #' "cpc" or "sap" and of a precision matrix
@@ -15,8 +16,8 @@ NULL
 cholcor <- function(
     theta,
     p,
-    parametrization = "cpc",
-    itheta) {
+    itheta,
+    parametrization = "cpc") {
   parametrization <- match.arg(
     arg = tolower(parametrization),
     choices = c("sap", "cpc")
@@ -98,6 +99,10 @@ KLD10 <- function(C1, C0, L1, L0) {
 #' @describeIn basecor-utils
 #' Evaluate the hessian of the KLD for a
 #' correlation model around a base model.
+#' @param C0 base correlation matrix.
+#' @param decomposition character to inform
+#' which decomposition is to be applied to the
+#' hessian. The options are "eigen", "svd" and "chol".
 #' @return list containing the hessian,
 #' its 'square root', inverse 'square root' along
 #' with the decomposition used
@@ -125,6 +130,9 @@ Hcorrel <- function(
       return(tcrossprod(L))
     }
   }
+  decomposition <- match.arg(
+    decomposition, c("svd", "eigen", "chol"))
+
   if(missing(C0)) {
     C0 <- theta2correl(theta)
   }

@@ -7,9 +7,23 @@
 #' @examples
 #' g1 <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
 #' g1
+#'
+#' g2 <- graphpcor(x ~ y + z, v ~ y + z)
+#' g2
+#'
 #' summary(g1)
+#' summary(g1)
+#'
+#' par(mfrow = c(1, 2))
 #' plot(g1)
-#' prec(g1)
+#' plot(g2)
+#'
+#' th1 <- c(-1.5, -1.2, -0.9, 0.5)
+#' vcov(g1, theta = th1)
+#' vcov(g2, theta = th1[c(1, 4, 2, 3)])
+#'
+#' prec(g1, theta = th1)
+#' prec(g2, theta = th1[c(1, 4, 2, 3)])
 graphpcor.formula <- function(...) {
   fch <- as.character(match.call())[-1]
   m <- length(fch)
@@ -96,7 +110,6 @@ summary.graphpcor <- function(object, ...) {
 }
 #' @describeIn graphpcor
 #' The dim method for `graphpcor`
-#' @param x graphpcor
 #' @export
 dim.graphpcor <- function(x, ...) {
   c(nodes=length(attr(x, 'nodes')),
@@ -135,8 +148,7 @@ setMethod(
 )
 #' @describeIn graphpcor
 #' The plot method for `graphpcor`
-#' @param x graphpcor
-#' @param y graphpcor
+#' @param y not used
 #' @importFrom methods getMethod
 #' @export
 setMethod(
@@ -204,25 +216,24 @@ setMethod(
 )
 #' @describeIn Laplacian
 #' The Laplacian of a matrix
-#' @param graph an object that inherits a matrix class
 #' @export
-Laplacian.matrix <- function(graph) {
-  if(inherits(graph, "matrix")) {
-    A <- 1 - is.zero(graph)
+Laplacian.matrix <- function(x) {
+  if(inherits(x, "matrix")) {
+    A <- 1 - is.zero(x)
     if(any(A!=t(A)))
       warning("Not symmetric!")
     L <- diag(rowSums(A)) - A
   } else {
-    Laplacian.default(graph)
+    Laplacian.default(x)
   }
 }
 #' @describeIn graphpcor
 #' The Laplacian method for a `graphpcor`
 #' @export
-Laplacian.graphpcor <- function(object) {
-  ne <- dim(object)
-  nodes <- attr(object, "nodes")
-  L <- -attr(object, "graph")
+Laplacian.graphpcor <- function(x) {
+  ne <- dim(x)
+  nodes <- attr(x, "nodes")
+  L <- -attr(x, "graph")
   diag(L) <- -colSums(L)
   return(L)
 }
@@ -268,7 +279,7 @@ setMethod(
 
     ## build lower Cholesky of Q0
     itheta <- which(lower.tri(G) & (!is.zero(G)))
-    LQ0 <- lCholQ0(
+    LQ0 <- Lprec0(
       theta = theta[-(1:ne[1])],
       p = ne[1],
       itheta = itheta,
@@ -287,7 +298,7 @@ setMethod(
 #' The precision method for 'graphpcor'
 #' @param model graphpcor model object
 #' @importFrom Matrix Matrix forceSymmetric
-#' @importFrom INLAtools Sparse
+#' @importFrom INLAtools Sparse prec
 #' @export
 prec.graphpcor <- function(model, ...) {
   V <- vcov(model, ...)
@@ -328,6 +339,21 @@ hessian.graphpcor <- function(
     method = "Richardson",
     method.args = list(),
     ...) {
+
+  if(TRUE) {
+    d <- dim(func)
+    iL <- which(lower.tri(diag(d[1])) &
+                  !is.zero(Laplacian(func)))
+    dotArgs <- list(...)
+    if(any(names(dotArgs)=="d0")) {
+      d0 <- dotArgs$d0
+    } else {
+      d0 <- d[1]:1
+    }
+    basepcor(base = x, p = d[1],
+             itheta = iL, d0 = d0)$I0
+
+  } else { ## old code
     decomposition <- c("svd", "eigen", "chol")
     if(is.null(list(...)$decomposition)) {
       decomposition <- "svd"
@@ -374,6 +400,7 @@ hessian.graphpcor <- function(
       decomposition = decomposition)
     return(H)
   }
+}
 #' @describeIn graphpcor
 #' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
 #' @importFrom INLAtools cgeneric

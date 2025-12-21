@@ -34,6 +34,8 @@ Cholesky factor for the initial precision matrix \code{Q0}.
 Default, if not provided, is \code{d0 = p:1}.}
 
 \item{x}{a basepcor object.}
+
+\item{...}{further arguments passed on.}
 }
 \value{
 a basepcor object
@@ -86,10 +88,10 @@ This element has the following attributes:
 \examples{
 th <- c(0.5,-1,0.5,-0.3)
 ith <- c(2,3,8,12)
-b1 <- basepcor(th, p=4, itheta = ith)
+b1 <- basepcor(th, p = 4, itheta = ith)
 b1
 
-all.equal(b1, basepcor(b1$base))
+all.equal(th, basepcor(b1$base, itheta = ith)$theta)
 
-Sparse(solve(pc2$base), zeros.rm = TRUE)
+Sparse(solve(b1$base), zeros.rm = TRUE)
 }

@@ -67,12 +67,12 @@ basepcor <- function(
 #' @examples
 #' th <- c(0.5,-1,0.5,-0.3)
 #' ith <- c(2,3,8,12)
-#' b1 <- basepcor(th, p=4, itheta = ith)
+#' b1 <- basepcor(th, p = 4, itheta = ith)
 #' b1
 #'
-#' all.equal(b1, basepcor(b1$base))
+#' all.equal(th, basepcor(b1$base, itheta = ith)$theta)
 #'
-#' Sparse(solve(pc2$base), zeros.rm = TRUE)
+#' Sparse(solve(b1$base), zeros.rm = TRUE)
 #' @describeIn basepcor
 #' Build a `basepcor` from the parameter vector.
 basepcor.numeric <- function(
@@ -106,7 +106,7 @@ basepcor.numeric <- function(
   }
 
   ## compute L0
-  L <- lCholQ0(
+  L <- Lprec0(
     theta = theta,
     p = p,
     itheta = itheta,
@@ -123,7 +123,7 @@ basepcor.numeric <- function(
   ## Hessian around theta
   I0 <- hessian(
     func = function(x)
-      KLD10(C1 = lq02cor(lCholQ0(x, p = p, itheta = itheta, d0 = d0)),
+      KLD10(C1 = lq02cor(Lprec0(x, p = p, itheta = itheta, d0 = d0)),
             L0 = U0correl),
     x = theta)
 
@@ -192,7 +192,7 @@ basepcor.matrix <- function(
   }
   I0 <- hessian(
     func = function(x)
-      KLD10(C1 = lq02cor(lCholQ0(x, p = p, itheta = itheta, d0 = d0)),
+      KLD10(C1 = lq02cor(Lprec0(x, p = p, itheta = itheta, d0 = d0)),
             L0 = U0correl),
     x = theta)
 
@@ -221,10 +221,11 @@ basepcor.matrix <- function(
 #' @describeIn basepcor
 #' Print method for 'basepcor'
 #' @param x a basepcor object.
+#' @param ... further arguments passed on.
 #' @export
 print.basepcor <- function(x, ...) {
   cat("Parameters:\n", sep = "")
-  print(x$theta)
+  print(x$theta, ...)
   cat("Base correlation matrix:\n")
-  print(x$base)
+  print(x$base, ...)
 }

@@ -24,7 +24,6 @@
 #' g1
 #' summary(g1)
 #' plot(g1)
-#' prec(g1)
 #' prec(g1, theta = 0)
 #'
 #' g2 <- treepcor(p1 ~ c1 + c2 + p2,
@@ -32,15 +31,14 @@
 #' g2
 #' summary(g2)
 #' plot(g2)
-#' prec(g2)
 #' prec(g2, theta = c(0, 0))
 #'
 #' g3 <- treepcor(p1 ~ -p2 + c1 + c2,
-#'           p2 ~ c3)
+#'                p2 ~ c3)
 #' g3
 #' summary(g3)
 #' plot(g3)
-#' prec(g3)
+#'
 #' prec(g3, theta = c(0,0))
 treepcor <- function(...) {
 

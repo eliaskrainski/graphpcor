@@ -6,23 +6,33 @@
 \alias{Hcorrel}
 \title{Internal functions used by basecor}
 \usage{
-cholcor(theta, p, parametrization = "cpc", itheta)
+cholcor(theta, p, itheta, parametrization = "cpc")
 
 Hcorrel(theta, p, parametrization, itheta, C0, decomposition, ...)
 }
 \arguments{
+\item{theta}{numeric parameter vector.}
+
 \item{p}{integer with the dimension,
 the number of rows/columns of the correlation matrix.}
+
+\item{itheta}{integer vector to specify the (vectorized) position
+where 'theta' will be placed in the (initial, before fill-in)
+Cholesky (lower triangle) factor. Default is missing and assumes
+the dense case for when \code{itheta = which(lower.tri(...))}.}
 
 \item{parametrization}{character to specify the
 parametrization used. The available ones are
 "cpc" (or "CPC") or "sap" (or "SAP").
 See Details. The default is "cpc".}
 
-\item{itheta}{integer vector to specify the (vectorized) position
-where 'theta' will be placed in the (initial, before fill-in)
-Cholesky (lower triangle) factor. Default is missing and assumes
-the dense case for when \code{itheta = which(lower.tri(...))}.}
+\item{C0}{base correlation matrix.}
+
+\item{decomposition}{character to inform
+which decomposition is to be applied to the
+hessian. The options are "eigen", "svd" and "chol".}
+
+\item{...}{further arguments passed on.}
 }
 \value{
 matrix with lower triangle as the Cholesky factor

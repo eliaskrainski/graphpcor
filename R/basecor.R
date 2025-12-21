@@ -24,14 +24,14 @@ setClass(
 #' 'length(itheta)' in the sparse model case.
 #' @param p integer with the dimension,
 #' the number of rows/columns of the correlation matrix.
-#' @param parametrization character to specify the
-#' parametrization used. The available ones are
-#' "cpc" (or "CPC") or "sap" (or "SAP").
-#' See Details. The default is "cpc".
 #' @param itheta integer vector to specify the (vectorized) position
 #' where 'theta' will be placed in the (initial, before fill-in)
 #' Cholesky (lower triangle) factor. Default is missing and assumes
 #' the dense case for when `itheta = which(lower.tri(...))`.
+#' @param parametrization character to specify the
+#' parametrization used. The available ones are
+#' "cpc" (or "CPC") or "sap" (or "SAP").
+#' See Details. The default is "cpc".
 #' @details
 #' For 'parametrization' = "CPC" or 'parametrization' = "cpc":
 #' The Canonical Partial Correlation - CPC parametrization,
@@ -116,8 +116,8 @@ setClass(
 #' @export
 basecor <- function(
     base,
-    parametrization = 'cpc',
     p,
+    parametrization = "cpc",
     itheta) {
   UseMethod("basecor")
 }
@@ -131,24 +131,25 @@ basecor <- function(
 #' c0 <- matrix(c(1,.9,.5, .9,1,.2, .5,.2,1), 3)
 #'
 #' ## build the 'basecor'
-#' pc.c0 <- basecor(base = c0) ## base as matrix
+#' pc.c0 <- basecor(c0) ## base as matrix
 #' pc.c0
 #'
 #' ## using 'theta' instead (numerically the same)
 #' th0 <- pc.c0$theta
-#' pc.th0 <- basecor(base = th0) ## base as vector
+#' pc.th0 <- basecor(th0) ## base as vector
 #' pc.th0
 #'
 #' all.equal(pc.c0, pc.th0)
-#'
-#' ## other way around
-#' all.equal(pc.th0, basecor(base = pc.th0$base))
 #'
 basecor.numeric <- function(
     base,
     p,
     parametrization = "cpc",
     itheta) {
+  parametrization <- match.arg(
+    arg = tolower(parametrization),
+    choices = c("cpc", "sap")
+  )
   theta <- base
   m <- length(theta)
   if(missing(p)) {
@@ -161,10 +162,6 @@ basecor.numeric <- function(
       x = rep(1, p), nrow = p, ncol = p)))
   }
   stopifnot(length(itheta) == m)
-  parametrization <- match.arg(
-    arg = tolower(parametrization),
-    choices = c("cpc", "sap")
-  )
   L <- cholcor(
     theta = theta,
     p = p,
@@ -209,7 +206,10 @@ basecor.matrix <- function(
   l <- t(chol(base))[itheta]
   theta <- stats::optim(
     rep(0.0, m), function(x)
-      mean((cholcor(x, p, parametrization, itheta)[itheta]-l)^2),
+      mean((cholcor(theta = x,
+                    p = p,
+                    itheta = itheta,
+                    parametrization = parametrization)[itheta]-l)^2),
       method = 'BFGS')$par
   out <- list(
     base = base,
@@ -230,11 +230,12 @@ basecor.matrix <- function(
 #' @describeIn basecor
 #' Print method for 'basecor'
 #' @param x a basecor object.
+#' @param ... further arguments passed on.
 #' @export
 print.basecor <- function(x, ...) {
   cat("Parameters (", toupper(x$parametrization),
       " parametrization):\n", sep = "")
-  print(x$theta)
+  print(x$theta, ...)
   cat("Base correlation matrix:\n")
-  print(x$base)
+  print(x$base, ...)
 }

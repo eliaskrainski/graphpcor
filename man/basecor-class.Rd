@@ -9,7 +9,7 @@
 \alias{print.basecor}
 \title{Information for a base model for correlation matrices}
 \usage{
-basecor(base, parametrization = "cpc", p, itheta)
+basecor(base, p, parametrization = "cpc", itheta)
 
 \method{basecor}{numeric}(base, p, parametrization = "cpc", itheta)
 
@@ -23,13 +23,13 @@ correlation matrix. If numeric vector with length 'm',
 'm' should be 'p(p-1)/2' in the dense model case and
 'length(itheta)' in the sparse model case.}
 
+\item{p}{integer with the dimension,
+the number of rows/columns of the correlation matrix.}
+
 \item{parametrization}{character to specify the
 parametrization used. The available ones are
 "cpc" (or "CPC") or "sap" (or "SAP").
 See Details. The default is "cpc".}
-
-\item{p}{integer with the dimension,
-the number of rows/columns of the correlation matrix.}
 
 \item{itheta}{integer vector to specify the (vectorized) position
 where 'theta' will be placed in the (initial, before fill-in)
@@ -37,6 +37,8 @@ Cholesky (lower triangle) factor. Default is missing and assumes
 the dense case for when \code{itheta = which(lower.tri(...))}.}
 
 \item{x}{a basecor object.}
+
+\item{...}{further arguments passed on.}
 }
 \value{
 a \code{basecor} object
@@ -129,18 +131,15 @@ This element has the following attributes:
 c0 <- matrix(c(1,.9,.5, .9,1,.2, .5,.2,1), 3)
 
 ## build the 'basecor'
-pc.c0 <- basecor(base = c0) ## base as matrix
+pc.c0 <- basecor(c0) ## base as matrix
 pc.c0
 
 ## using 'theta' instead (numerically the same)
 th0 <- pc.c0$theta
-pc.th0 <- basecor(base = th0) ## base as vector
+pc.th0 <- basecor(th0) ## base as vector
 pc.th0
 
 all.equal(pc.c0, pc.th0)
-
-## other way around
-all.equal(pc.th0, basecor(base = pc.th0$base))
 
 }
 \references{

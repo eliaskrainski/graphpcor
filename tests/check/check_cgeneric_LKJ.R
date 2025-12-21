@@ -166,7 +166,7 @@ prholabs <- c(
 
 par(mfrow = c(3, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(e in c(1/2, 3, 30)) {
-    cm <- cgeneric("LKJ", n = n, eta = e)
+    cm <- cgeneric("LKJ", n = n, eta = e, useINLAprecomp = FALSE)
     p3a <- array(exp(prior(cm, theta = th3)), rep(nsth, 3))
     itest <- inla(
         y ~ 0 + f(i, model = cm),
@@ -227,7 +227,7 @@ cfam <- list(
 ## consider different priors for these 2 data
 par(mfrow = c(3, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(e in c(1/2, 3, 30)) {
-    cmodel <- cgeneric("LKJ", n = n, eta = e)
+    cmodel <- cgeneric("LKJ", n = n, eta = e, useINLAprecomp = FALSE)
     p3a <- array(exp(prior(cmodel, theta = th3)), rep(nsth, 3))
     itests <- lapply(datf3, function(ddf)
         inla(formula = fr, 
@@ -349,7 +349,7 @@ prholabs4 <- c(
 ## visualize the posterior for each correlation
 par(mfrow = c(3, m), mar = c(3,3,0,0), mgp = c(1.5,0.5,0))
 for(e in c(1/2, 3, 30)) {
-    cmodel <- cgeneric("LKJ", n = n, eta = e)
+    cmodel <- cgeneric("LKJ", n = n, eta = e, useINLAprecomp = FALSE)
     itests <- lapply(datfs, function(ddf)
         inla(formula = fr, 
              data = ddf, 
