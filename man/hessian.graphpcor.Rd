@@ -32,11 +32,3 @@ with the decomposition used
 Evaluate the hessian of the KLD for a \code{graphpcor}
 correlation model around a base model.
 }
-\examples{
-g <- graphpcor(x1 ~ x2 + x3, x2 ~ x4, x3 ~ x4)
-ne <- dim(g)
-gH0 <- hessian(g, rep(-1, ne[2]))
-## alternatively
-C0 <- vcov(g, theta = rep(c(0,-1), ne))
-all.equal(hessian(g, C0), gH0)
-}

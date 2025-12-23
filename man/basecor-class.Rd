@@ -158,6 +158,8 @@ b2 <- basecor(bc$base, itheta = c(2,3))
 
 all.equal(th2, b2$theta, tol = 1e-4)
 
+## Hessian around the base (and its decomposition, etc.)
+b2$I0
 }
 \references{
 Rapisarda, Brigo and Mercurio (2007).

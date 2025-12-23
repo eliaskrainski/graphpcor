@@ -1,7 +1,7 @@
 library(graphpcor)
 
 ## A correlation matrix
-c0 <- matrix(c(1,.9,.5, .9,1,.2, .5,.2,1), 3)
+c0 <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
 
 ## build the 'basecor'
 pc.c0 <- basecor(c0) ## base as matrix
@@ -30,3 +30,5 @@ b2 <- basecor(bc$base, itheta = c(2,3))
 
 all.equal(th2, b2$theta, tol = 1e-4)
 
+## Hessian around the base (and its decomposition, etc.)
+b2$I0

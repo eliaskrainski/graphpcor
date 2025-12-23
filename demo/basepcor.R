@@ -17,3 +17,5 @@ Sparse(solve(b2$base), zeros.rm = TRUE)
 
 all.equal(th2, basepcor(b2$base, itheta = ith2)$theta)
 
+## Hessian around the base (and its decomposition, etc.)
+b2$I0

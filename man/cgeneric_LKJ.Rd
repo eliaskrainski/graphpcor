@@ -50,7 +50,7 @@ It uses the Cannonical Partial Correlation (CPC),
 see \code{\link[=basepcor]{basepcor()}} for details.
 }
 \examples{
-C0 <- matrix(c(1,.7,-.3, .7,1,.2, -.3,.2,1), 3)
+C0 <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
 (b0 <- basecor(C0))
 cglkj <- cgeneric("LKJ", n = 3, eta = 2)
 dLKJ(C0, eta = 2, log = TRUE)
