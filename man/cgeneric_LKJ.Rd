@@ -50,11 +50,28 @@ It uses the Cannonical Partial Correlation (CPC),
 see \code{\link[=basepcor]{basepcor()}} for details.
 }
 \examples{
-C0 <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
-(b0 <- basecor(C0))
-cglkj <- cgeneric("LKJ", n = 3, eta = 2)
-dLKJ(C0, eta = 2, log = TRUE)
-prior(cglkj, theta = b0$theta)
+## a cgeneric model for the LKJ prior
+## for theta from the CPC parametrization
+cglkj <- cgeneric(
+    model = "LKJ", n = 3, eta = 2,
+    useINLAprecomp = !is.na(packageCheck("INLA", "25.12.16")))
+
+## correlation matrix, p = 3
+cc <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
+
+## CPC parametrization: C(theta)
+(bb <- basecor(cc))
+th <- bb$theta
+
+## p(theta | eta)
+prior(cglkj, theta = th)
+
+## precision inverse
+solve(prec(cglkj, theta = th))
+solve(prec(cglkj, theta = c(0,0,0)))
+solve(prec(cglkj, theta = c(1,1,1)))
+
+
 }
 \seealso{
 \code{\link[=dLKJ]{dLKJ()}} and \code{\link[=basepcor]{basepcor()}}

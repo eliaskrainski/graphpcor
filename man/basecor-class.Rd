@@ -129,7 +129,7 @@ This element has the following attributes:
 library(graphpcor)
 
 ## A correlation matrix
-c0 <- matrix(c(1,.9,.5, .9,1,.2, .5,.2,1), 3)
+c0 <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
 
 ## build the 'basecor'
 pc.c0 <- basecor(c0) ## base as matrix

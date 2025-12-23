@@ -37,19 +37,13 @@ dLKJ <- function(R, eta, log = FALSE) {
 #' `sigma.prior.reference`.
 #' If a vector is given and a probability is NA, 0 or 1, the
 #' corresponding `sigma.prior.reference` will be used as fixed.
-#' @param ... additional arguments passed on to
-#' [INLAtools::cgeneric()].
+#' @param ... additional arguments passed to [INLAtools::cgeneric()].
 #' @seealso [dLKJ()] and [basepcor()]
 #' @details
 #' It uses the Cannonical Partial Correlation (CPC),
 #' see [basepcor()] for details.
 #' @return a `cgeneric` object, see [INLAtools::cgeneric()] for details.
-#' @examples
-#' C0 <- matrix(c(1,.7,-.3, .7,1,.2, -.3,.2,1), 3)
-#' (b0 <- basecor(C0))
-#' cglkj <- cgeneric("LKJ", n = 3, eta = 2)
-#' dLKJ(C0, eta = 2, log = TRUE)
-#' prior(cglkj, theta = b0$theta)
+#' @example demo/LKJ.R
 cgeneric_LKJ <-
   function(n,
            eta,

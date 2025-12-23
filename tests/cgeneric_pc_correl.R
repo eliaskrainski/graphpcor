@@ -3,26 +3,30 @@ library(INLA)
 library(graphpcor)
 
 n <- 4
-lambda <- 5
+m <- n*(n-1)/2
 
-model <- cgeneric(
+theta1 <- rnorm(m,-1)
+base <- basecor(theta1, n)
+base
+
+lambda <- 5
+Cmodel <- cgeneric(
     model = "pc_correl",
     n = n,
-    lambda = lambda)
+    base = theta1,
+    lambda = lambda,
+    useINLAprecomp = FALSE)
 
-graph(model, optimize = TRUE)
+str(Cmodel)
 
-graph(model)
+graph(Cmodel, optimize = TRUE)
 
-initial(model)
-round(ith <- rep(3, n*(n-1)/2))
+graph(Cmodel)
 
-m <- n * (n-1)/2
-theta1 <- rnorm(m)
+initial(Cmodel)
 
-(qq <- prec(model, theta = theta1))
-
-(vv <- solve(qq))
+all.equal(as.matrix(solve(prec(Cmodel, theta = theta1))),
+          base$base)
 
 dat1 <- data.frame(
     i = 1:n,
@@ -33,54 +37,56 @@ cinla <- list(int.strategy = 'eb')
 cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 cmode <- list(theta = theta1, fixed = TRUE)
 
-fit <- inla(
-    y ~ 0 + f(i, model = model),
+fit0 <- inla(
+    y ~ 0 + f(i, model = Cmodel),
     data = dat1,
     control.family = cfam,
     control.inla = cinla,
-    control.mode = cmode
+    control.mode = cmode,
+    verbose = !TRUE
 )
 
-all.equal(qq, prec(fit))
+all.equal(base$base, as.matrix(solve(prec(fit0))))
 
-pc1 <- prior(model, theta = theta1)
-pc1
+n
+(sigmas <- c(2,1,0.5,0.1))
+V <- diag(sigmas) %*% base$base %*% diag(sigmas)
 
-thetapi <- pi/(1+exp(-theta1))
-pc0 <- INLA:::inla.pc.cormat.dtheta(thetapi, lambda = lambda, log = TRUE)
-pc0 +sum(log(pi * exp(-theta1) / ( (1 + exp(-theta1))^2 ) )) ## 1st Jacobian
+ns <- 100
+xx <- matrix(rnorm(ns * n), ns) %*% chol(V)
 
-if(FALSE) {
-    INLA:::inla.pc.cormat.dtheta
-    INLA:::inla.pc.multvar.simplex.d
-    INLA:::inla.pc.multvar.simplex.core
-    INLA:::inla.pc.multvar.simplex.d.core
-    INLA:::inla.pc.multvar.h.default
-}
+V
+cov(xx)
+cor(xx)
 
-### fit some data
-nrep <- 200
-xx <- matrix(rnorm(nrep * n), nrep) %*% as.matrix(chol(vv))
-str(xx)
-
-dat2 <- data.frame(
-    i = rep(1:n, each = nrep),
-    r = rep(1:nrep, n),
-    y = as.vector(xx)
+dataf <- data.frame(
+    y = as.vector(xx),
+    i = rep(1:n, each = ns),
+    r = rep(1:ns, n)
 )
-str(dat2)
 
-fitr <- inla(
-    y ~ 0 + f(i, model = model, replicate = r),
-    data = dat2,
+Vmodel <- cgeneric(
+    model = "pc_correl",
+    n = n,
+    base = theta1,
+    lambda = lambda,
+    sigma.prior.reference = rep(1, n), 
+    sigma.prior.probability = rep(0.5, n),
+    useINLAprecomp = FALSE)
+
+fit <- inla(
+    y ~ 0 + f(i, model = Vmodel, replicate = r),
+    data = dataf,
     control.family = cfam,
-    control.inla = cinla,
-    control.mode = cmode
+    verbose = !TRUE
 )
 
-(Lfitted <- Lprec(fitr$mode$theta))
-round(tcrossprod(Lfitted), 2)
-round(vv, 2)
+sigmas
+exp(fit$mode$theta[1:n])
+m
+cor(xx)
+(Rfit <- basecor(fit$mode$theta[n+1:m], p = n)$base)
 
-detach("package:graphpcor", unload = TRUE)
-library(graphpcor)
+cov(xx)
+(Vfit <- diag(exp(fit$mode$theta[1:n])) %*% Rfit %*%
+    diag(exp(fit$mode$theta[1:n])))
