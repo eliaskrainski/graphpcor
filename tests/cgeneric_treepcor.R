@@ -1,47 +1,48 @@
+## for details see
+## https://link.springer.com/article/10.1007/s10260-025-00788-y
+
 library(INLA)
 library(graphpcor)
 
-## define the treegraph
-g <- graphpcor(x1 ~ x2+x3, x2~x4, x3~x4)
+## define the tree graph
+g <- treepcor(
+    p1 ~ p2 + c1 - c2,
+    p2 ~ c3 + c4)
 class(g)
 g
 summary(g)
-Laplacian(g)
 
-(ne <- dim(g))
+(np <- dim(g))
 
-## define the cgeneric model (see test/concepts/graphpcor.R for other options)
-theta.base <- rep(0, ne[2])
+## define the cgeneric model
 cmodel <- cgeneric(
     model = g,
     lambda = 10,
-    base = theta.base,
-    sigma.prior.reference = rep(1, ne[1]),
-    sigma.prior.probability = rep(0.5, ne[1]))
+    sigma.prior.reference = rep(1, np[1]),
+    sigma.prior.probability = rep(0.05, np[1]))
 
-sigmas <- c(5, 0.5, 1, 0.1)
-thetaL <- c(-5, 1, 2, -0.1)
-theta1 <- c(log(sigmas), thetaL)
+sigmas <- c(4, 2, 1, 0.5)
+thetal <- c(0, 1)
+theta1 <- c(log(sigmas), thetal)
 
 Vg <- vcov(g, theta = theta1)
 Vg
 
-cov2cor(vcov(g, theta = theta.base)) ## base model correlation
-cov2cor(Vg) ## correlation to be used to sample data
+cov2cor(Vg)
 
-prec(cmodel, theta = theta1)
+solve(prec(cmodel, theta = theta1))
 
 ## some data
 nrep <- 100
-nd <- nrep * ne[1]
+nd <- nrep * np[1]
 
 xx <- matrix(rnorm(nd), nrep) %*% chol(Vg)
 cov(xx)
 
 theta.y <- log(10)
 datar <- data.frame(
-    r = rep(1:nrep, ne[1]),
-    i = rep(1:ne[1], each = nrep),
+    r = rep(1:nrep, np[1]),
+    i = rep(1:np[1], each = nrep),
     y = rnorm(nd, 1 + xx, exp(-2*theta.y))
 )
 
@@ -58,12 +59,21 @@ grep("fn-calls=", fit$logfile, value = TRUE)
 
 rbind(true = c(theta1),
       fit = fit$mode$theta)
-fit$mode$theta - c(theta1)
 
-prec(cmodel, theta = fit$mode$theta)
-
+## true covariance
 round(Vg, 2)
 
-round(vcov(g, theta = thetaL), 2)
+## observed covariance
+round(cov(xx), 2)
+
+## fitted covariance (from posterior mode)
+round(solve(prec(cmodel, theta = fit$mode$theta)), 2)
+
+## true correlation
+round(cov2cor(Vg), 2)
+
+## observed correlation
 round(cor(xx), 2)
-round(Vfit <- vcov(g, theta = fit$mode$theta[5:8]), 2)
+
+## fitted correlation (from posterior mode)
+round(Cfit <- vcov(g, theta = fit$mode$theta[np[1]+1:np[2]]), 2)
