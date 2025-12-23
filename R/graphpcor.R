@@ -4,26 +4,7 @@
 #' @param ... a list of arguments
 #' @importFrom stats as.formula
 #' @export
-#' @examples
-#' g1 <- graphpcor(x ~ y, y ~ v, v ~ z, z ~ x)
-#' g1
-#'
-#' g2 <- graphpcor(x ~ y + z, v ~ y + z)
-#' g2
-#'
-#' summary(g1)
-#' summary(g1)
-#'
-#' par(mfrow = c(1, 2))
-#' plot(g1)
-#' plot(g2)
-#'
-#' th1 <- c(-1.5, -1.2, -0.9, 0.5)
-#' vcov(g1, theta = th1)
-#' vcov(g2, theta = th1[c(1, 4, 2, 3)])
-#'
-#' prec(g1, theta = th1)
-#' prec(g2, theta = th1[c(1, 4, 2, 3)])
+#' @example demo/graphpcor.R
 graphpcor.formula <- function(...) {
   fch <- as.character(match.call())[-1]
   m <- length(fch)

@@ -125,22 +125,7 @@ basecor <- function(
 #' Build a `basecor` from the parameter vector.
 #' @returns a `basecor` object
 #' @export
-#' @examples
-#'
-#' ## Base correlation matrix
-#' c0 <- matrix(c(1,.9,.5, .9,1,.2, .5,.2,1), 3)
-#'
-#' ## build the 'basecor'
-#' pc.c0 <- basecor(c0) ## base as matrix
-#' pc.c0
-#'
-#' ## using 'theta' instead (numerically the same)
-#' th0 <- pc.c0$theta
-#' pc.th0 <- basecor(th0) ## base as vector
-#' pc.th0
-#'
-#' all.equal(pc.c0, pc.th0)
-#'
+#' @example demo/basecor.R
 basecor.numeric <- function(
     base,
     p,

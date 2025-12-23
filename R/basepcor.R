@@ -62,19 +62,11 @@ basepcor <- function(
     d0) {
   UseMethod("basepcor")
 }
-#' @returns a `basepcor` object
-#' @export
-#' @examples
-#' th <- c(0.5,-1,0.5,-0.3)
-#' ith <- c(2,3,8,12)
-#' b1 <- basepcor(th, p = 4, itheta = ith)
-#' b1
-#'
-#' all.equal(th, basepcor(b1$base, itheta = ith)$theta)
-#'
-#' Sparse(solve(b1$base), zeros.rm = TRUE)
 #' @describeIn basepcor
 #' Build a `basepcor` from the parameter vector.
+#' @returns a `basepcor` object
+#' @export
+#' @example demo/basepcor.R
 basepcor.numeric <- function(
     base,
     p,
