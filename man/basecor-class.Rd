@@ -150,13 +150,13 @@ all.equal(c0, pc.th0$base)
 
 ## from a numeric vector (theta)
 th2 <- c(-1, -0.5)
-bth2 <- basecor(th2, p = 3, itheta = c(2,3))
-bth2
+b2 <- basecor(th2, p = 3, itheta = c(2,3))
+b2
 
 ## from the correlation matrix
-b2 <- basecor(bc$base, itheta = c(2,3))
+b2c <- basecor(b2$base, itheta = c(2,3))
 
-all.equal(th2, b2$theta, tol = 1e-4)
+all.equal(th2, b2c$theta, tol = 1e-4)
 
 ## Hessian around the base (and its decomposition, etc.)
 b2$I0

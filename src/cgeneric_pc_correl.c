@@ -209,7 +209,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	    nunkparams[1], lambda,
 	    &data->doubles[4]->doubles[0],
       &data->mats[0]->x[0],
-      &data->doubles[0]->doubles[0],
+      &data->doubles[3]->doubles[3],
       &theta[nunkparams[0]]);
 
       // PC prior for sigma[i]

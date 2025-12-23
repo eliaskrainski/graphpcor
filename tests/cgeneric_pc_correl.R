@@ -2,6 +2,19 @@ library(INLA)
 
 library(graphpcor)
 
+## n = 1, m = 1
+C1 <- cgeneric(
+    model = "pc_correl",
+    n = 2L,
+    lambda = 3.0,
+    useINLAprecomp = FALSE
+)
+
+integrate(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
+
+plot(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
+
+## n = 4, m = 6
 n <- 4
 m <- n*(n-1)/2
 

@@ -35,8 +35,7 @@ marginal variances are considered as known, as described in
 If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.}
 
-\item{...}{additional arguments passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}.}
+\item{...}{additional arguments passed to \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}.}
 }
 \value{
 a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
@@ -54,7 +53,7 @@ see \code{\link[=basepcor]{basepcor()}} for details.
 ## for theta from the CPC parametrization
 cglkj <- cgeneric(
     model = "LKJ", n = 3, eta = 2,
-    useINLAprecomp = !is.na(packageCheck("INLA", "25.12.16")))
+    useINLAprecomp = FALSE)##!is.na(packageCheck("INLA", "25.12.16")))
 
 ## correlation matrix, p = 3
 cc <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
