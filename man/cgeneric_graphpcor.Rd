@@ -82,7 +82,7 @@ parameters are fixed to \code{-1}.}
 \code{cgeneric} object.
 }
 \description{
-From either a \code{graph} (see \code{\link[INLAtools:methods]{INLAtools::graph()}}) or
+From either a \code{graph} (see \code{\link[INLAtools:INLAtools-methods]{INLAtools::graph()}}) or
 a square matrix (used as a graph),
 creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
 to implement the Penalized Complexity prior using the

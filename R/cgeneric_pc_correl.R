@@ -65,9 +65,34 @@ cgeneric_pc_correl <-
            cor.params.fixed,
            ...) {
 
-    stopifnot(n>1)
+    if(missing(n) & missing(base))
+      stop("Please provide 'n' or 'base'!")
+    if(missing(base)) {
+      warning("Missing base model! Assume zero correlations.")
+      stopifnot(n>1)
+      base <- basecor(diag(n))
+    } else {
+      if(inherits(base, "matrix")) {
+        if(missing(n)) {
+          n <- ncol(base)
+        } else {
+          stopfinot(n == ncol(base))
+        }
+        base <- basecor(base)
+      }
+      if(is.vector(base)) {
+        if(missing(n)) {
+          m <- length(base)
+          n <- (1 + sqrt(1 + 4 * 2 * m)) / 2
+        }
+        base <- basecor(base, p = n)
+      }
+    }
+    theta0 <- base$theta
+    m <- length(theta0)
+    I0 <- base$I0
+
     stopifnot(lambda>0)
-    m <- n*(n-1)/2
 
     dotArgs <- list(...)
     if(!any(names(dotArgs)=="debug")) {
@@ -124,21 +149,12 @@ cgeneric_pc_correl <-
       stopifnot(all(params.id %in% (1:(n+m))))
       stopifnot(all(diff(sort(params.id))==1))
     }
+
     ## update sigmas.prior.*
     sigma.prior.reference <- sigma.prior.reference[params.id[(1:n)]]
     sigma.prior.probability <- sigma.prior.probability[params.id[(1:n)]]
     sigma.fixed <- sigma.fixed[params.id[(1:n)]]
     nUnkSigmas <- length(sigma.prior.reference)
-
-    if(missing(base)) {
-      warning("Missing base model! Using 'iid'.")
-      base <- rep(0, m)
-    }
-    if(!inherits(base, "basecor"))
-      base <- basecor(base, p = n)
-    theta0 <- base$theta
-    stopifnot(length(theta0) == m)
-    I0 <- base$I0
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,

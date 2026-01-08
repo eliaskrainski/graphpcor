@@ -18,7 +18,7 @@ setClass(
 )
 #' @describeIn basecor
 #' Build a `basecor` object.
-#' @param base numeric/matrix used to define the base
+#' @param base numeric vector/matrix used to define the base
 #' correlation matrix. If numeric vector with length 'm',
 #' 'm' should be 'p(p-1)/2' in the dense model case and
 #' 'length(itheta)' in the sparse model case.

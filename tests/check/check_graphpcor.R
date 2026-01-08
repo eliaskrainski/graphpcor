@@ -14,6 +14,9 @@ all.equal(g, graphpcor(G!=0))
 ## base model (theta for L)
 theta0l <- rep(-0.3, ne[2])
 
+basepcor(theta0l, p = ne[1], itheta = g)
+
+basepcor(theta0l, p = ne[1], itheta = g)$I0
 hessian(g, theta0l)
 
 ## build the cgeneric model
@@ -23,10 +26,9 @@ cmodel <- cgeneric(
     lambda = 1,
     base = theta0l,
     sigma.prior.reference = rep(1, ne[1]),
-    sigma.prior.probability = rep(0.5, ne[1]),
-    debug = 1e9)
+    sigma.prior.probability = rep(0.5, ne[1]))
 
-gexraph(cmodel)
+graph(cmodel)
 
 ## define initial L
 theta.low <- rep(-1, ne[2])
@@ -121,6 +123,7 @@ prior(cmodel, theta = rnorm(sum(ne)))
 prior(cmodel, theta = rnorm(sum(ne)))
 prior(cmodel, theta = theta1)
 
+
 dataf <- list(
     i = 1:ne[1],
     y = rep(NA, ne[1]))
@@ -183,18 +186,34 @@ vcov(g, theta = ifits[[1]]$mode$theta)
 g2c <- function(th) vcov(g, theta=th)[lower.tri(diag(ne[1]))]
 g2c(ifits[[1]]$mode$theta)
 
-inla.cgeneric.sample(n = 2, result = ifits[[1]], name = 'i', model=g,from.theta = g2c)
+ifits[[1]]
 
-sr <- lapply(ifits, function(r)
-    inla.cgeneric.sample(
-        n = 2000, result = r, name = 'i', model = g,
-        from.theta = g2c, simplify = TRUE))
+str(hs <- inla.hyperpar.sample(2000, ifits[[1]]))
+
+il4 <- which(lower.tri(diag(ne[1])))
+
+vcov(g, theta = hs[1,])
+c1s <- sapply(1:nrow(hs), function(i)
+    vcov(g, theta = hs[i, ])[il4])
+str(c1s)
+
+par(mfrow = c(2, 3))
+for(i in 1:6) {
+    hist(c1s[i, ])
+    abline(v = c.base[il4[i]], lwd = 2, lty = 2, col = 2)
+}
+
+sr <- lapply(ifits, function(r) {
+    hs <- inla.hyperpar.sample(2000, ifits[[1]])
+    c1s <- sapply(1:nrow(hs), function(i)
+        vcov(g, theta = hs[i, ])[il4])
+})
 str(sr,1)
 
 cnams <- c("c[2,1]", "c[3,1]", "c[4,1]",
            "c[3,2]", "c[4,2]", "c[4,3]")
 
-png("corr4priors.png", width = 1600, height=1000, res = 100)
+##png("corr4priors.png", width = 1600, height=1000, res = 100)
 par(mfrow = c(length(sr), 6), mar = c(4,4,2,1), mgp = c(3,1,0))
 for(i in 1:length(sr)) {
     for(k in 1:6) {
@@ -209,9 +228,9 @@ for(i in 1:length(sr)) {
         abline(v=ck0, lwd = 2, col = 2)
     }
 }
-dev.off()
+##dev.off()
 
-system("eog corr4priors.png &")
+##system("eog corr4priors.png &")
 
 ###
 
@@ -269,8 +288,10 @@ C0 <- matrix(c(1, rho0,
 library(graphpcor)
 gpc <- graphpcor(x1 ~ x2 + x3)
 
-H <- hessian(gpc, x = C0)
-(theta0 <- attr(H, "theta"))
+b <- basepcor(C0, itheta = gpc)
+b
+
+(theta0 <- b$theta)
 
 ptheta <- function(theta, H) {
     xi <- attr(H, "h.5") %*% (theta - attr(H, "theta"))
@@ -288,12 +309,13 @@ cpc <- cgeneric(gpc, base = theta0, lambda = 5,
 
 graph(cpc)
 
-all.equal(prec(cpc, theta = theta0),
-          prec(gpc, theta = theta0))
+all.equal(as.matrix(prec(cpc, theta = theta0)),
+          as.matrix(prec(gpc, theta = theta0)))
 
-all.equal(prec(cpc, theta = theta0+c(0.33, -0.1)),
-          prec(gpc, theta = theta0+c(0.33, -0.1)))
+all.equal(as.matrix(prec(cpc, theta = theta0+c(0.33, -0.1))),
+          as.matrix(prec(gpc, theta = theta0+c(0.33, -0.1))))
 
+## multiple theta (columns)
 prior(cpc, theta = cbind(c(0,0), c(1,1)))
 
 h0 <- 0.05
@@ -318,17 +340,16 @@ plot(x0+theta0[2], colSums(dxx2*h0))
 
 library(plot3D)
 
+par(mfrow = c(1, 2), mar = c(0,0,0,0))
+
 surf3D(matrix(xx[1, ], nx0),
        matrix(xx[2, ], nx0),
        matrix(exp(dxx), nx0), 
        colkey = !TRUE,
        xlab = '', ylab  = '', zlab = '',
        box = TRUE, bty = "b")
-
-  text(-0.15, -0.43, expression(xi[1]), adj = 1)
-  text(0.28, -0.37, expression(xi[2]), adj = 1)
-  legend("topleft", bty = "n", as.expression(llab[[i]]), cex = 2)
-
+text(-0.15, -0.43, expression(xi[1]), adj = 1)
+text(0.28, -0.37, expression(xi[2]), adj = 1)
 
 ribbon3D(x0+theta0[1], x0+theta0[2],
          matrix(exp(dxx), nx0),

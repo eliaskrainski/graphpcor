@@ -1,5 +1,5 @@
-library(INLA)
 library(graphpcor)
+library(INLA)
 
 ################################################################
 ### n = 2, m = 1
@@ -7,7 +7,7 @@ n <- 2
 (m <- n*(n-1)/2)
 
 ## evaluate some lambda
-lambdas <- c(2, 10, 50)
+lambdas <- c(0.5, 1, 2, 10, 50, 1000)
 nlambs <- length(lambdas)
 
 for(i in 1:nlambs) {
@@ -25,10 +25,9 @@ cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 fi <- y ~ 0 + f(i, model = Cmodel)
 d1n <- data.frame(y = NA, i = 1:n)
 
-hth <- 0.1
-ths <- c(seq(-2+hth/2, 2-hth/2, hth))##,
-##         seq(hth/2, 3-hth/2, hth))
-nths <- length(ths)
+hth <- 0.005
+ths <- c(seq(-1.5+hth/2, 1.5-hth/2, hth))
+(nths <- length(ths))
 
 par(mfrow = c(2, 3), mar = c(3,3,0.1,0.1), mgp = c(1.5, 0.5, 0), bty = "n")
 for(i in 1:nlambs) {
@@ -36,28 +35,33 @@ for(i in 1:nlambs) {
         model = "pc_correl",
         n = n,
         lambda = lambdas[i],
-        base = 0,
         useINLAprecomp = FALSE)
     ifit <- inla(
         formula = fi, data = d1n, control.family = cfam
     )
     pm <- ifit$marginals.hyperpar[[1]]
-    plot(ths, exp(prior(Cmodel, theta = matrix(ths, 1))), type = "l")
-    lines(pm, col = 2)    
+    plot(ths, exp(prior(Cmodel, theta = matrix(ths, 1))),
+         xlim = range(pm[, 1]) * 3, type = "l")
+    lines(pm, col = 2, lty = 3)
 }
 
-basepcor(-1, 2)
+basecor(-1, 2)
 solve(prec(Cmodel, theta = -1))
 
 ################################################################
 ## n = 3, m = 3
-n <- 3
+c0 <- matrix(c(1,     .8,  -.5,
+               0.8,    1,  -.4,
+               -.5,  -.4,   1), 3)
+c0
+
+(n <- ncol(c0))
+
+b0 <- basecor(c0)
+(theta3 <- b0$theta)
 (m <- n*(n-1)/2)
 
-## some base model theta
-(theta1 <- rnorm(m))
-
-lR <- cholcor(theta1, n)
+lR <- cholcor(theta3, n)
 lR
 
 R <- tcrossprod(lR)
@@ -65,39 +69,42 @@ R
 
 cmodel <- cgeneric(
     model = "pc_correl", 
-    n = n,
+    base = c0, 
     lambda = 5,
     useINLAprecomp = FALSE)
 
-##str(cmodel)
+cmodel
 
 graph(cmodel)
 
 initial(cmodel)
 
-prec(cmodel, theta = theta1)
+prec(cmodel, theta = theta3)
 
-all.equal(as.matrix(solve(prec(cmodel, theta = theta1))),
+all.equal(as.matrix(solve(prec(cmodel, theta = theta3))),
           R)
 
-prior(cmodel, theta = theta1)
+prior(cmodel, theta = theta3)
 
-hth <- 0.05; hth2 <- hth^2
-length(sth <- seq(-4+hth/2, 4-hth/2, hth))
-(nsth <- length(sth))
-th3 <- t(expand.grid(th1 = sth, th2 = sth, th3 = sth))
-str(th3)
+hth <- 0.02; hth2 <- hth^2
+str(sths <- lapply(1:3, function(i)
+    seq(-2+hth/2, 2-hth/2, hth) + theta3[i]))
+(nsth <- length(sths[[1]]))
+ncol(th3 <- t(expand.grid(sths)))/1e6
 
 p3 <- array(prior(cmodel, theta = th3), rep(nsth, 3))
+str(p3)
 
 par(mfrow = c(2, 2), mar = c(3, 3, 0.5, 0.5),
     mgp = c(2, 0.5, 0), bty = "n")
-image(sth, sth, p3[,,nsth/2])
-contour(sth, sth, p3[,,nsth/2], add = TRUE, nlevels = 5)
-image(sth, sth, p3[,nsth/2,])
-contour(sth, sth, p3[,nsth/2,], add = TRUE, nlevels = 5)
-image(sth, sth, p3[nsth/2,,])
-contour(sth, sth, p3[nsth/2,,], add = TRUE, nlevels = 5)
+image(sths[[1]], sths[[2]], p3[,,nsth/2])
+contour(sths[[1]], sths[[2]], p3[,,nsth/2], add = TRUE, nlevels = 5)
+image(sths[[1]], sths[[3]], p3[,nsth/2,])
+contour(sths[[1]], sths[[3]], p3[,nsth/2,], add = TRUE, nlevels = 5)
+image(sths[[2]], sths[[3]], p3[nsth/2,,])
+contour(sths[[2]], sths[[3]], p3[nsth/2,,], add = TRUE, nlevels = 5)
+
+exp(-8:-6)
 
 sum(exp(p3)*(hth^3))
 
@@ -110,13 +117,15 @@ sum(apply(exp(p3)*hth2, 2, sum) * hth)
 sum(apply(exp(p3)*hth2, 2, sum) * hth)
 sum(apply(exp(p3)*hth2, 3, sum) * hth)
 
-plot(sth, apply(exp(p3)*hth2, 1, sum),
-     xlab = expression(theta), ylab = "density",
-     type = "l", lwd = 2, lty = 2)
-lines(sth, apply(exp(p3)*hth2, 2, sum), col = 2)
-lines(sth, apply(exp(p3)*hth2, 3, sum), col = 3)
+plot(sths[[1]], apply(exp(p3)*hth2, 1, sum),
+     type = "l", xlab = "", ylab = "density", 
+     xlim = range(unlist(sths)))
+lines(sths[[2]], apply(exp(p3)*hth2, 2, sum), col = 2)
+lines(sths[[3]], apply(exp(p3)*hth2, 3, sum), col = 3)
+legend("topleft", bty = "n", lty = 1, col = 1:3,
+       c(expression(theta[1]), expression(theta[2]), expression(theta[3])))
 
-## eval 3 different parameters
+## consider different prior parameters
 ## fit with no data: get back the prior
 
 pthlabs <- c(
@@ -143,7 +152,7 @@ for(il in 1:nlambs) {
     lamb <- lambdas[il]
     Cmodel <- cgeneric(
         model = "pc_correl", n = n, lambda = lamb,
-        base = theta1, useINLAprecomp = FALSE)
+        base = theta3, useINLAprecomp = FALSE)
     itest <- inla(
         formula = fi, control.family = cfam,
         data = list(y = rep(NA, n), i = 1:n)
@@ -208,7 +217,7 @@ for(lamb in lambdas) {
     for(i in 1:3) {
         pm1 <- itests[[1]]$marginals.hyperpar[[i]]
         pm2 <- itests[[2]]$marginals.hyperpar[[i]]
-        xlm <- range(theta1[i],
+        xlm <- range(theta3[i],
                      Bs[[1]]$theta[i],
                      Bs[[2]]$theta[i],
                      pm1[, 1], pm2[, 1])
@@ -218,8 +227,8 @@ for(lamb in lambdas) {
              xlab = as.expression(bquote(theta[.(i)])),
              ylab = pthlabs[[i]], main = "")
         lines(pm2, col = 3, lwd = 2)
-        lines(sth, apply(p3a*hth2, i, sum), lty = 3, lwd = 3)
-        abline(v = theta1[i], col = 1, lty = 1)
+        lines(sths[[i]], apply(p3a*hth2, i, sum), lty = 3, lwd = 3)
+        abline(v = theta3[i], col = 1, lty = 1)
         abline(v = Bs[[1]]$theta[i], lty = 2, col = 2, lwd = 2)
         abline(v = Bs[[2]]$theta[i], lty = 2, col = 3, lwd = 2)
         if(i==1)
@@ -269,9 +278,9 @@ for(lamb in lambdas) {
 n <- 4
 (m <- n*(n-1)/2)
 
-(theta1 <- rnorm(m))
+(theta0 <- rnorm(m))
 
-lR <- cholcor(theta1, p = n)
+lR <- cholcor(theta0, p = n)
 log(attr(lR, 'determinant'))
 R <- tcrossprod(lR)
 il4 <- which(lower.tri(R))

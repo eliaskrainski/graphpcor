@@ -18,7 +18,7 @@ basecor(base, p, parametrization = "cpc", itheta)
 \method{print}{basecor}(x, ...)
 }
 \arguments{
-\item{base}{numeric/matrix used to define the base
+\item{base}{numeric vector/matrix used to define the base
 correlation matrix. If numeric vector with length 'm',
 'm' should be 'p(p-1)/2' in the dense model case and
 'length(itheta)' in the sparse model case.}

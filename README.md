@@ -5,17 +5,40 @@
 
 <img src="graphpcor_logo.png" style="width:3in" />
 
-This package implement an approach for constructing models for
-correlation matrices with a user-defined graphical structure, proposed
-in <https://arxiv.org/abs/2312.06289>. The graphical structure makes
-correlation matrices interpretable and avoids the quadratic increase of
-parameters as a function of the dimension. We suggest an automatic
-approach to define a prior using a natural sequence of simpler models
-within the Penalized Complexity framework for the unknown parameters in
-these models. Models are implemented in a C code template for the
-‘cgeneric’ interface with the ‘INLA’ package (<https://www.r-inla.org>).
-This allows one to use ‘INLA’ to build and fit complex data models using
-the models in this package as building blocks.
+This package implement some models for correlation/covariance matrices
+including two approaches to model correlation matrices from a graphical
+structure. One use latent parent variables as proposed in Sterrantino
+et. al. (2024) <doi:10.48550/arXiv.2312.06289>. The other uses a graph
+to specify conditional relations between the variables. The graphical
+structure makes correlation matrices interpretable and avoids the
+quadratic increase of parameters as a function of the dimension. In the
+first approach a natural sequence of simpler models along with a
+complexity penalization is used. The second penalizes deviations from a
+base model. These can be used as prior for model parameters, considering
+C code through the ‘cgeneric’ interface for the ‘INLA’ package
+(<https://www.r-inla.org>). This allows one to use these models as
+building blocks combined and to other latent Gaussian models in order to
+build complex data models.
+
+# It can be installed with
+
+1.  local clone repository
+    1)  R CMD build then R CMD INSTALL
+    2)  within Rstudio: \<Ctrl+Shift+B\>
+2.  from this source with the github token (obtain the token at Github
+    account settings: click on <Developer settings>, then
+    <Personal access tokens>, and select \<Tokens (classic)\> and
+    following the steps.)
+
+<!-- -->
+
+    atok <- 'your_github_token'
+    remotes::install_github(
+    repo = 'https://github.com/eliaskrainski/graphpcor',
+    build = TRUE, ## to completely build the package
+    build_vignettes = TRUE, ## it will take a bit of time, but helps
+    build_opts = c("--no-resave-data"),
+    auth_token = atok)
 
 ## Installing dependencies
 

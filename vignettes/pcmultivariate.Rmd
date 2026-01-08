@@ -1,6 +1,8 @@
 ---
 title: "Multivariate Penalized Complexity Prior"
-output: rmarkdown::pdf_document
+output:
+  - rmarkdown::html_vignette
+  - rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Multivariate Penalized Complexity Prior}
   %\VignetteEngine{knitr::rmarkdown}
@@ -30,8 +32,7 @@ knitr::opts_chunk$set(
   warning = FALSE,
   fig.align='center',
   fig.width = 7, 
-  fig.height = 4, 
-  out.width = '0.59\\textwidth')
+  fig.height = 4)
 library(graphpcor)
 library(plot3D)
 

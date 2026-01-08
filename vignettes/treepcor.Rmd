@@ -4,7 +4,7 @@ author: "Elias T Krainski, Denis Rustand, Anna Freni-Sterrantino, Janet van Niek
   and Håvard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
 output: rmarkdown::pdf_document
-ignette: >
+vignette: >
   %\VignetteIndexEntry{Tree based correlation model implementation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
