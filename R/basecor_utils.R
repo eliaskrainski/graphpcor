@@ -146,7 +146,8 @@ Hcorrel <- function(
   t0 <- sqrt(.Machine$double.eps)
   if(decomposition == "eigen") {
     Hd <- eigen(H)
-    if(!all(Hd$values >= (t0 * abs(Hd$values[1]))))
+    tol1 <- t0 * abs(Hd$values[1])
+    if(!all(Hd$values >= tol1))
       warning("'H' is numerically not positive semidefinite")
     Hdet <- prod(Hd$values)
     s <- sqrt(pmax(Hd$values, 0.0))
@@ -155,7 +156,8 @@ Hcorrel <- function(
   }
   if(decomposition == "svd") {
     Hd <- svd(H)
-    if(any(Hd$d<(t0 * abs(Hd$d[1]))))
+    tol1 <- t0 * abs(Hd$d[1])
+    if(any(Hd$d<tol1))
       warning("'H' is numerically not positive semidefinite")
     Hdet <- prod(Hd$d)
     s <- sqrt(pmax(Hd$d, 0.0))
@@ -164,13 +166,16 @@ Hcorrel <- function(
   }
   if(decomposition == "chol") {
     Hd <- chol(H, pivot = TRUE)
+    if(any(diag(Hd)<t0))
+      warning("'H' is numerically not positive semidefinite")
+    tol1 <- pmin(t0 * 10, diag(Hd))
     hdet <- exp(sum(diag(Hd)*2))
     h.5 <- matrix(Hd[, order(attr(Hd, "pivot")), ], nrow(H))
     hn <- chol2inv(chol(H))
     hn.5 <- chol(hn, pivot = TRUE)
     hneg.5 <- matrix(hn.5[, order(attr(hn.5, "pivot"))], nrow(H))
   }
-  stopifnot(all.equal(H, tcrossprod(h.5)))
+  stopifnot(all.equal(H, crossprod(h.5), tolerance = tol1))
 ##  attr(H, "theta") <- theta
   attr(Hd, "decomposition") <- decomposition
   attr(H, "decomposition") <- Hd

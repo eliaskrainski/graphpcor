@@ -95,7 +95,16 @@ The matrices $\bA$ and $\bB$ are then used to build the Cholesky factor of the c
 The determinant of the correlation matrix is
 \[  \Pi_{i=2}^p \Pi_{j=1}^{i-1}\bB_{i,j} = \Pi_{i=2}^p \mathbf{L}_{i,i}. \]
 
-The prior distribution for $\btheta$, see the PC-multivariate vignette, has the scalar parameter $\lambda$.
+The prior distribution for $\btheta$ is 
+\[ 
+\pi_{\btheta}(\btheta|\lambda) = 
+\pi_{\bxi}(\bxi|\lambda)|\textrm{det}(\textbf{I}(\btheta_0)^{1/2})|,
+\]
+see the PC-multivariate vignette, 
+where $\lambda$ is a (scalar) prior parameter, 
+$\textbf{I}(\btheta_0)$ is the Hessian of the KLD($\btheta,\btheta_0$) around $\btheta_0$,
+and $\bxi = \textbf{I}(\btheta_0)^{1/2}(\btheta-\btheta_0)$.
+
 We will consider some values for $\lambda$
 
 ```{r lambdas}
@@ -110,7 +119,7 @@ p <- 2
 (m <- p*(p-1)/2)
 ```
 
-For each value of the parameter we define the `cgneric` model,
+For each value of the parameter we define the `cgeneric` model,
 implemented with model (name) as `pc_correl`.
 Notice that $n=p$ and that we did set the base model 
 as $\theta=0$ (no correlation).
@@ -124,7 +133,9 @@ for(i in 1:nlambs) {
         lambda = lambdas[i],
         base = 0,
         useINLAprecomp = FALSE)
-    print(integrate(function(th) exp(prior(Cmodel, theta = th)), -3, 3))
+    print(integrate(
+      function(th) exp(prior(Cmodel, theta = th)), 
+      -3.5, 3.5))
 }
 ```
 
@@ -396,7 +407,6 @@ We drawn samples with $\mathbf{C})$
 for two different sample size with
 ```{r data3}
 nsims <- c(n50=50, n500=500)
-set.seed(1)
 xxs <- lapply(nsims, function(ns)
     tcrossprod(matrix(rnorm(ns * p), ns), lR))
 ```
@@ -535,18 +545,27 @@ c(sd=sd(theta3))
 
 # Example with $p=4$
 
-With $p=4$ we have now $m=6$. 
-The following (similar) results
-could be attributable to the fact that the 
-simulated $\btheta$ is near equally far
-from the base model.
+We now consider $p=4$ that give $m=6$. 
+We simulate $\btheta$ that not too close to the 
+base model (vector of zeros).
+Therefore, the following results have to be taken 
+considering this. 
+The posterior with $n=50$ is away from the prior, 
+and around the true values, for $\lambda=0.1$ and $\lambda=1$. 
+With $n=500$, only for the case with $\lambda=1000$ 
+there is not enouth information in the data to move 
+the posterior away from the prior. 
 
 ```{r p4}
 p <- 4
 (m <- p*(p-1)/2)
-set.seed(2)
-(theta0 <- rnorm(m))
-c(sd = sd(theta0))
+
+repeat{
+ theta0 <- rnorm(m, 0, 0.5)
+ if(sd(theta0)>1) break
+}
+print(theta0)
+print(c(sd=sd(theta0)))
 
 lR <- cholcor(theta0, p = p)
 R <- tcrossprod(lR)
@@ -556,7 +575,6 @@ R
 
 We also simulate two data sets for $p=4$ with
 ```{r samples4}
-# set.seed(3)
 xxs <- lapply(nsims, function(ns)
     tcrossprod(matrix(rnorm(ns * p), ns), lR))
 ```
@@ -650,13 +668,21 @@ for(il in 1:nlambs) {
 # Example with $p=5$
 
 With $p=5$ we have now $m=10$. 
+We have similar results, attributable to the fact
+that the $\ptheta$ simulated reasonable far from 
+the base model.
 
 
 ```{r p5, echo = FALSE, fig.width = 15, fig.height = 10}
 p <- 5
 (m <- p*(p-1)/2)
-(theta0 <- rnorm(m))
-c(sd=sd(theta0))
+
+repeat{
+ theta0 <- rnorm(m, 0, 0.5)
+ if(sd(theta0)>1) break
+}
+print(theta0)
+print(c(sd=sd(theta0)))
 
 lR <- cholcor(theta0, p = p)
 round(R <- tcrossprod(lR), 2)
