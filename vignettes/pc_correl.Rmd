@@ -1,0 +1,639 @@
+---
+title: "An informative prior for correlation matrix"
+output:
+  - rmarkdown::pdf_document
+  - rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{An informative prior for correlation matrix}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{amsfonts}
+  - \usepackage{amssymb}
+  - \usepackage{graphicx}
+  - \usepackage{mathtools}
+  - \usepackage{calc}
+  - \newcommand{\bx}{\textbf{x}}
+  - \newcommand{\bmu}{\boldsymbol{\mu}}
+  - \newcommand{\bgamma}{\boldsymbol{\gamma}}
+  - \newcommand{\btheta}{\boldsymbol{\theta}}
+  - \newcommand{\bxi}{\boldsymbol{\xi}}
+  - \newcommand{\brho}{\boldsymbol{\rho}}
+  - \newcommand{\bvphi}{\boldsymbol{\varphi}}
+  - \newcommand{\bA}{\mathbf{A}}
+  - \newcommand{\bB}{\mathbf{B}}
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  include = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.align='center', out.width = "99%",
+  fig.width = 10, fig.height = 7)
+library(graphpcor)
+library(INLA)
+set.seed(1)
+```
+
+# Abstract
+
+We illustrate the use of the informative correlation matrix prior
+by penalizing deviations from a base correlation matrix by 
+applying the idea from @simpsonetal2017.
+This prior may be **un**informative for small data size, 
+as shown.
+
+# Introduction
+
+We assume that a $p$-dimensional random vector $\mathbf{X}$
+is Normally distributed and want to consider its covariance
+matrix $\mathbf{V}$.
+This covariance matrix is written as
+\[ \Sigma = \mathbf{S} \mathbf{C}(\btheta) \mathbf{S} \]
+where the matrix $\mathbf{S}$ is a diagonal matrix whose
+elements $\mathbf{S}_{jj} = \sigma_j$ is the
+standard deviation of $\mathbf{X}_j$.
+We consider that $\mathbf{C}(\btheta)$ is parametrized
+considering the canonical partial correlation - CPC,
+where the $\btheta$ is a vector of dimension $m=n(n-1)/2$.
+
+The CPC parametrization, @lkj2009,
+we define $r[k] = \textrm{tanh}(\theta[k])$, 
+for $k=\{1, \ldots,m\}$, and the two 
+$p\times p$ matrices
+\[ \bA = \left[
+     \begin{array}{ccccc}
+       1 & & & & \\
+       r_1 & 1 & & & \\
+       r_2 & r_p & 1 & & \\
+       \vdots & \vdots & \ddots & \ddots & \\
+       r_{p-1} & r_{2p-3} & ... & r_m & 1
+     \end{array} \right]
+     \textrm{ and } \bB = \left[
+     \begin{array}{ccccc}
+       1 & & & & \\
+       \sqrt{1-r_1^2} & 1 & & & \\
+       \sqrt{1-r_2^2} & \sqrt{1-r_p^2} & 1 & & \\
+       \vdots & \vdots & \ddots & \ddots & \\
+       \sqrt{1-r_{p-1}^2} & \sqrt{r_{2p-3}^2} & ... & \sqrt{1-r_m^2} & 1
+     \end{array} \right]  \] 
+The matrices $\bA$ and $\bB$ are then used to build the Cholesky factor of the correlation matrix, given as
+\[ \mathbf{L} = \left[
+     \begin{array}{ccccc}
+       1 & 0 & 0 & ... & 0\\
+       \bA_{2,1} & \bB_{2,1} & 0 & ... & 0\\
+       \bA_{3,1} & \bA_{3,2}\bB_{3,1} & \bB_{3,1}\bB_{3,2} & & \vdots \\
+       \vdots & \vdots & \ddots & \ddots & 0\\
+       \bA_{p,1} & \bA_{p,2}\bB_{p,1} & ... &
+       \bA_{p,p-1}prod_{k=1}^{p-1}\bB_{p,k} & prod_{k=1}^{p-1}\bB_{p,k}
+     \end{array} \right]  \]
+     
+The determinant of the correlation matrix is
+\[  \Pi_{i=2}^p \Pi_{j=1}^{i-1}\bB_{i,j} = \Pi_{i=2}^p \mathbf{L}_{i,i}. \]
+
+The prior distribution for $\btheta$, see the PC-multivariate vignette, has the scalar parameter $\lambda$.
+We will consider some values for $\lambda$
+
+```{r lambdas}
+lambdas <- c(0.1, 1, 10, 100, 1000)
+nlambs <- length(lambdas)
+```
+
+## Example with p = 2, m = 1
+
+```{r p2m1}
+p <- 2
+(m <- p*(p-1)/2)
+```
+
+For each value of the parameter we define the `cgneric` model,
+implemented with model (name) as `pc_correl`.
+Notice that $n=p$ and that we did set the base model 
+as $\theta=0$ (no correlation).
+We evaluate the integral of the density (for $\theta$)
+with
+```{r inttheta}
+for(i in 1:nlambs) {
+    Cmodel <- cgeneric(
+        model = "pc_correl",
+        n = p,
+        lambda = lambdas[i],
+        base = 0,
+        useINLAprecomp = FALSE)
+    print(integrate(function(th) exp(prior(Cmodel, theta = th)), -3, 3))
+}
+```
+
+Now, visualize the density with respect to $\theta$.
+We do it considering the `prior` function for the `cgeneric` model
+For that, we set a grid of values for $\theta$ with
+
+```{r ths}
+hth <- 0.005
+ths <- c(seq(-1.5+hth/2, 1.5-hth/2, hth))
+(nths <- length(ths))
+```
+
+We will also fit the model for a data set with no data,
+therefore getting back the prior,
+by considering
+```{r d1p}
+cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
+fi <- y ~ 0 + f(i, model = Cmodel)
+d1p <- data.frame(y = NA, i = 1:p)
+```
+
+We visualize both, the prior directly computed with `prior()` and the one from `inla()`, 
+for different prior parameter with
+```{r vizthn2m1}
+par(mfrow = c(2, 3), mar = c(3,3,0.1,0.1), mgp = c(1.5, 0.5, 0), bty = "n")
+for(i in 1:nlambs) {
+    Cmodel <- cgeneric(
+        model = "pc_correl",
+        n = p,
+        lambda = lambdas[i],
+        useINLAprecomp = FALSE)
+    ifit <- inla(
+        formula = fi, data = d1p, control.family = cfam
+    )
+    pm <- ifit$marginals.hyperpar[[1]]
+    plot(ths, exp(prior(Cmodel, theta = matrix(ths, 1))),
+         xlim = range(pm[, 1]) * 3, type = "l", 
+         xlab = expression(theta), 
+         ylab = expression(pi[theta]))
+    lines(pm, col = 2, lty = 3)
+}
+```
+
+We can use the function `basecor` evaluate $\theta$ with
+```{r basecor1}
+basecor(-1, p)
+basecor(0, p)
+basecor(1, p)
+```
+which include more than what we need.
+Therefore we can just do
+```{r cholcor1}
+tcrossprod(cholcor(-1, p))
+```
+or invert the `prec` evaluated over a `cgeneric` object for the
+`pc_correl` with
+```{r prec1}
+solve(prec(Cmodel, theta = -1))
+```
+
+We can use the `inla.hyperpar.sample` to drawn samples from
+the $\theta$, compute the correlation and visualize it
+as the prior for the correlation next.
+
+```{r vizCn2m1}
+par(mfrow = c(2, 3), mar = c(3,3,0.1,0.1), mgp = c(1.5, 0.5, 0), bty = "n")
+for(i in 1:nlambs) {
+    Cmodel <- cgeneric(
+        model = "pc_correl",
+        n = p,
+        lambda = lambdas[i],
+        useINLAprecomp = FALSE)
+    ifit <- inla(
+        formula = fi, data = d1p, control.family = cfam
+    )
+    thsim <- inla.hyperpar.sample(n = 5000, result = ifit)
+    csim <- sapply(1:nrow(thsim), function(i)
+      tcrossprod(cholcor(thsim[i,], p = p))[2,1])
+    hist(csim, 100, freq = FALSE, 
+         main = "", xlab = expression(rho))
+}
+```
+
+The histograms for the correlation drawn with different 
+$\lambda$ are narrowed toward 0 (set as base) as 
+$\lambda$ increases. 
+See also the PC-multivariate vignette for the exact posterior.
+
+
+# Example with p = 3, m = 3
+
+Consider that we have a correlation matrix $\mathbf{C}_0$: 
+```{r c3}
+c0 <- matrix(c(1,     .8,  -.5,
+               0.8,    1,  -.4,
+               -.5,  -.4,   1), 3)
+c0
+(p <- ncol(c0))
+(m <- p*(p-1)/2)
+```
+
+We now want to compute the $\btheta$, under the CPC
+parametrization.
+The `basecor` function does this and
+also compute the Hessian around
+(see PC-multivariate vignette for details) with
+
+```{r base3}
+b0 <- basecor(c0)
+(theta3 <- b0$theta)
+
+lR <- cholcor(theta3, p)
+lR
+
+R <- tcrossprod(lR)
+R
+```
+
+Let us visualize the (3 dimensional) density.
+We first define the `cgeneric` model where
+the base model is $\mathbf{C}_0$ with
+
+```{r cg3}
+cmodel <- cgeneric(
+    model = "pc_correl",
+    base = c0,
+    lambda = 5,
+    useINLAprecomp = FALSE)
+
+cmodel
+
+graph(cmodel)
+
+initial(cmodel)
+
+prec(cmodel, theta = theta3)
+
+all.equal(as.matrix(solve(prec(cmodel, theta = theta3))),
+          R)
+
+```
+
+The prior can be evaluated at one $\btheta$ (vector) value with
+```{r prior3_1}
+prior(cmodel, theta = theta3)
+```
+or at several (one at each column)
+```{r prior3_2}
+prior(cmodel, theta = cbind(theta3, rnorm(m)))
+```
+
+We now set a 3d grid with
+```{r th3dgrid}
+hth <- 0.02; hth2 <- hth^2
+str(sths <- lapply(1:3, function(i)
+    seq(-2+hth/2, 2-hth/2, hth) + theta3[i]))
+(nsth <- length(sths[[1]]))
+ncol(th3 <- t(expand.grid(sths)))/1e6
+```
+evaluate the prior and organize it into an array with
+```{r p3}
+p3 <- array(prior(cmodel, theta = th3), rep(nsth, 3))
+str(p3)
+```
+
+Checks:
+```{r p3check}
+sum(exp(p3)*(hth^3))
+
+hth2 <- hth * hth
+sum(apply(exp(p3)*hth2, 2, sum) * hth)
+sum(apply(exp(p3)*hth2, 2, sum) * hth)
+sum(apply(exp(p3)*hth2, 3, sum) * hth)
+
+```
+
+We will visualize every 2 dimentions
+(at the mid value of the other) and
+each marginal with
+
+```{r visp3}
+par(mfrow = c(2, 2), mar = c(3, 3, 0.5, 0.5),
+    mgp = c(2, 0.5, 0), bty = "n")
+image(sths[[1]], sths[[2]], p3[,,nsth/2])
+contour(sths[[1]], sths[[2]], p3[,,nsth/2], add = TRUE, nlevels = 5)
+image(sths[[1]], sths[[3]], p3[,nsth/2,])
+contour(sths[[1]], sths[[3]], p3[,nsth/2,], add = TRUE, nlevels = 5)
+image(sths[[2]], sths[[3]], p3[nsth/2,,])
+contour(sths[[2]], sths[[3]], p3[nsth/2,,], add = TRUE, nlevels = 5)
+
+
+plot(sths[[1]], apply(exp(p3)*hth2, 1, sum),
+     type = "l", xlab = "", ylab = "density",
+     xlim = range(unlist(sths)))
+lines(sths[[2]], apply(exp(p3)*hth2, 2, sum), col = 2)
+lines(sths[[3]], apply(exp(p3)*hth2, 3, sum), col = 3)
+legend("topleft", bty = "n", lty = 1, col = 1:3,
+       c(expression(theta[1]), expression(theta[2]), expression(theta[3])))
+```
+
+We now consider different prior parameters
+fit with no data, to get back the prior, and visualize
+
+Preparations
+```{r prep3}
+pthlabs <- c(
+    expression(pi[theta[1]](theta[1]~"|"~lambda)),
+    expression(pi[theta[2]](theta[2]~"|"~lambda)),
+    expression(pi[theta[3]](theta[3]~"|"~lambda))
+)
+rholabs <- c(
+    expression(rho[2~","~1]),
+    expression(rho[3~""~1]),
+    expression(rho[3~""~2])
+    )
+prholabs <- c(
+    expression(pi[rho[2~","~1]](rho[2~","~1]~"|"~lambda)),
+    expression(pi[rho[3~","~1]](rho[3~","~1]~"|"~lambda)),
+    expression(pi[rho[3~","~2]](rho[3~","~2]~"|"~lambda))
+)
+
+il3 <- which(lower.tri(diag(p)))
+il3
+```
+
+Visualize the prior of $\btheta$ and of the correlations,
+for each $\lambda$ case, and having the base model as 
+$\mathbf{C}_0$. 
+We notice that with increasing $\lambda$, 
+the prior gets narrower around the values from 
+$\mathbf{C}_0$.
+
+```{r p3cor, fig.width = 18, fig.height = 12}
+par(mfrow = c(nlambs, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
+for(il in 1:nlambs) {
+    lamb <- lambdas[il]
+    Cmodel <- cgeneric(
+        model = "pc_correl", n = p, lambda = lamb,
+        base = theta3, useINLAprecomp = FALSE)
+    itest <- inla(
+        formula = fi, control.family = cfam,
+        data = d1p
+    )
+    for(i in 1:3) {
+        plot(itest$marginals.hyperpar[[i]], pch = 19, type = 'b',
+             xlab = as.expression(bquote(theta[.(i)])),
+             ylab = pthlabs[[i]], main = "")
+        if(i==1)
+            legend("topleft", bty = "n",
+                   as.expression(bquote(lamda == .(lamb))))
+    }
+    hprior3 <- inla.hyperpar.sample(10000, itest)
+    cprior3 <- apply(hprior3, 1, function(x)
+        tcrossprod(cholcor(x, p=p))[il3])
+    for(i in 1:3) {
+        hist(cprior3[i, ], seq(-.1, .1, 0.005)+R[il3[i]], freq = FALSE,
+             main = "",
+             xlab = rholabs[[i]],
+             ylab = prholabs[[i]])
+        abline(v = R[il3[i]], col = 2, lty = 2, lwd = 2)
+    }
+}
+```
+
+We now want to see the effect of the prior on the posterior
+considering different data size.
+We drawn samples with $\mathbf{C})$ 
+for two different sample size with
+```{r data3}
+nsims <- c(50, 500)
+set.seed(1)
+xxs <- lapply(nsims, function(ns)
+    tcrossprod(matrix(rnorm(ns * p), ns), lR))
+```
+
+Compute the sample correlations (to compare later)
+```{r c3sample}
+Rs <- lapply(xxs, cor)
+Rs
+```
+
+Evaluate the $\btheta$ at the sample correlation,
+to overlay in the plots as "observed" $\btheta$:
+```{r otheta3}
+Bs <- lapply(Rs, basecor, p = p)
+(oths <- sapply(Bs, function(b) b$theta))
+```
+
+Some setup to organize the data for INLA and
+the formula considering each sample as replicate.
+```{r setup3}
+datf3 <- lapply(1:2, function(i)
+    data.frame(
+        y = as.vector(xxs[[i]]),
+        i = rep(1:p, each = nsims[i]),
+        r = rep(1:nsims[i], p)))
+fr <- y ~ 0 + f(i, model = cmodel, replicate = r)
+```
+
+For each $\lambda$, we have 2 
+(one for each of the 2 samples) times 6 plots
+(one for each $\btheta$ and one for each correlation), 
+each one of these plots shown at each row of the figure.
+
+Now we consider that the base model is no correlation!
+We set this as we want to see how the sample size is 
+able to move the posterior away from the prior 
+correlation value (which is zero) for 
+different $\lambda$, one at each each row of the figure.
+
+```{r vis3d2, fig.width = 12, fig.height = 12}
+par(mfrow = c(nlambs, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
+for(lamb in lambdas) {
+    cmodel <- cgeneric("pc_correl", n = p, lambda = lamb,
+                       useINLAprecomp = FALSE)
+    p3a <- array(exp(prior(cmodel, theta = th3)), rep(nsth, 3))
+    itests <- lapply(datf3, function(ddf)
+        inla(formula = fr,
+             data = ddf,
+             control.family = cfam
+             )
+        )
+    for(i in 1:3) {
+        pm1 <- itests[[1]]$marginals.hyperpar[[i]]
+        pm2 <- itests[[2]]$marginals.hyperpar[[i]]
+        xlm <- range(theta3[i],
+                     Bs[[1]]$theta[i],
+                     Bs[[2]]$theta[i],
+                     pm1[, 1], pm2[, 1])
+        ylm <- c(0, max(pm1[, 2], pm2[, 2]))
+        plot(pm1, type = "l", col = 2, lwd = 2,
+             xlim = xlm, ylim = ylm,
+             xlab = as.expression(bquote(theta[.(i)])),
+             ylab = pthlabs[[i]], main = "")
+        lines(pm2, col = 3, lwd = 2)
+        lines(sths[[i]], apply(p3a*hth2, i, sum), lty = 3, lwd = 3)
+        abline(v = theta3[i], col = 1, lty = 1)
+        abline(v = Bs[[1]]$theta[i], lty = 2, col = 2, lwd = 2)
+        abline(v = Bs[[2]]$theta[i], lty = 2, col = 3, lwd = 2)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   c("true", "prior",
+                     as.expression(
+                         lapply(nsims, function(ns)
+                             bquote("Obs."~theta~", n="~.(ns)))),
+                    as.expression(
+                         lapply(nsims, function(ns)
+                             bquote("Post."~theta~", n="~.(ns))))),
+                   lty = c(1, 3, 2, 2, 1, 1),
+                   col = c(1, 1, 2:3, 2:3),
+                   lwd = c(1, 3, 2, 2, 2, 2),
+                   title = as.expression(bquote(lambda == .(lamb))))
+    }
+    hpriors3 <- lapply(itests, function(r)
+                       inla.hyperpar.sample(10000, r))
+    cpriors3 <- lapply(hpriors3, apply, 1, function(x)
+        tcrossprod(cholcor(x, p))[il3])
+    hh <- 0.01
+    for(i in 1:3) {
+        h1 <- hist(cpriors3[[1]][i, ], seq(-1, 1, hh), plot = FALSE)
+        h2 <- hist(cpriors3[[2]][i, ], seq(-1, 1, hh), plot = FALSE)
+        ih <- which((h1$counts>0) | (h2$counts>0))
+        plot(h1, freq = FALSE, xlab = rholabs[[i]],
+             ylab = prholabs[[i]],
+             xlim = range(h1$mids[ih], h2$mids[ih]) + c(-1,1)*hh,
+             ylim = range(h1$dens[ih], h2$dens[ih]),
+             main = "", col = rgb(1,0,0,0.5))
+        plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
+        abline(v = R[il3[i]], lty = 1, col = 1)
+        rug(R[il3[i]], col = 1, lwd = 1)
+        rug(Rs[[1]][il3[i]], col = 2, lwd = 5, lty = 2)
+        rug(Rs[[2]][il3[i]], col = 3, lwd = 5, lty = 2)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   paste("n = ", nsims),
+                   fill = c(2,3), border = 2:3,
+                   title = as.expression(bquote(lambda == .(lamb))))
+    }
+}
+```
+
+We see that for $\lambda=0.1$ and $\lambda=1$ 
+the posterior distributions are around the "true" values.
+Also, for the bigger sample size, the posterior is
+narrower. 
+However, with $n=50$, 
+for the $\lambda=10$ and $\lambda = 1000$ cases, 
+each posterior is around 0 (zero), which is the value 
+at the base model.
+Therefore, with a sample size of $n=50$ it was not enough 
+to move the posterior away from these priors, 
+and is narrower than the posterior with $n=500$. 
+With $\lambda = 1000$, 
+the biggest value considered for $\lambda$ here, 
+both sample sizes were not able to move away from the prior.
+
+\textbf{NOTE}: this was just for one simulated data. 
+The results may differ for different data simulated in 
+the same way but different seed.
+
+# Example with $p=4$
+
+With $p=4$ we have now $m=6$: similar results. 
+
+
+```{r p4}
+p <- 4
+(m <- p*(p-1)/2)
+set.seed(2)
+(theta0 <- rnorm(m))
+
+lR <- cholcor(theta0, p = p)
+log(attr(lR, 'determinant'))
+R <- tcrossprod(lR)
+il4 <- which(lower.tri(R))
+R
+```
+
+We also simulate two data sets for $p=4$ with
+```{r samples4}
+# set.seed(3)
+xxs <- lapply(nsims, function(ns)
+    tcrossprod(matrix(rnorm(ns * p), ns), lR))
+```
+compute the sample correlation with
+```{r Rs4}
+Rs <- lapply(xxs, cor)
+Rs
+```
+and the base model at the sample correlation (to get observed theta)
+```{r obsth4}
+Bs <- lapply(Rs, basecor, p = p)
+(oths <- sapply(Bs, function(b) b$theta))
+```
+
+Organize the data
+```{r data4}
+datfs <- lapply(1:2, function(i)
+    data.frame(
+        y = as.vector(xxs[[i]]),
+        i = rep(1:p, each = nsims[i]),
+        r = rep(1:nsims[i], p)))
+```
+
+Prepare cosmetic labels
+```{r labs4}
+rholabs4 <- c(
+    expression(rho[2~","~1]),
+    expression(rho[3~""~1]),
+    expression(rho[4~""~1]),
+    expression(rho[3~""~2]),
+    expression(rho[4~""~2]),
+    expression(rho[4~""~3])
+)
+prholabs4 <- c(
+    expression(pi[rho[2~","~1]](rho[2~","~1]~"|"~lambda)),
+    expression(pi[rho[3~","~1]](rho[3~","~1]~"|"~lambda)),
+    expression(pi[rho[4~","~1]](rho[4~","~1]~"|"~lambda)),
+    expression(pi[rho[3~","~2]](rho[3~","~2]~"|"~lambda)),
+    expression(pi[rho[4~","~2]](rho[4~","~2]~"|"~lambda)),
+    expression(pi[rho[4~","~3]](rho[4~","~3]~"|"~lambda))
+)
+```
+
+We will now visualize the posterior for each correlation
+(each column of plots)
+considering these two data (different colors),
+for different $\lambda$ (each row in the figure).
+
+
+```{r c4vis, fig.width = 12, fig.height = 12}
+par(mfrow = c(nlambs, m), mar = c(3,3,0,0), mgp = c(1.5,0.5,0))
+for(il in 1:nlambs) {
+    lamb <- lambdas[il]
+    cmodel <- cgeneric("pc_correl", n = p, lambda = lamb,
+                       useINLAprecomp = FALSE)
+    itests <- lapply(datfs, function(ddf)
+        inla(formula = fr,
+             data = ddf,
+             control.family = cfam
+             )
+        )
+    hpriors <- lapply(itests, function(r)
+        inla.hyperpar.sample(10000, r))
+    cpriors <- lapply(hpriors, apply, 1, function(x)
+        tcrossprod(cholcor(x, p=p))[il4])
+    hh <- 0.01
+    for(i in 1:m) {
+        h1 <- hist(cpriors[[1]][i, ], seq(-1, 1, hh), plot = FALSE)
+        h2 <- hist(cpriors[[2]][i, ], seq(-1, 1, hh), plot = FALSE)
+        ih <- which((h1$counts>0) | (h2$counts>0))
+        plot(h1, freq = FALSE, xlab = rholabs4[[i]],
+             ylab = prholabs4[[i]],
+             xlim = range(h1$mids[ih], h2$mids[ih]) + c(-1,1)*hh,
+             ylim = range(h1$dens[ih], h2$dens[ih]),
+             main = "", col = rgb(1,0,0,0.5))
+        plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
+        abline(v = R[il4[i]], lty = 1, col = 1)
+        rug(R[il4[i]], col = 1, lwd = 1)
+        rug(Rs[[1]][il4[i]], col = 2, lwd = 5, lty = 2)
+        rug(Rs[[2]][il4[i]], col = 3, lwd = 5, lty = 2)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   paste("n = ", nsims),
+                   fill = c(2,3), border = 2:3,
+                   title = as.expression(bquote(lambda == .(lamb))))
+    }
+}
+```
+
+# References
