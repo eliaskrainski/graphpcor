@@ -89,7 +89,7 @@ The matrices $\bA$ and $\bB$ are then used to build the Cholesky factor of the c
        \bA_{3,1} & \bA_{3,2}\bB_{3,1} & \bB_{3,1}\bB_{3,2} & & \vdots \\
        \vdots & \vdots & \ddots & \ddots & 0\\
        \bA_{p,1} & \bA_{p,2}\bB_{p,1} & ... &
-       \bA_{p,p-1}prod_{k=1}^{p-1}\bB_{p,k} & prod_{k=1}^{p-1}\bB_{p,k}
+       \bA_{p,p-1}\Pi_{k=1}^{p-1}\bB_{p,k} & \Pi_{k=1}^{p-1}\bB_{p,k}
      \end{array} \right]  \]
      
 The determinant of the correlation matrix is
@@ -358,7 +358,7 @@ We notice that with increasing $\lambda$,
 the prior gets narrower around the values from 
 $\mathbf{C}_0$.
 
-```{r p3cor, fig.width = 18, fig.height = 12}
+```{r p3cor, fig.width = 18, fig.height = 10}
 par(mfrow = c(nlambs, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(il in 1:nlambs) {
     lamb <- lambdas[il]
@@ -395,7 +395,7 @@ considering different data size.
 We drawn samples with $\mathbf{C})$ 
 for two different sample size with
 ```{r data3}
-nsims <- c(50, 500)
+nsims <- c(n50=50, n500=500)
 set.seed(1)
 xxs <- lapply(nsims, function(ns)
     tcrossprod(matrix(rnorm(ns * p), ns), lR))
@@ -422,6 +422,7 @@ datf3 <- lapply(1:2, function(i)
         y = as.vector(xxs[[i]]),
         i = rep(1:p, each = nsims[i]),
         r = rep(1:nsims[i], p)))
+names(datf3) <- names(nsims)
 fr <- y ~ 0 + f(i, model = cmodel, replicate = r)
 ```
 
@@ -436,7 +437,7 @@ able to move the posterior away from the prior
 correlation value (which is zero) for 
 different $\lambda$, one at each each row of the figure.
 
-```{r vis3d2, fig.width = 12, fig.height = 12}
+```{r vis3d2, fig.width = 12, fig.height = 10}
 par(mfrow = c(nlambs, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(lamb in lambdas) {
     cmodel <- cgeneric("pc_correl", n = p, lambda = lamb,
@@ -525,22 +526,31 @@ both sample sizes were not able to move away from the prior.
 \textbf{NOTE}: this was just for one simulated data. 
 The results may differ for different data simulated in 
 the same way but different seed.
+But, **most important** is that it depend on how far 
+$\theta_j$ is from the base model.
+Let us compute the mean of squared differences
+```{r d3}
+c(sd=sd(theta3))
+```
 
 # Example with $p=4$
 
-With $p=4$ we have now $m=6$: similar results. 
-
+With $p=4$ we have now $m=6$. 
+The following (similar) results
+could be attributable to the fact that the 
+simulated $\btheta$ is near equally far
+from the base model.
 
 ```{r p4}
 p <- 4
 (m <- p*(p-1)/2)
 set.seed(2)
 (theta0 <- rnorm(m))
+c(sd = sd(theta0))
 
 lR <- cholcor(theta0, p = p)
-log(attr(lR, 'determinant'))
 R <- tcrossprod(lR)
-il4 <- which(lower.tri(R))
+iil <- which(lower.tri(R))
 R
 ```
 
@@ -553,21 +563,22 @@ xxs <- lapply(nsims, function(ns)
 compute the sample correlation with
 ```{r Rs4}
 Rs <- lapply(xxs, cor)
-Rs
+lapply(Rs, round, 2)
 ```
 and the base model at the sample correlation (to get observed theta)
 ```{r obsth4}
 Bs <- lapply(Rs, basecor, p = p)
-(oths <- sapply(Bs, function(b) b$theta))
+round(t(oths <- sapply(Bs, function(b) b$theta)), 2)
 ```
 
 Organize the data
 ```{r data4}
-datfs <- lapply(1:2, function(i)
+datfs <- lapply(c(s=1:2), function(i)
     data.frame(
         y = as.vector(xxs[[i]]),
         i = rep(1:p, each = nsims[i]),
         r = rep(1:nsims[i], p)))
+names(datfs) <- names(nsims)
 ```
 
 Prepare cosmetic labels
@@ -596,7 +607,7 @@ considering these two data (different colors),
 for different $\lambda$ (each row in the figure).
 
 
-```{r c4vis, fig.width = 12, fig.height = 12}
+```{r c4vis, fig.width = 12, fig.height = 10}
 par(mfrow = c(nlambs, m), mar = c(3,3,0,0), mgp = c(1.5,0.5,0))
 for(il in 1:nlambs) {
     lamb <- lambdas[il]
@@ -611,7 +622,7 @@ for(il in 1:nlambs) {
     hpriors <- lapply(itests, function(r)
         inla.hyperpar.sample(10000, r))
     cpriors <- lapply(hpriors, apply, 1, function(x)
-        tcrossprod(cholcor(x, p=p))[il4])
+        tcrossprod(cholcor(x, p=p))[iil])
     hh <- 0.01
     for(i in 1:m) {
         h1 <- hist(cpriors[[1]][i, ], seq(-1, 1, hh), plot = FALSE)
@@ -623,10 +634,102 @@ for(il in 1:nlambs) {
              ylim = range(h1$dens[ih], h2$dens[ih]),
              main = "", col = rgb(1,0,0,0.5))
         plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
-        abline(v = R[il4[i]], lty = 1, col = 1)
-        rug(R[il4[i]], col = 1, lwd = 1)
-        rug(Rs[[1]][il4[i]], col = 2, lwd = 5, lty = 2)
-        rug(Rs[[2]][il4[i]], col = 3, lwd = 5, lty = 2)
+        abline(v = R[iil[i]], lty = 1, col = 1)
+        rug(R[iil[i]], col = 1, lwd = 1)
+        rug(Rs[[1]][iil[i]], col = 2, lwd = 5, lty = 2)
+        rug(Rs[[2]][iil[i]], col = 3, lwd = 5, lty = 2)
+        if(i==1)
+            legend("topleft", bty = "n",
+                   paste("n = ", nsims),
+                   fill = c(2,3), border = 2:3,
+                   title = as.expression(bquote(lambda == .(lamb))))
+    }
+}
+```
+
+# Example with $p=5$
+
+With $p=5$ we have now $m=10$. 
+
+
+```{r p5, echo = FALSE, fig.width = 15, fig.height = 10}
+p <- 5
+(m <- p*(p-1)/2)
+(theta0 <- rnorm(m))
+c(sd=sd(theta0))
+
+lR <- cholcor(theta0, p = p)
+round(R <- tcrossprod(lR), 2)
+iil <- which(lower.tri(R))
+xxs <- lapply(nsims, function(ns)
+    tcrossprod(matrix(rnorm(ns * p), ns), lR))
+Rs <- lapply(xxs, cor)
+lapply(Rs, round, 2)
+Bs <- lapply(Rs, basecor, p = p)
+round(t(oths <- sapply(Bs, function(b) b$theta)), 2)
+datfs <- lapply(c(s=1:2), function(i)
+    data.frame(
+        y = as.vector(xxs[[i]]),
+        i = rep(1:p, each = nsims[i]),
+        r = rep(1:nsims[i], p)))
+names(datfs) <- names(nsims)
+
+## Prepare cosmetic labels
+rholabsp <- c(
+    expression(rho[2~","~1]),
+    expression(rho[3~""~1]),
+    expression(rho[4~""~1]),
+    expression(rho[5~""~1]),
+    expression(rho[3~""~2]),
+    expression(rho[4~""~2]),
+    expression(rho[5~""~2]),
+    expression(rho[4~""~3]),
+    expression(rho[5~""~3]),
+    expression(rho[5~""~4])
+)
+prholabsp <- c(
+    expression(pi[rho[2~","~1]](rho[2~","~1]~"|"~lambda)),
+    expression(pi[rho[3~","~1]](rho[3~","~1]~"|"~lambda)),
+    expression(pi[rho[4~","~1]](rho[4~","~1]~"|"~lambda)),
+    expression(pi[rho[5~","~1]](rho[4~","~1]~"|"~lambda)),
+    expression(pi[rho[3~","~2]](rho[3~","~2]~"|"~lambda)),
+    expression(pi[rho[4~","~2]](rho[3~","~2]~"|"~lambda)),
+    expression(pi[rho[5~","~2]](rho[4~","~2]~"|"~lambda)),
+    expression(pi[rho[4~","~3]](rho[4~","~2]~"|"~lambda)),
+    expression(pi[rho[5~","~3]](rho[4~","~2]~"|"~lambda)),
+    expression(pi[rho[5~","~4]](rho[4~","~3]~"|"~lambda))
+)
+
+par(mfrow = c(nlambs, m), mar = c(3,3,0,0), mgp = c(1.5,0.5,0))
+for(il in 1:nlambs) {
+    lamb <- lambdas[il]
+    cmodel <- cgeneric("pc_correl", n = p, lambda = lamb,
+                       useINLAprecomp = FALSE)
+    itests <- lapply(datfs, function(ddf)
+        inla(formula = fr,
+             data = ddf,
+             control.family = cfam
+             )
+        )
+    hpriors <- lapply(itests, function(r)
+        inla.hyperpar.sample(10000, r))
+    cpriors <- lapply(hpriors, apply, 1, function(x)
+        tcrossprod(cholcor(x, p=p))[iil])
+    hh <- 0.01
+    for(i in 1:m) {
+        h1 <- hist(cpriors[[1]][i, ], seq(-1, 1, hh), plot = FALSE)
+        h2 <- hist(cpriors[[2]][i, ], seq(-1, 1, hh), plot = FALSE)
+        ih <- which((h1$counts>0) | (h2$counts>0))
+        plot(h1, freq = FALSE, xlab = rholabsp[[i]],
+             ylab = prholabsp[[i]],
+             xlim = range(h1$mids[ih], h2$mids[ih]) + c(-1,1)*hh,
+             ylim = range(h1$dens[ih], h2$dens[ih]),
+             main = "", col = rgb(1,0,0,0.5))
+        plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
+        abline(v = R[iil[i]], lty = 1, col = 1)
+        rug(R[iil[i]], col = 1, lwd = 1)
+        rug(Rs[[1]][iil[i]], col = 2, lwd = 5, lty = 2)
+        rug(Rs[[2]][iil[i]], col = 3, lwd = 5, lty = 2)
         if(i==1)
             legend("topleft", bty = "n",
                    paste("n = ", nsims),
