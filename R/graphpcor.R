@@ -57,11 +57,13 @@ graphpcor.matrix <- function(...) {
   }
   argl <- list()
   adde <- 0
+  nj <- integer(ne[1]-1)
   for(i in 1:(ne[1]-1)) {
     jj <- intersect(
       (i+1):ne[1],
       which(!iz[i, ]))
-    if(length(jj)>0) {
+    nj[i] <- length(jj)
+    if(nj[i]>0) {
       argl[[i]] <- paste(
         vnams[i], "~",
         paste(vnams[jj], collapse = " + "))
@@ -69,6 +71,7 @@ graphpcor.matrix <- function(...) {
     }
   }
   stopifnot(adde==ne[2])
+  argl <- argl[which(nj>0)]
   return(do.call(what = 'graphpcor',
                  args = lapply(argl, as.formula)))
 }

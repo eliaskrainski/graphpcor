@@ -41,8 +41,10 @@ set.seed(1)
 
 # Abstract
 
-We illustrate the use of the informative correlation matrix prior
-by penalizing deviations from a base correlation matrix by 
+We illustrate the use of the informative prior for 
+correlation matrix. 
+This prior is constructed by penalizing deviations 
+from a base correlation matrix, 
 applying the idea from @simpsonetal2017.
 This prior may be **un**informative for small data size, 
 as shown.
@@ -57,6 +59,9 @@ This covariance matrix is written as
 where the matrix $\mathbf{S}$ is a diagonal matrix whose
 elements $\mathbf{S}_{jj} = \sigma_j$ is the
 standard deviation of $\mathbf{X}_j$.
+
+## Parametrization
+
 We consider that $\mathbf{C}(\btheta)$ is parametrized
 considering the canonical partial correlation - CPC,
 where the $\btheta$ is a vector of dimension $m=n(n-1)/2$.
@@ -100,10 +105,10 @@ The prior distribution for $\btheta$ is
 \pi_{\btheta}(\btheta|\lambda) = 
 \pi_{\bxi}(\bxi|\lambda)|\textrm{det}(\textbf{I}(\btheta_0)^{1/2})|,
 \]
-see the PC-multivariate vignette, 
 where $\lambda$ is a (scalar) prior parameter, 
 $\textbf{I}(\btheta_0)$ is the Hessian of the KLD($\btheta,\btheta_0$) around $\btheta_0$,
 and $\bxi = \textbf{I}(\btheta_0)^{1/2}(\btheta-\btheta_0)$.
+See the PC-multivariate vignette for details.
 
 We will consider some values for $\lambda$
 
@@ -112,7 +117,7 @@ lambdas <- c(0.1, 1, 10, 100, 1000)
 nlambs <- length(lambdas)
 ```
 
-## Example with p = 2, m = 1
+# Example with p = 2, m = 1
 
 ```{r p2m1}
 p <- 2
@@ -123,7 +128,18 @@ For each value of the parameter we define the `cgeneric` model,
 implemented with model (name) as `pc_correl`.
 Notice that $n=p$ and that we did set the base model 
 as $\theta=0$ (no correlation).
+
+## The prior
+
 We evaluate the integral of the density (for $\theta$)
+by applying `prior()` to the `generic` model as
+```{r iprior, eval = FALSE}
+plot(function(th) 
+  exp(prior(Cmodel, theta = th)), 
+  from = a, to = b)
+```
+where `a` and `b` are the limits.
+
 with
 ```{r inttheta}
 for(i in 1:nlambs) {
@@ -135,31 +151,32 @@ for(i in 1:nlambs) {
         useINLAprecomp = FALSE)
     print(integrate(
       function(th) exp(prior(Cmodel, theta = th)), 
-      -3.5, 3.5))
+      lower = -5, upper = 5)) 
 }
 ```
 
-Now, visualize the density with respect to $\theta$.
-We do it considering the `prior` function for the `cgeneric` model
-For that, we set a grid of values for $\theta$ with
+Note: For small $\lambda$ it did not get to one
+as the prior has relevant mass 
+outside the domain considered.
 
-```{r ths}
-hth <- 0.005
-ths <- c(seq(-1.5+hth/2, 1.5-hth/2, hth))
-(nths <- length(ths))
-```
+Similarly, we can also visualize 
+the density, with respect to $\theta$.
+We also consider the posterior from 
+fitting the model to an empty data, 
+thus it should be equal the prior, with INLA.
 
-We will also fit the model for a data set with no data,
-therefore getting back the prior,
-by considering
+Set up a empty data set and fix the precision of a 
+Gaussian likelihood to a high precision with
 ```{r d1p}
-cfam <- list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 fi <- y ~ 0 + f(i, model = Cmodel)
 d1p <- data.frame(y = NA, i = 1:p)
+cfam <- list(hyper = list(prec = list(
+  initial = 10, fixed = TRUE)))
 ```
 
 We visualize both, the prior directly computed with `prior()` and the one from `inla()`, 
-for different prior parameter with
+for different prior parameter. 
+
 ```{r vizthn2m1}
 par(mfrow = c(2, 3), mar = c(3,3,0.1,0.1), mgp = c(1.5, 0.5, 0), bty = "n")
 for(i in 1:nlambs) {
@@ -172,13 +189,18 @@ for(i in 1:nlambs) {
         formula = fi, data = d1p, control.family = cfam
     )
     pm <- ifit$marginals.hyperpar[[1]]
-    plot(ths, exp(prior(Cmodel, theta = matrix(ths, 1))),
-         xlim = range(pm[, 1]) * 3, type = "l", 
+    plot(function(th) exp(prior(Cmodel, theta = th)),
+         from = min(pm[, 1])*2, to = max(pm[, 1]) * 2, 
          xlab = expression(theta), 
          ylab = expression(pi[theta]))
     lines(pm, col = 2, lty = 3)
 }
 ```
+
+The differences for small $\lambda$ are due to 
+lack of numerical refinements for such cases. 
+
+## The $\theta$ and correlation map
 
 We can use the function `basecor` evaluate $\theta$ with
 ```{r basecor1}
@@ -246,13 +268,12 @@ also compute the Hessian around
 
 ```{r base3}
 b0 <- basecor(c0)
+b0
+```
+
+Collect the parameter for this base correlation matrix
+```{r theta3}
 (theta3 <- b0$theta)
-
-lR <- cholcor(theta3, p)
-lR
-
-R <- tcrossprod(lR)
-R
 ```
 
 Let us visualize the (3 dimensional) density.
@@ -275,7 +296,7 @@ initial(cmodel)
 prec(cmodel, theta = theta3)
 
 all.equal(as.matrix(solve(prec(cmodel, theta = theta3))),
-          R)
+          c0)
 
 ```
 
@@ -288,7 +309,8 @@ or at several (one at each column)
 prior(cmodel, theta = cbind(theta3, rnorm(m)))
 ```
 
-We now set a 3d grid with
+
+We now set a 3d grid for $\btheta$ with
 ```{r th3dgrid}
 hth <- 0.02; hth2 <- hth^2
 str(sths <- lapply(1:3, function(i)
@@ -313,7 +335,7 @@ sum(apply(exp(p3)*hth2, 3, sum) * hth)
 
 ```
 
-We will visualize every 2 dimentions
+We will visualize every 2 dimensions
 (at the mid value of the other) and
 each marginal with
 
@@ -338,9 +360,22 @@ legend("topleft", bty = "n", lty = 1, col = 1:3,
 ```
 
 We now consider different prior parameters
-fit with no data, to get back the prior, and visualize
+fit with no data, to get back the prior 
+in the `inla` output. 
+This will be then used to sample from the joint 
+posterior (which is equal the prior in this case) 
+for $\theta$. 
+For each sample we can compute the correlation matrix
+in order to have a joint sample for the correlations.
+To do that, we use the `cholcor()` function as 
+in the following example:
+```{r cholcor}
+lR <- cholcor(theta3, p)
+lR
+all.equal(c0, tcrossprod(lR))
+```
 
-Preparations
+Labels for the plots
 ```{r prep3}
 pthlabs <- c(
     expression(pi[theta[1]](theta[1]~"|"~lambda)),
@@ -365,9 +400,6 @@ il3
 Visualize the prior of $\btheta$ and of the correlations,
 for each $\lambda$ case, and having the base model as 
 $\mathbf{C}_0$. 
-We notice that with increasing $\lambda$, 
-the prior gets narrower around the values from 
-$\mathbf{C}_0$.
 
 ```{r p3cor, fig.width = 18, fig.height = 10}
 par(mfrow = c(nlambs, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
@@ -392,14 +424,20 @@ for(il in 1:nlambs) {
     cprior3 <- apply(hprior3, 1, function(x)
         tcrossprod(cholcor(x, p=p))[il3])
     for(i in 1:3) {
-        hist(cprior3[i, ], seq(-.1, .1, 0.005)+R[il3[i]], freq = FALSE,
+        hist(cprior3[i, ], seq(-.1, .1, 0.005)+c0[il3[i]], freq = FALSE,
              main = "",
              xlab = rholabs[[i]],
              ylab = prholabs[[i]])
-        abline(v = R[il3[i]], col = 2, lty = 2, lwd = 2)
+        abline(v = c0[il3[i]], col = 2, lty = 2, lwd = 2)
     }
 }
 ```
+
+As expected, by increasing $\lambda$, 
+the prior gets narrower around the values from 
+$\mathbf{C}_0$.
+
+## Fit to data
 
 We now want to see the effect of the prior on the posterior
 considering different data size.
@@ -505,8 +543,8 @@ for(lamb in lambdas) {
              ylim = range(h1$dens[ih], h2$dens[ih]),
              main = "", col = rgb(1,0,0,0.5))
         plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
-        abline(v = R[il3[i]], lty = 1, col = 1)
-        rug(R[il3[i]], col = 1, lwd = 1)
+        abline(v = c0[il3[i]], lty = 1, col = 1)
+        rug(c0[il3[i]], col = 1, lwd = 1)
         rug(Rs[[1]][il3[i]], col = 2, lwd = 5, lty = 2)
         rug(Rs[[2]][il3[i]], col = 3, lwd = 5, lty = 2)
         if(i==1)
@@ -652,8 +690,8 @@ for(il in 1:nlambs) {
              ylim = range(h1$dens[ih], h2$dens[ih]),
              main = "", col = rgb(1,0,0,0.5))
         plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
-        abline(v = R[iil[i]], lty = 1, col = 1)
-        rug(R[iil[i]], col = 1, lwd = 1)
+        abline(v = c0[iil[i]], lty = 1, col = 1)
+        rug(c0[iil[i]], col = 1, lwd = 1)
         rug(Rs[[1]][iil[i]], col = 2, lwd = 5, lty = 2)
         rug(Rs[[2]][iil[i]], col = 3, lwd = 5, lty = 2)
         if(i==1)
@@ -669,7 +707,7 @@ for(il in 1:nlambs) {
 
 With $p=5$ we have now $m=10$. 
 We have similar results, attributable to the fact
-that the $\ptheta$ simulated reasonable far from 
+that the $\btheta$ simulated reasonable far from 
 the base model.
 
 
@@ -752,8 +790,8 @@ for(il in 1:nlambs) {
              ylim = range(h1$dens[ih], h2$dens[ih]),
              main = "", col = rgb(1,0,0,0.5))
         plot(h2, add = TRUE, freq = FALSE, col = rgb(0,1,0,0.5))
-        abline(v = R[iil[i]], lty = 1, col = 1)
-        rug(R[iil[i]], col = 1, lwd = 1)
+        abline(v = c0[iil[i]], lty = 1, col = 1)
+        rug(c0[iil[i]], col = 1, lwd = 1)
         rug(Rs[[1]][iil[i]], col = 2, lwd = 5, lty = 2)
         rug(Rs[[2]][iil[i]], col = 3, lwd = 5, lty = 2)
         if(i==1)
