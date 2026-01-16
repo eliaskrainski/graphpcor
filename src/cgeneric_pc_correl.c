@@ -55,7 +55,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	M = (int) ((double) N * ((double) (N + 1)) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
   assert(!strcasecmp(data->ints[2]->name, "itheta"));   // this will always be the case
   inla_cgeneric_vec_tp *itheta = data->ints[2];
@@ -64,13 +64,14 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
   assert(!strcasecmp(data->ints[3]->name, "sfixed"));   // this will always be the case
   int nsigmas = data->ints[3]->len;
   int nsfixed = 0, sfixed[nsigmas];
+  int nLparam = itheta->ints[M-1]-itheta->ints[N-1]; // to do
   for (i = 0; i < nsigmas; i++) {
     sfixed[i] = data->ints[3]->ints[i];
     nsfixed += sfixed[i];
   }
   int nunkparams[3];
   nunkparams[0] = nsigmas - nsfixed;
-  nunkparams[1] = M-nsigmas;   // TO DO: corparamsfixed
+  nunkparams[1] = M-nsigmas-nLparam;
   nunkparams[2] = nunkparams[0] + nunkparams[1];
 
   assert(!strcasecmp(data->doubles[0]->name, "lambda"));
