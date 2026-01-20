@@ -8,7 +8,9 @@ cglkj <- cgeneric(
     useINLAprecomp = FALSE)
 
 ## correlation matrix, p = 3
-cc <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
+cc <- matrix(c( 1.0,  0.8, -0.5,
+                0.8,  1.0, -0.4,
+               -0.5, -0.4,  1.0), 3)
 
 ## CPC parametrization: C(theta)
 (bb <- basecor(cc))
