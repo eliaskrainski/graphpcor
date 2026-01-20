@@ -25,8 +25,8 @@
 #' assumed for a correlation. If a length `n` vector is given
 #' and `sigma.prior.probability` is missing, it will be used as
 #' known square root of the variances.
-#' NOTE: `params.id` will be applied here as
-#' `sigma.prior.reference[params.id[1:n]]`.
+#' NOTE: `iparams` will be applied here as
+#' `sigma.prior.reference[iparams[1:n]]`.
 #' @param sigma.prior.probability numeric vector with length `n`
 #' to set the probability statement of the PC prior for each
 #' marginal variance parameters. The probability statement is
@@ -35,14 +35,14 @@
 #' `sigma.prior.reference`.
 #' If a vector is given and a probability is NA, 0 or 1, the
 #' corresponding `sigma.prior.reference` will be used as fixed.
-#' NOTE: `params.id` will be applied here as
-#' `sigma.prior.probability[params.id[1:n]]`.
-#' @param params.id integer ordered vector with length equals
+#' NOTE: `iparams` will be applied here as
+#' `sigma.prior.probability[iparams[1:n]]`.
+#' @param iparams integer ordered vector with length equals
 #' to `n+m` to specify common parameter values. If missing it
 #' is assumed `1:(n+m)` and all parameters are assumed distinct.
 #' The first `n` indexes the square root of the marginal
 #' variances and the remaining indexes the edges parameters.
-#' Example: By setting `params.id = c(1,1,2,3, 4,5,5,6)`,
+#' Example: By setting `iparams = c(1,1,2,3, 4,5,5,6)`,
 #' the first two standard deviations are common and the
 #' second and third edges parameters are common as well,
 #' giving 6 unknown parameters in the model.
@@ -53,8 +53,8 @@
 #' Example: with `cor.params.fixed = c(NA, -1, NA, 1)` the first
 #' and the third of these parameters will be estimated while
 #' the second is fixed and equal to -1 and the forth is fixed
-#' and equal to 1. NOTE: `params.id` will be applied here as
-#' `cor.params.fixed[params.id[(n+1:m)]-n+1]`, thus the provided
+#' and equal to 1. NOTE: `iparams` will be applied here as
+#' `cor.params.fixed[iparams[(n+1:m)]-n+1]`, thus the provided
 #' examples give `NA -1 -1 NA` and so the second and third low L
 #' parameters are fixed to `-1`.
 #' @param ... additional arguments that will be passed on to
@@ -68,7 +68,7 @@ cgeneric_graphpcor <-
            base,
            sigma.prior.reference,
            sigma.prior.probability,
-           params.id,
+           iparams,
            cor.params.fixed,
            ...) {
 
@@ -144,17 +144,17 @@ cgeneric_graphpcor <-
     nnz <- n + nEdges
     nfi <- length(qij$ifil)
 
-    if(missing(params.id)) {
-      params.id <- 1:nnz
+    if(missing(iparams)) {
+      iparams <- 1:nnz
     } else {
-      stopifnot(length(params.id)==nnz)
-      stopifnot(all(params.id %in% (1:nnz)))
-      stopifnot(all(diff(sort(params.id))==1))
+      stopifnot(length(iparams)==nnz)
+      stopifnot(all(iparams %in% (1:nnz)))
+      stopifnot(all(diff(sort(unique(iparams)))==1))
     }
     ## update sigmas.prior.*
-    sigma.prior.reference <- sigma.prior.reference[params.id[(1:n)]]
-    sigma.prior.probability <- sigma.prior.probability[params.id[(1:n)]]
-    sigma.fixed <- sigma.fixed[params.id[(1:n)]]
+    sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
+    sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
+    sigma.fixed <- sigma.fixed[iparams[(1:n)]]
     nUnkSigmas <- length(sigma.prior.reference)
 
     if(missing(cor.params.fixed)) {
@@ -162,7 +162,7 @@ cgeneric_graphpcor <-
     } else {
       stopifnot(length(cor.params.fixed)==nEdges)
     }
-    cor.params.fixed[params.id[n+1:nEdges]-n]
+    cor.params.fixed[iparams[n+1:nEdges]-n]
     if(any(!is.na(cor.params.fixed)))  stop("WORK IN PROGRESS!")
 
     ii <- c(1:n, qij$ii)
@@ -225,7 +225,7 @@ cgeneric_graphpcor <-
         iuqpac = as.integer(iuqpac-1),
         ifi = as.integer(ifi-1),
         jfi = as.integer(jfi-1),
-        itheta = as.integer(params.id -1),
+        itheta = as.integer(iparams -1),
         sfixed = as.integer(sigma.fixed),
         lambda = as.numeric(lambda),
         sigmaref = as.numeric(sigma.prior.reference),

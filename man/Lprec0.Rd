@@ -9,7 +9,7 @@ Lprec0(theta, p, itheta, d0)
 \arguments{
 \item{theta}{numeric parameter vector.}
 
-\item{p}{integer (needed if \code{base} is vector): the dimention.}
+\item{p}{integer (needed if \code{base} is vector): the dimension.}
 
 \item{itheta}{integer vector or 'graphpcor' to specify the (vectorized)
 position where 'theta' is placed in the initial (before the fill-in)

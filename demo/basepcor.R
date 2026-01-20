@@ -5,7 +5,7 @@ bc
 
 round(solve(bc$base), 4)
 
-all.equal(bc, basepcor(bc$base, itheta =c(2,3)))
+all.equal(bc, basepcor(bc$base, itheta = c(2,3)))
 
 ## p = 4, m = 4
 th2 <- c(0.5,-1,0.5,-0.3)
@@ -19,3 +19,13 @@ all.equal(th2, basepcor(b2$base, itheta = ith2)$theta)
 
 ## Hessian around the base (and its decomposition, etc.)
 b2$I0
+
+## p = 4, m = 3 with some common theta
+th3 <- c(0.5, -1, -0.3)
+ip <- c(1, 2, 1, 3) ## 1st == 3rd
+b3 <- basepcor(th3, p = 4, itheta = ith2, params.id = ip)
+
+all.equal(b2$base, b3$base) ## TRUE
+
+## but the parameter dimension is now reduced
+b3$I0

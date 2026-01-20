@@ -13,9 +13,11 @@ g
 
 summary(g)
 
-(Lg <- Laplacian(g))
-
 (ne <- dim(g))
+
+plot(g)
+
+(Lg <- Laplacian(g))
 
 ## define the cgeneric model (see test/concepts/graphpcor.R for other options)
 theta.base <- rep(0, ne[2])
@@ -130,4 +132,3 @@ for(i in 1:4) {
         } 
     }
 }
-

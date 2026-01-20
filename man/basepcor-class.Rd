@@ -9,9 +9,9 @@
 \alias{print.basepcor}
 \title{Information for a base model for correlation matrices}
 \usage{
-basepcor(base, p, itheta, d0)
+basepcor(base, p, itheta, d0, params.id)
 
-\method{basepcor}{numeric}(base, p, itheta, d0)
+\method{basepcor}{numeric}(base, p, itheta, d0, params.id)
 
 \method{basepcor}{matrix}(base, p, itheta, d0)
 
@@ -21,7 +21,7 @@ basepcor(base, p, itheta, d0)
 \item{base}{matrix (or numeric vector) as the base correlation
 (or parameter at the base model).}
 
-\item{p}{integer (needed if \code{base} is vector): the dimention.}
+\item{p}{integer (needed if \code{base} is vector): the dimension.}
 
 \item{itheta}{integer vector or 'graphpcor' to specify the (vectorized)
 position where 'theta' is placed in the initial (before the fill-in)
@@ -32,6 +32,12 @@ the dense case as \code{itheta = which(lower.tri(...))}, giving
 \item{d0}{numeric vector to specify the diagonal of the
 Cholesky factor for the initial precision matrix \code{Q0}.
 Default, if not provided, is \code{d0 = p:1}.}
+
+\item{params.id}{integer ordered vector with length equal
+the number of parameters used to specify common parameter values.
+If missing, assumed to be \code{1:length(theta)}. Example: By setting
+\code{params.id = c(1,1,2,3)} the first and second unknowns are
+considered to be the same.}
 
 \item{x}{a basepcor object.}
 

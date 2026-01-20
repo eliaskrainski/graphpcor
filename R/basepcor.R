@@ -20,7 +20,7 @@ setClass(
 #' Build a `basepcor` object.
 #' @param base matrix (or numeric vector) as the base correlation
 #' (or parameter at the base model).
-#' @param p integer (needed if `base` is vector): the dimention.
+#' @param p integer (needed if `base` is vector): the dimension.
 #' @param itheta integer vector or 'graphpcor' to specify the (vectorized)
 #' position where 'theta' is placed in the initial (before the fill-in)
 #' Cholesky (lower triangle) factor. If missing, default, assumes
@@ -29,6 +29,11 @@ setClass(
 #' @param d0 numeric vector to specify the diagonal of the
 #' Cholesky factor for the initial precision matrix `Q0`.
 #' Default, if not provided, is `d0 = p:1`.
+#' @param iparams integer ordered vector with length equal
+#' the number of parameters used to specify common parameter values.
+#' If missing, assumed to be `1:length(theta)`. Example: By setting
+#' `iparams = c(1,1,2,3)` the first and second unknowns are
+#' considered to be the same.
 #' @details
 #' The Inverse Transform Parametrization - ITP,
 #' is applied by starting with a
@@ -59,7 +64,8 @@ basepcor <- function(
     base,
     p,
     itheta,
-    d0) {
+    d0,
+    iparams) {
   UseMethod("basepcor")
 }
 #' @describeIn basepcor
@@ -71,35 +77,27 @@ basepcor.numeric <- function(
     base,
     p,
     itheta,
-    d0) {
+    d0,
+    iparams) {
+
   theta <- base
-  m <- length(theta)
+
+  itheta <- p_itheta_fnc(p, itheta)
   if(missing(p)) {
-    if(missing(itheta)) {
-      p <- (1 + sqrt(1+8*m))/2
-      stopifnot(floor(p)==ceiling(p))
-    } else {
-      stop("please provid 'p'!")
-    }
+    p <- attr(itheta, "p")
   }
   stopifnot(p>1)
-  if(missing(itheta)) {
-    itheta <- which(lower.tri(diag(
-      x = rep(1, p), nrow = p, ncol = p)))
-  } else {
-    if(inherits(itheta, "graphpcor")) {
-      Q1 <- Laplacian(itheta)
-      itheta <- which(lower.tri(Q1) & (Q1 != 0.0))
-    }
-  }
-  stopifnot(length(itheta) == m)
+
+  m <- length(itheta)
+  iparams <- m_iparams_fnc(m, iparams)
+
   if(missing(d0)) {
     d0 <- p:1
   }
 
   ## compute L0
   L <- Lprec0(
-    theta = theta,
+    theta = theta[iparams],
     p = p,
     itheta = itheta,
     d0 = d0
@@ -115,9 +113,12 @@ basepcor.numeric <- function(
   ## Hessian around theta
   I0 <- hessian(
     func = function(x)
-      KLD10(C1 = lq02cor(Lprec0(x, p = p, itheta = itheta, d0 = d0)),
+      KLD10(C1 = lq02cor(Lprec0(
+        x[iparams], ## here it expand theta
+        p = p,
+        itheta = itheta, d0 = d0)),
             L0 = U0correl),
-    x = theta)
+    x = theta) ## here it is 'pure' theta
 
   ## eigen decomposition of I0, I0^0.5 and I0^-0.5
   eI0 <- eigen(I0)
@@ -136,6 +137,7 @@ basepcor.numeric <- function(
     p = p,
     d0 = d0,
     itheta = itheta,
+    iparams = iparams,
     I0 = I0)
   class(out) <- "basepcor"
 
@@ -149,7 +151,8 @@ basepcor.matrix <- function(
     base,
     p,
     itheta,
-    d0) {
+    d0,
+    iparams) {
   stopifnot(all.equal(base, t(base)))
   p <- as.integer(nrow(base))
   if(missing(d0)) {
@@ -161,14 +164,7 @@ basepcor.matrix <- function(
   ilQ <-  which(
     lower.tri(matrix(1, p, p)) &
       (!is.zero(Q, tol = 1e-9)))
-  if(missing(itheta)) {
-    itheta <- ilQ
-  }  else {
-    if(inherits(itheta, "graphpcor")) {
-      Q1 <- Laplacian(itheta)
-      itheta <- which(lower.tri(Q1) & (Q1 != 0.0))
-    }
-  }
+  itheta <- p_itheta_fnc(p, itheta)
   stopifnot(all(ilQ %in% itheta))
 
   ## compute theta
@@ -184,7 +180,9 @@ basepcor.matrix <- function(
   }
   I0 <- hessian(
     func = function(x)
-      KLD10(C1 = lq02cor(Lprec0(x, p = p, itheta = itheta, d0 = d0)),
+      KLD10(C1 = lq02cor(
+        Lprec0(x[iparams], p = p,
+               itheta = itheta, d0 = d0)),
             L0 = U0correl),
     x = theta)
 
@@ -205,6 +203,7 @@ basepcor.matrix <- function(
     p = p,
     d0 = d0,
     itheta = itheta,
+    iparams = iparams,
     I0 = I0)
   class(out) <- "basepcor"
 

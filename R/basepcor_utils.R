@@ -75,3 +75,37 @@ fillLprec <- function(L, lfi) {
   }
   return(L)
 }
+#' @describeIn basepcor
+#' Function to deal with `p` and `itheta`
+p_itheta_fnc <- function(p, itheta) {
+  if(missing(itheta)) {
+    if(missing(p))
+      stop("Please provide 'p' or 'itheta'!")
+    itheta <- which(lower.tri(diag(
+      x = rep(1, p), nrow = p, ncol = p)))
+  } else {
+    if(inherits(itheta, "graphpcor")) {
+      Q1 <- Laplacian(itheta)
+      p <- ncol(Q1)
+      itheta <- which(lower.tri(Q1) & (Q1 != 0.0))
+    } else {
+      if(missing(p))
+        stop("Please provide 'p'!")
+    }
+  }
+  attr(itheta, 'p') <- as.integer(p)
+  return(itheta)
+}
+#' @describeIn basepcor
+#' Function to deal with `m` and `iparams`
+m_iparams_fnc <- function(m, iparams) {
+  if(missing(iparams)) {
+    iparams <- 1:m
+  } else {
+    stopifnot(length(iparams) == m)
+    stopifnot(all(iparams %in% 1:m))
+    stopifnot(all(diff(unique(iparams))>0))
+  }
+  attr(iparams, "m") <- m
+  return(iparams)
+}
