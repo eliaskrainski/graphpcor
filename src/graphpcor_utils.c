@@ -85,12 +85,12 @@ void cpcCholesky(int *N, double *theta,
 //   3. log determinant of J: Jacobian of the transformation
 // See #correlation-matrix-inverse-transform at
 //  https://mc-stan.org/docs/reference-manual/transforms.html
-  int i, j, k0=0, k=0;
-//  int m = (n*(n-1))/2;
-  int n = (*N);
-  int M = (n*(n+1))/2;
+  int i, j, k0=0, k=0, n = (*N);
+  double dn = (double)n;
+  int M = (int)(dn*(dn+1)*0.5);
+//  printf("n = %d, M = %d \n", n, M);
   double aux, a1=0.0, a2=0.0;
-  double z[M], p[n-1];
+  double z[M], p[n];
   *ldR = 0.0;
   for(i=0; i<n; i++) {
     for(j=i; j<n; j++) {
@@ -110,14 +110,14 @@ void cpcCholesky(int *N, double *theta,
   *ldJ = 0.5*a1 + a2;
   a1 = *ldR;
   a2 = *ldJ;
-  //printf("k0: %d, k: %d, logDet = %2.4f, aJ = %2.4f\n", k0, k, a1, a2);
+//  printf("k0: %d, k: %d, logDet = %2.4f, aJ = %2.4f\n", k0, k, a1, a2);
   for(i=0; i<n; i++) {
     L[i] = z[i];
     p[i] = sqrt(1-SQR(z[i]));
   }
   k = n;
   for(i=1; i<n; i++) {
-     for(j=i; j<n; j++) {
+    for(j=i; j<n; j++) {
        L[k] = z[k] * p[j];
        p[j] *= sqrt(1-SQR(z[k]));
        k++;
@@ -436,6 +436,8 @@ void dl2fullQ(int n, double *d, double *l, double *qq)
 				k++;
 			}
 		}
+
+//		printMat(aa,n,n,"aa:\n");
 
 		char tra = 'N';				       // upper in C is lower in Fortran
 		char trb = 'T';
