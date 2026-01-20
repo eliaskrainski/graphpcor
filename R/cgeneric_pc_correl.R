@@ -76,7 +76,7 @@ cgeneric_pc_correl <-
         if(missing(n)) {
           n <- ncol(base)
         } else {
-          stopfinot(n == ncol(base))
+          stopifnot(n == ncol(base))
         }
         base <- basecor(base)
       }
@@ -145,6 +145,9 @@ cgeneric_pc_correl <-
     if(missing(params.id)) {
       params.id <- 1:(n+m)
     } else {
+      if(!all(params.id == (1:(n+m))))
+        warning("Currently only 1:(n+m)!")
+      params.id <- 1:(n+m)
       stopifnot(length(params.id)==(n+m))
       stopifnot(all(params.id %in% (1:(n+m))))
       stopifnot(all(diff(sort(params.id))==1))
@@ -154,7 +157,8 @@ cgeneric_pc_correl <-
     sigma.prior.reference <- sigma.prior.reference[params.id[(1:n)]]
     sigma.prior.probability <- sigma.prior.probability[params.id[(1:n)]]
     sigma.fixed <- sigma.fixed[params.id[(1:n)]]
-    nUnkSigmas <- length(sigma.prior.reference)
+    nSigmas <- params.id[n]
+    nLparam <- params.id[n+m]-nSigmas
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,

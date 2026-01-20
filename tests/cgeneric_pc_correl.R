@@ -9,12 +9,23 @@ C1 <- cgeneric(
     useINLAprecomp = FALSE
 )
 
+initial(C1)
+graph(C1)
+prec(C1, theta = 0)
+prec(C1, theta = -1)
+prec(C1, theta = 1)
+mu(C1)
+
+prior(C1, theta = 0.0)
+
 integrate(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
 
 plot(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
 
 ## n =3, m = 3
-c0 <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
+c0 <- matrix(c( 1.0,  0.8, -0.5,
+                0.8,  1.0, -0.4,
+               -0.5, -0.4,  1.0), 3)
 c0
 
 (p <- ncol(c0))
@@ -30,13 +41,11 @@ ncol(ths <- t(expand.grid(
          th2 = th0 + th0b[2],
          th3 = th0 + th0b[3])))
 
-dim(p1ths <- array(exp(prior(M1, theta = ths)), rep(nth0, 3)))
-p5ths <- array(exp(prior(M5, theta = ths)), rep(nth0, 3))
+dim(p1ths <- array(exp(prior(C1, theta = ths)), rep(nth0, 3)))
 
 sum(h0*apply(p1ths * (h0^2), 1:2, sum))
 sum(h0*apply(p1ths * (h0^2), c(1,3), sum))
 sum(h0*apply(p1ths * (h0^2), 2:3, sum))
-
 
 ## n = 4, m = 6
 n <- 4

@@ -139,8 +139,7 @@ plot(function(th)
   from = a, to = b)
 ```
 where `a` and `b` are the limits.
-
-with
+We do it with different lambdas
 ```{r inttheta}
 for(i in 1:nlambs) {
     Cmodel <- cgeneric(

@@ -200,9 +200,9 @@ setMethod(
   "drop1",
   "treepcor",
   function(object) {
-    stopifnot((m <- length(object))>1)
     trm0 <- attr(object, "relationship")
-    stopifnot(ncol(trm0) == m)
+    m <- ncol(trm0)
+    if(m==1) return(NULL)
     ilast <- which(rownames(trm0) == (colnames(trm0)[m]))
     iplast <- which(!is.zero(trm0[ilast, ]))
     trm0[, iplast] <- trm0[, iplast] + trm0[, m]
@@ -473,14 +473,20 @@ setMethod(
         vi <- sapply(ij$iv, function(i)
           sum(exp(2 * mc$theta[i])))
       }
+      vv <- diag(nc) + vi[ij$itop]
     } else {
       sigmas <- rep(1, nm[1])
-      vi <- sapply(ij$iv, function(i) length(i))
+      vv <- diag(nc) + ij$itop
     }
-    vv <- diag(nc) + vi[ij$itop]
+    vv <- t(vv * ij$schildren) * ij$schildren
     rownames(vv) <- colnames(vv) <- names(edgl)[np + 1:nc]
-    c0 <- cov2cor(t(vv * ij$schildren) * ij$schildren)
-    return(diag(sigmas) %*% c0 %*% diag(sigmas))
+    if(("raw" %in% nargs) && (mc$raw)) {
+      return(vv)
+    }
+    c0 <- cov2cor(vv)
+    cc <- diag(sigmas) %*% c0 %*% diag(sigmas)
+    dimnames(cc) <- dimnames(vv)
+    return(cc)
   }
 )
 #' @describeIn treepcor

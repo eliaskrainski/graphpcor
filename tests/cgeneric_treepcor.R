@@ -14,13 +14,6 @@ summary(g)
 
 (np <- dim(g))
 
-## define the cgeneric model
-cmodel <- cgeneric(
-    model = g,
-    lambda = 10,
-    sigma.prior.reference = rep(1, np[1]),
-    sigma.prior.probability = rep(0.05, np[1]))
-
 sigmas <- c(4, 2, 1, 0.5)
 thetal <- c(0, 1)
 theta1 <- c(log(sigmas), thetal)
@@ -30,7 +23,8 @@ Vg
 
 cov2cor(Vg)
 
-solve(prec(cmodel, theta = theta1))
+(Qg <- prec(cmodel, theta = theta1))
+all.equal(Vg, as.matrix(solve(Qg)))
 
 ## some data
 nrep <- 100
@@ -46,11 +40,30 @@ datar <- data.frame(
     y = rnorm(nd, 1 + xx, exp(-2*theta.y))
 )
 
+## define the cgeneric model
+cmodel <- cgeneric(
+    model = g,
+    lambda = 10,
+    sigma.prior.reference = rep(1, np[1]),
+    sigma.prior.probability = rep(0.05, np[1]),
+    debug = TRUE)
+
+graph(cmodel)
+initial(cmodel)
+prior(cmodel, theta = rep(0, sum(np)))
+prior(cmodel, theta = rep(1, sum(np)))
+
+np
+prec(cmodel, theta = rep(0, sum(np)))
+(Qc <- prec(cmodel, theta = theta1))
+all.equal(Vg, as.matrix(solve(Qc)))
+
 m1 <- y ~ f(i, model = cmodel, replicate = r)
+pfix <- list(prec = list(initial = 10, fixed = TRUE))
 fit <- inla(
     formula = m1,
     data = datar,
-    control.family = list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
+    control.family = list(hyper = pfix)
 )
 fit$cpu.used
 
@@ -67,7 +80,11 @@ round(Vg, 2)
 round(cov(xx), 2)
 
 ## fitted covariance (from posterior mode)
-round(solve(prec(cmodel, theta = fit$mode$theta)), 2)
+round(Vfit <- vcov(g, theta = fit$mode$theta), 2)
+
+## fitted correlation (from posterior mode)
+round(Cfit <- vcov(g, theta = fit$mode$theta[np[1]+1:np[2]]), 2)
+round(cov2cor(Vfit), 2)
 
 ## true correlation
 round(cov2cor(Vg), 2)
@@ -75,5 +92,3 @@ round(cov2cor(Vg), 2)
 ## observed correlation
 round(cor(xx), 2)
 
-## fitted correlation (from posterior mode)
-round(Cfit <- vcov(g, theta = fit$mode$theta[np[1]+1:np[2]]), 2)

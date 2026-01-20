@@ -1,3 +1,4 @@
+
 library(INLA)
 
 library(graphpcor)
@@ -17,8 +18,14 @@ W <- cgeneric(
     model = "Wishart",
     n = n,
     dof = dof,
-    R = R
+    R = R,
+##    debug = 1e9,
+    useINLAprecomp = FALSE
 )
+
+W
+
+str(W)
 
 graph(W, optimize = TRUE)
 
@@ -28,6 +35,9 @@ round(ini <- initial(W), 4)
 
 theta1 <- c(log(diag(lQ)), lQ[upper.tri(lQ)])
 theta1
+
+prec(W, theta = theta1)
+
 
 (theta0 <- c(-log(diag(V)), log((1 + cc[upper.tri(cc)]) / (1 -cc[upper.tri(cc)]))))
 
@@ -56,6 +66,7 @@ fit1 <- inla(
     control.inla = cinla,
     control.mode = cmode
 )
+
 
 fit2 <- inla(
     y ~ 0 + f(i, model = W),
@@ -111,6 +122,10 @@ fit2r <- inla(
     control.inla = cinla,
     control.mode = list(theta = theta1)
 )
+
+grep("evaluations = ", fit0r$logfile, value = TRUE)
+grep("evaluations = ", fit1r$logfile, value = TRUE)
+grep("evaluations = ", fit2r$logfile, value = TRUE)
 
 cbind(fit0r$mlik, fit1r$mlik, fit2r$mlik)
 

@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.15
+Version: 0.1.16.901
 Maintainer: Elias Teixeira Krainski <eliaskrainski@gmail.com>
 Authors@R: c(
  person(given = c("Elias"),
@@ -64,7 +64,7 @@ Imports:
     Rgraphviz
 Suggests:
     knitr,
-    INLA (>= 24.02.09)
+    INLA (>= 25.12.16)
 BuildVignettes: true
 VignetteBuilder: knitr
 LazyData: true

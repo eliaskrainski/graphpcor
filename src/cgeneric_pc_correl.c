@@ -55,7 +55,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	M = (int) ((double) N * ((double) (N + 1)) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
   assert(!strcasecmp(data->ints[2]->name, "itheta"));   // this will always be the case
   inla_cgeneric_vec_tp *itheta = data->ints[2];

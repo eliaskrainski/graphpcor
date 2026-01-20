@@ -1,56 +1,149 @@
 ---
-title: "Tree based correlation model implementation"
-author: "Elias T Krainski, Denis Rustand, Anna Freni-Sterrantino, Janet van Niekerk,
-  and Håvard Rue"
+title: 'Tree based latent variables correlation model'
+author: "Anna Freni-Sterrantino, Denis Rustand, Janet van Niekerk, Elias T Krainski, and H\\aa vard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
-output: rmarkdown::pdf_document
+output:
+  - rmarkdown::html_vignette
+  - rmarkdown::pdf_document
 vignette: >
-  %\VignetteIndexEntry{Tree based correlation model implementation}
+  %\VignetteIndexEntry{Tree based latent variables correlation model}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+header-includes:
+- \usepackage{lscape}
+- \usepackage{multicol}
 bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo = TRUE, 
-  include = !FALSE, 
+  echo = TRUE,
+  message = FALSE, 
+  warning = FALSE,
   fig.width = 7, 
   fig.height = 5, 
   out.width = '0.39\\textwidth')
-chinclude <- TRUE
 library(graphpcor)
+chinclude = TRUE
 ```
 
-# Abstract
 
-In this vignette we show how to work a tree based correlation
-model proposed in @sterrantino2025graphical.
-We recommend to look at the 'tree_model' vignette for details.
+This material illustrate and detail the model properties of the 
+graphical approach to model correlations proposed in @sterrantino2025graphical.
+We first formalize the specific kind of graph used
+to define the model and provides an intuitive visualization.
+We use some examples for illustration and
+show how to implement the tree based correlation
+model proposed.
+We add details of the model definition at the end.
 
-# The model definition
+# The directed tree model definition
 
-A directed acyclic graph is defined from a set of nodes and 
-directed edges linking them. 
-Because the edges are directed, there is no closed loop on it.
-A tree is a graph with only one (directed) path between a pair of nodes.
-We use this fact to define correlation model.
-The nodes hierarchy will imposes a hierarchy on the correlation as well.
+A graph is defined from a set of nodes and edges, 
+where the nodes are linked by the edges. 
+A directed acyclic graph consider 
+directed edges linking the nodes. 
+In the later case there is no closed loop.
+Yet, a tree is a graph where there is only one 
+possible path between a pair of nodes.
+Furthermore, the edges of a tree are directed edges.
+This also impose a hierarchy on the nodes.
 
-The definition start by considering two kind of nodes: parent or children.
-The $m$ variables of interest, 
-those for we want to model their correlation,
-will be classified as children variables.
-They are labeled as $c_i$, $i\in\{1,\ldots,m\}$. 
-The nodes to represent children variables are
-leafs of the tree, having always an ancestor (parent) 
+## The parents and children tree
+
+We consider a particular tree definition 
+where we have two different class of nodes to
+represent two kind of variables.
+We classify the nodes as parent or children.
+The nodes classified as children are leafs of the tree, 
+which are nodes with an ancestor (parent) 
 but with no children.
-Each children node has a directed edge from its parent.
-The path between each $c_i$ goes through a set of $k$ parent variables, 
-labeled as $p_j$, $j\in\{1,\ldots,k\}$.
-The $m$ parent variables are nodes with children nodes.
+The nodes classified as parent will always have children nodes,
 and some may have parent but will still be classified as parent 
 because they have children.
+The directed edges (arrows) represent conditional distributions.
+At the end of this material we provide some 
+detailed definition and examples.
+
+Suppose we have $k$ variables of interest, 
+and want to model their correlation.
+These $k$ variables will be represented by 
+the children nodes and
+labeled as $c_i$, $i\in\{1,\ldots,m\}$. 
+The parent nodes are then labeled as $p_j$, $j\in\{1,\ldots,k\}$.
+The parent $p_1$ is the main parent, with no parent, 
+which is the root of the tree.
+We have some examples in Figure 1 bellow.
+
+```{r graphs, echo = FALSE, fig.width = 9, fig.height = 4, out.width="79%", fig.align = 'center', fig.cap = "Graphs representing different models. A model with one parent, (A), a model with two parents (B), and two different models with three parents (C) and (D)."}
+tree1 <- treepcor(p1 ~ c1 + c2 - c3)
+tree2 <- treepcor(p1 ~ p2 + c1 + c2, 
+                  p2 ~ -c3 + c4)
+tree3a <- treepcor(p1 ~ p2 + p3 + c1 + c2, 
+                   p2 ~ -c3 + c4, 
+                   p3 ~ c5 + c6)
+tree3b <- treepcor(p1 ~ p2 + c1 + c2, 
+                   p2 ~ p3 - c3 + c4, 
+                   p3 ~ c5 + c6)
+par(mfrow = c(2, 2), mar = c(0, 0, 0, 0))
+plot(tree1)
+legend("topleft", "(A)", bty = "n")
+plot(tree2)
+legend("topleft", "(B)", bty = "n")
+plot(tree3a)
+legend("topleft", "(C)", bty = "n")
+plot(tree3b)
+legend("topleft", "(D)", bty = "n")
+```
+
+**NOTE**: The children variable `c3` is with a 
+negative sign, assuming it has a negative correlation 
+with the other children variables.
+
+If a graph is used to represent conditional 
+distributions, when computing the marginal distribution, 
+it induces a the covariance between two nodes to be 
+non-zero covariance as long as there is a path linking them
+in the graph.
+The same apply in our approach.
+Moreover, the strength of the correlation depends on 
+how many parents, and their hierarchy, 
+there is in the path linking them.
+
+## The implied covariance
+
+Let us represent the correlation between $a$ and $b$ as C(a,b).
+In the model defined with graph (A), 
+|C($c_1$,$c_2$)| = |C($c_1$,$c_3$)| = |C($c_2$,$c_3$)|.
+From graph (B) 
+|C($c_1$,$c_3$)| = |C($c_1,c_4$)| = |C($c_2$,$c_3$)| = 
+|C($c_2$,$c_4$)| $\leq$ |C($c_1$,$c_2$)| $\leq$ |C($c_3$,$c_4$)|.
+
+With the models defined from the graphs (C) and (D) we have 
+|C($c_1$,$c_2$)|$\leq$|C($c_3$,$c_4$)|, 
+|C($c_1$,$c_2$)|$\leq$|C($c_5$,$c_6$)|, and
+|C($c_1$,$c_3$)|=|C($c_1$,$c_4$)|=
+|C($c_2$,$c_3$)|=|C($c_2$,$c_4$)| and
+|C($c_1$,$c_5$)|=|C($c_1$,$c_6$)|=
+|C($c_2$,$c_5$)|=|C($c_2$,$c_6$)|.
+If we want to not fix the order between |C($c_3$,$c_4$)| 
+and |C($c_5$,$c_6$) we can use the model from graph (C), 
+whereas model (D) impose |C($c_3$,$c_4$)|$\leq$|C($c_5$,$c_6$)| and
+the correlation strength between a children of $p_3$ to a 
+children of $p_1$ to be smaller than to a children of $p_2$, e.g.
+|C($c_1$,$c_5$)|$\leq$|C($c_3$,$c_5$)|.
+
+These results follow from the application of the 
+law of total expectation, variance and covariance. 
+Let us start by having Var($p_j$) = $\gamma_j^2$ and 
+the conditional variance for each children as
+Var($c_i$|$p_{c_i}$)=1. 
+Thus, the marginal variance of $C_i$ is 
+equal the sum of the 
+variances of its ancestors plus 1.
+
+# Implementation with $\textbf{\textsf{graphpcor}}$
+
 
 In the \textbf{\textsf{R}} environment we represent the parent 
 variables with the letter ``p`` along with an integer number
@@ -122,7 +215,7 @@ round(c1, 3)
 ```
 
 
-# Correlation matrix with two parameters
+## Correlation matrix with two parameters
 
 In this example, we model the correlation between four 
 variables using two parameters.
@@ -135,7 +228,7 @@ The tree for this is set by
 ```{r graph2}
 tree2 <- treepcor(
   p1 ~ p2 + c1 + c2, 
-  p2 ~ c3 - c4)
+  p2 ~ -c3 + c4)
 dim(tree2)
 tree2
 summary(tree2)
@@ -145,10 +238,18 @@ which can be visualized by
 plot(tree2)
 ```
 
-We can drop the last parent with
+We can use the `drop1` method to remove the last parent with
 ```{r drop1}
-drop(tree2)
+drop1(tree2)
 ```
+which align with the prior for the model
+parameters as proposed in @sterrantino2025graphical.
+However, the code to implement such a prior is 
+an internal C code and do not use this `drop1` 
+which is fully a R code.
+In order to apply this for real data
+we do recommend to use the \textbf{\textsf{R}}
+as shown further ahead in this vignette.
 
 We now have two parameters:
 $\gamma_1^2$ the variance of $p_1$ 
@@ -202,9 +303,460 @@ all.equal(solve(q2)[1:4, 1:4],
 
 Therefore, allowing flexibility in an edge of parent to another parent is not useful and will only imply more complexity.
 Therefore we will not consider it in the `vcov` method. 
-NOTE: The `vcov` of a `treepcor` does not takes into account 
-the sing between parent variables!
+
+**NOTE**: The `vcov` applied to a `treepcor` does not 
+takes into account the sign between parent variables!
 So, please use it with care.
+
+In case we just want to compute the raw covariance, 
+assuming that V($p_j$)=1, to see the law of sum of 
+for the four examples in Figure 1 we have 
+```{r vfig1}
+vcov(tree1, raw = TRUE)
+vcov(tree2, raw = TRUE)
+tree3a <- treepcor(p1 ~ p2 + p3 + c1 + c2, 
+                   p2 ~ -c3 + c4, 
+                   p3 ~ c5 + c6)
+vcov(tree3a, raw = TRUE)
+tree3b <- treepcor(p1 ~ p2 + c1 + c2, 
+                   p2 ~ p3 - c3 + c4, 
+                   p3 ~ c5 + c6)
+vcov(tree3b, raw = TRUE)
+```
+
+**NOTE**: The `vcov` method for a `treepcor` 
+without the `theta` argument assume 
+$\gamma_j=1$ and $\sigma_i=1$. 
+With not providing `raw` (or `raw = FALSE`) it
+will standardize the raw matrix then 
+apply the $\sigma_i$.
+
+# The penalized complexity prior
+
+To implement the prior proposed in @sterrantino2025graphical
+we have used the `cgeneric` interface. 
+First, let us define the model and its parameters. 
+Let us consider the two parents example.
+```{r tree2c}
+tree2
+(np <- dim(tree2))
+```
+
+Define the standard deviation parameters for the 
+variables of interest
+```{r sigmas}
+sigmas <- c(4, 2, 1, 0.5)
+``` 
+and the log of the parent variance parameters
+```{r pparams}
+thetal <- c(0, 1)
+```
+
+With that we can build the covariance with
+```{r Vg}
+theta1 <- c(log(sigmas), thetal)
+Vg <- vcov(tree2, theta = theta1)
+Vg
+```
+
+Now we can simulate some data
+
+```{r data2}
+nrep <- 100
+nd <- nrep * np[1]
+
+xx <- matrix(rnorm(nd), nrep) %*% chol(Vg)
+cov(xx)
+
+theta.y <- log(10)
+datar <- data.frame(
+    r = rep(1:nrep, np[1]),
+    i = rep(1:np[1], each = nrep),
+    y = rnorm(nd, 1 + xx, exp(-2*theta.y))
+)
+```
+
+We now use the `cgeneric` interface 
+implemented by the \textbf{\textsf{INLAtools}} package. 
+For that, we can apply the `cgeneric` method to a 
+`treepcor` object.
+The prior parameter is the `param` argument.
+```{r cg2}
+cmodel <- cgeneric(
+  tree2, lambda = 5, 
+  sigma.prior.reference = rep(1, np[1]), 
+  sigma.prior.probability = rep(0.05, np[1]))
+```
+
+Perform some checks:
+```{r ccheck}
+graph(cmodel)
+initial(cmodel)
+prior(cmodel, theta = rep(0, sum(np)))
+prior(cmodel, theta = rep(1, sum(np)))
+
+np
+prec(cmodel, theta = rep(0, sum(np)))
+(Qc <- prec(cmodel, theta = theta1))
+all.equal(Vg, as.matrix(solve(Qc)))
+```
+
+Model fit (if have INLA installed)
+```{r haveINLA, echo = FALSE}
+haveINLA <- library(INLA)
+```
+
+```{r mfit, eval = haveINLA}
+m1 <- y ~ f(i, model = cmodel, replicate = r)
+pfix <- list(prec = list(initial = 10, fixed = TRUE))
+fit <- inla(
+    formula = m1,
+    data = datar,
+    control.family = list(hyper = pfix)
+)
+fit$cpu.used
+```
+
+Compare the true covariance
+```{r true}
+round(Vg, 2)
+```
+the observed covariance
+```{r Vxx}
+round(cov(xx), 2)
+``` 
+and the fitted covariance (from posterior mode)
+```{r Vfitg, eval = haveINLA}
+round(Vfit <- vcov(tree2, theta = fit$mode$theta), 2)
+```
+
+The fitted correlation (from posterior mode):
+```{r Cfit, eval = haveINLA}
+round(Cfit <- vcov(tree2, theta = fit$mode$theta[np[1]+1:np[2]]), 2)
+round(cov2cor(Vfit), 2)
+```
+
+# Model definition details
+
+We now define a set of rules to propose a model.
+We assume a distribution for the main parent, $p_1$,
+and conditional distributions for each of the
+remaining $k-1$ parents and each of the $m$ children.
+The arrows represent each of these conditional distributions.
+Since we assume Gaussian distributions, 
+we just need to define the (conditional) mean and variance.
+
+* **1st rule**: For the main parent $p_1$, 
+the mean is zero and the variance is $\gamma_1^2$. 
+
+* **2nd rule**: The conditional mean for $p_j$, $j=2$,...$k$, 
+is its parent and the conditional variance is $\gamma_j^2$.
+
+* **3rd rule**: The conditional mean of $c_i$, $i=1$, ..., $m$, 
+is $s_i$ times its parent and unit conditional variance, 
+where $s_i$ is assumed known, either "-1" or "+1".
+
+We have $p$ parameters, one for each parent.
+These conditional distributions build up a joint one 
+that will have a covariance matrix. 
+Since we are primarily interested in the correlations, 
+we will scale it by the implied variances and obtaining 
+a correlation matrix. 
+The marginal variances for each children are assigned 
+after this scaling.
+As we will usually have $k<m$, 
+this represents a reduction on the number of 
+parameters, from $m(m+1)/2$ to $k+m$.
+
+As an illustration, consider the graph (A) from Figure 1.
+The joint distribution for $\{c_1, c_2, c_3, p_1\}$ is 
+\[
+\pi(c_1, c_2, c_3, p_1) \propto \mathrm{exp} 
+  \left\{-\frac{1}{2} \left[ \frac{p_1^2}{\gamma_1^2} + \frac{(c_1-s_1p_1)^2}{s_1^2} + \frac{(c_2-s_2p_1)^2}{s_2^2} + \frac{(c_3-s_3p_1)^2}{s_3^2} \right] \right\}.
+\]
+From this set of conditional distributions we obtain the precision matrix as 
+\[
+\left[ \begin {array}{cccc} 
+{{\it s_1}}^{-2}&0&0&-{{\it s_1}}^{-1}\\ 
+0&{{\it s_2}}^{-2}&0&-{{\it s_2}}^{-1}\\ 
+0&0&{{\it s_3}}^{-2}&-{{\it s_3}}^{-1}\\ 
+-{{\it s_1}}^{-1}&-{{\it s_2}}^{-1}&-{{\it s_3}}^{-1}&{\gamma_1}^{-2}+3
+\end {array} \right].
+\]
+
+The joint distribution for $\{c_1, c_2, c_3, c_4, p_1, p_2\}$, 
+from the DAG (B) in Figure 1, is proportional to
+\[ 
+\mathrm{exp} 
+  \left\{-\frac{1}{2} \left[ \frac{p_1^2}{\gamma_1^2} + \frac{(p_2-p_1)^2}{\gamma_2^2} +
+  \frac{(c_1-s_1p_1)^2}{s_1^2} + \frac{(c_2-s_2p_1)^2}{s_2^2} +
+  \frac{(c_3-s_3p_2)^2}{s_3^2} + \frac{(c_4-s_4p_2)^2}{s_4^2} \right] \right\}.
+\]
+The precision matrix is 
+\[
+\left[ \begin {array}{cccccc} 
+{{\it s_1}}^{-2}&0&0&0&-{{\it s_1}}^{-1}&0\\ 
+0&{{\it s_2}}^{-2}&0&0&-{{\it s_2}}^{-1}&0\\ 
+0&0&{{\it s_3}}^{-2}&0&0&-{{\it s_3}}^{-1}\\ 
+0&0&0&{{\it s_4}}^{-2}&0&-{{\it s_4}}^{-1}\\ 
+-{{\it s_1}}^{-1}&-{{\it s_2}}^{-1}&0&0&
+{\gamma_1}^{-2}+{\gamma_2}^{-2}+2&-{\gamma_2}^{-2}\\ 
+0&0&-{{\it s_3}}^{-1}&-{{\it s_4}}^{-1}&-{\gamma_2}^{-2}&{\gamma_2}^{-2}+2
+\end {array} \right] 
+\]
+
+The models represented by graphs (C) and (D) in Figure 1 have both the same
+number of children and parents. 
+The only difference is that parent $p_3$ is children to parent $p_1$ in (C) 
+whereas in (D) $p_3$ is children to parent $p_2$.
+For the case when $p_1$ is parent to $p_3$ the 
+precision matrix is
+\[
+\left[ \begin {array}{ccccccccc} 
+{{\it s_1}}^{-2}&0&0&0&0&0&-{{\it s_1}}^{-1}&0&0\\ 
+ 0&{{\it s_2}}^{-2}&0&0&0&0&-{{\it s_2}}^{-1}&0&0\\ 
+ 0&0&{{\it s_3}}^{-2}&0&0&0&0&-{{\it s_3}}^{-1}&0\\ 
+ 0&0&0&{{\it s_4}}^{-2}&0&0&0&-{{\it s_4}}^{-1}&0\\ 
+ 0&0&0&0&{{\it s_5}}^{-2}&0&0&0&-{{\it s_5}}^{-1} \\ 
+ 0&0&0&0&0&{{\it s_6}}^{-2}&0&0&-{{\it s_6}}^{-1}\\ 
+-{{\it s_1}}^{-1}&-{{\it s_2}}^{-1}&0&0&0&0&
+ {\gamma_1}^{-2}+{\gamma_2}^{-2}+{\gamma_3}^{-2} +2 &
+-{\gamma_2}^{-2}&-{\gamma_3}^{-2}\\ 
+0&0&-{{\it s_3}}^{-1}&-{{\it s_4}}^{-1}&0&0&
+ -{\gamma_2}^{-2}&{\gamma_2}^{-2}+2&0\\ 
+ 0&0&0&0&-{{\it s_5}}^{-1}&-{{\it s_6}}^{-1}&
+ -{\gamma_3}^{-2}&0&{\gamma_3}^{-2}+2
+ \end {array} \right]
+\]
+and the case when $p_2$ is parent to $p_3$ the last three rows of the precision matrix are
+\[ 
+\left[ \begin {array}{ccccccccc} 
+-{{\it s_1}}^{-1}&-{{\it s_2}}^{-1}&0&0&0&0&{\gamma_1}^{-2}+{\gamma_2}^{-2}+2&-{\gamma_2}^{-2}
+&0\\ 0&0&-{{\it s_3}}^{-1}&-{{\it s_4}}^{-1}&0&0&-{\gamma_2}^{-2}&{\gamma_2}^{-2}+{\gamma_3}^{-2}+2&-{\gamma_3}^{-2}\\ 0&0&0&0&-{{\it s_5}}^{-1}&-{
+{\it s_6}}^{-1}&0&-{\gamma_3}^{-2}&{\gamma_3}^{-2}+2\end {array} \right] 
+ \]
+and the first $6$ rows are equal the ones from the previous case.
+
+## Model properties
+
+The conditional distributions defines a precision matrix 
+for all the $m+k$ variables in the model and a joint distribution.
+Therefore we can obtain the implied covariance matrix 
+to learn the marginal properties, and correlations as well.
+Since our primarily interest is in the correlation between the children variables, we consider its first $m$ rows and columns.
+
+The model defined from the DAG (A) in Figure 1 for 
+$\{c_1, c_2, c_3, p_1\}$ induces a covariance matrix equals to
+\[ 
+\left[ \begin {array}{cccc}  
+( 1+{\gamma_1}^{2} ) {{\it s_1}}^{2} & {\it s_2}{\it s_1}{\gamma_1}^{2}&
+{\it s_3}{\it s_1}{\gamma_1}^{2} & {\it s_1}{\gamma_1}^{2} \\ 
+{\it s_2}{\it s_1}{\gamma_1}^{2} & ( 1+{\gamma_1}^{2} ) {{\it s_2}}^{2}& 
+{\it s_3}{\it s_2}{\gamma_1}^{2} & {\it s_2}{\gamma_1}^{2} \\ 
+{\it s_3}{\it s_1}{\gamma_1}^{2} &{\it s_3}{\it s_2}{\gamma_1}^{2}& 
+( 1+{\gamma_1}^{2} ) {{\it s_3}}^{2} & {\it s_3}{\gamma_1}^{2} \\ 
+{\it s_1}{\gamma_1}^{2} & {\it s_2}{\gamma_1}^{2} &
+{\it s_3}{\gamma_1}^{2}&{\gamma_1}^{2}
+\end {array} \right] 
+\]
+and the C($c_i,c_j$) = sign($s_is_j$)$\gamma_1^2/(1+\gamma_1^2)$, for $i,j\in\{1,2,3\}$ and $i\neq j$.
+
+The model defined from the DAG (B) in Figure 1 gives the covariance matrix 
+for $\{c_1, c_2, c_3, c_4, p_1, p_2\}$ as
+\[ 
+\left[ \begin {array}{cccccc}  \left( 1+{\gamma_1}^{2} \right) {{\it s_1}}^{2}&{\it s_2}\,{\gamma_1}^{2}{\it s_1}&{\it s_3}\,{\gamma_1}^{2}{\it s_1}&{\it s_4}\,{\gamma_1}^{2}{\it 
+s_1}&{\gamma_1}^{2}{\it s_1}&{\gamma_1}^{2}{\it s_1}\\ {\it s_2}\,{\gamma_1}^{2}{\it s_1}& \left( 1+{\gamma_1}^{2} \right) {{\it s_2}}^{2}&{\it s_3}\,{\gamma_1
+}^{2}{\it s_2}&{\it s_4}\,{\gamma_1}^{2}{\it s_2}&{\gamma_1}^{2}{\it s_2}&{\gamma_1}^{2}{\it s_2}\\ {\it s_3}\,{\gamma_1}^{2}{\it s_1}&{\it s_3}\,{\gamma_1}^{
+2}{\it s_2}& \left( 1+{\gamma_2}^{2}+{\gamma_1}^{2} \right) {{\it s_3}}^{2}&{\it s_4}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}&{\gamma_1}^{2}{\it s_3}& \left( {{
+\it \gamma_2}}^{2}+{\gamma_1}^{2} \right) {\it s_3}\\ {\it s_4}\,{\gamma_1}^{2}{\it s_1}&{\it s_4}\,{\gamma_1}^{2}{\it s_2}&{\it s_4}\, \left( {\gamma_2}^{2}+{{\it 
+\gamma_1}}^{2} \right) {\it s_3}& \left( 1+{\gamma_2}^{2}+{\gamma_1}^{2} \right) {{\it s_4}}^{2}&{\gamma_1}^{2}{\it s_4}& \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_4}
+\\ {\gamma_1}^{2}{\it s_1}&{\gamma_1}^{2}{\it s_2}&{\gamma_1}^{2}{\it s_3}&{\gamma_1}^{2}{\it s_4}&{\gamma_1}^{2}&{\gamma_1}^{2}\\ {\gamma_1
+}^{2}{\it s_1}&{\gamma_1}^{2}{\it s_2}& \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}& \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_4}&{\gamma_1}^{2}&{\gamma_2}
+^{2}+{\gamma_1}^{2}\end {array} \right] 
+\]
+from what the marginal properties can be learn. 
+The upper triangle of the children correlation matrix is
+\[
+\left[ \begin {array}{ccc} 
+\frac{\textrm{sign}(s_1s_2){\gamma_1}^{2}}{{( {\gamma_1}^{2}+1 )}} & 
+\frac{\textrm{sign}(s_1 s_3){\gamma_1}^{2}} {\sqrt{( {\gamma_1}^{2}+1 )} \sqrt { ( 1+{\gamma_2}^{2}+{\gamma_1}^{2} )}} & 
+\frac{\textrm{sign}(s_1 s_4){\gamma_1}^{2}} {\sqrt{( {\gamma_1}^{2}+1 )} \sqrt { ( 1+{\gamma_2}^{2}+{\gamma_1}^{2} )}}\\ 
+& \frac{\textrm{sign}(s_2 s_3){\gamma_1}^{2}} {\sqrt{( {\gamma_1}^{2}+1 )} \sqrt { ( 1+{\gamma_2}^{2}+{\gamma_1}^{2} )}} & 
+\frac{\textrm{sign}(s_2 s_4){\gamma_1}^{2}} {\sqrt{( {\gamma_1}^{2}+1 )} \sqrt { ( 1+{\gamma_2}^{2}+{\gamma_1}^{2} )}}\\
+ &  & \frac{{\textrm{sign}(s_3 s_4) ( {\gamma_2}^{2}+{\gamma_1}^{2}) }}{
+{( 1+{\gamma_2}^{2}+{\gamma_1}^{2})}}
+\end{array} \right] 
+\]
+where C($s_i,s_j$) = sign($s_is_j$)$\frac{\gamma_1^2}{(\gamma_1^2+1)(1+\gamma_1^2+\gamma_2^2)}$ 
+for $i\in\{1,2\}$ and $j\in\{3,4\}$, which defines a block with the same absolute value 
+and is the main structure that this model induced for the correlation matrix.
+
+In the model given from graph (C), when $p_1$ is parent to $p_3$,
+the covariance matrix of $\{c_1,...,c_6\}$ is 
+\[ \scriptsize 
+\left[ \begin {array}{cccccc}  \left( 1+{\gamma_1}^{2} \right) {{\it s_1}}^{2}&{\it s_2}\,{\gamma_1}^{2}{\it s_1}&{\it s_3}\,{\gamma_1}^{2}{\it s_1}&{\it s_4}\,{\gamma_1}^{2}{\it 
+s_1}&{\it s_5}\,{\gamma_1}^{2}{\it s_1}&{\it s_6}\,{\gamma_1}^{2}{\it s_1}\\ {\it s_2}\,{\gamma_1}^{2}{\it s_1}& \left( 1+{\gamma_1}^{2} \right) {{\it s_2}}^{2}
+&{\it s_3}\,{\gamma_1}^{2}{\it s_2}&{\it s_4}\,{\gamma_1}^{2}{\it s_2}&{\it s_5}\,{\gamma_1}^{2}{\it s_2}&{\it s_6}\,{\gamma_1}^{2}{\it s_2}\\ {\it s_3}\,{{
+\it \gamma_1}}^{2}{\it s_1}&{\it s_3}\,{\gamma_1}^{2}{\it s_2}& \left( 1+{\gamma_2}^{2}+{\gamma_1}^{2} \right) {{\it s_3}}^{2}&{\it s_4}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2}
+ \right) {\it s_3}&{\it s_5}\,{\gamma_1}^{2}{\it s_3}&{\it s_6}\,{\gamma_1}^{2}{\it s_3}\\ {\it s_4}\,{\gamma_1}^{2}{\it s_1}&{\it s_4}\,{\gamma_1}^{2}{\it s_2
+}&{\it s_4}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}& \left( 1+{\gamma_2}^{2}+{\gamma_1}^{2} \right) {{\it s_4}}^{2}&{\it s_5}\,{\gamma_1}^{2}{\it s_4}&{\it s_6}
+\,{\gamma_1}^{2}{\it s_4}\\ {\it s_5}\,{\gamma_1}^{2}{\it s_1}&{\it s_5}\,{\gamma_1}^{2}{\it s_2}&{\it s_5}\,{\gamma_1}^{2}{\it s_3}&{\it s_5}\,{\gamma_1}^{2}
+{\it s_4}& \left( 1+{\gamma_3}^{2}+{\gamma_1}^{2} \right) {{\it s_5}}^{2}&{\it s_6}\,{\it s_5}\, \left( {\gamma_3}^{2}+{\gamma_1}^{2} \right) \\ {\it s_6}\,{{\it 
+\gamma_1}}^{2}{\it s_1}&{\it s_6}\,{\gamma_1}^{2}{\it s_2}&{\it s_6}\,{\gamma_1}^{2}{\it s_3}&{\it s_6}\,{\gamma_1}^{2}{\it s_4}&{\it s_6}\,{\it s_5}\, \left( {\gamma_3}^{2}+{{\it 
+\gamma_1}}^{2} \right) & \left( 1+{\gamma_3}^{2}+{\gamma_1}^{2} \right) {{\it s_6}}^{2}\end {array} \right] 
+\]
+where the variances and covariance for $c_5$ and $c_6$ does not depends on $\gamma_2^2$.
+
+For the case when $p_2$ is parent to $p_3$ the covariance of $c_1$, ..., $c_6$ is 
+\[ \tiny
+\left[ \begin {array}{cccccc}  \left( 1+{\gamma_1}^{2} \right) {{\it s_1}}^{2}&{\it s_2}\,{\gamma_1}^{2}{\it s_1}&{\it s_3}\,{\gamma_1}^{2}{\it s_1}&{\it s_4}\,{\gamma_1}^{2}{\it 
+s_1}&{\it s_5}\,{\gamma_1}^{2}{\it s_1}&{\it s_6}\,{\gamma_1}^{2}{\it s_1}\\ {\it s_2}\,{\gamma_1}^{2}{\it s_1}& \left( 1+{\gamma_1}^{2} \right) {{\it s_2}}^{2}
+&{\it s_3}\,{\gamma_1}^{2}{\it s_2}&{\it s_4}\,{\gamma_1}^{2}{\it s_2}&{\it s_5}\,{\gamma_1}^{2}{\it s_2}&{\it s_6}\,{\gamma_1}^{2}{\it s_2}\\ {\it s_3}\,{{
+\it \gamma_1}}^{2}{\it s_1}&{\it s_3}\,{\gamma_1}^{2}{\it s_2}& \left( 1+{\gamma_2}^{2}+{\gamma_1}^{2} \right) {{\it s_3}}^{2}&{\it s_4}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2}
+ \right) {\it s_3}&{\it s_5}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}&{\it s_6}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}\\ {\it 
+s_4}\,{\gamma_1}^{2}{\it s_1}&{\it s_4}\,{\gamma_1}^{2}{\it s_2}&{\it s_4}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}& \left( 1+{\gamma_2}^{2}+{\gamma_1}^{2}
+ \right) {{\it s_4}}^{2}&{\it s_5}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_4}&{\it s_6}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_4}\\ {
+\it s_5}\,{\gamma_1}^{2}{\it s_1}&{\it s_5}\,{\gamma_1}^{2}{\it s_2}&{\it s_5}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}&{\it s_5}\, \left( {\gamma_2}^{2}+{{\it 
+\gamma_1}}^{2} \right) {\it s_4}& \left( 1+{\gamma_3}^{2}+{\gamma_2}^{2}+{\gamma_1}^{2} \right) {{\it s_5}}^{2}&{\it s_6}\,{\it s_5}\, \left( {\gamma_3}^{2}+{\gamma_2}^{2}+{\gamma_1}
+^{2} \right) \\ {\it s_6}\,{\gamma_1}^{2}{\it s_1}&{\it s_6}\,{\gamma_1}^{2}{\it s_2}&{\it s_6}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_3}&{\it s_6
+}\, \left( {\gamma_2}^{2}+{\gamma_1}^{2} \right) {\it s_4}&{\it s_6}\,{\it s_5}\, \left( {\gamma_3}^{2}+{\gamma_2}^{2}+{\gamma_1}^{2} \right) & \left( 1+{\gamma_3}^{2}+{\gamma_2
+}^{2}+{\gamma_1}^{2} \right) {{\it s_6}}^{2}\end {array} \right] 
+\]
+where the variances and covariance for $c_5$ and $c_6$ now depends on $\gamma_2^2$. 
+
+For the correlations, we now compare C($c_i,c_j$), for $i\neq j$ and $i,j\in\{3,4,5,6\}$, 
+with these two different models. 
+The upper triangle of the correlation matrix for $c_3$, ..., $c_6$
+obtained with the model where $p_1$ is parent to $p_3$ is 
+\[
+\left[ \begin {array}{ccc} 
+\textrm{sign}(s_3s_4)\frac{\gamma_1^2+\gamma_2^2}{1+\gamma_1^2+\gamma_2^2} & 
+\textrm{sign}(s_3s_5)\frac{\gamma_1^2}{\sqrt{(1+\gamma_1^2)(1+\gamma_1^2+\gamma_3^2)}} &
+\textrm{sign}(s_3s_6)\frac{\gamma_1^2}{\sqrt{(1+\gamma_1^2)(1+\gamma_1^2+\gamma_3^2)}} \\
+ & \textrm{sign}(s_4s_5)\frac{\gamma_1^2}{\sqrt{(1+\gamma_1^2)(1+\gamma_1^2+\gamma_3^2)}} &
+\textrm{sign}(s_4s_6)\frac{\gamma_1^2}{\sqrt{(1+\gamma_1^2)(1+\gamma_1^2+\gamma_3^2)}} \\
+ & & \textrm{sign}(s_5s_6)\frac{\gamma_1^2 + \gamma_3^2}{\sqrt{(1+\gamma_1^2+\gamma_3^2)}} \\
+\end{array} \right],
+\]
+and with the model when $p_2$ is parent to $p_3$ it is
+\[
+\left[ \begin {array}{ccc} 
+\textrm{sign}(s_3s_4)\frac{\gamma_1^2+\gamma_2^2}{1+\gamma_1^2+\gamma_2^2} & 
+\textrm{sign}(s_3s_5)\frac{\gamma_1^2+\gamma_2^2}{\sqrt{(1+\gamma_1^2+\gamma_2^2)(1+\gamma_1^2+\gamma_3^2)}} &
+\textrm{sign}(s_3s_6)\frac{\gamma_1^2+\gamma_2^2}{\sqrt{(1+\gamma_1^2+\gamma_2^2)(1+\gamma_1^2+\gamma_3^2)}} \\
+ & \textrm{sign}(s_4s_5)\frac{\gamma_1^2+\gamma_2^2}{\sqrt{(1+\gamma_1^2+\gamma_2^2)(1+\gamma_1^2+\gamma_3^2)}} &
+\textrm{sign}(s_4s_6)\frac{\gamma_1^2+\gamma_2^2}{\sqrt{(1+\gamma_1^2+\gamma_2^2)(1+\gamma_1^2+\gamma_3^2)}} \\
+ & & \textrm{sign}(s_5s_6)\frac{\gamma_1^2+\gamma_2^2+\gamma_3^2}{1+\gamma_1^2+\gamma_2^2+\gamma_3^2} \\
+\end{array} \right].
+\]
+Comparing these results, when $p_1$ is parent to $p_3$ there is no contribution 
+from $\gamma_2^2$ in C($c_5,c_6$) and neither in C($c_i,c_j$), for $i\in\{3,4\}$,
+whereas when $p_2$ is parent to $p_3$ there is.
+
+From these examples we can list a set of properties as follows.
+
+* **Property 1**: The marginal variance of $p_i$ is $\gamma_i^2$ plus the variance of its parent.
+   * **Property 1a**: For $p_1$ it is equal its conditional variance, $\gamma_1^2$.
+   * **Property 1b**: The marginal variance of $p_i$ is $\gamma_i^2$ plus 
+   the conditional variance of its ancestors.
+* **Property 2**: The marginal variance of $c_i$ is equal $s_i^2(1+V)$,
+where $V$ is the variance of its parent.
+* **Property 3**: The covariance between $c_i$ and $c_j$ is equal $s_is_jR$, 
+where $R$ is the variance of the top indexed parent in the path linking them. 
+   * **Property 3a**: If $c_i$ and $c_j$ have a common parent, 
+   $R$ is the variance of their parent.
+* **Property 4**: C($c_i,c_j$)=sign($s_is_j$)R/$\sqrt{\gamma_{c_i}\gamma_{c_j}}$, 
+where $\gamma_{c_i}$ and $\gamma_{c_j}$ are the marginal variances of $c_i$ and $c_j$, respectively. 
+   * **Property 4a**: If $c_i$ and $c_j$ have a common parent, 
+   the correlation is sign($s_is_j$)$V/(1+V)$ where $V$ is the variance of their parent.
+* **Property 5**: Let $k_0$ be the number of parents with no children variable as children, 
+   $k_1$ be the number of parents with one children variable as children,
+   and $k_2$ be the number of parents with at least two children variables as children.
+   The number of distinct absolute correlation values is $k_2+(k_1-k_0)(k_1-k_0-1)/2$.
+   * **Property 5a**: If each parent variable has only one children variable as children,
+   this number is $k(k-1)/2$.
+   * **Property 5b**: The maximum number of distinct absolute correlation values is 
+$k(k+1)/2$, achieved if each parent variable is parent to at least two children variables.
+
+This intuitive modeling approach gives way to build a
+structured correlation matrix.
+The number of distinct absolute correlation values is $k(k+1)/2$.
+The sign assumed for each arrow ending at a children variable
+allows the full range of the correlation values, from $-1$ to $1$.
+Prior distributions can be considered for the marginal variances 
+and for the correlation matrix separately.
+
+## A further example
+
+We now consider more variables and use two models, as shown in Figure 2 bellow.
+The difference in on who is the parent to $p_4$. 
+We will use it to further illustrate the **Property 2a**.
+
+```{r t4, echo = FALSE,  fig.width = 9, fig.height = 4, out.width="69%", fig.align = 'center', fig.cap = "Two different models for the same number of children and parents."}
+t4a <- treepcor(
+  p1 ~ p2 + p3 + c1 + c2, 
+  p2 ~ p4 + c3 + c4, 
+  p3 ~ p5 + c5 + c6, 
+  p4 ~ c7 + c8, p5 ~ c9 + c10)
+t4b <- treepcor(p1 ~ p2 + p3 + c1 + c2, 
+  p2 ~ c3 + c4, p3 ~ p4 + p5 + c5 + c6, 
+  p4 ~ c7 + c8, p5 ~ c9 + c10)
+par(mfrow = c(1, 2), mar = c(0, 0, 0, 0))
+plot(t4a)
+legend("topleft", "(E)", bty = "n")
+plot(t4b)
+legend("topleft", "(F)", bty = "n")
+```
+
+The model for the DAG in (E) gives a precision matrix whose last five columns are
+\[ \scriptsize
+\left[ \begin {array}{ccccc} -{{\it s_1}}^{-1}&0&0&0&0\\ -{{\it s_2}}^{-1}&0&0&0&0\\ 0&-{{\it s_3}}^{-1}&0&0&0\\ 0&-{{\it s_4}}^{-1}&0&0
+&0\\ 0&0&-{{\it s_5}}^{-1}&0&0\\ 0&0&-{{\it s_6}}^{-1}&0&0\\ 0&0&0&-{{\it s_7}}^{-1}&0\\ 0&0&0&-{{\it s_8}}^{-1}&0
+\\ 0&0&0&0&-{{\it s_9}}^{-1}\\ 0&0&0&0&-{{\it s_{10}}}^{-1}\\ {\gamma_1}^{-2}+2+{\gamma_2}^{-2}+{\gamma_3}^{-2}&-{\gamma_2}^{-2}&-{{
+\it \gamma_3}}^{-2}&0&0\\ -{\gamma_2}^{-2}&{\gamma_2}^{-2}+2+{\gamma_4}^{-2}&0&-{\gamma_4}^{-2}&0\\ -{\gamma_3}^{-2}&0&{\gamma_3}^{-2}+2+{\gamma_5}^
+{-2}&0&-{\gamma_5}^{-2}\\ 0&-{\gamma_4}^{-2}&0&{\gamma_4}^{-2}+2&0\\ 0&0&-{\gamma_5}^{-2}&0&{\gamma_5}^{-2}+2\end {array} \right] 
+\]
+while the last five columns for the precision matrix for the model for DAG in (F) are
+\[ \scriptsize  
+\left[ \begin {array}{ccccc} 
+-{{\it s_1}}^{-1}&0&0&0&0\\ -{{\it s_2}}^{-1}&0&0&0&0\\ 0&-{{\it s_3}}^{-1}&0&0&0\\ 0&-{{\it s_4}}^{-1}&0&0
+&0\\ 0&0&-{{\it s_5}}^{-1}&0&0\\ 0&0&-{{\it s_6}}^{-1}&0&0\\ 0&0&0&-{{\it s_7}}^{-1}&0\\ 0&0&0&-{{\it s_8}}^{-1}&0
+\\ 0&0&0&0&-{{\it s_9}}^{-1}\\ 0&0&0&0&-{{\it s_{10}}}^{-1}\\ {\gamma_1}^{-2}+2+{\gamma_2}^{-2}+{\gamma_3}^{-2}&-{\gamma_2}^{-2}&-{{
+\it \gamma_3}}^{-2}&0&0\\ -{\gamma_2}^{-2}&{\gamma_2}^{-2}+2&0&0&0\\ -{\gamma_3}^{-2}&0&{\gamma_3}^{-2}+2+{\gamma_4}^{-2}+{\gamma_5}^{-2}&-{\gamma_4
+}^{-2}&-{\gamma_5}^{-2}\\ 0&0&-{\gamma_4}^{-2}&{\gamma_4}^{-2}+2&0\\ 0&0&-{\gamma_5}^{-2}&0&{\gamma_5}^{-2}+2
+\end {array} \right]
+\]
+
+To illustrate property about the top parent on a path, we consider 
+the upper triangle of the correlation matrix for the last four children variables, $c_7,...,c_{10}$.
+For the model defined from (E) we have it as
+\[ 
+\left[ \begin {array}{ccc} 
+ {\frac { \textrm{sign}({\it s_7 s_8}) ( {\gamma_1}^{2}+{\gamma_2}^{2}+{\gamma_4}^{2} )}{( 1+{\gamma_1}^{2}+{\gamma_2}^{2}+{\gamma_4}^{2} )}} &
+\frac {\textrm{sign}({\it s_7 s_9}) {\gamma_1}^{2}}{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_2}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} )}} & 
+\frac {\textrm{sign}({\it s_7 s_{10}}) {\gamma_1}^{2}}{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_2}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} )}} \\ 
+ & \frac {\textrm{sign}({\it s_8 s_9}) {\gamma_1}^{2}}{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_2}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} )}} &
+\frac {\textrm{sign}({\it s_8 s_{10}}) {\gamma_1}^{2}}{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_2}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} )}}\\ 
+&  &  \frac { \textrm{sign}({\it s_{9} s_{10}}) ( {\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} ) }{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} ) }} \\
+\end {array} \right] 
+\]
+where  C($c_i,c_j$), for $i\in\{7,8\}$ and $j\in\{9,10\}$ 
+increase depends only on $\gamma_1^2$ and 
+depends on all $\gamma_j^2$ for $j=\{1,\ldots,5\}$.
+With the model defined from (F) we have 
+\[ \
+\left[ \begin {array}{ccc} 
+\frac {\textrm{sign}({\it s_7s_8}) ( {\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_4}^{2} ) }{( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_4}^{2} ) } & 
+\frac { \textrm{sign}({\it s_7s_9}) ( {\gamma_1}^{2}+{\gamma_3}^{2} ) }{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} ) }} &
+\frac { \textrm{sign}({\it s_7s_{10}}) ( {\gamma_1}^{2}+{\gamma_3}^{2} ) }{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} ) }} \\ 
+& \frac { \textrm{sign}({\it s_9s_9}) ( {\gamma_1}^{2}+{\gamma_3}^{2} ) }{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} ) }}  &
+\frac { \textrm{sign}({\it s_8s_{10}}) ( {\gamma_1}^{2}+{\gamma_3}^{2} ) }{\sqrt { ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_4}^{2} ) ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} ) }} \\
+& & \frac {\textrm{sign}({\it s_9s_{10}}) ( {\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} ) }{ ( 1+{\gamma_1}^{2}+{\gamma_3}^{2}+{\gamma_5}^{2} )}
+\end {array} \right] 
+\]
+where now C($c_i,c_j$), for $i\in\{7,8\}$ and $j\in\{9,10\}$, 
+increases if $\gamma_1^2+\gamma_3^2$ (the variance of $p_3$) increases 
+and no longer depends on $\gamma_2^2$.
 
 # References
 

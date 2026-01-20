@@ -146,19 +146,19 @@ if(FALSE) {
 ### allowed cases
 
 ## 3 children and 1 parent
-g1 <- treepcor(p1 ~ c1 + c2 - c3)
+tree1 <- treepcor(p1 ~ c1 + c2 - c3)
 
-g1
+tree1
 
-dim(g1)
+dim(tree1)
 
-summary(g1)
+summary(tree1)
 
-plot(g1)
+plot(tree1)
 
-prec(g1)
+prec(tree1)
 
-(q1 <- prec(g1, theta = c(0)))
+(q1 <- prec(tree1, theta = c(0)))
 
 v1 <- chol2inv(chol(q1))
 
@@ -166,76 +166,68 @@ v1
 
 cov2cor(v1)
 
-vcov(g1)
-vcov(g1, theta = 0)
-vcov(g1, theta = -1)
-vcov(g1, theta = 1)
+vcov(tree1, raw = TRUE)
+cov2cor(vcov(tree1, raw = TRUE))
+vcov(tree1)
 
-cov2cor(vcov(g1))
-cov2cor(vcov(g1, theta = -1))
-cov2cor(vcov(g1, theta = 1))
+vcov(tree1, theta = 0)
+vcov(tree1, theta = -1)
+vcov(tree1, theta = 1)
+
+cov2cor(vcov(tree1))
+cov2cor(vcov(tree1, theta = -1))
+cov2cor(vcov(tree1, theta = 1))
 
 ## 4 children and 2 parent
-g2 <- treepcor(
+tree2 <- treepcor(
     p1 ~ p2 + c1 + c2,
-    p2 ~ c3 - c4)
-g2
-dim(g2)
-summary(g2)
+    p2 ~ -c3 + c4)
+tree2
+dim(tree2)
+summary(tree2)
 
-plot(g2)
+plot(tree2)
 
-prec(g2)
-prec(g2, theta = c(0, 0))
-prec(g2, theta = c(-1, 1))
+prec(tree2)
+prec(tree2, theta = c(0, 0))
+prec(tree2, theta = c(-1, 1))
 
-cov2cor(solve(prec(g2, theta = c(0,0))))
-vcov(g2, theta = c(0,0))
-vcov(g2, theta = c(log(4:1), 0,0))
+vcov(tree2, raw = TRUE)
+cov2cor(vcov(tree2, raw = TRUE))
 
-vcov(g2)
+cov2cor(solve(prec(tree2, theta = c(0,0))))
+vcov(tree2, theta = c(0,0))
+vcov(tree2, theta = c(log(4:1), 0,0))
 
-g2
+vcov(tree2)
+
+tree2
 
 ## 4 children and 2 parent (notice the signs)
-g3 <- treepcor(
+tree2b <- treepcor(
     p1 ~ -p2 + c1 + c2,
     p2 ~ -c3 + c4)
-g3
-dim(g3)
-summary(g3)
+tree2b
+dim(tree2b)
+summary(tree2b)
 
-summary(g2)
-summary(g3)
+summary(tree2)
+summary(tree2b)
 
 par(mfrow = c(1, 2), mar = c(0,0,0,0))
-plot(g2)
-plot(g3)
+plot(tree2)
+plot(tree2b)
 
-prec(g2)
-prec(g3)
+prec(tree2)
+prec(tree2b)
 
-prec(g2, theta = c(0, 0))
-prec(g3, theta = c(0, 0))
+## prec is not equal
+all.equal(prec(tree2, theta = c(0, 0)),
+          prec(tree2b, theta = c(0, 0)))
 
-vcov(g2, theta = c(0, 0))
-vcov(g3, theta = c(0, 0))
+## vcov is equal
+all.equal(vcov(tree2, theta = c(0, 0)),
+          vcov(tree2b, theta = c(0, 0)))
 
-g3
 
-
-drop1(g2)
-drop1(g3) 
-
-prec(g3)
-prec(drop1(g3))
-
-n3 <- dim(g3)[1]
-all.equal(
-    solve(prec(g2, theta = c(0, 0)))[1:n3, 1:n3],
-    solve(prec(g3, theta = c(0, 0)))[1:n3, 1:n3]
-)
-
-vcov(g2, theta = c(0,0))
-vcov(g3, theta = c(0,0))
 }

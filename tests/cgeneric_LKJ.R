@@ -92,7 +92,8 @@ fit <- inla(
     control.mode = cmode
 )
 
-all.equal(qc, prec(fit))
+all.equal(as.matrix(qc),
+          as.matrix(prec(fit)))
 
 ### now consider variances as well (PC-prior for this)
 Vmodel <- cgeneric(
