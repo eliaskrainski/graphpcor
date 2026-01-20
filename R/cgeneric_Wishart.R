@@ -69,42 +69,19 @@ cgeneric_Wishart <-
       cat('hldet = ', hldetr, ', log const = ', lcprior, '\n')
     }
 
-    cmodel = "cgeneric_Wishart"
+    cmodel = "inla_cgeneric_Wishart"
 
-    the_model <- list(
-      f = list(
-        model = "cgeneric",
+    the_model <- do.call(
+      what = INLAtools::cgenericBuilder,
+      args = list(
+        model = cmodel,
         n = as.integer(n),
-        cgeneric = list(
-          model = cmodel,
-          shlib = shlib,
-          n = as.integer(n),
-          debug = as.logical(debug),
-          data = list(
-            ints = list(
-              n = as.integer(n),
-              debug = as.integer(debug)
-            ),
-            doubles = list(
-              dof = as.numeric(dof),
-              R = as.numeric(rr),
-              lcprior = as.numeric(lcprior)
-            ),
-            characters = list(
-              model = cmodel,
-              shlib = shlib
-            ),
-            matrices = list(
-            ),
-            smatrices = list(
-              )
-            )
-          )
-        )
-      )
-
-    class(the_model) <- "cgeneric"
-    class(the_model$f$cgeneric) <- "cgeneric"
+        debug = as.logical(debug),
+        shlib = shlib,
+        dof = as.numeric(dof),
+        lcprior = as.double(lcprior),
+        R = as.numeric(rr)
+      ))
 
     return(the_model)
 
