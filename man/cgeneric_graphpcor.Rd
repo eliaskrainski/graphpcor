@@ -10,7 +10,7 @@ cgeneric_graphpcor(
   base,
   sigma.prior.reference,
   sigma.prior.probability,
-  params.id,
+  iparams,
   cor.params.fixed,
   ...
 )
@@ -39,8 +39,8 @@ marginal variance parameters. If missing, the model will be
 assumed for a correlation. If a length \code{n} vector is given
 and \code{sigma.prior.probability} is missing, it will be used as
 known square root of the variances.
-NOTE: \code{params.id} will be applied here as
-\code{sigma.prior.reference[params.id[1:n]]}.}
+NOTE: \code{iparams} will be applied here as
+\code{sigma.prior.reference[iparams[1:n]]}.}
 
 \item{sigma.prior.probability}{numeric vector with length \code{n}
 to set the probability statement of the PC prior for each
@@ -50,15 +50,15 @@ marginal variances are considered as known, as described in
 \code{sigma.prior.reference}.
 If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.
-NOTE: \code{params.id} will be applied here as
-\code{sigma.prior.probability[params.id[1:n]]}.}
+NOTE: \code{iparams} will be applied here as
+\code{sigma.prior.probability[iparams[1:n]]}.}
 
-\item{params.id}{integer ordered vector with length equals
+\item{iparams}{integer ordered vector with length equals
 to \code{n+m} to specify common parameter values. If missing it
 is assumed \code{1:(n+m)} and all parameters are assumed distinct.
 The first \code{n} indexes the square root of the marginal
 variances and the remaining indexes the edges parameters.
-Example: By setting \code{params.id = c(1,1,2,3, 4,5,5,6)},
+Example: By setting \code{iparams = c(1,1,2,3, 4,5,5,6)},
 the first two standard deviations are common and the
 second and third edges parameters are common as well,
 giving 6 unknown parameters in the model.}
@@ -70,8 +70,8 @@ NA indicates not fixed and all are set to be estimated by default.
 Example: with \code{cor.params.fixed = c(NA, -1, NA, 1)} the first
 and the third of these parameters will be estimated while
 the second is fixed and equal to -1 and the forth is fixed
-and equal to 1. NOTE: \code{params.id} will be applied here as
-\code{cor.params.fixed[params.id[(n+1:m)]-n+1]}, thus the provided
+and equal to 1. NOTE: \code{iparams} will be applied here as
+\code{cor.params.fixed[iparams[(n+1:m)]-iparams[n]]}, thus the provided
 examples give \verb{NA -1 -1 NA} and so the second and third low L
 parameters are fixed to \code{-1}.}
 

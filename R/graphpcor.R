@@ -41,7 +41,7 @@ graphpcor.formula <- function(...) {
   return(fch)
 }
 #' @describeIn graphpcor
-#' Build a `graphpcor` from a matrix
+#' Build a `graphpcor` from a matrix object
 #' @importFrom stats as.formula
 #' @importFrom INLAtools is.zero
 #' @export
@@ -53,7 +53,7 @@ graphpcor.matrix <- function(...) {
   ne[2] <- sum(lower.tri(iz) & (!iz))
   vnams <- rownames(x)
   if(is.null(vnams)) {
-    vnams <- letters[1:ne[1]]
+    vnams <- paste0("x", 1:ne[1])
   }
   argl <- list()
   adde <- 0
@@ -72,6 +72,28 @@ graphpcor.matrix <- function(...) {
   }
   stopifnot(adde==ne[2])
   argl <- argl[which(nj>0)]
+  return(do.call(what = 'graphpcor',
+                 args = lapply(argl, as.formula)))
+}
+#' @describeIn graphpcor
+#' Build a `graphpcor` for a Matrix object
+#' @importFrom stats as.formula
+#' @importFrom INLAtools Sparse upperPadding
+#' @export
+graphpcor.Matrix <- function(...) {
+  x <- upperPadding(Sparse(list(...)[[1]]))
+  ne <- c(nrow(x), length(x@x))
+  sij <- split(x@j+1L, x@i+1L)
+  vnams <- rownames(x)
+  if(is.null(vnams)) {
+    vnams <- paste0("x", 1:ne[1])
+  }
+  argl <- list()
+  for(i in 1:length(sij)) {
+    xi <- vnams[as.integer(names(sij)[i])]
+    xj <- setdiff(vnams[sij[[i]]], xi)
+    argl[[i]] <- paste(xi, "~", paste(xj, collapse = "+"))
+  }
   return(do.call(what = 'graphpcor',
                  args = lapply(argl, as.formula)))
 }
@@ -211,6 +233,22 @@ Laplacian.matrix <- function(x) {
     Laplacian.default(x)
   }
 }
+#' @describeIn Laplacian
+#' The Laplacian of a Matrix
+#' @importFrom Matrix rowSums
+#' @export
+Laplacian.Matrix <- function(x) {
+  o <- Sparse(x)
+  o@x <- rep(1, length(o@x))
+  iid <- which(o@i==o@j)
+  if(length(iid)>0) {
+    o@x[iid] <- 0
+  }
+  d <- rowSums(o)
+  return(Sparse(
+    Diagonal(n = nrow(o), x = d)-o
+  ))
+}
 #' @describeIn graphpcor
 #' The Laplacian method for a `graphpcor`
 #' @export
@@ -327,8 +365,8 @@ hessian.graphpcor <- function(
     } else {
       d0 <- d[1]:1
     }
-    basepcor(base = x, p = d[1],
-             itheta = iL, d0 = d0)$I0
+    return(basepcor(base = x, p = d[1],
+                    itheta = iL, d0 = d0)$I0)
 
   } else { ## old code
     decomposition <- c("svd", "eigen", "chol")
@@ -389,9 +427,9 @@ cgeneric.graphpcor <- function(model, ...) {
           args = args)
 }
 #' @describeIn graphpcor
-#' The `cgeneric` method for `matrix` uses [cgeneric_graphpcor()]
+#' The `cgeneric` method for `Matrix` uses [cgeneric_graphpcor()]
 #' @export
-cgeneric.matrix <- function(model, ...) {
+cgeneric.Matrix <- function(model, ...) {
   args <- list(...)
   args$model <- graphpcor(model)
   do.call(what = 'cgeneric_graphpcor',

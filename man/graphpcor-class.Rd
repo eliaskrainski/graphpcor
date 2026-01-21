@@ -6,6 +6,7 @@
 \alias{graphpcor}
 \alias{graphpcor.formula}
 \alias{graphpcor.matrix}
+\alias{graphpcor.Matrix}
 \alias{print.graphpcor}
 \alias{summary.graphpcor}
 \alias{dim.graphpcor}
@@ -15,7 +16,7 @@
 \alias{vcov,graphpcor-method}
 \alias{prec.graphpcor}
 \alias{cgeneric.graphpcor}
-\alias{cgeneric.matrix}
+\alias{cgeneric.Matrix}
 \title{graphpcor: correlation from nodes and edges}
 \usage{
 graphpcor(...)
@@ -23,6 +24,8 @@ graphpcor(...)
 \method{graphpcor}{formula}(...)
 
 \method{graphpcor}{matrix}(...)
+
+\method{graphpcor}{Matrix}(...)
 
 \method{print}{graphpcor}(x, ...)
 
@@ -42,7 +45,7 @@ graphpcor(...)
 
 \method{cgeneric}{graphpcor}(model, ...)
 
-\method{cgeneric}{matrix}(model, ...)
+\method{cgeneric}{Matrix}(model, ...)
 }
 \arguments{
 \item{...}{a list of arguments}
@@ -84,7 +87,9 @@ whose non-zero pattern is given from the graph.
 \item \code{graphpcor(formula)}: Each term to represent a node, and
 each \code{~} to represent an edge.
 
-\item \code{graphpcor(matrix)}: Build a \code{graphpcor} from a matrix
+\item \code{graphpcor(matrix)}: Build a \code{graphpcor} from a matrix object
+
+\item \code{graphpcor(Matrix)}: Build a \code{graphpcor} for a Matrix object
 
 \item \code{print(graphpcor)}: The print method for \code{graphpcor}
 
@@ -98,7 +103,7 @@ each \code{~} to represent an edge.
 
 \item \code{cgeneric(graphpcor)}: The \code{cgeneric} method for \code{graphpcor} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
 
-\item \code{cgeneric(matrix)}: The \code{cgeneric} method for \code{matrix} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
+\item \code{cgeneric(Matrix)}: The \code{cgeneric} method for \code{Matrix} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
 
 }}
 \examples{

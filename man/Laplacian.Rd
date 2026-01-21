@@ -4,6 +4,7 @@
 \alias{Laplacian}
 \alias{Laplacian.default}
 \alias{Laplacian.matrix}
+\alias{Laplacian.Matrix}
 \title{The Laplacian of a graph}
 \usage{
 Laplacian(x)
@@ -11,6 +12,8 @@ Laplacian(x)
 \method{Laplacian}{default}(x)
 
 \method{Laplacian}{matrix}(x)
+
+\method{Laplacian}{Matrix}(x)
 }
 \arguments{
 \item{x}{object defining a graph}
@@ -34,5 +37,7 @@ n_i is the number of edges including node i.
 \item \code{Laplacian(default)}: The Laplacian default method (none)
 
 \item \code{Laplacian(matrix)}: The Laplacian of a matrix
+
+\item \code{Laplacian(Matrix)}: The Laplacian of a Matrix
 
 }}

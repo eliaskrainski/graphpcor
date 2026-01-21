@@ -54,7 +54,7 @@
 #' and the third of these parameters will be estimated while
 #' the second is fixed and equal to -1 and the forth is fixed
 #' and equal to 1. NOTE: `iparams` will be applied here as
-#' `cor.params.fixed[iparams[(n+1:m)]-n+1]`, thus the provided
+#' `cor.params.fixed[iparams[(n+1:m)]-iparams[n]]`, thus the provided
 #' examples give `NA -1 -1 NA` and so the second and third low L
 #' parameters are fixed to `-1`.
 #' @param ... additional arguments that will be passed on to
@@ -72,16 +72,19 @@ cgeneric_graphpcor <-
            cor.params.fixed,
            ...) {
 
+    ## collect ... args and check debug
     dotArgs <- list(...)
     if(!any(names(dotArgs)=="debug")) {
       dotArgs$debug <- FALSE
     }
-    if(inherits(model, "matrix")) {
+    if(inherits(model, "Matrix")) {
       if(dotArgs$debug) {
-        cat("Building 'graphpcor' from 'matrix'!")
+        cat("Building 'graphpcor' from a 'Matrix'!")
       }
       model <- graphpcor(model)
     }
+
+    ## Matrix structure
     Q0 <- Laplacian(model)
     n <- nrow(Q0)
     stopifnot(n>0)
@@ -96,33 +99,6 @@ cgeneric_graphpcor <-
     }
     lambda <- as.numeric(lambda[1])
     stopifnot(lambda>0)
-
-    if(missing(sigma.prior.reference)) {
-       sigma.prior.reference <- rep(1, n)
-    }
-    if(length(sigma.prior.reference)==1) {
-      sigma.prior.reference <- rep(sigma.prior.reference, n)
-    }
-    if(missing(sigma.prior.probability)) {
-      sigma.prior.probability <- rep(0, n)
-    }
-    if(length(sigma.prior.probability)==1) {
-      sigma.prior.probability <- rep(sigma.prior.probability, n)
-    }
-    stopifnot(length(sigma.prior.reference) == n)
-    stopifnot(length(sigma.prior.probability) == n)
-    stopifnot(all(sigma.prior.reference>0))
-    sigma.prior.probability[is.na(sigma.prior.probability)] <- 0
-    stopifnot(all(sigma.prior.probability>=0.0))
-    stopifnot(all(sigma.prior.probability<=1.0))
-    sigma.fixed <- is.zero(sigma.prior.probability) |
-      is.zero(1-sigma.prior.probability)
-
-    if(dotArgs$debug) {
-      print(list(sigmaref = sigma.prior.reference,
-                 sigmaprob = sigma.prior.probability,
-                 sfixed = sigma.fixed))
-    }
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
@@ -144,18 +120,37 @@ cgeneric_graphpcor <-
     nnz <- n + nEdges
     nfi <- length(qij$ifil)
 
-    if(missing(iparams)) {
-      iparams <- 1:nnz
-    } else {
-      stopifnot(length(iparams)==nnz)
-      stopifnot(all(iparams %in% (1:nnz)))
-      stopifnot(all(diff(sort(unique(iparams)))==1))
+    iparams <- m_iparams_fnc(nnz, iparams)
+    npars1 <- iparams[n]
+    npars2 <- iparams[nnz]
+
+    if(missing(sigma.prior.reference)) {
+       sigma.prior.reference <- rep(1, npars1)
     }
-    ## update sigmas.prior.*
+    if(missing(sigma.prior.probability)) {
+      sigma.prior.probability <- rep(0, npars1)
+    }
+
+    stopifnot(length(sigma.prior.reference) == npars1)
+    stopifnot(length(sigma.prior.probability) == npars1)
+    stopifnot(all(sigma.prior.reference>0))
+    sigma.prior.probability[is.na(sigma.prior.probability)] <- 0
+    stopifnot(all(sigma.prior.probability>=0.0))
+    stopifnot(all(sigma.prior.probability<=1.0))
+    sigma.fixed <- is.zero(sigma.prior.probability) |
+      is.zero(1-sigma.prior.probability)
+    nUnkSigmas <- npars1 - sum(sigma.fixed)
+
+    ## update sigma.*
     sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
     sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
     sigma.fixed <- sigma.fixed[iparams[(1:n)]]
-    nUnkSigmas <- length(sigma.prior.reference)
+
+    if(dotArgs$debug) {
+      print(list(sigmaref = sigma.prior.reference,
+                 sigmaprob = sigma.prior.probability,
+                 sfixed = sigma.fixed))
+    }
 
     if(missing(cor.params.fixed)) {
       cor.params.fixed <- rep(NA, nEdges)
