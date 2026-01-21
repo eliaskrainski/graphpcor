@@ -21,6 +21,7 @@ plot(g)
 
 ## define the cgeneric model (see test/concepts/graphpcor.R for other options)
 theta.base <- rep(0, ne[2])
+
 cmodel <- cgeneric(
     model = g,
     lambda = 10,

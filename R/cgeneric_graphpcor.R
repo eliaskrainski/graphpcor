@@ -88,7 +88,7 @@ cgeneric_graphpcor <-
     Q0 <- Laplacian(model)
     n <- nrow(Q0)
     stopifnot(n>0)
-    if(dotArgs$debug>99) {
+    if(dotArgs$debug) {
       print(model)
       cat("Laplacian is\n")
       print(Q0)
@@ -112,17 +112,26 @@ cgeneric_graphpcor <-
     qij$ilqpac <- which(qnz[lower.tri(Q0, diag = TRUE)])
     ll <- t(chol(Q0 + diag(n)))
     qij$ifil <- setdiff(which(ll!=0), qij$ilq)
-    if(dotArgs$debug>99) {
+    if(dotArgs$debug) {
       print(qij)
     }
 
     nEdges <- length(qij$ii)
+    if(nEdges==0) {
+      stop("This graph is trivial, please consider 'iid' model!")
+    }
     nnz <- n + nEdges
     nfi <- length(qij$ifil)
 
     iparams <- m_iparams_fnc(nnz, iparams)
     npars1 <- iparams[n]
-    npars2 <- iparams[nnz]
+    npars2 <- iparams[nnz]-npars1
+
+    if(dotArgs$debug) {
+      print(list(n = n, nnz = nnz, nfi = nfi,
+                 iparams = iparams,
+                 npars1 = npars1, npars2 = npars2))
+    }
 
     if(missing(sigma.prior.reference)) {
        sigma.prior.reference <- rep(1, npars1)
@@ -145,6 +154,8 @@ cgeneric_graphpcor <-
     sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
     sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
     sigma.fixed <- sigma.fixed[iparams[(1:n)]]
+    if(any(is.na(sigma.fixed)))
+      stop("Some error in `iparams` or  `sigma.fixed`!")
 
     if(dotArgs$debug) {
       print(list(sigmaref = sigma.prior.reference,
@@ -153,12 +164,15 @@ cgeneric_graphpcor <-
     }
 
     if(missing(cor.params.fixed)) {
-      cor.params.fixed <- rep(NA, nEdges)
-    } else {
-      stopifnot(length(cor.params.fixed)==nEdges)
+      cor.params.fixed <- 1:npars2
     }
-    cor.params.fixed[iparams[n+1:nEdges]-n]
-    if(any(!is.na(cor.params.fixed)))  stop("WORK IN PROGRESS!")
+    stopifnot(length(cor.params.fixed)==npars2)
+
+    ## expand
+    cor.params.fixed <- cor.params.fixed[iparams[n+1:nEdges]-n]
+    print(cor.params.fixed)
+    if(any(is.na(cor.params.fixed)))
+      stop("Some error in `iparams` or  `cor.params.fixed`!")
 
     ii <- c(1:n, qij$ii)
     jj <- c(1:n, qij$jj)
@@ -171,12 +185,9 @@ cgeneric_graphpcor <-
     ifi <- row(Q0)[qij$ifil]
     jfi <- col(Q0)[qij$ifil]
 
-    if(nEdges==0) {
-      stop("This graph is trivial, please consider 'iid' model!")
-    }
     if(missing(base)){
       warning("Missing base model! Using 'iid'.")
-      base <- rep(0, nEdges)
+      base <- rep(0, npars2)
     }
 
 ##    I0 <- hessian(model, base, decomposition = "eigen")
@@ -184,13 +195,14 @@ cgeneric_graphpcor <-
       base,
       p = n,
       itheta = itheta,
-      d0 = n:1
+      d0 = n:1,
+      iparams = iparams[n+1:nEdges]-npars1
     )
     if(dotArgs$debug) {
       cat("base model:\n")
       print(utils::str(basemodel))
     }
-    stopifnot(all(dim(basemodel$I0) == c(nEdges, nEdges)))
+    stopifnot(all(dim(basemodel$I0) == c(npars2, npars2)))
 
     theta0 <- basemodel$theta
     I0 <- basemodel$I0
@@ -220,7 +232,7 @@ cgeneric_graphpcor <-
         iuqpac = as.integer(iuqpac-1),
         ifi = as.integer(ifi-1),
         jfi = as.integer(jfi-1),
-        itheta = as.integer(iparams -1),
+        itheta = as.integer(iparams-1),
         sfixed = as.integer(sigma.fixed),
         lambda = as.numeric(lambda),
         sigmaref = as.numeric(sigma.prior.reference),
