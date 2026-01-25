@@ -34,17 +34,6 @@
 #' the first two standard deviations are common and the
 #' second and third edges parameters are common as well,
 #' giving 6 unknown parameters in the model.
-#' @param cor.params.fixed numeric vector of length `m`
-#' providing the value(s) at which the lower parameter(s)
-#' of the L matrix to be fixed and not estimated.
-#' NA indicates not fixed and all are set to be estimated by default.
-#' Example: with `cor.params.fixed = c(NA, -1, NA, 1)` the first
-#' and the third of these parameters will be estimated while
-#' the second is fixed and equal to -1 and the forth is fixed
-#' and equal to 1. NOTE: `iparams` will be applied here as
-#' `cor.params.fixed[iparams[(n+1:m)]-n+1]`, thus the provided
-#' examples give `NA -1 -1 NA` and so the second and third low L
-#' parameters are fixed to `-1`.
 #' @param ... additional arguments passed on to
 #' [INLAtools::cgeneric()].
 #' @references
@@ -62,7 +51,6 @@ cgeneric_pc_correl <-
            sigma.prior.reference,
            sigma.prior.probability,
            iparams,
-           cor.params.fixed,
            ...) {
 
     if(missing(n) & missing(base))
@@ -90,7 +78,15 @@ cgeneric_pc_correl <-
     }
     theta0 <- base$theta
     m <- length(theta0)
-    I0 <- base$I0
+    I0 <- hessian(base)
+
+    if(is.null(I0)) {
+      I0d <- list(
+        logDeterminant = 0,
+        sqrt = NULL)
+    } else {
+      I0d <- dspd(I0)
+    }
 
     stopifnot(lambda>0)
 
@@ -172,9 +168,9 @@ cgeneric_pc_correl <-
         lambda = as.numeric(lambda),
         sigmaref = as.numeric(sigma.prior.reference),
         sigmaprob = as.numeric(sigma.prior.probability),
-        lconst = as.numeric(attr(I0, "determinant")),
+        lconst = as.numeric(I0d$logDeterminant),
         thetabase = as.numeric(theta0),
-        Ihalf = attr(I0, "h.5")
+        Ihalf = I0d$sqrt
       )
     )
 

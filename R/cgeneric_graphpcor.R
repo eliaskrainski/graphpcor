@@ -37,30 +37,18 @@
 #' corresponding `sigma.prior.reference` will be used as fixed.
 #' NOTE: `iparams` will be applied here as
 #' `sigma.prior.probability[iparams[1:n]]`.
-#' @param iparams integer ordered vector with length equals
-#' to `n+m` to specify common parameter values. If missing it
-#' is assumed `1:(n+m)` and all parameters are assumed distinct.
-#' The first `n` indexes the square root of the marginal
-#' variances and the remaining indexes the edges parameters.
-#' Example: By setting `iparams = c(1,1,2,3, 4,5,5,6)`,
-#' the first two standard deviations are common and the
-#' second and third edges parameters are common as well,
-#' giving 6 unknown parameters in the model.
-#' @param cor.params.fixed numeric vector of length `m`
-#' providing the value(s) at which the lower parameter(s)
-#' of the L matrix to be fixed and not estimated.
-#' NA indicates not fixed and all are set to be estimated by default.
-#' Example: with `cor.params.fixed = c(NA, -1, NA, 1)` the first
-#' and the third of these parameters will be estimated while
-#' the second is fixed and equal to -1 and the forth is fixed
-#' and equal to 1. NOTE: `iparams` will be applied here as
-#' `cor.params.fixed[iparams[(n+1:m)]-iparams[n]]`, thus the provided
-#' examples give `NA -1 -1 NA` and so the second and third low L
-#' parameters are fixed to `-1`.
+#' @param iparams integer vector
+#' @param iunknown integer vector to specify which correlation
+#' parameters are treated as unknown when computing the Hessian.
+#' By default all correlation parameters are treated as unknown.
+#' Note: it will be applied to `iparams` as `iparams[n+1:ne]`.
+#' Example: if `iunknown = 2:3`, the first parameter will be
+#' treated as fixed and the Hessian will be computed for
+#' the second and third correlation parameters.
+#' Please see the examples in [basepcor()].
 #' @param ... additional arguments that will be passed on to
 #' [INLAtools::cgenericBuilder()].
-#' @seealso [graphpcor()]
-#' @useDynLib graphpcor, .registration = TRUE
+#' @seealso [graphpcor()] and [basepcor()]
 #' @returns `cgeneric` object.
 cgeneric_graphpcor <-
   function(model,
@@ -69,7 +57,7 @@ cgeneric_graphpcor <-
            sigma.prior.reference,
            sigma.prior.probability,
            iparams,
-           cor.params.fixed,
+           iunknown,
            ...) {
 
     ## collect ... args and check debug
@@ -93,7 +81,6 @@ cgeneric_graphpcor <-
       cat("Laplacian is\n")
       print(Q0)
     }
-
     if(length(lambda)>1) {
       warning('length(lambda)>1, using lambda[1]!')
     }
@@ -123,7 +110,18 @@ cgeneric_graphpcor <-
     nnz <- n + nEdges
     nfi <- length(qij$ifil)
 
-    iparams <- m_iparams_fnc(nnz, iparams)
+    ii <- c(1:n, qij$ii)
+    jj <- c(1:n, qij$jj)
+    ii <- ii[order(jj)]
+    jj <- jj[order(jj)]
+
+    iuq <- qij$ilq  ## mem order
+    iuqpac <- qij$ilqpac
+
+    ifi <- row(Q0)[qij$ifil]
+    jfi <- col(Q0)[qij$ifil]
+
+    iparams <- m_iparams_fncheck(nnz, iparams)
     npars1 <- iparams[n]
     npars2 <- iparams[nnz]-npars1
 
@@ -163,31 +161,9 @@ cgeneric_graphpcor <-
                  sfixed = sigma.fixed))
     }
 
-    if(missing(cor.params.fixed)) {
-      cor.params.fixed <- 1:npars2
-    }
-    stopifnot(length(cor.params.fixed)==npars2)
-
-    ## expand
-    cor.params.fixed <- cor.params.fixed[iparams[n+1:nEdges]-n]
-    print(cor.params.fixed)
-    if(any(is.na(cor.params.fixed)))
-      stop("Some error in `iparams` or  `cor.params.fixed`!")
-
-    ii <- c(1:n, qij$ii)
-    jj <- c(1:n, qij$jj)
-    ii <- ii[order(jj)]
-    jj <- jj[order(jj)]
-
-    iuq <- qij$ilq  ## mem order
-    iuqpac <- qij$ilqpac
-
-    ifi <- row(Q0)[qij$ifil]
-    jfi <- col(Q0)[qij$ifil]
-
     if(missing(base)){
       warning("Missing base model! Using 'iid'.")
-      base <- rep(0, npars2)
+      base <- rep(0, length(itheta))
     }
 
 ##    I0 <- hessian(model, base, decomposition = "eigen")
@@ -196,16 +172,27 @@ cgeneric_graphpcor <-
       p = n,
       itheta = itheta,
       d0 = n:1,
-      iparams = iparams[n+1:nEdges]-npars1
+      iparams = iparams[n+1:nEdges]-npars1,
+      iunknown = iunknown
     )
     if(dotArgs$debug) {
       cat("base model:\n")
       print(utils::str(basemodel))
     }
-    stopifnot(all(dim(basemodel$I0) == c(npars2, npars2)))
 
-    theta0 <- basemodel$theta
-    I0 <- basemodel$I0
+    theta <- basemodel$theta
+    I0 <- hessian(basemodel)
+    if(is.null(I0)) {
+      I0d <- list(logDeterminant = 0,
+                  sqrt = NULL)
+    } else {
+      I0d <- dspd(I0)
+    }
+
+    if(missing(iunknown)) {
+      iunknown <- 1:length(itheta)
+    }
+    cfixed <- !((1:length(theta)) %in% iunknown)
 
     if(is.null(dotArgs$shlib)) {
       if(dotArgs$debug){
@@ -234,12 +221,13 @@ cgeneric_graphpcor <-
         jfi = as.integer(jfi-1),
         itheta = as.integer(iparams-1),
         sfixed = as.integer(sigma.fixed),
+        cfixed = as.integer(cfixed),
         lambda = as.numeric(lambda),
         sigmaref = as.numeric(sigma.prior.reference),
         sigmaprob = as.numeric(sigma.prior.probability),
-        lconst = as.numeric(attr(I0, "determinant")),
-        thetabase = as.numeric(theta0),
-        Ihalf = attr(I0, "h.5")
+        lconst = as.numeric(I0d$logDeterminant),
+        thetabase = as.numeric(theta),
+        Ihalf = I0d$sqrt
       )
     )
     return(the_model)

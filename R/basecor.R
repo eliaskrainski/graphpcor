@@ -7,7 +7,7 @@
 #' and the Hessian around it `I0`, see details.
 setClass(
   "basecor",
-  slots = c("base", "theta", "p", "I0", "itheta"),
+  slots = c("base", "theta", "p", "itheta"),
   validity = function(object) {
     (object$p>1) &&
       (object$p == nrow(object$base)) &&
@@ -124,6 +124,7 @@ basecor <- function(
 #' @describeIn basecor
 #' Build a `basecor` from the parameter vector.
 #' @returns a `basecor` object
+#' @useDynLib graphpcor, .registration = TRUE
 #' @export
 #' @example demo/basecor.R
 basecor.numeric <- function(
@@ -159,14 +160,8 @@ basecor.numeric <- function(
     theta = theta,
     p = p,
     parametrization = parametrization,
-    itheta = itheta)
-  out$I0 <- Hcorrel(
-    theta = theta,
-    p = p,
-    parametrization = parametrization,
     itheta = itheta,
-    C0 = base,
-    decomposition = "eigen")
+    L = L)
   class(out) <- "basecor"
   return(out)
 }
@@ -188,7 +183,8 @@ basecor.matrix <- function(
       itheta <- which(lower.tri(diag(p)))
   }
   m <- length(itheta)
-  l <- t(chol(base))[itheta]
+  L0 <- t(chol(base))
+  l <- L0[itheta]
   theta <- stats::optim(
     rep(0.0, m), function(x)
       mean((cholcor(theta = x,
@@ -201,14 +197,8 @@ basecor.matrix <- function(
     theta = theta,
     p = p,
     parametrization = parametrization,
-    itheta = itheta)
-  out$I0 <- Hcorrel(
-    theta = theta,
-    p = p,
-    parametrization = parametrization,
     itheta = itheta,
-    C0 = base,
-    decomposition = "eigen")
+    L = L0)
   class(out) <- "basecor"
   return(out)
 }

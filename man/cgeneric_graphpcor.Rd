@@ -11,7 +11,7 @@ cgeneric_graphpcor(
   sigma.prior.reference,
   sigma.prior.probability,
   iparams,
-  cor.params.fixed,
+  iunknown,
   ...
 )
 }
@@ -53,27 +53,16 @@ corresponding \code{sigma.prior.reference} will be used as fixed.
 NOTE: \code{iparams} will be applied here as
 \code{sigma.prior.probability[iparams[1:n]]}.}
 
-\item{iparams}{integer ordered vector with length equals
-to \code{n+m} to specify common parameter values. If missing it
-is assumed \code{1:(n+m)} and all parameters are assumed distinct.
-The first \code{n} indexes the square root of the marginal
-variances and the remaining indexes the edges parameters.
-Example: By setting \code{iparams = c(1,1,2,3, 4,5,5,6)},
-the first two standard deviations are common and the
-second and third edges parameters are common as well,
-giving 6 unknown parameters in the model.}
+\item{iparams}{integer vector}
 
-\item{cor.params.fixed}{numeric vector of length \code{m}
-providing the value(s) at which the lower parameter(s)
-of the L matrix to be fixed and not estimated.
-NA indicates not fixed and all are set to be estimated by default.
-Example: with \code{cor.params.fixed = c(NA, -1, NA, 1)} the first
-and the third of these parameters will be estimated while
-the second is fixed and equal to -1 and the forth is fixed
-and equal to 1. NOTE: \code{iparams} will be applied here as
-\code{cor.params.fixed[iparams[(n+1:m)]-iparams[n]]}, thus the provided
-examples give \verb{NA -1 -1 NA} and so the second and third low L
-parameters are fixed to \code{-1}.}
+\item{iunknown}{integer vector to specify which correlation
+parameters are treated as unknown when computing the Hessian.
+By default all correlation parameters are treated as unknown.
+Note: it will be applied to \code{iparams} as \code{iparams[n+1:ne]}.
+Example: if \code{iunknown = 2:3}, the first parameter will be
+treated as fixed and the Hessian will be computed for
+the second and third correlation parameters.
+Please see the examples in \code{\link[=basepcor]{basepcor()}}.}
 
 \item{...}{additional arguments that will be passed on to
 \code{\link[INLAtools:cgeneric-class]{INLAtools::cgenericBuilder()}}.}
@@ -89,5 +78,5 @@ to implement the Penalized Complexity prior using the
 Kullback-Leibler divergence - KLD from a base graphpcor.
 }
 \seealso{
-\code{\link[=graphpcor]{graphpcor()}}
+\code{\link[=graphpcor]{graphpcor()}} and \code{\link[=basepcor]{basepcor()}}
 }

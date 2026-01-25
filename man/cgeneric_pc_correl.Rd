@@ -13,7 +13,6 @@ cgeneric_pc_correl(
   sigma.prior.reference,
   sigma.prior.probability,
   iparams,
-  cor.params.fixed,
   ...
 )
 }
@@ -56,18 +55,6 @@ Example: By setting \code{iparams = c(1,1,2,3, 4,5,5,6)},
 the first two standard deviations are common and the
 second and third edges parameters are common as well,
 giving 6 unknown parameters in the model.}
-
-\item{cor.params.fixed}{numeric vector of length \code{m}
-providing the value(s) at which the lower parameter(s)
-of the L matrix to be fixed and not estimated.
-NA indicates not fixed and all are set to be estimated by default.
-Example: with \code{cor.params.fixed = c(NA, -1, NA, 1)} the first
-and the third of these parameters will be estimated while
-the second is fixed and equal to -1 and the forth is fixed
-and equal to 1. NOTE: \code{iparams} will be applied here as
-\code{cor.params.fixed[iparams[(n+1:m)]-n+1]}, thus the provided
-examples give \verb{NA -1 -1 NA} and so the second and third low L
-parameters are fixed to \code{-1}.}
 
 \item{...}{additional arguments passed on to
 \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}.}

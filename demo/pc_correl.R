@@ -1,19 +1,24 @@
-
 library(graphpcor)
 
-## A base correlation matrix
-c0 <- matrix(c( 1.0,  0.8, -0.5,
+## A correlation matrix
+c1 <- matrix(c( 1.0,  0.8, -0.5,
                 0.8,  1.0, -0.4,
                -0.5, -0.4,  1.0), 3)
-p <- ncol(c0)
+(p <- ncol(c1))
 
 ## The cgeneric model for correlation matrix
 ## considering the CPC parametrization
 c0model <- cgeneric(
     model = "pc_correl", n = p,
-    base = c0, lambda = 10,
+    lambda = 3,
     useINLAprecomp = FALSE)
 c0model
+
+c1model <- cgeneric(
+    model = "pc_correl", n = p,
+    base = c1, lambda = 3,
+    useINLAprecomp = FALSE)
+c1model
 
 dataf0 <- data.frame(
     i = 1:p,
@@ -24,32 +29,45 @@ library(INLA)
 
 fh <- list(prec = list(initial = 20, fixed = TRUE))
 
-fit <- inla(
+fit0 <- inla(
     y ~ 0 + f(i, model = c0model),
     data = dataf0,
     control.family = list(hyper = fh)
 )
+fit1 <- inla(
+    y ~ 0 + f(i, model = c1model),
+    data = dataf0,
+    control.family = list(hyper = fh)
+)
 
-th0 <- fit$mode$theta
+th0 <- fit0$mode$theta
+th1 <- fit1$mode$theta
 
-cholcor(th0)
-tcrossprod(cholcor(th0))
+cholcor(th1)
+tcrossprod(cholcor(th1))
 
 basecor(base = th0, p = p)
+basecor(base = th1, p = p)
 
 ## sample theta from its joint posterior
-thpost <- inla.hyperpar.sample(
-    n = 3000, result = fit)
-summary(thpost)
+th0post <- inla.hyperpar.sample(
+    n = 3000, result = fit0)
+summary(th0post)
+th1post <- inla.hyperpar.sample(
+    n = 3000, result = fit1)
+summary(th1post)
 
 ## lower.tri index
-iil <- which(lower.tri(c0))
+iil <- which(lower.tri(c1))
 iil
 
 ## transform from theta to correlations
-corpost <- t(sapply(1:nrow(thpost), function(i)
-    tcrossprod(cholcor(thpost[i, ]))[iil]))
-summary(corpost)
+cor0post <- t(sapply(1:nrow(th0post), function(i)
+    tcrossprod(cholcor(th0post[i, ]))[iil]))
+summary(cor0post)
+cor1post <- t(sapply(1:nrow(th1post), function(i)
+    tcrossprod(cholcor(th1post[i, ]))[iil]))
+summary(cor1post)
 
 ## labels for plots
 thlabs <- lapply(1:3, function(i)
@@ -70,16 +88,26 @@ for(i in 1:p) {
         }
         if(i<j) {
             k1 <- k1 + 1
-            hist(corpost[,k1], 100, main = '',
+            h0 <- hist(cor0post[,k1], 100, plot = FALSE)
+            h1 <- hist(cor1post[,k1], 100, plot = FALSE)
+            plot(h0, xlim = range(h0$breaks, h1$breaks), 
                  col = gray(0.5), border = "transparent",
-                 xlab = clabs[[k1]], freq = FALSE)
+                 main = "", xlab = clabs[[k1]], freq = FALSE)
+            plot(h1, add = TRUE, freq = FALSE,
+                 col = rgb(1,0.5,0,0.5), border = "transparent")
+            abline(v = c(0, c1[iil[k1]]), lty = 2, col = c(1, 2))
         }
         if(i>j) {
             k2 <- k2 + 1
-            hist(thpost[,k2], 100, main = '',
+            h0 <- hist(th0post[,k2], 100, plot = FALSE)
+            h1 <- hist(th1post[,k2], 100, plot = FALSE)
+            plot(h0, xlim = range(h0$breaks, h1$breaks), 
                  col = gray(0.5), border = "transparent",
-                 xlab = thlabs[[k2]], freq = FALSE)
-            lines(fit$internal.marginals.hyperpar[[k2]])
+                 main = "", xlab = thlabs[[k2]], freq = FALSE)
+            plot(h1, add = TRUE, freq = FALSE,
+                 col = rgb(1,0.5,0,0.5), border = "transparent")
+            lines(fit0$internal.marginals.hyperpar[[k2]])
+            lines(fit1$internal.marginals.hyperpar[[k2]], col = 2)
         } 
     }
 }

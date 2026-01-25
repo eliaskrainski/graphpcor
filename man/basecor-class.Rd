@@ -126,7 +126,6 @@ This element has the following attributes:
 
 }}
 \examples{
-library(graphpcor)
 
 ## A correlation matrix
 c0 <- matrix(c( 1.0,  0.8, -0.5,
@@ -140,7 +139,8 @@ pc.c0
 ## elements
 pc.c0$base
 pc.c0$theta
-pc.c0$I0
+
+hessian(pc.c0)
 
 ## from 'theta' 
 th0 <- pc.c0$theta
@@ -160,8 +160,8 @@ b2c <- basecor(b2$base, itheta = c(2,3))
 
 all.equal(th2, b2c$theta, tol = 1e-4)
 
-## Hessian around the base (and its decomposition, etc.)
-b2$I0
+## Hessian around the base 
+hessian(b2)
 }
 \references{
 Rapisarda, Brigo and Mercurio (2007).

@@ -1,6 +1,12 @@
+#' Functions used by/to basepcor
+#' @name basepcor-utils
+NULL
+#> NULL
+
+#' @describeIn basepcor-utils
 #' Compute the (lower triangle) Cholesky of the initial precision `Q0`.
 #' @inheritParams basepcor
-#' @param theta numeric parameter vector.
+#' @param theta numeric, the parameter vector.
 #' @returns lower triangular matrix
 #' @details The (lower triangle) Cholesky factor
 #' of the initial precision for a correlation matrix contains
@@ -31,7 +37,7 @@ Lprec0 <- function(
   L <- fillLprec(L)
   return(L)
 }
-
+#' @describeIn basepcor-utils
 #' Function to fill-in a Cholesky matrix
 #' @param L matrix as the lower triangle
 #' containing the Cholesky decomposition of
@@ -41,8 +47,9 @@ Lprec0 <- function(
 #' @param lfi integer vector used as indicator of the
 #' position in the lower matrix where are the
 #' fill-in elements. Must be col then row ordered.
-#' @return lower triangular matrix with the filled-in
+#' @returns lower triangular matrix with the filled-in
 #' elements thus `Q0` can be computed.
+#' @useDynLib graphpcor, .registration = TRUE
 fillLprec <- function(L, lfi) {
   L <- as.matrix(L)
   p <- nrow(L)
@@ -74,38 +81,4 @@ fillLprec <- function(L, lfi) {
     }
   }
   return(L)
-}
-#' @describeIn basepcor
-#' Function to deal with `p` and `itheta`
-p_itheta_fnc <- function(p, itheta) {
-  if(missing(itheta)) {
-    if(missing(p))
-      stop("Please provide 'p' or 'itheta'!")
-    itheta <- which(lower.tri(diag(
-      x = rep(1, p), nrow = p, ncol = p)))
-  } else {
-    if(inherits(itheta, "graphpcor")) {
-      Q1 <- Laplacian(itheta)
-      p <- ncol(Q1)
-      itheta <- which(lower.tri(Q1) & (Q1 != 0.0))
-    } else {
-      if(missing(p))
-        stop("Please provide 'p'!")
-    }
-  }
-  attr(itheta, 'p') <- as.integer(p)
-  return(itheta)
-}
-#' @describeIn basepcor
-#' Function to deal with `m` and `iparams`
-m_iparams_fnc <- function(m, iparams) {
-  if(missing(iparams)) {
-    iparams <- 1:m
-  } else {
-    stopifnot(length(iparams) == m)
-    stopifnot(all(iparams %in% 1:m))
-    stopifnot(all(diff(unique(iparams))>0))
-  }
-  attr(iparams, "m") <- m
-  return(iparams)
 }

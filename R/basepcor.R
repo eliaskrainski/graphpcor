@@ -7,7 +7,7 @@
 #' and the Hessian around it `I0`, see details.
 setClass(
   "basepcor",
-  slots = c("base", "theta", "p", "I0", "itheta"),
+  slots = c("base", "theta", "p", "itheta", "iparams", "iunknown"),
   validity = function(object) {
     (object$p>1) &&
       (object$p == nrow(object$base)) &&
@@ -19,7 +19,7 @@ setClass(
 #' @describeIn basepcor
 #' Build a `basepcor` object.
 #' @param base matrix (or numeric vector) as the base correlation
-#' (or parameter at the base model).
+#' (or parameter value at the base model).
 #' @param p integer (needed if `base` is vector): the dimension.
 #' @param itheta integer vector or 'graphpcor' to specify the (vectorized)
 #' position where 'theta' is placed in the initial (before the fill-in)
@@ -32,8 +32,16 @@ setClass(
 #' @param iparams integer ordered vector with length equal
 #' the number of parameters used to specify common parameter values.
 #' If missing, assumed to be `1:length(theta)`. Example: By setting
-#' `iparams = c(1,1,2,3)` the first and second unknowns are
+#' `iparams = c(1,1,2,3)` the first and second parameters are
 #' considered to be the same.
+#' @param iunknown integer vector to specify which correlation
+#' parameters are treated as unknown when computing the Hessian.
+#' Example: if `iparams = c(1,1,2,3)` and
+#' `iunknown = 2:3`, the first parameter is considered
+#' fixed and the Hessian will be with respect the
+#' second and third parameters. If all the parameters
+#' are fixed, the Hessian is then `NULL`.
+#' By default all correlation parameters are treated as unknown.
 #' @details
 #' The Inverse Transform Parametrization - ITP,
 #' is applied by starting with a
@@ -65,7 +73,8 @@ basepcor <- function(
     p,
     itheta,
     d0,
-    iparams) {
+    iparams,
+    iunknown) {
   UseMethod("basepcor")
 }
 #' @describeIn basepcor
@@ -78,25 +87,38 @@ basepcor.numeric <- function(
     p,
     itheta,
     d0,
-    iparams) {
+    iparams,
+    iunknown) {
 
   theta <- base
 
-  itheta <- p_itheta_fnc(p, itheta)
+  ## check p and itheta
+  itheta <- p_itheta_fncheck(p, itheta)
   if(missing(p)) {
     p <- attr(itheta, "p")
   }
   stopifnot(p>1)
 
   m <- length(itheta)
-  iparams <- m_iparams_fnc(m, iparams)
+  ## check iparams
+  iparams <- m_iparams_fncheck(m, iparams)
 
   if(missing(d0)) {
     d0 <- p:1
+  } else {
+    stopifnot(all(d0>0))
   }
 
+  ## check iunknown
+  if(missing(iunknown)) {
+    iunknown <- 1:length(theta)
+  } else {
+    stopifnot(all(iunknown %in% (1:length(theta))))
+  }
+  nUnk <- length(iunknown)
+
   ## compute L0
-  L <- Lprec0(
+  L0 <- Lprec0(
     theta = theta[iparams],
     p = p,
     itheta = itheta,
@@ -107,28 +129,8 @@ basepcor.numeric <- function(
   }
 
   ## compute the base correlation matrix
-  base <- lq02cor(L)
+  base <- lq02cor(L0)
   U0correl <- chol(base)
-
-  ## Hessian around theta
-  I0 <- hessian(
-    func = function(x)
-      KLD10(C1 = lq02cor(Lprec0(
-        x[iparams], ## here it expand theta
-        p = p,
-        itheta = itheta, d0 = d0)),
-            L0 = U0correl),
-    x = theta) ## here it is 'pure' theta
-
-  ## eigen decomposition of I0, I0^0.5 and I0^-0.5
-  eI0 <- eigen(I0)
-  stopifnot(all(eI0$values>0))
-  s <- sqrt(eI0$values)
-  tv <- t(eI0$vectors)
-  attr(I0, "decomposition") <- eI0
-  attr(I0, "determinant") <- prod(eI0$values)
-  attr(I0, "h.5") <- crossprod(tv * s, tv)
-  attr(I0, "hneg.5") <- crossprod(tv / s, tv)
 
   ## output
   out <- list(
@@ -138,7 +140,9 @@ basepcor.numeric <- function(
     d0 = d0,
     itheta = itheta,
     iparams = iparams,
-    I0 = I0)
+    iunknown = iunknown,
+    L0 = L0, ## initial precision (lower) Cholesky
+    L = t(U0correl)) ## the correlation's (lower) Cholesky
   class(out) <- "basepcor"
 
   return(out)
@@ -152,7 +156,8 @@ basepcor.matrix <- function(
     p,
     itheta,
     d0,
-    iparams) {
+    iparams,
+    iunknown) {
   stopifnot(all.equal(base, t(base)))
   p <- as.integer(nrow(base))
   if(missing(d0)) {
@@ -163,8 +168,8 @@ basepcor.matrix <- function(
   Q <- chol2inv(U0correl)
   ilQ <-  which(
     lower.tri(matrix(1, p, p)) &
-      (!is.zero(Q, tol = 1e-9)))
-  itheta <- p_itheta_fnc(p, itheta)
+      (!is.zero(Q, tol = 0.001)))
+  itheta <- p_itheta_fncheck(p, itheta)
   stopifnot(all(ilQ %in% itheta))
 
   ## compute theta
@@ -174,27 +179,38 @@ basepcor.matrix <- function(
   }
   theta <- LQ0[itheta]
 
+  ## check iparams
+  m <- length(theta)
+  iparams <- m_iparams_fncheck(m, iparams)
+
+  if(iparams[m]<m) {
+    ## Check if the parameters assumed to be common actually are
+    stheta <- split(theta, iparams)
+    theta.diff <- all(sapply(stheta, function(x)
+      all(abs(x-mean(x)))>0.001))
+    if(any(theta.diff)) {
+      cat("Differences found among supposed equal parameters:\n")
+      print(stheta[which(theta.diff)])
+      stop("Please review `iparams` definition!")
+    }
+    theta0 <- sapply(stheta, mean)
+  } else {
+    theta0 <- theta
+  }
+  m0 <- length(theta0)
+
+  ## check iunknown
+  if(missing(iunknown)) {
+    iunknown <- 1:m0
+  } else {
+    stopifnot(all(iunknown %in% (1:m0)))
+  }
+  nUnk <- length(iunknown)
+
   ## Hessian around theta
   lq02cor <- function(l) {
     cov2cor(chol2inv(t(l)))
   }
-  I0 <- hessian(
-    func = function(x)
-      KLD10(C1 = lq02cor(
-        Lprec0(x[iparams], p = p,
-               itheta = itheta, d0 = d0)),
-            L0 = U0correl),
-    x = theta)
-
-  ## eigen decomposition of I0, I0^0.5 and I0^-0.5
-  eI0 <- eigen(I0)
-  stopifnot(all(eI0$values>0))
-  s <- sqrt(eI0$values)
-  tv <- t(eI0$vectors)
-  attr(I0, "decomposition") <- eI0
-  attr(I0, "determinant") <- prod(eI0$values)
-  attr(I0, "h.5") <- crossprod(tv * s, tv)
-  attr(I0, "hneg.5") <- crossprod(tv / s, tv)
 
   ## output
   out <- list(
@@ -204,7 +220,10 @@ basepcor.matrix <- function(
     d0 = d0,
     itheta = itheta,
     iparams = iparams,
-    I0 = I0)
+    iunknown = iunknown,
+    L0 = LQ0, ## initial precision (lower) Cholesky
+    L = t(U0correl)) ## the correlation's (lower) Cholesky
+
   class(out) <- "basepcor"
 
   return(out)
@@ -220,3 +239,4 @@ print.basepcor <- function(x, ...) {
   cat("Base correlation matrix:\n")
   print(x$base, ...)
 }
+
