@@ -17,7 +17,21 @@ KLD10(C1, C0, L1, L0)
 dspd(x, decomposition = "svd")
 }
 \arguments{
+\item{p}{integer (needed if \code{base} is vector): the dimension.}
+
+\item{itheta}{integer vector or 'graphpcor' to specify the (vectorized)
+position where 'theta' is placed in the initial (before the fill-in)
+Cholesky (lower triangle) factor. If missing, default, assumes
+the dense case as \code{itheta = which(lower.tri(...))}, giving
+\code{length(theta)=p(p-1)/2}.}
+
 \item{m}{integer to specify the number of parameters}
+
+\item{iparams}{integer ordered vector with length equal
+the number of parameters used to specify common parameter values.
+If missing, assumed to be \code{1:length(theta)}. Example: By setting
+\code{iparams = c(1,1,2,3)} the first and second parameters are
+considered to be the same.}
 
 \item{C1}{is a correlation matrix.}
 

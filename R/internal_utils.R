@@ -5,6 +5,7 @@ NULL
 
 #' @describeIn internal-utils
 #' Function to deal with `p` and `itheta`
+#' @inheritParams basepcor
 p_itheta_fncheck <- function(p, itheta) {
   if(missing(itheta)) {
     if(missing(p))
