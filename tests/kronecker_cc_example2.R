@@ -73,7 +73,7 @@ Q2
 
 solve(Q2)
 
-cov2cor(solve(Q2))
+cov2cor(as.matrix(solve(Q2)))
 cov2cor(vcov(m2.graph, theta = theta2[-(1:n2)]))
 
 ## The M1 (x) M2 Kronecker product model definition
@@ -108,7 +108,7 @@ summary(xx)
 diag(solve(Q2))
 apply(t(matrix(xx, n2)), 2, sd)^2
 
-cov2cor(solve(Q2))
+cov2cor(as.matrix(solve(Q2)))
 cor(t(matrix(xx, n2)))
 
 dataf <- list(
@@ -202,7 +202,7 @@ diag(solve(Q2))
 diag(solve(prec(m2, theta = out12$mode$theta)))
 diag(solve(prec(m2, theta = out21$mode$theta)))
 
-cov2cor(solve(Q2))
+cov2cor(as.matrix(solve(Q2)))
 
 cov2cor(vcov(m2.graph, theta = out12$mode$theta[-(1:n2)]))
 cov2cor(vcov(m2.graph, theta = out21$mode$theta[-(1:n2)]))

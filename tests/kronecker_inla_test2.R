@@ -82,7 +82,7 @@ solve(Q2test)
 crossprod(C2 %*% diag(exp(theta.test[1:n2])),
           diag(exp(theta.test[1:n2])))
 
-cov2cor(solve(Q2test))
+cov2cor(as.matrix(solve(Q2test)))
 C2
 
 theta2 <- c(0.0, 0.0, theta.p) ## unit variance
@@ -104,7 +104,7 @@ all.equal(Q2, prec(out2))
 rho = C2[1, 2]
 Q2 * (1 - rho^2)
 solve(Q2 * (1 - rho^2))
-cov2cor(solve(Q2 * (1 - rho^2)))
+cov2cor(as.matrix(solve(Q2 * (1 - rho^2))))
 
 Q21 <- as(inla.as.sparse(kronecker(Q2, Q1)),
           'symmetricMatrix')
@@ -136,7 +136,7 @@ ires1 <- inla(
 
 Qinla1 <- prec(ires1)
 
-all.equal(Q21r, Qinla1)
+all.equal(Sparse(Q21r), Sparse(Qinla1))
 
 ## setup the 'cgeneric' kronecker model
 m1 <- cgeneric(
@@ -145,7 +145,7 @@ m1 <- cgeneric(
     scale = FALSE,
     param = c(1, 0.0))
 
-Q1c <- prec(m1, theta = 0)
+Q1c <- Sparse(prec(m1, theta = 0))
 
 all.equal(
     prec(out1),
@@ -168,7 +168,7 @@ ires2 <- inla(
 
 Qinla2 <- prec(ires2)
 
-all.equal(q21, Qinla2)
+all.equal(Sparse(q21), Qinla2)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)

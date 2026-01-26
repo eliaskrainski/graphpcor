@@ -46,7 +46,7 @@ m2 <- cgeneric(
     sigma.prior.probability = c(.5,.5,0.5,0.5),
     lambda = 1)
 
-str(m2)
+m2
 
 (n2 <- m2$f$n)
 
@@ -57,7 +57,7 @@ Q2 <- prec(m2, theta = theta2)
 Q2
 
 solve(Q2)
-cov2cor(solve(Q2))
+cov2cor(as.matrix(solve(Q2)))
 
 Q12 <- kronecker(Q1, Q2)
 Q21 <- kronecker(Q2, Q1)
@@ -88,7 +88,7 @@ summary(xx)
 
 cov(t(matrix(xx, n2)))/solve(Q2)-1
 
-cov2cor(solve(Q2))
+cov2cor(as.matrix(solve(Q2)))
 cor(t(matrix(xx, n2)))
 
 dataf <- data.frame(
