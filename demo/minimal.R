@@ -8,8 +8,7 @@ g <- graphpcor(a ~ b + c)
 g
 dim(g)
 
-cmodel <- cgeneric(g, lambda = 10, base = c(-1, -0.5),
-                   useINLAprecomp = !is.na(packageCheck("INLA", "26-01-25")))
+cmodel <- cgeneric(g, lambda = 10, base = c(-1, -0.5))
 cmodel
 
 initial(cmodel)
