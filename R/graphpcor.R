@@ -235,7 +235,7 @@ Laplacian.matrix <- function(x) {
 }
 #' @describeIn Laplacian
 #' The Laplacian of a Matrix
-#' @importFrom Matrix rowSums
+#' @importFrom Matrix rowSums Diagonal
 #' @export
 Laplacian.Matrix <- function(x) {
   o <- Sparse(x)

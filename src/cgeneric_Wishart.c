@@ -74,7 +74,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	M = (int)(dn * (dn + 1.0) / 2.0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
-	int debug = data->ints[1]->ints[0];
+//	int debug = data->ints[1]->ints[0];
 
 	assert(!strcasecmp(data->doubles[0]->name, "dof"));
 	double dof = data->doubles[0]->doubles[0];
@@ -88,10 +88,12 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 	double lcprior = data->doubles[2]->doubles[0];
 	//assert(lcprior > 0);
 
+/*
 	if (debug > 999) {
 		printf("Inputs\nN: %d, M: %d, dof: %f, lc: %f\n", N, M, dof, lcprior);
 		printMat(R, N, N, "R");
 	}
+ */
 
 	double dk[N];
 	if (theta) {

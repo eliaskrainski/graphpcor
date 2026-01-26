@@ -49,8 +49,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(N > 0);
 
 	assert(!strcasecmp(data->ints[1]->name, "debug")); // this will always be the case
-	int debug = data->ints[1]->ints[0];
-	assert(debug>=0);
+//	int debug = data->ints[1]->ints[0];
+	//assert(debug>=0);
 
 	assert(!strcasecmp(data->ints[2]->name, "ne"));
 	int ne = data->ints[2]->ints[0];
