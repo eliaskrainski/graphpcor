@@ -260,74 +260,75 @@ plot.treepcor <- function(x, y, ...) {
            vertex.shape = rep(c("rectangle", "circle"), c(m,n)),
            vertex.color = rep(rgb(1:0, 0.5, 0:1, 0.5), c(m,n)))
     } else {
-      if(requireNamespace("graph")) {
-        edgl <- edges(x)
-        nodes <- names(edgl)
-        gr <- graph::graphNEL(
-          nodes = nodes,
-          edgeL = edgl,
-          edgemode = 'directed')
-
-        mc <- lapply(
-          match.call(expand.dots = TRUE)[-1],
-          eval)
-        nargs <- names(mc)
-
-        ppars <- list(
-          color =  {
-            if(any(nargs == "color"))
-              mc$color[1:2]
-            else
-              c("red", "blue")
-          },
-          fillcolor = {
-            if(any(nargs == "fillcolor"))
-              mc$fillcolor[1:2]
-            else
-              c("lightsalmon", "lightblue")
-          },
-          shape = {
-            if(any(nargs == "shape"))
-              mc$shape[1:2]
-            else
-              c("box", "circle")
-          },
-          height = {
-            if(any(nargs == "height"))
-              mc$height[1:2]
-            else
-              c(0.5, 0.5)
-          },
-          width = {
-            if(any(nargs == "width"))
-              mc$width[1:2]
-            else
-              c(0.75, 0.75)
-          },
-          fontsize = {
-            if(any(nargs == "fontsize"))
-              mc$fontsize
-            else
-              c(14, 14)
-          }
-        )
-        nattr <- lapply(
-          ppars, rep, times = c(m, n))
-        for(i in 1:length(nattr))
-          names(nattr[[i]]) <- nodes
-
-        ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
-        for(k in 1:length(ag@AgEdge)) {
-          i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
-          j <- pmatch(ag@AgEdge[[k]]@head,
-                      edgl[[i]]$edges)
-          ag@AgEdge[[k]]@color <- c(
-            "red", "black", "blue")[edgl[[i]]$weights[j]+2]
-          if(any(nargs == "lwd"))
-            ag@AgEdge[[k]]@lwd <- mc$lwd[1]
-        }
-        getMethod("plot", "Ragraph")(ag)
-      }
+      stop("Please install 'igraph' package!")
+      # if(requireNamespace("graph")) {
+      #   edgl <- edges(x)
+      #   nodes <- names(edgl)
+      #   gr <- graph::graphNEL(
+      #     nodes = nodes,
+      #     edgeL = edgl,
+      #     edgemode = 'directed')
+      #
+      #   mc <- lapply(
+      #     match.call(expand.dots = TRUE)[-1],
+      #     eval)
+      #   nargs <- names(mc)
+      #
+      #   ppars <- list(
+      #     color =  {
+      #       if(any(nargs == "color"))
+      #         mc$color[1:2]
+      #       else
+      #         c("red", "blue")
+      #     },
+      #     fillcolor = {
+      #       if(any(nargs == "fillcolor"))
+      #         mc$fillcolor[1:2]
+      #       else
+      #         c("lightsalmon", "lightblue")
+      #     },
+      #     shape = {
+      #       if(any(nargs == "shape"))
+      #         mc$shape[1:2]
+      #       else
+      #         c("box", "circle")
+      #     },
+      #     height = {
+      #       if(any(nargs == "height"))
+      #         mc$height[1:2]
+      #       else
+      #         c(0.5, 0.5)
+      #     },
+      #     width = {
+      #       if(any(nargs == "width"))
+      #         mc$width[1:2]
+      #       else
+      #         c(0.75, 0.75)
+      #     },
+      #     fontsize = {
+      #       if(any(nargs == "fontsize"))
+      #         mc$fontsize
+      #       else
+      #         c(14, 14)
+      #     }
+      #   )
+      #   nattr <- lapply(
+      #     ppars, rep, times = c(m, n))
+      #   for(i in 1:length(nattr))
+      #     names(nattr[[i]]) <- nodes
+      #
+      #   ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
+      #   for(k in 1:length(ag@AgEdge)) {
+      #     i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
+      #     j <- pmatch(ag@AgEdge[[k]]@head,
+      #                 edgl[[i]]$edges)
+      #     ag@AgEdge[[k]]@color <- c(
+      #       "red", "black", "blue")[edgl[[i]]$weights[j]+2]
+      #     if(any(nargs == "lwd"))
+      #       ag@AgEdge[[k]]@lwd <- mc$lwd[1]
+      #   }
+      #   getMethod("plot", "Ragraph")(ag)
+      # }
     }
 }
 #' @describeIn treepcor
