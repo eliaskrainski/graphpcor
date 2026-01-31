@@ -69,7 +69,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	assert(!strcasecmp(data->doubles[1]->name, "lc"));
 	double lc = data->doubles[1]->doubles[0];
 
-	assert(!strcasecmp(data->ints[2]->name, "sfixed"));   // this will always be the case
+	assert(!strcasecmp(data->ints[2]->name, "sfixed"));
 	int nsigmas = data->ints[2]->len;
 	assert(nsigmas==N);
 	int nsfixed = 0, sfixed[nsigmas];

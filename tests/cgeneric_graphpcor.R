@@ -29,6 +29,8 @@ cmodel <- cgeneric(
     sigma.prior.reference = rep(1, ne[1]),
     sigma.prior.probability = rep(0.5, ne[1]))
 
+cmodel
+
 sigmas <- c(5, 0.5, 1, 0.1)
 thetaL <- c(-5, 1, 2, -0.1)
 theta1 <- c(log(sigmas), thetaL)

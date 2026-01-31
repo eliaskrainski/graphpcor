@@ -1,8 +1,6 @@
 ## for details see
 ## https://link.springer.com/article/10.1007/s10260-025-00788-y
 
-library(graphpcor)
-
 if(FALSE) {
     
 ### examples of what is not allowed

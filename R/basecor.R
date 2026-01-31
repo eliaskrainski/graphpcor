@@ -7,7 +7,7 @@
 #' and the Hessian around it `I0`, see details.
 setClass(
   "basecor",
-  slots = c("base", "theta", "p", "itheta"),
+  slots = c("base", "theta", "p", "iparams", "itheta"),
   validity = function(object) {
     (object$p>1) &&
       (object$p == nrow(object$base)) &&
@@ -24,14 +24,19 @@ setClass(
 #' 'length(itheta)' in the sparse model case.
 #' @param p integer with the dimension,
 #' the number of rows/columns of the correlation matrix.
-#' @param itheta integer vector to specify the (vectorized) position
-#' where 'theta' will be placed in the (initial, before fill-in)
-#' Cholesky (lower triangle) factor. Default is missing and assumes
-#' the dense case for when `itheta = which(lower.tri(...))`.
 #' @param parametrization character to specify the
 #' parametrization used. The available ones are
 #' "cpc" (or "CPC") or "sap" (or "SAP").
 #' See Details. The default is "cpc".
+#' @param iparams integer ordered vector with length equal
+#' the number of parameters used to specify common parameter values.
+#' If missing, assumed to be `1:length(theta)`. Example: By setting
+#' `iparams = c(1,1,2,3)` the first and second parameters are
+#' considered to be the same.
+#' @param itheta integer vector to specify the (vectorized) position
+#' where 'theta' will be placed in the (initial, before fill-in)
+#' Cholesky (lower triangle) factor. Default is missing and assumes
+#' the dense case for when `itheta = which(lower.tri(...))`.
 #' @details
 #' For 'parametrization' = "CPC" or 'parametrization' = "cpc":
 #' The Canonical Partial Correlation - CPC parametrization,
@@ -107,17 +112,12 @@ setClass(
 #' on Vines and Extended Onion Method.
 #' Journal of Multivariate Analysis 100: 1989–2001.
 #' <doi: 10.1016/j.jmva.2009.04.008>
-#'
-#' Simpson, et. al. (2017)
-#' Penalising Model Component Complexity:
-#' A Principled, Practical Approach to Constructing Priors.
-#'  Statist. Sci. 32(1): 1-28 (February 2017).
-#'  <doi: 10.1214/16-STS576>
 #' @export
 basecor <- function(
     base,
     p,
     parametrization = "cpc",
+    iparams,
     itheta) {
   UseMethod("basecor")
 }
@@ -131,25 +131,28 @@ basecor.numeric <- function(
     base,
     p,
     parametrization = "cpc",
+    iparams,
     itheta) {
+
   parametrization <- match.arg(
     arg = tolower(parametrization),
     choices = c("cpc", "sap")
   )
   theta <- base
-  m <- length(theta)
+
+  ## check p and itheta
+  itheta <- p_itheta_fncheck(p, itheta)
   if(missing(p)) {
-    p <- (1 + sqrt(1+8*m))/2
-    stopifnot(floor(p)==ceiling(p))
+    p <- attr(itheta, "p")
   }
   stopifnot(p>1)
-  if(missing(itheta)) {
-    itheta <- which(lower.tri(diag(
-      x = rep(1, p), nrow = p, ncol = p)))
-  }
-  stopifnot(length(itheta) == m)
+
+  m <- length(itheta)
+  ## check iparams
+  iparams <- m_iparams_fncheck(m, iparams)
+
   L <- cholcor(
-    theta = theta,
+    theta = theta[iparams],
     p = p,
     parametrization = parametrization,
     itheta = itheta)
@@ -161,7 +164,9 @@ basecor.numeric <- function(
     p = p,
     parametrization = parametrization,
     itheta = itheta,
+    iparams = iparams,
     L = L)
+
   class(out) <- "basecor"
   return(out)
 }
@@ -172,31 +177,42 @@ basecor.matrix <- function(
     base,
     p,
     parametrization = "cpc",
+    iparams,
     itheta) {
+
   parametrization <- match.arg(
     arg = tolower(parametrization),
     choices = c("cpc", "sap")
   )
+
   stopifnot(all.equal(base, t(base)))
+  L0 <- t(chol(base))
+
   p <- as.integer(nrow(base))
   if(missing(itheta)) {
       itheta <- which(lower.tri(diag(p)))
   }
   m <- length(itheta)
-  L0 <- t(chol(base))
-  l <- L0[itheta]
+
+  ## check iparams
+  iparams <- m_iparams_fncheck(m, iparams)
+  m0 <- iparams[m]
+
   theta <- stats::optim(
-    rep(0.0, m), function(x)
-      mean((cholcor(theta = x,
-                    p = p,
-                    itheta = itheta,
-                    parametrization = parametrization)[itheta]-l)^2),
+    rep(0.0, m0), function(x)
+      mean((tcrossprod(cholcor(
+        theta = x[iparams],
+        p = p,
+        itheta = itheta,
+        parametrization = parametrization))-base)^2),
       method = 'BFGS')$par
+
   out <- list(
     base = base,
     theta = theta,
     p = p,
     parametrization = parametrization,
+    iparams = iparams,
     itheta = itheta,
     L = L0)
   class(out) <- "basecor"

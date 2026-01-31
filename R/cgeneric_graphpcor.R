@@ -1,11 +1,11 @@
 #' Build an `cgeneric` for a graph, see [graphpcor()]
 #' @description
-#' From either a `graph` (see [graph()]) or
+#' From either a `graphpcor` (see [graphpcor()]) or
 #' a square matrix (used as a graph),
 #' creates an `cgeneric` (see [INLAtools::cgeneric()])
 #' to implement the Penalized Complexity prior using the
 #' Kullback-Leibler divergence - KLD from a base graphpcor.
-#' @param model  a `graphpcor` (see [graphpcor()]) or
+#' @param model a `graphpcor` (see [graphpcor()]) or
 #' a square matrix (to be used as a graph)
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
@@ -18,36 +18,34 @@
 #' the parameters in the lower triangle matrix L.
 #' If it is a matrix, it will be checked if the graph model
 #' can generates this.
-#' @param sigma.prior.reference numeric vector with length `n`,
-#' `n` is the number of nodes (variables) in the graph, as the
-#' reference standard deviation to define the PC prior for each
-#' marginal variance parameters. If missing, the model will be
-#' assumed for a correlation. If a length `n` vector is given
-#' and `sigma.prior.probability` is missing, it will be used as
-#' known square root of the variances.
+#' @param sigma.prior.reference numeric vector to set the reference
+#' for each standard deviation parameter for its PC-prior.
+#' If missing, the model will be assumed as for a correlation.
 #' NOTE: `iparams` will be applied here as
 #' `sigma.prior.reference[iparams[1:n]]`.
-#' @param sigma.prior.probability numeric vector with length `n`
-#' to set the probability statement of the PC prior for each
+#' @param sigma.prior.probability numeric vector with to
+#'set the probability statement of the PC prior for each
 #' marginal variance parameters. The probability statement is
 #' P(sigma < `sigma.prior.reference`) = p. If missing, all the
-#' marginal variances are considered as known, as described in
-#' `sigma.prior.reference`.
+#' marginal variances are considered as known.
 #' If a vector is given and a probability is NA, 0 or 1, the
 #' corresponding `sigma.prior.reference` will be used as fixed.
 #' NOTE: `iparams` will be applied here as
 #' `sigma.prior.probability[iparams[1:n]]`.
-#' @param iparams integer vector
-#' @param iunknown integer vector to specify which correlation
-#' parameters are treated as unknown when computing the Hessian.
+#' @param iparams integer vector with length equal `n+m`,
+#' where `m` is the number of correlation parameters,
+#' to identify (possible) common parameters in the model
+#' @param ifixed integer vector to specify which correlation
+#' parameters are treated as known when computing the Hessian.
 #' By default all correlation parameters are treated as unknown.
-#' Note: it will be applied to `iparams` as `iparams[n+1:ne]`.
-#' Example: if `iunknown = 2:3`, the first parameter will be
-#' treated as fixed and the Hessian will be computed for
-#' the second and third correlation parameters.
+#' Note: it will be applied to `iparams` as `iparams[n+1:m]`.
+#' Example: if `ifixed = c(1,3)`, the first and third
+#' correlation parameters will be treated as fixed and the
+#' Hessian will be computed for the second correlation parameter.
 #' Please see the examples in [basepcor()].
-#' @param ... additional arguments that will be passed on to
-#' [INLAtools::cgenericBuilder()].
+#' @param ... additional arguments passed on to
+#' [INLAtools::cgeneric()], such as `debug`,
+#' `shlib` and `useINLAprecomp`.
 #' @seealso [graphpcor()] and [basepcor()]
 #' @returns `cgeneric` object.
 cgeneric_graphpcor <-
@@ -57,13 +55,36 @@ cgeneric_graphpcor <-
            sigma.prior.reference,
            sigma.prior.probability,
            iparams,
-           iunknown,
+           ifixed,
            ...) {
 
     ## collect ... args and check debug
     dotArgs <- list(...)
     if(!any(names(dotArgs)=="debug")) {
       dotArgs$debug <- FALSE
+    }
+
+    if(is.null(dotArgs$shlib)) {
+      if(dotArgs$debug){
+        cat("searching shlib...\n")
+      }
+      dotArgs$shlib <- do.call(
+        what = INLAtools::cgeneric_shlib,
+        args = c(list(package = "graphpcor"),
+                 dotArgs))
+    }
+
+    if(length(lambda)>1) {
+      warning('length(lambda)>1, using lambda[1]!')
+    }
+    lambda <- as.numeric(lambda[1])
+    stopifnot(lambda>0)
+
+    if(inherits(model, "matrix")) {
+      if(dotArgs$debug) {
+        cat("Building 'graphpcor' from a 'matrix'!")
+      }
+      model <- graphpcor(model)
     }
     if(inherits(model, "Matrix")) {
       if(dotArgs$debug) {
@@ -72,20 +93,20 @@ cgeneric_graphpcor <-
       model <- graphpcor(model)
     }
 
+    n <- dim(model)[1]
+    stopifnot(n>0)
+    nEdges <- dim(model)[2]
+    if(nEdges==0) {
+      stop("This graph is trivial, please consider 'iid' model!")
+    }
+
     ## Matrix structure
     Q0 <- Laplacian(model)
-    n <- nrow(Q0)
-    stopifnot(n>0)
     if(dotArgs$debug) {
       print(model)
       cat("Laplacian is\n")
       print(Q0)
     }
-    if(length(lambda)>1) {
-      warning('length(lambda)>1, using lambda[1]!')
-    }
-    lambda <- as.numeric(lambda[1])
-    stopifnot(lambda>0)
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
@@ -103,10 +124,6 @@ cgeneric_graphpcor <-
       print(qij)
     }
 
-    nEdges <- length(qij$ii)
-    if(nEdges==0) {
-      stop("This graph is trivial, please consider 'iid' model!")
-    }
     nnz <- n + nEdges
     nfi <- length(qij$ifil)
 
@@ -122,15 +139,16 @@ cgeneric_graphpcor <-
     jfi <- col(Q0)[qij$ifil]
 
     iparams <- m_iparams_fncheck(nnz, iparams)
-    npars1 <- iparams[n]
-    npars2 <- iparams[nnz]-npars1
+    npars1 <- length(unique(iparams[1:n]))
+    npars2 <- length(unique(iparams[n+1:nEdges]))
 
     if(dotArgs$debug) {
       print(list(n = n, nnz = nnz, nfi = nfi,
-                 iparams = iparams,
+                 itheta = itheta, iparams = iparams,
                  npars1 = npars1, npars2 = npars2))
     }
 
+    ## sigma prior
     if(missing(sigma.prior.reference)) {
        sigma.prior.reference <- rep(1, npars1)
     }
@@ -147,15 +165,21 @@ cgeneric_graphpcor <-
     sigma.fixed <- is.zero(sigma.prior.probability) |
       is.zero(1-sigma.prior.probability)
     nUnkSigmas <- npars1 - sum(sigma.fixed)
+    if(dotArgs$debug) {
+      print(list(sigmaref = sigma.prior.reference,
+                 sigmaprob = sigma.prior.probability,
+                 sfixed = sigma.fixed,
+                 nUnkSigmas = nUnkSigmas))
+    }
 
-    ## update sigma.*
+    ## update sigma.* with iparams
     sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
     sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
     sigma.fixed <- sigma.fixed[iparams[(1:n)]]
     if(any(is.na(sigma.fixed)))
       stop("Some error in `iparams` or  `sigma.fixed`!")
-
     if(dotArgs$debug) {
+      cat("expanded:\n")
       print(list(sigmaref = sigma.prior.reference,
                  sigmaprob = sigma.prior.probability,
                  sfixed = sigma.fixed))
@@ -166,43 +190,40 @@ cgeneric_graphpcor <-
       base <- rep(0, length(itheta))
     }
 
-##    I0 <- hessian(model, base, decomposition = "eigen")
     basemodel <- basepcor(
       base,
       p = n,
       itheta = itheta,
       d0 = n:1,
-      iparams = iparams[n+1:nEdges]-npars1,
-      iunknown = iunknown
+      iparams = iparams[n+1:nEdges]-npars1
     )
+    stopifnot(length(basemodel$theta) == npars2)
     if(dotArgs$debug) {
-      cat("base model:\n")
-      print(utils::str(basemodel))
+      print(basemodel)
     }
 
-    theta <- basemodel$theta
+    theta0 <- basemodel$theta
     I0 <- hessian(basemodel)
+    if(dotArgs$debug) {
+      cat("Hessian\n")
+      print(I0)
+    }
+
     if(is.null(I0)) {
       I0d <- list(logDeterminant = 0,
-                  sqrt = NULL)
+                  sqrt = matrix(0, 0))
     } else {
       I0d <- dspd(I0)
     }
-
-    if(missing(iunknown)) {
-      iunknown <- 1:length(itheta)
+    if(dotArgs$debug) {
+      cat("Hessian decomposition\n")
+      print(I0d)
     }
-    cfixed <- !((1:length(theta)) %in% iunknown)
 
-    if(is.null(dotArgs$shlib)) {
-      if(dotArgs$debug){
-        cat("searching shlib...\n")
-      }
-      dotArgs$shlib <- do.call(
-        what = INLAtools::cgeneric_shlib,
-        args = c(list(package = "graphpcor"),
-                 dotArgs))
+    if(missing(ifixed)) {
+      ifixed <- NULL
     }
+    cfixed <- ((1:npars2) %in% ifixed)
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,
@@ -226,7 +247,7 @@ cgeneric_graphpcor <-
         sigmaref = as.numeric(sigma.prior.reference),
         sigmaprob = as.numeric(sigma.prior.probability),
         lconst = as.numeric(I0d$logDeterminant),
-        thetabase = as.numeric(theta),
+        thetabase = as.numeric(theta0),
         Ihalf = I0d$sqrt
       )
     )

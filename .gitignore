@@ -3,7 +3,9 @@
 .RData
 .Ruserdata
 R/*~
+demo/*~
 src/*~
 src/*.o
 src/*.so
 tests/*~
+tests/*/*~

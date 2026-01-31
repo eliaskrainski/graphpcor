@@ -195,6 +195,7 @@ dim.treepcor <- function(x, ...) {
 #' The `drop1` method for a `treepcor`
 #' @param object treepcor
 #' @importFrom INLAtools is.zero
+#' @importFrom grDevices rgb
 #' @export
 setMethod(
   "drop1",
@@ -226,126 +227,109 @@ setMethod(
   }
 )
 #' @describeIn treepcor
-#' Extract the edges of a `treepcor` to be used for plot
-#' @param object treepcor
-#' @param which not used (TO DO: )
-#' @importFrom methods new
-#' @importFrom graph edges
-#' @export
-setMethod(
-  "edges",
-  "treepcor",
-  function(object, which, ...) {
-    trm <- attr(object, "relationship")
-    m <- ncol(trm)
-    n <- nrow(trm)-m+1
-    if(m>1) {
-      trm <- trm[c(n+1:(m-1), 1:n), ]
-      stopifnot(all(substr(rownames(trm)[1:(m-1)],1,1) == "p"))
-    }
-    stopifnot(all(substr(rownames(trm)[m:nrow(trm)],1,1) == "c"))
-    stopifnot(all(substr(rownames(trm),1,1) %in% c("p", "c")))
-
-    edgl <- vector("list", m + n)
-    names(edgl) <- c(paste0("p", 1:m),
-                     paste0("c", 1:n))
-    for(i in 1:m) {
-      w1 <- trm[, i] != 0
-      edgl[[i]] <- list(
-        n = sum(w1),
-        edges = rownames(trm)[w1],
-        weights = new("numeric", trm[w1, i])
-      )
-      edgl[[i]]$term <- edgl$edges
-      edgl[[i]]$parent <- substr(edgl[[i]]$edges, 1, 1) == "p"
-      edgl[[i]]$id <- new("integer", substring(edgl[[i]]$edges, 2))
-      edgl[[i]]$sign <- ifelse(edgl[[i]]$weights<0, -1, 1)
-    }
-    return(edgl)
-  }
-)
-#' @describeIn treepcor
 #' The `plot` method for a `treepcor`
 #' @param x treepcor object
 #' @param y not used
+#' @method plot treepcor
+#' @importFrom methods getMethod
 #' @export
-setMethod(
-  "plot",
-  "treepcor",
-  function(x, y, ...) {
-    edgl <- edges(x)
-    nodes <- names(edgl)
-    gr <- graph::graphNEL(
-      nodes = nodes,
-      edgeL = edgl,
-      edgemode = 'directed')
-
+plot.treepcor <- function(x, y, ...) {
     trm <- attr(x, "relationship")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
-
-    mc <- lapply(
-      match.call(expand.dots = TRUE)[-1],
-      eval)
-    nargs <- names(mc)
-
-    ppars <- list(
-      color =  {
-        if(any(nargs == "color"))
-          mc$color[1:2]
-        else
-          c("red", "blue")
-      },
-      fillcolor = {
-        if(any(nargs == "fillcolor"))
-          mc$fillcolor[1:2]
-        else
-          c("lightsalmon", "lightblue")
-      },
-      shape = {
-        if(any(nargs == "shape"))
-          mc$shape[1:2]
-        else
-          c("box", "circle")
-      },
-      height = {
-        if(any(nargs == "height"))
-          mc$height[1:2]
-        else
-          c(0.5, 0.5)
-      },
-      width = {
-        if(any(nargs == "width"))
-          mc$width[1:2]
-        else
-          c(0.75, 0.75)
-      },
-      fontsize = {
-        if(any(nargs == "fontsize"))
-          mc$fontsize
-        else
-          c(14, 14)
+    if(requireNamespace("igraph")) {
+      tp2a <- function(r) {
+        p <- colnames(r)
+        cp <- rownames(r)
+        nm <- c(p, setdiff(cp, p))
+        nn <- length(nm)
+        jj <- pmatch(cp, nm)
+        np <- dim(r)
+        a <- matrix(0, nn, nn, dimnames = list(nm, nm))
+        for(i in 1:np[2]) {
+          a[jj, i] <- r[, i]
+        }
+        a <- a ##+ t(a)
+        attr(a, 'type') <- substr(nm, 1, 1)
+        return(a)
       }
-    )
-    nattr <- lapply(
-      ppars, rep, times = c(m, n))
-    for(i in 1:length(nattr))
-      names(nattr[[i]]) <- nodes
+      a <- tp2a(trm)
+      g <- igraph::graph_from_adjacency_matrix(
+        abs(a), mode = "directed")
+      plot(g,
+           vertex.shape = rep(c("rectangle", "circle"), c(m,n)),
+           vertex.color = rep(rgb(1:0, 0.5, 0:1, 0.5), c(m,n)))
+    } else {
+      if(requireNamespace("graph")) {
+        edgl <- edges(x)
+        nodes <- names(edgl)
+        gr <- graph::graphNEL(
+          nodes = nodes,
+          edgeL = edgl,
+          edgemode = 'directed')
 
-    ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
-    for(k in 1:length(ag@AgEdge)) {
-      i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
-      j <- pmatch(ag@AgEdge[[k]]@head,
-                  edgl[[i]]$edges)
-      ag@AgEdge[[k]]@color <- c(
-        "red", "black", "blue")[edgl[[i]]$weights[j]+2]
-      if(any(nargs == "lwd"))
-        ag@AgEdge[[k]]@lwd <- mc$lwd[1]
+        mc <- lapply(
+          match.call(expand.dots = TRUE)[-1],
+          eval)
+        nargs <- names(mc)
+
+        ppars <- list(
+          color =  {
+            if(any(nargs == "color"))
+              mc$color[1:2]
+            else
+              c("red", "blue")
+          },
+          fillcolor = {
+            if(any(nargs == "fillcolor"))
+              mc$fillcolor[1:2]
+            else
+              c("lightsalmon", "lightblue")
+          },
+          shape = {
+            if(any(nargs == "shape"))
+              mc$shape[1:2]
+            else
+              c("box", "circle")
+          },
+          height = {
+            if(any(nargs == "height"))
+              mc$height[1:2]
+            else
+              c(0.5, 0.5)
+          },
+          width = {
+            if(any(nargs == "width"))
+              mc$width[1:2]
+            else
+              c(0.75, 0.75)
+          },
+          fontsize = {
+            if(any(nargs == "fontsize"))
+              mc$fontsize
+            else
+              c(14, 14)
+          }
+        )
+        nattr <- lapply(
+          ppars, rep, times = c(m, n))
+        for(i in 1:length(nattr))
+          names(nattr[[i]]) <- nodes
+
+        ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
+        for(k in 1:length(ag@AgEdge)) {
+          i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
+          j <- pmatch(ag@AgEdge[[k]]@head,
+                      edgl[[i]]$edges)
+          ag@AgEdge[[k]]@color <- c(
+            "red", "black", "blue")[edgl[[i]]$weights[j]+2]
+          if(any(nargs == "lwd"))
+            ag@AgEdge[[k]]@lwd <- mc$lwd[1]
+        }
+        getMethod("plot", "Ragraph")(ag)
+      }
     }
-
-    getMethod("plot", "Ragraph")(ag)
 }
-)
 #' @describeIn treepcor
 #' The `prec` for a `treepcor`
 #' @param model treepcor
@@ -354,7 +338,6 @@ setMethod(
 #' @export
 prec.treepcor <- function(model, ...) {
   d <- dim(model)
-  trm <- attr(model, "relationship")
   edgl <- edges(model)
   q.el <- etreepcor2precision(edgl[1:d[2]])
   mc <- list(...)

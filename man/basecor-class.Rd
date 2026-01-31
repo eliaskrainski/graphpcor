@@ -9,11 +9,11 @@
 \alias{print.basecor}
 \title{Information for a base model for correlation matrices}
 \usage{
-basecor(base, p, parametrization = "cpc", itheta)
+basecor(base, p, parametrization = "cpc", iparams, itheta)
 
-\method{basecor}{numeric}(base, p, parametrization = "cpc", itheta)
+\method{basecor}{numeric}(base, p, parametrization = "cpc", iparams, itheta)
 
-\method{basecor}{matrix}(base, p, parametrization = "cpc", itheta)
+\method{basecor}{matrix}(base, p, parametrization = "cpc", iparams, itheta)
 
 \method{print}{basecor}(x, ...)
 }
@@ -30,6 +30,12 @@ the number of rows/columns of the correlation matrix.}
 parametrization used. The available ones are
 "cpc" (or "CPC") or "sap" (or "SAP").
 See Details. The default is "cpc".}
+
+\item{iparams}{integer ordered vector with length equal
+the number of parameters used to specify common parameter values.
+If missing, assumed to be \code{1:length(theta)}. Example: By setting
+\code{iparams = c(1,1,2,3)} the first and second parameters are
+considered to be the same.}
 
 \item{itheta}{integer vector to specify the (vectorized) position
 where 'theta' will be placed in the (initial, before fill-in)
@@ -133,22 +139,20 @@ c0 <- matrix(c( 1.0,  0.8, -0.5,
                -0.5, -0.4,  1.0), 3)
 
 ## build the 'basecor'
-pc.c0 <- basecor(c0) ## base as matrix
-pc.c0
+b3 <- basecor(c0) ## base as matrix
+b3
 
 ## elements
-pc.c0$base
-pc.c0$theta
-
-hessian(pc.c0)
+b3$base
+b3$theta
 
 ## from 'theta' 
-th0 <- pc.c0$theta
-pc.th0 <- basecor(th0) ## base as vector
-pc.th0
+th3 <- b3$theta
+bth3 <- basecor(th3, p = 3) ## base as vector
+bth3
 
 ## numerically the same
-all.equal(c0, pc.th0$base)
+all.equal(c0, bth3$base, tol = 1e-4)
 
 ## from a numeric vector (theta)
 th2 <- c(-1, -0.5)
@@ -161,6 +165,8 @@ b2c <- basecor(b2$base, itheta = c(2,3))
 all.equal(th2, b2c$theta, tol = 1e-4)
 
 ## Hessian around the base 
+hessian(b3)
+hessian(b3, ifixed = 3)
 hessian(b2)
 }
 \references{
@@ -174,10 +180,4 @@ Generating Random Correlation Matrices Based
 on Vines and Extended Onion Method.
 Journal of Multivariate Analysis 100: 1989–2001.
 <doi: 10.1016/j.jmva.2009.04.008>
-
-Simpson, et. al. (2017)
-Penalising Model Component Complexity:
-A Principled, Practical Approach to Constructing Priors.
-Statist. Sci. 32(1): 1-28 (February 2017).
-<doi: 10.1214/16-STS576>
 }

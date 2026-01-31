@@ -10,6 +10,7 @@ p_itheta_fncheck <- function(p, itheta) {
   if(missing(itheta)) {
     if(missing(p))
       stop("Please provide 'p' or 'itheta'!")
+    p <- as.integer(p[1])
     itheta <- which(lower.tri(diag(
       x = rep(1, p), nrow = p, ncol = p)))
   } else {
@@ -22,6 +23,8 @@ p_itheta_fncheck <- function(p, itheta) {
         stop("Please provide 'p'!")
     }
   }
+  il0 <- which(lower.tri(matrix(0, p, p)))
+  stopifnot(all(itheta %in% il0))
   attr(itheta, 'p') <- as.integer(p)
   return(itheta)
 }
@@ -29,13 +32,15 @@ p_itheta_fncheck <- function(p, itheta) {
 #' Function to deal with `m` and `iparams`
 #' @param m integer to specify the number of parameters
 m_iparams_fncheck <- function(m, iparams) {
-  if(missing(iparams)) {
+  if(missing(iparams) || is.null(iparams)) {
+    if(missing(m)) {
+      stop("Missing 'm' and 'iparams'!")
+    }
     iparams <- 1:m
-  } else {
-    stopifnot(length(iparams) == m)
-    stopifnot(all(iparams %in% 1:m))
-    stopifnot(all(diff(unique(iparams))>0))
   }
+  stopifnot(length(iparams) == m)
+  stopifnot(all(iparams %in% 1:m))
+  stopifnot(all(diff(sort(unique(iparams)))>0))
   attr(iparams, "m") <- m
   return(iparams)
 }

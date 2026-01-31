@@ -45,7 +45,7 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
 //	int debug = data->ints[1]->ints[0];
 
-	assert(!strcasecmp(data->ints[2]->name, "np"));	       // this will always be the case
+	assert(!strcasecmp(data->ints[2]->name, "np"));
 	np = data->ints[2]->ints[0];
 	assert(np > 0);
 	nparam = N + np;
@@ -57,28 +57,28 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 	}
 */
 
-	assert(!strcasecmp(data->ints[3]->name, "nv"));	       // this will always be the case
+	assert(!strcasecmp(data->ints[3]->name, "nv"));
 //	inla_cgeneric_vec_tp *nv = data->ints[3];
 	//assert(nv->len == np);
 
-	assert(!strcasecmp(data->ints[4]->name, "ipar"));      // this will always be the case
+	assert(!strcasecmp(data->ints[4]->name, "ipar"));
 	inla_cgeneric_vec_tp *ipar = data->ints[4];
 	assert(ipar->len == N);
 
-	assert(!strcasecmp(data->ints[5]->name, "iiv"));       // this will always be the case
+	assert(!strcasecmp(data->ints[5]->name, "iiv"));
 	inla_cgeneric_vec_tp *iiv = data->ints[5];
 
-	assert(!strcasecmp(data->ints[6]->name, "jjv"));       // this will always be the case
+	assert(!strcasecmp(data->ints[6]->name, "jjv"));
 	inla_cgeneric_vec_tp *jjv = data->ints[6];
 	assert(iiv->len == jjv->len);
 
-	assert(!strcasecmp(data->ints[7]->name, "itop"));      // this will always be the case
+	assert(!strcasecmp(data->ints[7]->name, "itop"));
 	inla_cgeneric_vec_tp *itop = data->ints[7];
 
-	assert(!strcasecmp(data->ints[8]->name, "ii"));	       // this will always be the case
+	assert(!strcasecmp(data->ints[8]->name, "ii"));
 	inla_cgeneric_vec_tp *ii = data->ints[8];
 
-	assert(!strcasecmp(data->ints[9]->name, "jj"));	       // this will always be the case
+	assert(!strcasecmp(data->ints[9]->name, "jj"));
 	inla_cgeneric_vec_tp *jj = data->ints[9];
 
 	assert(!strcasecmp(data->doubles[0]->name, "lambda"));

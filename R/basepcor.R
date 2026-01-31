@@ -7,7 +7,7 @@
 #' and the Hessian around it `I0`, see details.
 setClass(
   "basepcor",
-  slots = c("base", "theta", "p", "itheta", "iparams", "iunknown"),
+  slots = c("base", "theta", "p", "itheta", "iparams"),
   validity = function(object) {
     (object$p>1) &&
       (object$p == nrow(object$base)) &&
@@ -34,14 +34,6 @@ setClass(
 #' If missing, assumed to be `1:length(theta)`. Example: By setting
 #' `iparams = c(1,1,2,3)` the first and second parameters are
 #' considered to be the same.
-#' @param iunknown integer vector to specify which correlation
-#' parameters are treated as unknown when computing the Hessian.
-#' Example: if `iparams = c(1,1,2,3)` and
-#' `iunknown = 2:3`, the first parameter is considered
-#' fixed and the Hessian will be with respect the
-#' second and third parameters. If all the parameters
-#' are fixed, the Hessian is then `NULL`.
-#' By default all correlation parameters are treated as unknown.
 #' @details
 #' The Inverse Transform Parametrization - ITP,
 #' is applied by starting with a
@@ -73,8 +65,7 @@ basepcor <- function(
     p,
     itheta,
     d0,
-    iparams,
-    iunknown) {
+    iparams) {
   UseMethod("basepcor")
 }
 #' @describeIn basepcor
@@ -87,8 +78,7 @@ basepcor.numeric <- function(
     p,
     itheta,
     d0,
-    iparams,
-    iunknown) {
+    iparams) {
 
   theta <- base
 
@@ -108,14 +98,6 @@ basepcor.numeric <- function(
   } else {
     stopifnot(all(d0>0))
   }
-
-  ## check iunknown
-  if(missing(iunknown)) {
-    iunknown <- 1:length(theta)
-  } else {
-    stopifnot(all(iunknown %in% (1:length(theta))))
-  }
-  nUnk <- length(iunknown)
 
   ## compute L0
   L0 <- Lprec0(
@@ -140,7 +122,6 @@ basepcor.numeric <- function(
     d0 = d0,
     itheta = itheta,
     iparams = iparams,
-    iunknown = iunknown,
     L0 = L0, ## initial precision (lower) Cholesky
     L = t(U0correl)) ## the correlation's (lower) Cholesky
   class(out) <- "basepcor"
@@ -156,8 +137,7 @@ basepcor.matrix <- function(
     p,
     itheta,
     d0,
-    iparams,
-    iunknown) {
+    iparams) {
   stopifnot(all.equal(base, t(base)))
   p <- as.integer(nrow(base))
   if(missing(d0)) {
@@ -199,19 +179,6 @@ basepcor.matrix <- function(
   }
   m0 <- length(theta0)
 
-  ## check iunknown
-  if(missing(iunknown)) {
-    iunknown <- 1:m0
-  } else {
-    stopifnot(all(iunknown %in% (1:m0)))
-  }
-  nUnk <- length(iunknown)
-
-  ## Hessian around theta
-  lq02cor <- function(l) {
-    cov2cor(chol2inv(t(l)))
-  }
-
   ## output
   out <- list(
     base = base,
@@ -220,7 +187,6 @@ basepcor.matrix <- function(
     d0 = d0,
     itheta = itheta,
     iparams = iparams,
-    iunknown = iunknown,
     L0 = LQ0, ## initial precision (lower) Cholesky
     L = t(U0correl)) ## the correlation's (lower) Cholesky
 

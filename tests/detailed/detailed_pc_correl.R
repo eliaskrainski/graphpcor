@@ -63,7 +63,7 @@ m2 <- cgeneric(
     useINLAprecomp = FALSE)
 
 th2corr <- function(th) {
-    chol2inv(chol(prec(m2, theta = th)))[iil]
+    tcrossprod(cholcor(th))[iil]
 }
 
 th2corr(rep(0,6))
@@ -71,18 +71,25 @@ th2corr(rep(-1,6))
 th2corr(rep(1,6))
 
 summary(t(sapply(1:1000, function(i)
-                 th2corr(rnorm(m)))))
+    th2corr(rnorm(m)))))
 
-
-s1 <- inla.cgeneric.sample(
-    n=1000, result = fitfix, name = 'i',
-    from.theta = th2corr,
-    simplify = TRUE
+fitprior <- inla(
+    y ~ 0 + f(i, model = m2), 
+    data = dat1,
+    control.family = cfam
 )
+
+h1 <- inla.hyperpar.sample(
+    n=1000, result = fitprior, intern = TRUE)
+
+dim(h1)
+
+s1 <- t(sapply(1:nrow(h1), function(i) 
+    th2corr(h1[i, ])))
 
 par(mfrow = c(2, 3), mar = c(3,3,1,1), mgp = c(2,1,0), las = 1, bty = "n")
 for(k in 1:6)
-    hist(s1[k, ], 30, main = '', xlab = '', ylab = '', freq = FALSE)
+    hist(s1[, k], 30, main = '', xlab = '', ylab = '', freq = FALSE)
 
 
 ## fit the prior for different lambda

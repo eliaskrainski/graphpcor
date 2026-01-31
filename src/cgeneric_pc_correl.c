@@ -49,19 +49,19 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	// the size of the model
 	assert(data->n_ints > 1);
-	assert(!strcasecmp(data->ints[0]->name, "n"));	       // this will always be the case
+	assert(!strcasecmp(data->ints[0]->name, "n"));	    // this will always be the case
 	N = data->ints[0]->ints[0];
 	assert(N > 0);
 	M = (int) ((double) N * ((double) (N + 1)) / 2.0);
 
-	assert(!strcasecmp(data->ints[1]->name, "debug"));     // this will always be the case
+	assert(!strcasecmp(data->ints[1]->name, "debug"));  // this will always be the case
 //	int debug = data->ints[1]->ints[0];
 
-  assert(!strcasecmp(data->ints[2]->name, "itheta"));   // this will always be the case
+  assert(!strcasecmp(data->ints[2]->name, "itheta"));
 //  inla_cgeneric_vec_tp *itheta = data->ints[2];
   //assert(M == itheta->len);
 
-  assert(!strcasecmp(data->ints[3]->name, "sfixed"));   // this will always be the case
+  assert(!strcasecmp(data->ints[3]->name, "sfixed"));
   int nsigmas = data->ints[3]->len;
   int nsfixed = 0, sfixed[nsigmas];
   for (i = 0; i < nsigmas; i++) {
@@ -212,17 +212,18 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
       &data->doubles[3]->doubles[3],
       &theta[nunkparams[0]]);
 
-      // PC prior for sigma[i]
-      if(nunkparams[0]>0) {
-        double lam;
-        k=0;
-        for (i = 0; i < nunkparams[0]; i++) {
-          if (!sfixed[i]) {
-            lam = -log(sigmaprob->doubles[i]) / sigmaref->doubles[i];
-            ret[0] += pclogsigma(theta[k++], lam);
-          }
+    // PC prior for sigma[i]
+    if(nunkparams[0]>0) {
+      double lam;
+      k=0;
+      for (i = 0; i < nunkparams[0]; i++) {
+        if (!sfixed[i]) {
+          lam = -log(sigmaprob->doubles[i]) / sigmaref->doubles[i];
+          ret[0] += pclogsigma(theta[k++], lam);
         }
       }
+    }
+
 	}
 		break;
 

@@ -1,41 +1,10 @@
 #' Build an `cgeneric` object to implement the PC prior,
 #' proposed on Simpson et. al. (2007),
 #' as an informative prior, see details in [basecor()].
-#' @param n integer to define the size of the matrix
-#' @param lambda numeric (positive), the penalization rate parameter
-#' @param base matrix with base correlation matrix,
-#' or numeric vector representing the parameters of a base correlation
-#' matrix. See [basepcor()] for details.
-#' @param sigma.prior.reference numeric vector with length `n`,
-#' `n` is the number of nodes (variables) in the graph, as the
-#' reference standard deviation to define the PC prior for each
-#' marginal variance parameters. If missing, the model will be
-#' assumed for a correlation. If a length `n` vector is given
-#' and `sigma.prior.probability` is missing, it will be used as
-#' known square root of the variances.
-#' NOTE: `iparams` will be applied here as
-#' `sigma.prior.reference[iparams[1:n]]`.
-#' @param sigma.prior.probability numeric vector with length `n`
-#' to set the probability statement of the PC prior for each
-#' marginal variance parameters. The probability statement is
-#' P(sigma < `sigma.prior.reference`) = p. If missing, all the
-#' marginal variances are considered as known, as described in
-#' `sigma.prior.reference`.
-#' If a vector is given and a probability is NA, 0 or 1, the
-#' corresponding `sigma.prior.reference` will be used as fixed.
-#' NOTE: `iparams` will be applied here as
-#' `sigma.prior.probability[iparams[1:n]]`.
-#' @param iparams integer ordered vector with length equals
-#' to `n+m` to specify common parameter values. If missing it
-#' is assumed `1:(n+m)` and all parameters are assumed distinct.
-#' The first `n` indexes the square root of the marginal
-#' variances and the remaining indexes the edges parameters.
-#' Example: By setting `iparams = c(1,1,2,3, 4,5,5,6)`,
-#' the first two standard deviations are common and the
-#' second and third edges parameters are common as well,
-#' giving 6 unknown parameters in the model.
-#' @param ... additional arguments passed on to
-#' [INLAtools::cgeneric()].
+#' @param n integer to define the size of the matrix,
+#' same as `p` in [basecor()].
+#' @inheritParams basecor
+#' @inheritParams cgeneric_graphpcor
 #' @references
 #' Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
 #' Martins and Sigrunn H. S\\o rbye (2017).
@@ -46,50 +15,16 @@
 #' @return a `cgeneric` object, see [cgeneric()] for details.
 cgeneric_pc_correl <-
   function(n,
-           lambda,
            base,
+           itheta,
+           iparams,
+           ifixed,
+           lambda,
            sigma.prior.reference,
            sigma.prior.probability,
-           iparams,
            ...) {
 
-    if(missing(n) & missing(base))
-      stop("Please provide 'n' or 'base'!")
-    if(missing(base)) {
-      warning("Missing base model! Assume zero correlations.")
-      stopifnot(n>1)
-      base <- basecor(diag(n))
-    } else {
-      if(inherits(base, "matrix")) {
-        if(missing(n)) {
-          n <- ncol(base)
-        } else {
-          stopifnot(n == ncol(base))
-        }
-        base <- basecor(base)
-      }
-      if(is.vector(base)) {
-        if(missing(n)) {
-          m <- length(base)
-          n <- (1 + sqrt(1 + 4 * 2 * m)) / 2
-        }
-        base <- basecor(base, p = n)
-      }
-    }
-    theta0 <- base$theta
-    m <- length(theta0)
-    I0 <- hessian(base)
-
-    if(is.null(I0)) {
-      I0d <- list(
-        logDeterminant = 0,
-        sqrt = NULL)
-    } else {
-      I0d <- dspd(I0)
-    }
-
-    stopifnot(lambda>0)
-
+    ## collect ... args and check debug
     dotArgs <- list(...)
     if(!any(names(dotArgs)=="debug")) {
       dotArgs$debug <- FALSE
@@ -111,6 +46,82 @@ cgeneric_pc_correl <-
     lambda <- as.numeric(lambda[1])
     stopifnot(lambda>0)
 
+    if(missing(base)) {
+      if(missing(n)) {
+        stop("Please provide 'n' or 'base'!")
+      } else {
+        stopifnot(n>1)
+        warning("Missing base model! Assume zero correlations.")
+        base <- diag(n)
+      }
+    }
+    if(inherits(base, "matrix")) {
+      if(missing(n)) {
+        n <- ncol(base)
+      }
+    }
+    if(is.vector(base)) {
+      if(missing(n)) {
+        n <- (1 + sqrt(1 + 4 * 2 * length(base))) / 2
+      }
+    }
+    stopifnot(n>1)
+    itheta <- p_itheta_fncheck(n, itheta)
+    m <- length(itheta)
+    if(dotArgs$debug) {
+      print(list(n = n, m = m,
+                 itheta = itheta))
+    }
+
+    iparams <- m_iparams_fncheck(n+m, iparams)
+    npars1 <- length(unique(iparams[1:n]))
+    npars2 <- length(unique(iparams[n+1:m]))
+
+    basemodel <- basecor(
+      base, p = n,
+      parametrization = "cpc",
+      iparams = iparams[n+1:m]-npars1,
+      itheta = itheta
+    )
+    if(dotArgs$debug) {
+      print(basemodel)
+    }
+
+    theta0 <- basemodel$theta
+    m <- length(theta0)
+
+    if(missing(ifixed)) {
+      ifixed <- NULL
+    }
+    cfixed <- ((1:m) %in% ifixed)
+
+    I0 <- hessian(basemodel, ifixed = ifixed)
+    if(dotArgs$debug) {
+      cat("Hessian\n")
+      print(I0)
+    }
+
+    if(is.null(I0)) {
+      I0d <- list(
+        logDeterminant = 0,
+        sqrt = NULL)
+    } else {
+      I0d <- dspd(I0)
+    }
+    if(dotArgs$debug) {
+      cat("Hessian decomposition\n")
+      print(I0d)
+    }
+
+    if(dotArgs$debug) {
+      print(list(n = n, m = m,
+                 iparams = iparams,
+                 npars1 = npars1,
+                 npars2 = npars2,
+                 cfixed = cfixed))
+    }
+
+    ## sigma prior
     if(missing(sigma.prior.reference)) {
       sigma.prior.reference <- rep(1, n)
     }
@@ -138,23 +149,19 @@ cgeneric_pc_correl <-
                  sfixed = sigma.fixed))
     }
 
-    if(missing(iparams)) {
-      iparams <- 1:(n+m)
-    } else {
-      if(!all(iparams == (1:(n+m))))
-        warning("Currently only 1:(n+m)!")
-      iparams <- 1:(n+m)
-      stopifnot(length(iparams)==(n+m))
-      stopifnot(all(iparams %in% (1:(n+m))))
-      stopifnot(all(diff(sort(iparams))==1))
-    }
-
-    ## update sigmas.prior.*
+    ## update sigma.* with iparams
     sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
     sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
     sigma.fixed <- sigma.fixed[iparams[(1:n)]]
-    nSigmas <- iparams[n]
-    nLparam <- iparams[n+m]-nSigmas
+    if(any(is.na(sigma.fixed)))
+      stop("Some error in `iparams` or  `sigma.fixed`!")
+
+    if(dotArgs$debug) {
+      cat("expanded:\n")
+      print(list(sigmaref = sigma.prior.reference,
+                 sigmaprob = sigma.prior.probability,
+                 sfixed = sigma.fixed))
+    }
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,

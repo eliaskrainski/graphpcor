@@ -45,7 +45,8 @@ plot(G)
 
 ## the correlation model
 gmodel1 <- cgeneric(
-  model = G,
+    model = G,
+    base = rep(-3, 4),
   sigma.prior.reference = rep(5, dim(G)[1]),
   sigma.prior.probability = rep(0.2, dim(G)[1]),
   lambda = 3

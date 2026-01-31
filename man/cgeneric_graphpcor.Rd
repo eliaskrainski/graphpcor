@@ -11,7 +11,7 @@ cgeneric_graphpcor(
   sigma.prior.reference,
   sigma.prior.probability,
   iparams,
-  iunknown,
+  ifixed,
   ...
 )
 }
@@ -32,46 +32,44 @@ the parameters in the lower triangle matrix L.
 If it is a matrix, it will be checked if the graph model
 can generates this.}
 
-\item{sigma.prior.reference}{numeric vector with length \code{n},
-\code{n} is the number of nodes (variables) in the graph, as the
-reference standard deviation to define the PC prior for each
-marginal variance parameters. If missing, the model will be
-assumed for a correlation. If a length \code{n} vector is given
-and \code{sigma.prior.probability} is missing, it will be used as
-known square root of the variances.
+\item{sigma.prior.reference}{numeric vector to set the reference
+for each standard deviation parameter for its PC-prior.
+If missing, the model will be assumed as for a correlation.
 NOTE: \code{iparams} will be applied here as
 \code{sigma.prior.reference[iparams[1:n]]}.}
 
-\item{sigma.prior.probability}{numeric vector with length \code{n}
-to set the probability statement of the PC prior for each
+\item{sigma.prior.probability}{numeric vector with to
+set the probability statement of the PC prior for each
 marginal variance parameters. The probability statement is
 P(sigma < \code{sigma.prior.reference}) = p. If missing, all the
-marginal variances are considered as known, as described in
-\code{sigma.prior.reference}.
+marginal variances are considered as known.
 If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.
 NOTE: \code{iparams} will be applied here as
 \code{sigma.prior.probability[iparams[1:n]]}.}
 
-\item{iparams}{integer vector}
+\item{iparams}{integer vector with length equal \code{n+m},
+where \code{m} is the number of correlation parameters,
+to identify (possible) common parameters in the model}
 
-\item{iunknown}{integer vector to specify which correlation
-parameters are treated as unknown when computing the Hessian.
+\item{ifixed}{integer vector to specify which correlation
+parameters are treated as known when computing the Hessian.
 By default all correlation parameters are treated as unknown.
-Note: it will be applied to \code{iparams} as \code{iparams[n+1:ne]}.
-Example: if \code{iunknown = 2:3}, the first parameter will be
-treated as fixed and the Hessian will be computed for
-the second and third correlation parameters.
+Note: it will be applied to \code{iparams} as \code{iparams[n+1:m]}.
+Example: if \code{ifixed = c(1,3)}, the first and third
+correlation parameters will be treated as fixed and the
+Hessian will be computed for the second correlation parameter.
 Please see the examples in \code{\link[=basepcor]{basepcor()}}.}
 
-\item{...}{additional arguments that will be passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgenericBuilder()}}.}
+\item{...}{additional arguments passed on to
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}, such as \code{debug},
+\code{shlib} and \code{useINLAprecomp}.}
 }
 \value{
 \code{cgeneric} object.
 }
 \description{
-From either a \code{graph} (see \code{\link[INLAtools:INLAtools-methods]{INLAtools::graph()}}) or
+From either a \code{graphpcor} (see \code{\link[=graphpcor]{graphpcor()}}) or
 a square matrix (used as a graph),
 creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
 to implement the Penalized Complexity prior using the

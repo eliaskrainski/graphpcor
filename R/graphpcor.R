@@ -122,143 +122,77 @@ dim.graphpcor <- function(x, ...) {
     edges=sum(attr(x, 'graph'))/2)
 }
 #' @describeIn graphpcor
-#' Extract the edges of a `graphcor` to be used for plot
-#' @param object graphpcor object
-#' @param which not used
-#' @importFrom graph edges
-#' @export
-setMethod(
-  "edges",
-  "graphpcor",
-  function(object, which, ...) {
-    ne <- dim(object)
-    nodes <- attr(object, "nodes")
-    stopifnot(!is.null(nodes))
-    stopifnot(ne[1]==length(nodes))
-    Q1 <- Laplacian(object)
-    edgl <- vector("list", ne[1])
-    for(i in 1:ne[1]) {
-      jj <- setdiff(which(!is.zero(Q1[i, ])), i)
-      ni <- length(jj)
-      if(ni>0) {
-        edgl[[i]] <- list(
-          n = ni,
-          edges = nodes[jj],
-          weights = rep(1.0, ni))
-        edgl[[i]]$term <- jj
-      }
-    }
-    names(edgl) <- nodes
-    return(edgl)
-  }
-)
-#' @describeIn graphpcor
-#' The plot method for `graphpcor`
+#' The `plot` method for a `graphpcor`
 #' @param y not used
+#' @method plot graphpcor
 #' @importFrom methods getMethod
 #' @export
-setMethod(
-  "plot",
-  "graphpcor",
-  function(x, y, ...) {
+plot.graphpcor <- function(x, y, ...) {
     ne <- dim(x)
     nodes <- attr(x, "nodes")
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
-    edgl <- edges(x, which)
-    gr <- graph::graphNEL(
-      nodes = nodes,
-      edgeL = edgl,
-      edgemode = 'undirected')
+    edgl <- edges(x)
+    if(requireNamespace("igraph")) {
+      g <- igraph::graph_from_adjacency_matrix(attr(x, "graph"))
+      plot(g, ...)
+    } else {
+      if(requireNamespace("graph")) {
+        gr <- graph::graphNEL(
+          nodes = nodes,
+          edgeL = edgl,
+          edgemode = 'undirected')
 
-    mc <- lapply(
-      match.call(expand.dots = TRUE)[-1],
-      eval)
-    nargs <- names(mc)
-    nattr <- list(color = {
-      if(any(nargs=="color")) mc$color
-      else rep("blue", ne[1])
-    },
-    fillcolor = {
-      if(any(nargs == "fillcolor"))
-        mc$fillcolor
-      else rep("lightblue", ne[1])
-    },
-    shape = {
-      if(any(nargs == "shape"))
-        mc$shape
-      else
-        rep("circle", ne[1])
-    },
-    height = {
-      if(any(nargs == "height"))
-        mc$height
-      else
-        rep(0.5, ne[1])
-    },
-    width = {
-      if(any(nargs == "width"))
-        mc$width
-      else
-        rep(1.5, ne[1])
-    },
-    fontsize = {
-      if(any(nargs == "fontsize"))
-        mc$fontsize
-      else
-        rep(14, ne[1])
+        mc <- lapply(
+          match.call(expand.dots = TRUE)[-1],
+          eval)
+        nargs <- names(mc)
+        nattr <- list(color = {
+          if(any(nargs=="color")) mc$color
+          else rep("blue", ne[1])
+        },
+        fillcolor = {
+          if(any(nargs == "fillcolor"))
+            mc$fillcolor
+          else rep("lightblue", ne[1])
+        },
+        shape = {
+          if(any(nargs == "shape"))
+            mc$shape
+          else
+            rep("circle", ne[1])
+        },
+        height = {
+          if(any(nargs == "height"))
+            mc$height
+          else
+            rep(0.5, ne[1])
+        },
+        width = {
+          if(any(nargs == "width"))
+            mc$width
+          else
+            rep(1.5, ne[1])
+        },
+        fontsize = {
+          if(any(nargs == "fontsize"))
+            mc$fontsize
+          else
+            rep(14, ne[1])
+        }
+        )
+        for(i in 1:length(nattr))
+          names(nattr[[i]]) <- nodes
+
+        ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
+
+        for(k in 1:length(ag@AgEdge)) {
+          ag@AgEdge[[k]]@color <- "red"
+        }
+        getMethod("plot", "Ragraph")(ag)
+      }
     }
-    )
-    for(i in 1:length(nattr))
-      names(nattr[[i]]) <- nodes
-
-    ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
-
-    for(k in 1:length(ag@AgEdge)) {
-      ag@AgEdge[[k]]@color <- "red"
-    }
-    getMethod("plot", "Ragraph")(ag)
   }
-)
-#' @describeIn Laplacian
-#' The Laplacian of a matrix
-#' @export
-Laplacian.matrix <- function(x) {
-  if(inherits(x, "matrix")) {
-    A <- 1 - is.zero(x)
-    if(any(A!=t(A)))
-      warning("Not symmetric!")
-    L <- diag(rowSums(A)) - A
-  } else {
-    Laplacian.default(x)
-  }
-}
-#' @describeIn Laplacian
-#' The Laplacian of a Matrix
-#' @importFrom Matrix rowSums Diagonal
-#' @export
-Laplacian.Matrix <- function(x) {
-  o <- Sparse(x)
-  o@x <- rep(1, length(o@x))
-  iid <- which(o@i==o@j)
-  if(length(iid)>0) {
-    o@x[iid] <- 0
-  }
-  d <- rowSums(o)
-  return(Sparse(
-    Diagonal(n = nrow(o), x = d)-o
-  ))
-}
-#' @describeIn graphpcor
-#' The Laplacian method for a `graphpcor`
-#' @export
-Laplacian.graphpcor <- function(x) {
-  ne <- dim(x)
-  nodes <- attr(x, "nodes")
-  L <- -attr(x, "graph")
-  diag(L) <- -colSums(L)
-  return(L)
-}
 #' @describeIn graphpcor
 #' The `vcov` method for a `graphpcor`
 #' @importFrom methods getMethod

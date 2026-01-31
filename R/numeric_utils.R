@@ -10,7 +10,9 @@ NULL
 #' otherwise not used.
 #' @param method see [numDeriv::hessian()]
 #' @param method.args see [numDeriv::hessian()]
-#' @param ... not used.
+#' @param ... used to pass `ifixed`, an integer
+#' vector to indicate model parameters as fixed.
+#' If not used, all parameters are treated unknown.
 #' @returns matrix with the Hessian
 #' @importFrom numDeriv hessian
 #' @export
@@ -20,20 +22,30 @@ hessian.basecor <- function(
     method = "Richardson",
     method.args = list(),
     ...) {
+
+  ifixed <- list(...)$ifixed
+  m <- length(func$theta)
+  nunk <- m - length(ifixed)
+  if(nunk==0) return(NULL)
+
+  iunknown <- setdiff(1:m, ifixed)
+  theta0 <- func$theta[iunknown]
+
   ## the KLD10() uses upper triangle Cholesky
   L0 <- t(func$L)
   H <- hessian(
     func = function(x) {
+      th <- func$theta
+      th[iunknown] <- x
       L1 <- cholcor(
-        theta = x,
+        theta = th[func$iparams],
         p = func$p,
         parametrization = func$parametrization,
         itheta = func$itheta)
       KLD10(L0 = L0,
             L1 = t(L1))
     },
-    x = func$theta,
-    ...)
+    x = theta0)
   return(H)
 }
 
@@ -48,14 +60,20 @@ hessian.basepcor <- function(
     method = "Richardson",
     method.args = list(),
     ...) {
-  nunk <- length(func$iunknown)
+
+  ifixed <- list(...)$ifixed
+  m <- length(func$theta)
+  nunk <- m - length(ifixed)
   if(nunk==0) return(NULL)
+
+  iunknown <- setdiff(1:m, ifixed)
+  theta0 <- func$theta[iunknown]
+
   L0 <- func$L ## the correlation's (lower) Cholesky
-  theta0 <- func$theta[func$iunknown]
   H <- hessian(
     func = function(x) {
       th <- func$theta
-      th[func$iunknown] <- x
+      th[iunknown] <- x
       L1Q0 <- Lprec0(
         theta = th[func$iparams],
         p = func$p,
@@ -64,8 +82,7 @@ hessian.basepcor <- function(
       C1 <- cov2cor(chol2inv(t(L1Q0)))
       return(KLD10(L0 = L0, C1 = C1))
     },
-    x = theta0,
-    ...)
+    x = theta0)
   return(H)
 }
 
@@ -92,5 +109,5 @@ hessian.graphpcor <- function(
   }
   b0 <- basepcor(base = x, p = d[1],
                  itheta = iL, d0 = d0)
-  return(hessian(b0))
+  return(hessian(b0, ...))
 }

@@ -87,7 +87,7 @@ mcov
 round(cov(xx), 2)
 round(mcov.fit, 2)
 
-cc.fit <- cov2cor(mcov.fit)
+cc.fit <- cov2cor(as.matrix(mcov.fit))
 
 round(mcorr*100)
 round(cor(xx)*100)

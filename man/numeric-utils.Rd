@@ -23,7 +23,9 @@ otherwise not used.}
 
 \item{method.args}{see \code{\link[numDeriv:hessian]{numDeriv::hessian()}}}
 
-\item{...}{not used.}
+\item{...}{used to pass \code{ifixed}, an integer
+vector to indicate model parameters as fixed.
+If not used, all parameters are treated unknown.}
 }
 \value{
 matrix with the Hessian

@@ -9,11 +9,11 @@
 \alias{print.basepcor}
 \title{Information for a base model for correlation matrices}
 \usage{
-basepcor(base, p, itheta, d0, iparams, iunknown)
+basepcor(base, p, itheta, d0, iparams)
 
-\method{basepcor}{numeric}(base, p, itheta, d0, iparams, iunknown)
+\method{basepcor}{numeric}(base, p, itheta, d0, iparams)
 
-\method{basepcor}{matrix}(base, p, itheta, d0, iparams, iunknown)
+\method{basepcor}{matrix}(base, p, itheta, d0, iparams)
 
 \method{print}{basepcor}(x, ...)
 }
@@ -38,15 +38,6 @@ the number of parameters used to specify common parameter values.
 If missing, assumed to be \code{1:length(theta)}. Example: By setting
 \code{iparams = c(1,1,2,3)} the first and second parameters are
 considered to be the same.}
-
-\item{iunknown}{integer vector to specify which correlation
-parameters are treated as unknown when computing the Hessian.
-Example: if \code{iparams = c(1,1,2,3)} and
-\code{iunknown = 2:3}, the first parameter is considered
-fixed and the Hessian will be with respect the
-second and third parameters. If all the parameters
-are fixed, the Hessian is then \code{NULL}.
-By default all correlation parameters are treated as unknown.}
 
 \item{x}{a basepcor object.}
 
@@ -101,55 +92,60 @@ This element has the following attributes:
 
 }}
 \examples{
+## A correlation matrix
+c0 <- matrix(c( 1.0,  0.8, -0.5,
+                0.8,  1.0, -0.4,
+               -0.5, -0.4,  1.0), 3)
+
+## p = 3, m = 3
+b1 <- basepcor(c0)
+b1
 
 ## p = 3, m = 2
-bc <- basepcor(c(-1,-1), p = 3, itheta = c(2,3))
-bc
-
-round(solve(bc$base), 4)
-
-all.equal(bc,
-          basepcor(bc$base, itheta = c(2,3)))
-
-## p = 4, m = 4
-th2 <- c(0.5,-1,0.5,-0.3)
-ith2 <- c(2,3,8,12)
-b2 <- basepcor(th2, p = 4, itheta = ith2)
+b2 <- basepcor(c0, itheta = c(2,3))
 b2
 
-Sparse(solve(b2$base), zeros.rm = TRUE)
+all.equal(b1$base, b2$base)
 
-all.equal(th2, basepcor(b2$base, itheta = ith2)$theta)
-
-## Hessian around the base 
+## Hessian
 hessian(b2)
+hessian(b1, ifixed = 3)
+hessian(b1)
 
-## p = 4, m = 3 with some common theta
+## p = 4, m = 4
+th4 <- c(0.5,-1,0.5,-0.3)
+ith4 <- c(2,3,8,12)
+b44 <- basepcor(th4, p = 4, itheta = ith4)
+b44
+
+Sparse(round(solve(b44$base), 4), zeros.rm = TRUE)
+
+## p = 4, m = 3 (with some common theta)
 th3 <- c(0.5, -1, -0.3)
-ip <- c(1, 2, 1, 3) ## 1st == 3rd
-b3 <- basepcor(th3, p = 4, itheta = ith2, iparams = ip)
+ip3 <- c(1, 2, 1, 3) ## 1st == 3rd
+b43 <- basepcor(th3, p = 4, itheta = ith4, iparams = ip3)
 
-all.equal(b2$base, b3$base) ## TRUE
+all.equal(b44$base, b43$base) ## TRUE
 
-## but the parameter dimension is now reduced
-hessian(b3)
+## parameter dimension is now reduced
+hessian(b44)
+hessian(b43)
 
 ## If a subset of the parameters are known (fixed), then the
 ## Hessian is only computed with respect to the unknown ones
-hessian(basepcor(th2, p=4, itheta = ith2, iunknown = 1))
-hessian(basepcor(th2, p=4, itheta = ith2, iunknown = c(2,3)))
-hessian(basepcor(th2, p=4, itheta = ith2, iunknown = c(2,4)))
+hessian(basepcor(th4, p=4, itheta = ith4), ifixed = 2:3)
+hessian(basepcor(th4, p=4, itheta = ith4), ifixed = 1)
+hessian(basepcor(th4, p=4, itheta = ith4), ifixed = 3)
 
-hessian(basepcor(th3, p=4, itheta = ith2,
-                 iparams = ip, iunknown = 1))
-hessian(basepcor(th3, p=4, itheta = ith2,
-                 iparams = ip, iunknown = 1:2))
-hessian(basepcor(th3, p=4, itheta = ith2,
-                 iparams = ip, iunknown = 3))
+hessian(basepcor(th3, p=4, itheta = ith4,
+                 iparams = ip3), ifixed = 3)
+hessian(basepcor(th3, p=4, itheta = ith4,
+                 iparams = ip3), ifixed = 2:3)
+hessian(basepcor(th3, p=4, itheta = ith4,
+                 iparams = ip3), ifixed = 1:2)
 
 ## check
-all.equal(b2, basepcor(th2, p = 4, itheta = ith2,
-                       iunknown = 1:4))
-all.equal(b3, basepcor(th3, p = 4, itheta = ith2,
-                       iparams = ip, iunknown = 1:3))
+hessian(basepcor(th3, p=4, itheta = ith4,
+                 iparams = ip3), ifixed = NULL)
+
 }

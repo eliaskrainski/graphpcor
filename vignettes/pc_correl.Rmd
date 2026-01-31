@@ -1,8 +1,8 @@
 ---
 title: "An informative prior for correlation matrix"
 output:
-  - rmarkdown::pdf_document
   - rmarkdown::html_vignette
+  - rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{An informative prior for correlation matrix}
   %\VignetteEngine{knitr::rmarkdown}

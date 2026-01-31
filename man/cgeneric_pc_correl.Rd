@@ -8,56 +8,65 @@ as an informative prior, see details in \code{\link[=basecor]{basecor()}}.}
 \usage{
 cgeneric_pc_correl(
   n,
-  lambda,
   base,
+  itheta,
+  iparams,
+  ifixed,
+  lambda,
   sigma.prior.reference,
   sigma.prior.probability,
-  iparams,
   ...
 )
 }
 \arguments{
-\item{n}{integer to define the size of the matrix}
+\item{n}{integer to define the size of the matrix,
+same as \code{p} in \code{\link[=basecor]{basecor()}}.}
 
-\item{lambda}{numeric (positive), the penalization rate parameter}
+\item{base}{numeric vector/matrix used to define the base
+correlation matrix. If numeric vector with length 'm',
+'m' should be 'p(p-1)/2' in the dense model case and
+'length(itheta)' in the sparse model case.}
 
-\item{base}{matrix with base correlation matrix,
-or numeric vector representing the parameters of a base correlation
-matrix. See \code{\link[=basepcor]{basepcor()}} for details.}
+\item{itheta}{integer vector to specify the (vectorized) position
+where 'theta' will be placed in the (initial, before fill-in)
+Cholesky (lower triangle) factor. Default is missing and assumes
+the dense case for when \code{itheta = which(lower.tri(...))}.}
 
-\item{sigma.prior.reference}{numeric vector with length \code{n},
-\code{n} is the number of nodes (variables) in the graph, as the
-reference standard deviation to define the PC prior for each
-marginal variance parameters. If missing, the model will be
-assumed for a correlation. If a length \code{n} vector is given
-and \code{sigma.prior.probability} is missing, it will be used as
-known square root of the variances.
+\item{iparams}{integer ordered vector with length equal
+the number of parameters used to specify common parameter values.
+If missing, assumed to be \code{1:length(theta)}. Example: By setting
+\code{iparams = c(1,1,2,3)} the first and second parameters are
+considered to be the same.}
+
+\item{ifixed}{integer vector to specify which correlation
+parameters are treated as known when computing the Hessian.
+By default all correlation parameters are treated as unknown.
+Note: it will be applied to \code{iparams} as \code{iparams[n+1:m]}.
+Example: if \code{ifixed = c(1,3)}, the first and third
+correlation parameters will be treated as fixed and the
+Hessian will be computed for the second correlation parameter.
+Please see the examples in \code{\link[=basepcor]{basepcor()}}.}
+
+\item{lambda}{the parameter for the exponential prior on
+the radius of the sphere, see details.}
+
+\item{sigma.prior.reference}{numeric vector to set the reference
+for each standard deviation parameter for its PC-prior.
+If missing, the model will be assumed as for a correlation.
 NOTE: \code{iparams} will be applied here as
 \code{sigma.prior.reference[iparams[1:n]]}.}
 
-\item{sigma.prior.probability}{numeric vector with length \code{n}
-to set the probability statement of the PC prior for each
+\item{sigma.prior.probability}{numeric vector with to
+set the probability statement of the PC prior for each
 marginal variance parameters. The probability statement is
 P(sigma < \code{sigma.prior.reference}) = p. If missing, all the
-marginal variances are considered as known, as described in
-\code{sigma.prior.reference}.
+marginal variances are considered as known.
 If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.
 NOTE: \code{iparams} will be applied here as
 \code{sigma.prior.probability[iparams[1:n]]}.}
 
-\item{iparams}{integer ordered vector with length equals
-to \code{n+m} to specify common parameter values. If missing it
-is assumed \code{1:(n+m)} and all parameters are assumed distinct.
-The first \code{n} indexes the square root of the marginal
-variances and the remaining indexes the edges parameters.
-Example: By setting \code{iparams = c(1,1,2,3, 4,5,5,6)},
-the first two standard deviations are common and the
-second and third edges parameters are common as well,
-giving 6 unknown parameters in the model.}
-
-\item{...}{additional arguments passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}.}
+\item{...}{further arguments passed on.}
 }
 \value{
 a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.

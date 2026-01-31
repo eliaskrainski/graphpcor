@@ -14,6 +14,11 @@ if(FALSE) { ### just to avoid having to add dependencies we don't really need
     pc <- mtcars %>%
         correlation(partial = TRUE)
 
+    mcl <- structure(mc$r, class = 'dist', Size = ncol(mtcars),
+                     Diag = FALSE, Upper = FALSE, method='marginal')
+    pcl <- structure(pc$r, class = 'dist', Size = ncol(mtcars),
+                       Diag = FALSE, Upper = FALSE, method='partial')    
+
     mc.f <- mc[abs(mc$r)>0.7, ]
     pc.f <- pc[abs(pc$r)>0.3, ]
 
@@ -72,185 +77,286 @@ inla.setOption(
     num.threads = 6L
 )
 
-mtcars <- as.data.frame(
-    kronecker(matrix(1, 10, 1),
-              as.matrix(mtcars))
-)
+## 11 variables
+(p <- ncol(V <- cov(mtcars)))
+lV <- chol(V)
+Q <- chol2inv(lV)
 
+round(Q,1)
+
+## partial correlation matrix
+pC <- cov2cor(Q)
+dimnames(pC) <- dimnames(Q) <- dimnames(V) <-
+    list(colnames(mtcars), colnames(mtcars))
+round(pC*100)
+
+## define a graphpcor from pC threshold
+g <- graphpcor(abs(pC)>0.3)
+g
+c(p, p*(p-1)/2)
+
+par(mfrow = c(1, 1), mar = c(0,0,0,0))
+plot(g)
+
+lp <- Laplacian(g)
+
+Lplot <- function(L, ij) {
+    xy <- eigen(L)$vectors[,ij]    
+    plot(xy[, 1:2], cex = 10, xlab = "", ylab = "", axes = FALSE)
+    text(xy[, 1], xy[, 2], colnames(L))
+    for(i in 1:nrow(lp)) {
+        jj <- which(abs(lp[i,])>0)
+        if(length(jj)>0) {
+            segments(xy[i, 1], xy[i, 2],
+                     xy[jj, 1], xy[jj, 2])
+        }
+    }
+    return(NULL)
+}
+
+gg <- graph_from_adjacency_matrix(attr(g, "graph"))
+
+par(mfrow = c(3,3), mar = c(0,0,0,0))
+plot(g)
+plot(gg)
+Lplot(lp, 1:2)
+Lplot(lp, c(1,3))
+Lplot(lp, c(1,4))
+Lplot(lp, -2:-1 + ncol(lp))
+Lplot(lp, c(1, ncol(lp)-1))
+Lplot(lp, c(2, ncol(lp)-1))
+
+library(igraph)
+
+
+plot(gg)
+
+attr(g, "graph")
+g2graph <- function(g) {
+    g <- attr(g, "graph")
+    
+}
+
+round(sigmas <- data.frame(obs = sqrt(diag(V))), 1)
+
+## define the cgeneric model (including variances)
+cmodel0 <- cgeneric(
+    "LKJ", n = p, eta = 5, 
+    sigma.prior.reference = sigmas$obs, 
+    sigma.prior.probability = rep(0.5, p),
+    useINLAprecomp = FALSE)
+cmodel1 <- cgeneric(
+    "pc_correl", n = p, lambda = 2, 
+    sigma.prior.reference = sigmas$obs, 
+    sigma.prior.probability = rep(0.5, p),
+    useINLAprecomp = FALSE)
+cmodel2 <- cgeneric(
+    g, lambda = 1, 
+    sigma.prior.reference = sigmas$obs, 
+    sigma.prior.probability = rep(0.5, p),
+    useINLAprecomp = FALSE)
+
+## prepare the (long format) data for INLA
 n <- nrow(mtcars)
-(nc <- length(jjy <- c(1, 3, 4, 6, 7)))
-length(jjx <- c(2, 5, 8:11))
+nc <- c(nc=1, nc=5)
+datac <- lapply(nc, function(a) {
+    d <- data.frame(
+        i = rep(rep(1:p, each = n), a), ## id for variables
+        r = rep(rep(1:n, p), a),       ## id for replicates
+        y = rep(as.vector(as.matrix(mtcars)), a))
+    d$a <- factor(d$i) ## intercept for each variable
+    d
+})
 
-names(mtcars)[jjx]
-names(mtcars)[jjy]
+head(mtcars)
+str(datac)
 
-xx <- as.matrix(mtcars[, jjx])
+## model formula
+f0 <- y ~ a + f(i, model = cmodel0, replicate = r)
+f1 <- y ~ a + f(i, model = cmodel1, replicate = r)
+f2 <- y ~ a + f(i, model = cmodel2, replicate = r)
 
-mypc <- sapply(jjy, function(i) {
-    sapply(jjy, function(j) {
-        yi <- mtcars[, i]
-        yj <- mtcars[, j]
-        cor(resid(lm(yi ~ xx)),
-            resid(lm(yj ~ xx)))
-    })
-}); rownames(mypc) <- colnames(mypc) <-
-        colnames(mtcars)[jjy]
-
-round(mypc * 100)
-
-str(mtcars)
-
-datax <- data.frame(
-    kronecker(diag(nc), as.matrix(mtcars[, jjx])))
-str(datax)
-
-data0 <- data.frame(
-    datax,
-    iv = factor(rep(1:nc, each = n)),
-    y = unlist(mtcars[, jjy]))
-
-ff0 <- update(y ~ iv, paste(".~.+", paste(colnames(datax), collapse = "+")))
-ff0
-
+## fix the likelihood precision to a high value
 pprc <- list(prec = list(initial = 10, fixed = TRUE))
-fit0 <- inla(
-    formula = ff0,
-    control.family=list(hyper = pprc),
-    data = data0,
-    control.inla = list(int.strategy = "eb"),
-    verbose = !TRUE)
 
-round(fit0$summary.fix[, c(1, 2, 3, 5)], 2)
+## model fitting
+fits <- lapply(datac, function(datax) {
+    list(fit0 = inla(
+             formula = f0,
+             control.family=list(hyper = pprc),
+             data = datax,
+             control.inla = list(int.strategy = "eb")),
+         fit1 = inla(
+             formula = f1,
+             control.family=list(hyper = pprc),
+             data = datax,
+             control.inla = list(int.strategy = "eb")),
+         fit2 = inla(
+             formula = f2,
+             control.family=list(hyper = pprc),
+             data = datax,
+             control.inla = list(int.strategy = "eb"))
+         )
+})
+    
+cor(colMeans(mtcars),
+    sapply(fits[[1]], function(x)
+        x$summary.fix[, 1]))
 
-data1 <- data.frame(
-    y = data0$y - fit0$summary.fitted.values$mean
-)
+iil <- which(lower.tri(V))
 
-summary(data1$y)
-summary(matrix(data1$y, n))
-round(100 * cov2cor(cov(matrix(data1$y, n))))
-round(100 * mypc)
+sc1f <- function(theta) {
+    t(sapply(1:nrow(theta), function(i) {
+        cc <- tcrossprod(cholcor(theta[i, -(1:p)]))
+        c(s = exp(theta[i, 1:p]), c = cc[iil])       
+    }))
+}
+sc2f <- function(theta) {
+    t(sapply(1:nrow(theta), function(i) {
+        v <- vcov(g, theta = theta[i, ])
+        c(s=sqrt(diag(v)), c=cov2cor(v)[iil])
+    }))
+}
 
-data1$iv <- data0$iv
-data1$i <- rep(1:nc, each = n)
-data1$r <- rep(1:n, nc)
+vcsamples <- lapply(fits, function(lr)
+    list(
+        m0 = sc1f(inla.hyperpar.sample(
+            n = 10000, lr[[1]], intern = TRUE)),
+        m1 = sc1f(inla.hyperpar.sample(
+            n = 10000, lr[[2]], intern = TRUE)),
+        m1 = sc2f(inla.hyperpar.sample(
+            n = 10000, lr[[3]], intern = TRUE))
+    ))
 
-summary(data1)
+sigmas$m0 <- exp(fit0$mode$theta[1:p])
+sigmas$m1 <- exp(fit1$mode$theta[1:p])
+sigmas$m2 <- exp(fit2$mode$theta[1:p])
 
-ff1 <- y ~ iv + f(i, model = gmodel, replicate = r, vb.correct = FALSE)
-ff1
+cols <- c(gray(.5), rgb(c(1,.5), .7, c(.5,1), .5))
 
-## the tree 
-tree1 <- treepcor(
-  p1 ~ p2 + p3 - c1,
-  p2 ~ p4 + c4,
-  p3 ~ c3,
-  p4 ~ p5 + c2,
-  p5 ~ c5
-)
+par(mfrow = c(1,2), mar = c(2.5,2.5,0.5,0.5), mgp = c(1.5,0.5,0))
+plot(sigmas[, 1:2], ylim = range(sigmas), asp = 1,
+     pch = 19, col = cols[1], cex = 3, log = 'xy')
+points(sigmas[, c(1, 3)], pch = 19, col = cols[2], cex = 3)
+points(sigmas[, c(1, 4)], pch = 19, col = cols[3], cex = 3)
+abline(0:1, lty = 2)
+plot(sigmas[, 1], sigmas[, 2]/sigmas[, 1],
+     ylim = range(sigmas[, -1]/sigmas[, 1]),
+     xlab = 'Obs sigma', ylab = 'Relative fit',
+     pch = 19, col = cols[1], cex = 3, log = 'x')
+points(sigmas[, 1], sigmas[, 3]/sigmas[, 1],
+     pch = 19, col = cols[2], cex = 3)
+points(sigmas[, 1], sigmas[, 4]/sigmas[, 1],
+       pch = 19, col = cols[3], cex = 3)
+abline(h=1, lty = 2)
 
-plot(tree1)
+for(i in 1:(p-1))
+    cat(cumsum(p:1)[i]-i + (i+1):p, "\n")
 
-c(nc <- dim(tree1)[1],
-  np <- dim(tree1)[2])
+ij <- lapply(1:(p-1), function(i)
+    cumsum(p:1)[i]-i + (i+1):p)
+ij
 
-gmodel <- cgeneric(
-    model = tree1,
-    sigma.prior.reference = rep(1, nc),
-    sigma.prior.probability = rep(0.1, nc),
-    lambda = 1,
-    debug = 0
-)
+for(i in 2:p) {
+    cat(sapply(1:(i-1), function(j) ij[[j]][i-j]), "\n")
+}
+ji <- lapply(2:p, function(i) sapply(1:(i-1), function(j) ij[[j]][i-j]))
+ji
 
-str(gmodel, 5)
+par(mfrow = c(p, p), mar = c(3,3,0.5,0.5), mgp = c(1,.5,0), bty = "n")
+for(i in 1:p) {
+    for(j in 1:p) {
+        if(j<i) {
+            if(TRUE) {
+                cij <- cor(mtcars[, i], mtcars[, j])
+                jj <- ji[[i-1]][j]
+                h0 <- hist(vcsamples[[2]][[1]][, jj],
+                           -10:10/10, plot = FALSE)
+                h1 <- hist(vcsamples[[2]][[2]][, jj],
+                           -10:10/10, plot = FALSE)
+                h2 <- hist(vcsamples[[2]][[3]][, jj],
+                           -10:10/10, plot = FALSE)
+                plot(h0, main = '', xlab = "", col = cols[1],
+                     border = 'transparent')
+                plot(h1, add = TRUE, col = cols[2], border = 'transparent')
+                plot(h2, add = TRUE, col = cols[3], border = 'transparent')
+                legend("topright", bty = "n", 
+                       title = paste(i,j, collapse = ","),
+                       format(cij*100, digits = 1))
+                abline(v = cij, lty = 2, lwd = 2)
+                ##plot(0, type = 'n', axes = FALSE, xlab = '', ylab = '')
+            } else {
+                cij <- cor(mtcars[, i], mtcars[, j])
+                jj <- ji[[i-1]][j]
+                hist(vc0samples[, jj], -10:10/10,
+                     col = cols[1], border = 'transparent',
+                     main = '', xlab = "")
+                legend("topright", bty = "n", 
+                       title = paste(i,j, collapse = ","),
+                       format(cij*100, digits = 1))
+                abline(v = cij, lty = 2, lwd = 2, col = 2)
+            }
+        }
+        if(i==j) {
+            h0 <- hist(vcsamples[[1]][[1]][, i], plot = FALSE)
+            h1 <- hist(vcsamples[[1]][[2]][, i], plot = FALSE)
+            h2 <- hist(vcsamples[[1]][[3]][, i], plot = FALSE)
+            plot(h0, xlim = range(h0$breaks, h1$breaks, h2$breaks),
+                 main = '', xlab = paste("s", i),
+                 col = cols[1], border = 'transparent')
+            plot(h1, add = TRUE, col = cols[2], border = 'transparent')
+            plot(h2, add = TRUE, col = cols[3], border = 'transparent')
+            abline(v = sqrt(diag(V))[i], lty = 2, lwd = 2, col = 3)
+            if(j==1)
+                legend("topright", c("LKJ", "PC1", "PC2"), bty = "n",
+                       col = cols, lty = 2, lwd = 2, fill = cols,
+                       border = cols)
+        }
+        if(j>i) {
+            cij <- cor(mtcars[, i], mtcars[, j])
+            jj <- ij[[i]][j-i]
+            h0 <- hist(vcsamples[[1]][[1]][, jj],
+                       -10:10/10, plot = FALSE)
+            h1 <- hist(vcsamples[[1]][[2]][, jj],
+                       -10:10/10, plot = FALSE)
+            h2 <- hist(vcsamples[[1]][[3]][, jj],
+                       -10:10/10, plot = FALSE)
+            plot(h0, main = '', xlab = "", col = cols[1],
+                 border = 'transparent')
+            plot(h1, add = TRUE, col = cols[2], border = 'transparent')
+            plot(h2, add = TRUE, col = cols[3], border = 'transparent')
+            legend("topright", bty = "n", 
+                   title = paste(i,j, collapse = ","),
+                   format(cij*100, digits = 1))
+            abline(v = cij, lty = 2, lwd = 2)
+        }
+    }
+}
+legend("topright", paste("p", 0:2), bty = "n", fill = cols,
+       border = 'transparent')
 
-fit1 <- inla(
-    formula = ff1,
-    control.family=list(hyper = pprc),
-    data = data1,
-    control.inla = list(int.strategy = "eb"),
-    control.mode = list(theta = rep(c(-2, 0), c(nc, np)), restart = TRUE),
-##    control.mode = list(theta = rep(0, nc+np), restart = FALSE, fixed = TRUE),
-    verbose = !TRUE) ### if true prints looooooottttssss of details
-
-fit1$cpu.used
-
-fit1$mode$theta
-fit1$mode$theta[nc+1:np]
-
-plot(fit1, F, F, F, F, F, F, plot.opt.trace = TRUE)
-
-cc.fit1 <- cov2cor(vcov(
-    tree1, 
-    fit1$mode$theta[nc+1:np]))
-
-round(mypc*100)
-round(cc.fit1*100)
-
-### joint
-data2 <- data.frame(
-    datax,
-    data1
-)
-
-ff2 <- update(ff0, .~.+f(i, model = gmodel, replicate = r, vb.correct = FALSE))
-
-fit2 <- inla(
-    formula = ff2,
-    control.family=list(hyper = pprc),
-    data = data2,
-    control.inla = list(int.strategy = "eb"),
-    verbose = !TRUE) ### if true prints looooooottttssss of details
-
-fit2$cpu.used
-
-fit2$mode$theta
-fit2$mode$theta[nc+1:np]
-
-plot(fit2, F, F, F, F, F, F, plot.opt.trace = TRUE)
-
-cc.fit2 <- cov2cor(vcov(
-    tree1,
-    fit2$mode$theta[nc+1:np]))
-
-round(mypc*100)
-round(cc.fit1*100)
-round(cc.fit2*100)
-
-ff3 <- update(
-    ff0,
-    .~.+f(i, model = "iidkd", order = nc,
-          n = n*nc, vb.correct = FALSE))
-
-lcc <- t(chol(solve(mypc)))
-ini3 <- c(log(diag(lcc)), lcc[lower.tri(lcc)])
-length(ini3)
-
-fit3 <- inla(
-    formula = ff3,
-    control.family=list(hyper = pprc),
-    data = data2,
-##    control.mode = list(theta = ini3, restart = TRUE),
-    control.inla = list(int.strategy = "eb"),
-#    control.compute = list(smtp = "pardiso"),
- #    inla.call = "remote",
-  #   num.threads = 2*length(ini3),
-    verbose = !TRUE
-)
-
-xxsamples <- inla.iidkd.sample(
-    n = 3000,
-    result = fit3,
-    name = "i",
-    return.cov = TRUE)
-
-cvfit3 <- Reduce("+", xxsamples)/length(xxsamples)
-cc.fit3 <- cov2cor(cvfit3)
-
-round(mypc*100)
-round(cc.fit1*100)
-round(cc.fit2*100)
-round(cc.fit3*100)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)
+
+
+tree2 <- treepcor(
+    p1 ~ p2 + c1 + c2,
+    p2 ~ -c3 + c4)
+
+str(tree2)
+
+attr(tree2, "relationship")
+
+
+tp2a(tree2)
+
+gt <- graph_from_adjacency_matrix(abs(tp2a(tree2)))
+
+plot(gt)
+
+tree2
+dim(tree2)
+summary(tree2)
+
+plot(tree2)

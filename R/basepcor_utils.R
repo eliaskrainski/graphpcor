@@ -18,16 +18,10 @@ Lprec0 <- function(
     p,
     itheta,
     d0) {
-  stopifnot(p>1)
   stopifnot((m <- length(theta))>0)
-  ith0 <- which(lower.tri(
-    diag(x = rep(1, p), nrow = p, ncol = p)))
-  if(missing(itheta)) {
-    itheta <- ith0
-  } else {
-    stopifnot(all(itheta %in% ith0))
-  }
-  stopifnot(length(itheta)==m)
+  itheta <- p_itheta_fncheck(p, itheta)
+  p <- attr(itheta, "p")
+  stopifnot(p>1)
   if(missing(d0)) {
     warning("Using 'd0 = p:1'!")
     d0 <- p:1

@@ -124,27 +124,16 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
 	inla_cgeneric_vec_tp *sigmaref = data->doubles[1];
-	assert(sigmaref->len > 0);
 	assert(nsigmas == sigmaref->len);
 	for (i = 0; i < nsigmas; i++) {
 		assert(sigmaref->doubles[i] > 0);
 	}
 	assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
 	inla_cgeneric_vec_tp *sigmaprob = data->doubles[2];
-	assert(sigmaprob->len > 0);
 	assert(nsigmas == sigmaprob->len);
-
-	assert(!strcasecmp(data->doubles[3]->name, "lconst"));
-	double lconst = data->doubles[3]->doubles[0];
-
-	// printf("lconst = %2.5f \n", lconst);
 
 	assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
 	assert(data->doubles[4]->len == ne);
-
-	assert(!strcasecmp(data->mats[0]->name, "Ihalf"));
-	assert(data->mats[0]->nrow == ne);
-	assert(data->mats[0]->ncol == ne);
 
 	double actualtheta[M];
 	double sigmas[N];
@@ -154,18 +143,16 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	  if (sfixed[0]) {
 	    actualtheta[0] = log(sigmaref->doubles[itheta->ints[0]]);
 	  } else {
-	    actualtheta[0] = theta[k++];
+	    k++;
+	    actualtheta[0] = theta[itheta->ints[0]];
 	  }
 	  if(N>1) {
 	    for (i=1; i<N; i++) {
-	      if(itheta->ints[i]>itheta->ints[i-1]) {
-	        if (sfixed[i]) {
-	          actualtheta[i] = log(sigmaref->doubles[itheta->ints[i]]);
-	        } else {
-	          actualtheta[i] = theta[k++];
-	        }
+	      if (sfixed[i]) {
+	        actualtheta[i] = log(sigmaref->doubles[itheta->ints[i]]);
 	      } else {
-	        actualtheta[i] = actualtheta[i-1];
+	        k++;
+	        actualtheta[i] = theta[itheta->ints[i]];
 	      }
 	    }
 	  }
@@ -183,18 +170,16 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	  if(cfixed[0]) {
 	    actualtheta[N] = data->doubles[4]->doubles[0];
 	  } else {
-	    actualtheta[N] = theta[k++];
+	    k++;
+	    actualtheta[N] = theta[itheta->ints[N]];
 	  }
 	  if(ne>1) {
 	    for (i=1; i<ne; i++) {
-	      if(itheta->ints[N+i]>itheta->ints[N+i-1]) {
-	        if (cfixed[i]) {
-	          actualtheta[N+i] = data->doubles[4]->doubles[i];
-	        } else {
-	          actualtheta[N+i] = theta[k++];
-	        }
+	      if (cfixed[i]) {
+	        actualtheta[N+i] = data->doubles[4]->doubles[i];
 	      } else {
-	        actualtheta[N+i] = actualtheta[i-1];
+	        k++;
+	        actualtheta[N+i] = theta[itheta->ints[N+i]];
 	      }
 	    }
 	  }
@@ -429,6 +414,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	case INLA_CGENERIC_LOG_PRIOR:
 	{
 		ret = Calloc(1, double);
+	  ret[0] = 0.0;
 
 		// p(theta|lambda) = p(xi|lambda) |det(I(theta0))|
 		// lconst = |det(I)^{1/2}|
@@ -440,9 +426,11 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		      ucthetabase[k++] = data->doubles[4]->doubles[i];
 		    }
 		  }
-		  ret[0] = pcmultivar(ne, lambda, &ucthetabase[0],
-                          &data->mats[0]->x[0],
-                          &lconst, &theta[nunkparams[0]]);
+		  ret[0] += pcmultivar(
+		    ne, lambda, &ucthetabase[0],
+        &data->mats[0]->x[0],
+        &data->doubles[3]->doubles[0],
+        &theta[nunkparams[0]]);
 		}
 
 		// PC prior for sigma[i]
