@@ -1,5 +1,18 @@
 library(graphpcor)
 
+g32 <- graphpcor(A ~ B + C)
+g4r <- graphpcor(X1~X2+X3, X4~X2+X3)
+g4s <- graphpcor(X1~X2+X3+X4+X4+X5+X6)
+
+png("~/github/slides/graphpcor/figures/graphs3.png", 1500, 500, res = 200)
+par(mfrow = c(1, 3), mar = c(0,0,0,0))
+plot(g32, vertex.size = 50, vertex.label.cex = 3)
+plot(g4r, vertex.size = 50, vertex.label.cex = 2)
+plot(g4s, vertex.size = 50, vertex.label.cex = 2)
+dev.off()
+
+system("eog ~/github/slides/graphpcor/figures/graphs3.png &")
+
 par(mfrow = c(2, 3), mar = c(0,0,0,0))
 plot(graphpcor(x~y+v, z~y+v))
 plot(graphpcor(x~y,x~v,z~y,z~v))
