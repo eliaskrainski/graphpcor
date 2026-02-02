@@ -58,11 +58,12 @@ gmodel1 <- cgeneric(
 iidmodel <- cgeneric(
     model = "iid",
     n = 312, ## number of individuals
-    param = c(1, 0.0)
+    param = c(1, 0.0),
+    useINLAprecomp=FALSE
 )
 
 ## the model to actually use
-gmodel <- kronecker(gmodel1, iidmodel)
+gmodel <- kronecker(gmodel1, iidmodel, useINLAprecomp=TRUE)
 
 ## update the formula with the model
 run.G <- run0

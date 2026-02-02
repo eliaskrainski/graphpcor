@@ -10,12 +10,14 @@ c1 <- matrix(c( 1.0,  0.8, -0.5,
 ## considering the CPC parametrization
 c0model <- cgeneric(
     model = "pc_correl", n = p,
-    lambda = 3)
+    lambda = 3,
+    useINLAprecomp = FALSE)
 c0model
 
 c1model <- cgeneric(
     model = "pc_correl", n = p,
-    base = c1, lambda = 3)
+    base = c1, lambda = 3,
+    useINLAprecomp = FALSE)
 c1model
 
 dataf0 <- data.frame(

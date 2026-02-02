@@ -133,65 +133,80 @@ plot.graphpcor <- function(x, y, ...) {
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
     edgl <- edges(x)
-    if(requireNamespace("igraph")) {
-      g <- igraph::graph_from_adjacency_matrix(attr(x, "graph"))
-      plot(g, ...)
+    haveigraph <- require(igraph)
+    if(haveigraph) {
+      g <- igraph::graph_from_adjacency_matrix(
+        adjmatrix = attr(x, "graph")
+      )
+      if(is.null(list(...)$arrow.mode)) {
+        plot(g, arrow.mode = 0, ...)
+      } else {
+        plot(g, ...)
+      }
     } else {
-      stop("Please install 'igraph' package!")
-      # if(requireNamespace("graph")) {
-      #   gr <- graph::graphNEL(
-      #     nodes = nodes,
-      #     edgeL = edgl,
-      #     edgemode = 'undirected')
-      #
-      #   mc <- lapply(
-      #     match.call(expand.dots = TRUE)[-1],
-      #     eval)
-      #   nargs <- names(mc)
-      #   nattr <- list(color = {
-      #     if(any(nargs=="color")) mc$color
-      #     else rep("blue", ne[1])
-      #   },
-      #   fillcolor = {
-      #     if(any(nargs == "fillcolor"))
-      #       mc$fillcolor
-      #     else rep("lightblue", ne[1])
-      #   },
-      #   shape = {
-      #     if(any(nargs == "shape"))
-      #       mc$shape
-      #     else
-      #       rep("circle", ne[1])
-      #   },
-      #   height = {
-      #     if(any(nargs == "height"))
-      #       mc$height
-      #     else
-      #       rep(0.5, ne[1])
-      #   },
-      #   width = {
-      #     if(any(nargs == "width"))
-      #       mc$width
-      #     else
-      #       rep(1.5, ne[1])
-      #   },
-      #   fontsize = {
-      #     if(any(nargs == "fontsize"))
-      #       mc$fontsize
-      #     else
-      #       rep(14, ne[1])
-      #   }
-      #   )
-      #   for(i in 1:length(nattr))
-      #     names(nattr[[i]]) <- nodes
-      #
-      #   ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
-      #
-      #   for(k in 1:length(ag@AgEdge)) {
-      #     ag@AgEdge[[k]]@color <- "red"
-      #   }
-      #   getMethod("plot", "Ragraph")(ag)
-      #}
+      havegraph <- do.call(
+        what = "require",
+        args = list(package = "Rgraphviz"))
+      if(havegraph) {
+        gr <- do.call(
+          what = "graphNEL",
+          args = list(nodes = nodes,
+                      edgeL = edgl,
+                      edgemode = 'undirected')
+        )
+        mc <- lapply(
+          match.call(expand.dots = TRUE)[-1],
+          eval)
+        nargs <- names(mc)
+        nattr <- list(color = {
+          if(any(nargs=="color")) mc$color
+          else rep("blue", ne[1])
+        },
+        fillcolor = {
+          if(any(nargs == "fillcolor"))
+            mc$fillcolor
+          else rep("lightblue", ne[1])
+        },
+        shape = {
+          if(any(nargs == "shape"))
+            mc$shape
+          else
+            rep("circle", ne[1])
+        },
+        height = {
+          if(any(nargs == "height"))
+            mc$height
+          else
+            rep(0.5, ne[1])
+        },
+        width = {
+          if(any(nargs == "width"))
+            mc$width
+          else
+            rep(1.5, ne[1])
+        },
+        fontsize = {
+          if(any(nargs == "fontsize"))
+            mc$fontsize
+          else
+            rep(14, ne[1])
+        }
+        )
+        for(i in 1:length(nattr))
+          names(nattr[[i]]) <- nodes
+
+        ag <- do.call(
+          what = "agopen",
+          args = list(
+            graph = gr,
+            name = "",
+            nodeAttrs = nattr)
+        )
+        for(k in 1:length(ag@AgEdge)) {
+          ag@AgEdge[[k]]@color <- "red"
+        }
+        getMethod("plot", "Ragraph")(ag)
+      }
     }
   }
 #' @describeIn graphpcor

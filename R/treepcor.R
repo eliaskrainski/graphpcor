@@ -237,7 +237,8 @@ plot.treepcor <- function(x, y, ...) {
     trm <- attr(x, "relationship")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
-    if(requireNamespace("igraph")) {
+    haveigraph <- require(igraph)
+    if(haveigraph) {
       tp2a <- function(r) {
         p <- colnames(r)
         cp <- rownames(r)
@@ -249,86 +250,111 @@ plot.treepcor <- function(x, y, ...) {
         for(i in 1:np[2]) {
           a[jj, i] <- r[, i]
         }
-        a <- a ##+ t(a)
+        a <- t(a)
         attr(a, 'type') <- substr(nm, 1, 1)
         return(a)
       }
-      a <- tp2a(trm)
+      A <- tp2a(trm)
       g <- igraph::graph_from_adjacency_matrix(
-        abs(a), mode = "directed")
-      plot(g,
-           vertex.shape = rep(c("rectangle", "circle"), c(m,n)),
-           vertex.color = rep(rgb(1:0, 0.5, 0:1, 0.5), c(m,n)))
+        adjmatrix = abs(A),
+        mode =  "directed")
+      dArgs <- list(...)
+      if(is.null(dArgs$vertex.shape)) {
+        dArgs$vertex.shape = rep(c("rectangle", "circle"), c(m,n))
+      }
+      if(is.null(dArgs$vertex.color)) {
+        dArgs$vertex.color = rep(rgb(1:0, 0.5, 0:1, 0.5), c(m,n))
+
+      }
+      if(is.null(dArgs$edge.color)) {
+        dArgs$edge.color <- ifelse(
+          A<0, "red", "blue"
+        )[upper.tri(A) & (!is.zero(A))]
+      }
+      do.call(
+        what = "plot",
+        args = c(list(x=g), dArgs)
+      )
     } else {
-      stop("Please install 'igraph' package!")
-      # if(requireNamespace("graph")) {
-      #   edgl <- edges(x)
-      #   nodes <- names(edgl)
-      #   gr <- graph::graphNEL(
-      #     nodes = nodes,
-      #     edgeL = edgl,
-      #     edgemode = 'directed')
-      #
-      #   mc <- lapply(
-      #     match.call(expand.dots = TRUE)[-1],
-      #     eval)
-      #   nargs <- names(mc)
-      #
-      #   ppars <- list(
-      #     color =  {
-      #       if(any(nargs == "color"))
-      #         mc$color[1:2]
-      #       else
-      #         c("red", "blue")
-      #     },
-      #     fillcolor = {
-      #       if(any(nargs == "fillcolor"))
-      #         mc$fillcolor[1:2]
-      #       else
-      #         c("lightsalmon", "lightblue")
-      #     },
-      #     shape = {
-      #       if(any(nargs == "shape"))
-      #         mc$shape[1:2]
-      #       else
-      #         c("box", "circle")
-      #     },
-      #     height = {
-      #       if(any(nargs == "height"))
-      #         mc$height[1:2]
-      #       else
-      #         c(0.5, 0.5)
-      #     },
-      #     width = {
-      #       if(any(nargs == "width"))
-      #         mc$width[1:2]
-      #       else
-      #         c(0.75, 0.75)
-      #     },
-      #     fontsize = {
-      #       if(any(nargs == "fontsize"))
-      #         mc$fontsize
-      #       else
-      #         c(14, 14)
-      #     }
-      #   )
-      #   nattr <- lapply(
-      #     ppars, rep, times = c(m, n))
-      #   for(i in 1:length(nattr))
-      #     names(nattr[[i]]) <- nodes
-      #
-      #   ag <- Rgraphviz::agopen(gr, "", nodeAttrs = nattr)
-      #   for(k in 1:length(ag@AgEdge)) {
-      #     i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
-      #     j <- pmatch(ag@AgEdge[[k]]@head,
-      #                 edgl[[i]]$edges)
-      #     ag@AgEdge[[k]]@color <- c(
-      #       "red", "black", "blue")[edgl[[i]]$weights[j]+2]
-      #     if(any(nargs == "lwd"))
-      #       ag@AgEdge[[k]]@lwd <- mc$lwd[1]
-      #   }
-      #   getMethod("plot", "Ragraph")(ag)
-      # }
+      havegraph <- do.call(
+        what = "require",
+        args = list(package = "Rgraphviz"))
+      if(havegraph) {
+        edgl <- edges(x)
+        nodes <- names(edgl)
+        gr <- do.call(
+          what= "graphNEL",
+          args = list(
+            nodes = nodes,
+            edgeL = edgl,
+            edgemode = 'directed')
+        )
+        mc <- lapply(
+          match.call(expand.dots = TRUE)[-1],
+          eval)
+        nargs <- names(mc)
+
+        ppars <- list(
+          color =  {
+            if(any(nargs == "color"))
+              mc$color[1:2]
+            else
+              c("red", "blue")
+          },
+          fillcolor = {
+            if(any(nargs == "fillcolor"))
+              mc$fillcolor[1:2]
+            else
+              c("lightsalmon", "lightblue")
+          },
+          shape = {
+            if(any(nargs == "shape"))
+              mc$shape[1:2]
+            else
+              c("box", "circle")
+          },
+          height = {
+            if(any(nargs == "height"))
+              mc$height[1:2]
+            else
+              c(0.5, 0.5)
+          },
+          width = {
+            if(any(nargs == "width"))
+              mc$width[1:2]
+            else
+              c(0.75, 0.75)
+          },
+          fontsize = {
+            if(any(nargs == "fontsize"))
+              mc$fontsize
+            else
+              c(14, 14)
+          }
+        )
+        nattr <- lapply(
+          ppars, rep, times = c(m, n))
+        for(i in 1:length(nattr))
+          names(nattr[[i]]) <- nodes
+
+        ag <- do.call(
+          what = "agopen",
+          args = list(
+            graph = gr,
+            name = "",
+            nodeAttrs = nattr)
+        )
+        for(k in 1:length(ag@AgEdge)) {
+          i <- pmatch(ag@AgEdge[[k]]@tail, names(edgl))
+          j <- pmatch(ag@AgEdge[[k]]@head,
+                      edgl[[i]]$edges)
+          ag@AgEdge[[k]]@color <- c(
+            "red", "black", "blue")[edgl[[i]]$weights[j]+2]
+          if(any(nargs == "lwd"))
+            ag@AgEdge[[k]]@lwd <- mc$lwd[1]
+        }
+        getMethod("plot", "Ragraph")(ag)
+      }
     }
 }
 #' @describeIn treepcor

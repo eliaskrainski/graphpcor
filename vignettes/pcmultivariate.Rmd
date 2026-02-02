@@ -502,7 +502,7 @@ r & = & \sqrt{\xi_1^2+\xi_2^2+\ldots+\xi_m^2} &
 
 We consider a three dimensional random vector 
 $\mathbf{x}=\{x_1, x_2, x_3\}$ and assume that it follows a
-$3$-dimensional Gaussian distribution with zero mean vector
+bivariate Gaussian distribution with zero mean vector
 and unit marginal variances. 
 Therefore, remains three correlations to be modeled:
 $\rho_{1,2}$ = Cor($x_1,x_2$),
