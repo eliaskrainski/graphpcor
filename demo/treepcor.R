@@ -68,8 +68,6 @@ tree2
 dim(tree2)
 summary(tree2)
 
-plot(tree2)
-
 prec(tree2)
 prec(tree2, theta = c(0, 0))
 prec(tree2, theta = c(-1, 1))

@@ -54,6 +54,7 @@ Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.3),
     Matrix,
+    igraph,
     INLAtools,
     numDeriv
 Imports:
@@ -62,7 +63,6 @@ Imports:
     utils
 Suggests:
     knitr,
-    igraph,
     INLA (>= 25.12.16)
 BuildVignettes: true
 VignetteBuilder: knitr

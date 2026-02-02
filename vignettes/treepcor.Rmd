@@ -3,7 +3,7 @@ title: 'Tree based latent variables correlation model'
 author: "Anna Freni-Sterrantino, Denis Rustand, Janet van Niekerk, Elias T Krainski, and H\\aa vard Rue"
 date: "Started in November 2023, updated in `r format(Sys.time(), '%B, %Y')`"
 output:
-  - rmarkdown::html_vignette
+  - rmarkdown::html_document
   - rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Tree based latent variables correlation model}
@@ -20,9 +20,10 @@ knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE, 
   warning = FALSE,
-  fig.width = 7, 
+  fig.width = 9, 
   fig.height = 5, 
-  out.width = '0.39\\textwidth')
+  out.width = '0.49\\textwidth', 
+  fig.align = 'center')
 library(graphpcor)
 chinclude = TRUE
 ```
@@ -75,7 +76,7 @@ The parent $p_1$ is the main parent, with no parent,
 which is the root of the tree.
 We have some examples in Figure 1 bellow.
 
-```{r graphs, echo = FALSE, fig.width = 9, fig.height = 4, out.width="79%", fig.align = 'center', fig.cap = "Graphs representing different models. A model with one parent, (A), a model with two parents (B), and two different models with three parents (C) and (D)."}
+```{r graphs, echo = FALSE, fig.width = 15, fig.height = 7,  out.width="99%", fig.cap = "Graphs representing different models. A model with one parent, (A), a model with two parents (B), and two different models with three parents (C) and (D)."}
 tree1 <- treepcor(p1 ~ c1 + c2 - c3)
 tree2 <- treepcor(p1 ~ p2 + c1 + c2, 
                   p2 ~ -c3 + c4)
@@ -142,8 +143,7 @@ Thus, the marginal variance of $C_i$ is
 equal the sum of the 
 variances of its ancestors plus 1.
 
-# Implementation with $\textbf{\textsf{graphpcor}}$
-
+# Illustrative code examples
 
 In the \textbf{\textsf{R}} environment we represent the parent 
 variables with the letter ``p`` along with an integer number
