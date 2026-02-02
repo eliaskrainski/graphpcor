@@ -43,7 +43,6 @@ Lprec0 <- function(
 #' fill-in elements. Must be col then row ordered.
 #' @returns lower triangular matrix with the filled-in
 #' elements thus `Q0` can be computed.
-#' @useDynLib graphpcor, .registration = TRUE
 fillLprec <- function(L, lfi) {
   L <- as.matrix(L)
   p <- nrow(L)
