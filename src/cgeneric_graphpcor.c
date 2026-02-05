@@ -112,7 +112,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	for(i=0; i<np2; i++) {
 	  th0[np1+i] = data->doubles[4]->doubles[i];
 	}
-//	printMat(th0,1,npars, "theta0\n");
 
 	if (theta) {
 
