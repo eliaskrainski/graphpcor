@@ -100,8 +100,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
   }
   int nUnk=nunk1+nunk2;
 
-  //printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
-    //     np1, np2, npars, nunk1, nunk2);
+//  printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
+  //       np1, np2, npars, nunk1, nunk2);
 
 	double actualtheta[M], th0[npars];
 	double actualsigmas[N];
@@ -112,7 +112,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	for(i=0; i<np2; i++) {
 	  th0[np1+i] = data->doubles[4]->doubles[i];
 	}
-	//printMat(th0,1,M, "theta0\n");
+//	printMat(th0,1,npars, "theta0\n");
 
 	if (theta) {
 
@@ -121,10 +121,11 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
 	  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
 
-	  aethetafn(npars, &theta[0], &th0[0], &data->ints[10]->ints[0],
+	  aethetafn(data->ints[11]->len, &theta[0],
+             &th0[0], &data->ints[10]->ints[0],
              &data->ints[11]->ints[0], &actualtheta[0]);
 
-	  //printMat(actualtheta,1,M, "actualtheta\n");
+//	  printMat(actualtheta,1,M, "actualtheta\n");
 
 	  for(i=0; i<N; i++) {
 	    actualsigmas[i] = exp(actualtheta[i]);
