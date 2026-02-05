@@ -29,9 +29,10 @@ the dense case as \code{itheta = which(lower.tri(...))}, giving
 
 \item{iparams}{integer ordered vector with length equal
 the number of parameters used to specify common parameter values.
-If missing, assumed to be \code{1:length(theta)}. Example: By setting
-\code{iparams = c(1,1,2,3)} the first and second parameters are
-considered to be the same.}
+Default is \code{1:m}, \code{m=length(theta)}. Example: By setting
+\code{iparams = c(1,1,2,3)}, \code{m=3}, the first and second parameters
+are considered to be the same.
+NOTE: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 
 \item{C1}{is a correlation matrix.}
 

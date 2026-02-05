@@ -8,7 +8,7 @@ prior for a precision matrix.}
 cgeneric_Wishart(n, dof, R, debug = FALSE, useINLAprecomp = TRUE, shlib = NULL)
 }
 \arguments{
-\item{n}{the size of the precision matrix}
+\item{n}{integer to define the size of the precision matrix}
 
 \item{dof}{degrees of freedom model parameter}
 

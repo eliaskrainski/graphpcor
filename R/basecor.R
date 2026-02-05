@@ -124,7 +124,6 @@ basecor <- function(
 #' @describeIn basecor
 #' Build a `basecor` from the parameter vector.
 #' @returns a `basecor` object
-#' @useDynLib graphpcor, .registration = TRUE
 #' @export
 #' @example demo/basecor.R
 basecor.numeric <- function(

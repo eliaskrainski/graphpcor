@@ -18,8 +18,8 @@ setClass(
 )
 #' @describeIn basepcor
 #' Build a `basepcor` object.
-#' @param base matrix (or numeric vector) as the base correlation
-#' (or parameter value at the base model).
+#' @param base a correlation matrix, or numeric vector as
+#' the parameter(s) to define correlation matrix.
 #' @param p integer (needed if `base` is vector): the dimension.
 #' @param itheta integer vector or 'graphpcor' to specify the (vectorized)
 #' position where 'theta' is placed in the initial (before the fill-in)
@@ -31,9 +31,10 @@ setClass(
 #' Default, if not provided, is `d0 = p:1`.
 #' @param iparams integer ordered vector with length equal
 #' the number of parameters used to specify common parameter values.
-#' If missing, assumed to be `1:length(theta)`. Example: By setting
-#' `iparams = c(1,1,2,3)` the first and second parameters are
-#' considered to be the same.
+#' Default is `1:m`, `m=length(theta)`. Example: By setting
+#' `iparams = c(1,1,2,3)`, `m=3`, the first and second parameters
+#' are considered to be the same.
+#' NOTE: `c(1,2,1)` is allowed, but `c(2,1,2)` is not.
 #' @details
 #' The Inverse Transform Parametrization - ITP,
 #' is applied by starting with a
@@ -89,13 +90,15 @@ basepcor.numeric <- function(
   }
   stopifnot(p>1)
 
-  m <- length(itheta)
   ## check iparams
-  iparams <- m_iparams_fncheck(m, iparams)
+  iparams <- m_iparams_fncheck(
+    length(itheta), iparams)
+  m <- attr(iparams, "m")
 
   if(missing(d0)) {
     d0 <- p:1
   } else {
+    stopifnot(length(d0)==p)
     stopifnot(all(d0>0))
   }
 
@@ -142,6 +145,9 @@ basepcor.matrix <- function(
   p <- as.integer(nrow(base))
   if(missing(d0)) {
     d0 <- p:1
+  } else {
+    stopifnot(length(d0)==p)
+    stopifnot(all(d0>0))
   }
   stopifnot((length(d0)==p) && (all(d0>0)))
   U0correl <- chol(base)
@@ -160,8 +166,9 @@ basepcor.matrix <- function(
   theta <- LQ0[itheta]
 
   ## check iparams
-  m <- length(theta)
-  iparams <- m_iparams_fncheck(m, iparams)
+  iparams <- m_iparams_fncheck(
+    length(itheta), iparams)
+  m <- attr(iparams, "m")
 
   if(iparams[m]<m) {
     ## Check if the parameters assumed to be common actually are
@@ -175,14 +182,13 @@ basepcor.matrix <- function(
     }
     theta0 <- sapply(stheta, mean)
   } else {
-    theta0 <- theta
+    theta0 <- tapply(theta, iparams, mean)
   }
-  m0 <- length(theta0)
 
   ## output
   out <- list(
     base = base,
-    theta = theta,
+    theta = new("numeric", theta0),
     p = p,
     d0 = d0,
     itheta = itheta,

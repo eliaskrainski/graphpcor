@@ -1,6 +1,6 @@
 #' Build an `cgeneric` to implement the Wishart
 #' prior for a precision matrix.
-#' @param n the size of the precision matrix
+#' @param n integer to define the size of the precision matrix
 #' @param dof degrees of freedom model parameter
 #' @param R lower triangle of the scale matrix parameter
 #' @param debug integer, default is zero, indicating the verbose level.
