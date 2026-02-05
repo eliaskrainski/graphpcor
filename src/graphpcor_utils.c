@@ -74,6 +74,18 @@ double pcmultivar(int m, double param, double *theta0, double *halfI, double *ld
   return ldens;
 }
 
+void aethetafn(int m, double *th, double *th0, int *isfix, int *ith, double *ath) {
+  int k=0;
+  for(int i=0; i<m; i++) {
+    if(isfix[i]) {
+      ath[i] = th0[ith[i]];
+      k++;
+    } else {
+      ath[i] = th[ith[i]-k];
+    }
+  }
+}
+
 void cpcCholesky(int *N, double *theta,
                  double *L, double *ldR, double *ldJ) {
 // given the canonical partial correlations

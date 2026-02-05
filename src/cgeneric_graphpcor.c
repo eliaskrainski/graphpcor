@@ -84,104 +84,51 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	inla_cgeneric_vec_tp *jfi = data->ints[9];
 	assert(nfi == jfi->len);
 
-	assert(!strcasecmp(data->ints[10]->name, "itheta"));
-	inla_cgeneric_vec_tp *itheta = data->ints[10];
-	assert(M == itheta->len);
-
-	assert(!strcasecmp(data->ints[11]->name, "sfixed"));
-	int nsigmas = data->ints[11]->len;
-	int nsfixed=0, sfixed[nsigmas];
-	int nunkparams[3];
-	nunkparams[0]=0;
-	for (i = 0; i < nsigmas; i++) {
-	  if(data->ints[11]->ints[i]>0) {
-	    sfixed[i] = 1;
-	    nsfixed += 1;
-	  } else {
-	    sfixed[i] = 0;
-	    nunkparams[0] += 1;
-	  }
-	}
-
-	assert(!strcasecmp(data->ints[12]->name, "cfixed"));
-	int ncpars = data->ints[12]->len;
-	int ncfixed=0, cfixed[ncpars];
-	nunkparams[1] = 0;
-	for (i = 0; i < ncpars; i++) {
-	  if(data->ints[12]->ints[i]>0) {
-	    cfixed[i] = 1;
-	    ncfixed += 1;
-	  } else {
-	    cfixed[i] = 0;
-	    nunkparams[1] += 1;
-	  }
-	}
-	nunkparams[2] = nunkparams[0]+nunkparams[1];
-
-	assert(!strcasecmp(data->doubles[0]->name, "lambda"));
-	double lambda = data->doubles[0]->doubles[0];
-	assert(lambda > 0.0);
-
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
-	inla_cgeneric_vec_tp *sigmaref = data->doubles[1];
-	assert(nsigmas == sigmaref->len);
-	for (i = 0; i < nsigmas; i++) {
-		assert(sigmaref->doubles[i] > 0);
+	int np1 = data->doubles[1]->len;
+
+	assert(!strcasecmp(data->ints[11]->name, "itheta"));
+	int npars = data->ints[11]->len;
+	int np2 = npars-np1;
+
+  assert(!strcasecmp(data->ints[10]->name, "ifixed"));
+  int nunk1=0, nunk2=0;
+  for(i=0; i<npars; i++) {
+    if(i<np1) {
+      nunk1 += (data->ints[10]->ints[i]==0);
+    } else {
+      nunk2 += (data->ints[10]->ints[i]==0);
+    }
+  }
+  int nUnk=nunk1+nunk2;
+
+//  printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
+  //       np1, np2, npars, nunk1, nunk2);
+
+	double actualtheta[M], th0[npars];
+	double actualsigmas[N];
+
+	for(i=0; i<np1; i++) {
+	  th0[i] = log(data->doubles[1]->doubles[i]);
 	}
-	assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
-	inla_cgeneric_vec_tp *sigmaprob = data->doubles[2];
-	assert(nsigmas == sigmaprob->len);
-
-	assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
-	assert(data->doubles[4]->len == ne);
-
-	double actualtheta[M];
-	double sigmas[N];
+	for(i=0; i<np2; i++) {
+	  th0[np1+i] = data->doubles[4]->doubles[i];
+	}
+	//printMat(th0,1,M, "theta0\n");
 
 	if (theta) {
-	  k = 0;
-	  if (sfixed[0]) {
-	    actualtheta[0] = log(sigmaref->doubles[itheta->ints[0]]);
-	  } else {
-	    k++;
-	    actualtheta[0] = theta[itheta->ints[0]];
-	  }
-	  if(N>1) {
-	    for (i=1; i<N; i++) {
-	      if (sfixed[i]) {
-	        actualtheta[i] = log(sigmaref->doubles[itheta->ints[i]]);
-	      } else {
-	        k++;
-	        actualtheta[i] = theta[itheta->ints[i]];
-	      }
-	    }
-	  }
-	  for (i=0; i<N; i++) {
-	    sigmas[i] = exp(actualtheta[i]);
-	  }
-	  /*
-		if (debug > 99) {
-			printf("number of fixed sigma = %d\n", nsfixed);
-			for (i = 0; i < N; i++)
-				printf("%d ", sfixed[i]);
-			printMat(sigmas, 1, N, "\nsigmas\n");
-		}
-*/
-	  if(cfixed[0]) {
-	    actualtheta[N] = data->doubles[4]->doubles[0];
-	  } else {
-	    k++;
-	    actualtheta[N] = theta[itheta->ints[N]];
-	  }
-	  if(ne>1) {
-	    for (i=1; i<ne; i++) {
-	      if (cfixed[i]) {
-	        actualtheta[N+i] = data->doubles[4]->doubles[i];
-	      } else {
-	        k++;
-	        actualtheta[N+i] = theta[itheta->ints[N+i]];
-	      }
-	    }
+
+	  assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
+	  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
+	  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
+
+	  aethetafn(npars, &theta[0], &th0[0], &data->ints[10]->ints[0],
+             &data->ints[11]->ints[0], &actualtheta[0]);
+
+	  //printMat(actualtheta,1,M, "actualtheta\n");
+
+	  for(i=0; i<N; i++) {
+	    actualsigmas[i] = exp(actualtheta[i]);
 	  }
 
 	  /*
@@ -196,11 +143,10 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	} else {
 		for (i = 0; i < N; i++) {
-			actualtheta[i] = NAN;
-			sigmas[i] = NAN;
+			actualsigmas[i] = NAN;
 		}
-		for (i = 0; i < ne; i++) {
-			actualtheta[N+i] = NAN;
+		for (i = 0; i < M; i++) {
+			actualtheta[i] = NAN;
 		}
 	}
 
@@ -233,12 +179,22 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		int m2 = N * (N + 1) / 2;
 		double ll[N * N], qtemp[m2];
 
+		double d0[N];
+		if(data->n_doubles>5) {
+		  for(i = 0; i<N; i++)
+		    d0[i] = data->doubles[5]->doubles[i];
+		} else {
+		  for(i = 0; i<N; i++)
+		    d0[i] = (double)(N-i);
+		}
+		//printMat(d0,1,N,"d0:\n");
+
 		// star L with diag, off-diag are zero
 		k = 0;
 		for (i = 0; i < N; i++) {
 			for (j = 0; j < N; j++) {
 				if (i == j) {
-					ll[k] = ((double) N-i);
+					ll[k] = d0[i];
 				} else {
 					ll[k] = 0.0;
 				}
@@ -258,6 +214,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				ll[iuq->ints[i]] = actualtheta[N+k++];
 			}
 		}
+		//printMat(ll, N, N, "L\n");
 
 /*
 		 if (debug > 9999) {
@@ -280,6 +237,8 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 
 		}
+		//printMat(ll, N, N, "filled L\n");
+
 		// copy L to q (to be worked later in-place)
 		k = 0;
 		for (i = 0; i < N; i++) {
@@ -324,7 +283,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		double si[N];
 		k = 0;
 		for (i = 0; i < N; i++) {
-			si[i] = sigmas[i] / sqrt(qtemp[k]);
+			si[i] = actualsigmas[i] / sqrt(qtemp[k]);
 			k += (N - i);
 		}
 
@@ -403,9 +362,9 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	{
 		// return c(P, initials)
 		// where P is the number of hyperparameters
-		ret = Calloc(nunkparams[2] + 1, double);
-		ret[0] = nunkparams[2];
-		for (i = 0; i < nunkparams[2]; i++) {
+		ret = Calloc(nUnk + 1, double);
+		ret[0] = nUnk;
+		for (i = 0; i < nUnk; i++) {
 			ret[1 + i] = 0.0;
 		}
 	}
@@ -416,33 +375,28 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret = Calloc(1, double);
 	  ret[0] = 0.0;
 
-		// p(theta|lambda) = p(xi|lambda) |det(I(theta0))|
+	  // PC prior for UNKNOWN sigma[i]
+	  if(nunk1>0) {
+	    double lam;
+	    for (i = 0; i < nunk1; i++) {
+	      if (data->ints[10]->ints[i]) {
+	        k = data->ints[11]->ints[i];
+	        lam = -log(data->doubles[1]->doubles[k]);
+	        lam /= data->doubles[2]->doubles[k];
+	        ret[0] += pclogsigma(theta[i], lam);
+	      }
+	    }
+	  }
+	  // p(theta|lambda) = p(xi|lambda) |det(I(theta0))|
 		// lconst = |det(I)^{1/2}|
-		if(nunkparams[1]>0) {
-		  double ucthetabase[nunkparams[1]];
-		  k=0;
-		  for(i=0; i<ne; i++) {
-		    if(cfixed[i]==0) {
-		      ucthetabase[k++] = data->doubles[4]->doubles[i];
-		    }
-		  }
+		if(nunk2>0) {
+		  assert(!strcasecmp(data->doubles[0]->name, "lambda"));
+		  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
+		  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
+		  assert(!strcasecmp(data->mats[0]->name, "Ihalf"));
 		  ret[0] += pcmultivar(
-		    ne, lambda, &ucthetabase[0],
-        &data->mats[0]->x[0],
-        &data->doubles[3]->doubles[0],
-        &theta[nunkparams[0]]);
-		}
-
-		// PC prior for sigma[i]
-		if(nunkparams[0]>0) {
-		  double lam;
-		  for (i = 0; i < nunkparams[0]; i++) {
-		    if (!sfixed[i]) {
-		      k = itheta->ints[i];
-		      lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
-		      ret[0] += pclogsigma(theta[i], lam);
-		    }
-		  }
+		    nunk2, data->doubles[0]->doubles[0], &data->doubles[4]->doubles[0],
+        &data->mats[0]->x[0], &data->doubles[3]->doubles[0], &theta[nunk1]);
 		}
 
 	}
