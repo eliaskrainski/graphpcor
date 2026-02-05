@@ -34,15 +34,20 @@
 #' `sigma.prior.probability[iparams[1:n]]`.
 #' @param iparams integer vector with length equal `n+m`,
 #' where `m` is the number of correlation parameters,
-#' to identify (possible) common parameters in the model
-#' @param ifixed integer vector to specify which correlation
-#' parameters are treated as known when computing the Hessian.
+#' to identify (possible) common parameters in the model.
+#' Default is `1:(n+m)`.
+#' Note: `c(1,2,1)` is allowed, but `c(2,1,2)` is not.
+#' @param cfixed integer vector to specify which correlation
+#' parameters are treated as known and fixed.
 #' By default all correlation parameters are treated as unknown.
-#' Note: it will be applied to `iparams` as `iparams[n+1:m]`.
-#' Example: if `ifixed = c(1,3)`, the first and third
+#' Example: if `cfixed = c(1,3)`, the first and third
 #' correlation parameters will be treated as fixed and the
 #' Hessian will be computed for the second correlation parameter.
 #' Please see the examples in [basepcor()].
+#' Note: consider `iparams[n+1:m]-iparams[n]`.
+#' @param d0 numeric vector to specify the diagonal of the
+#' Cholesky factor for the initial precision matrix `Q0`,
+#'  passed on to [basepcor()]. Default is `d0 = n:1`.
 #' @param ... additional arguments passed on to
 #' [INLAtools::cgeneric()], such as `debug`,
 #' `shlib` and `useINLAprecomp`.
@@ -55,7 +60,8 @@ cgeneric_graphpcor <-
            sigma.prior.reference,
            sigma.prior.probability,
            iparams,
-           ifixed,
+           cfixed,
+           d0,
            ...) {
 
     ## collect ... args and check debug
@@ -64,14 +70,27 @@ cgeneric_graphpcor <-
       dotArgs$debug <- FALSE
     }
 
+    if(is.null(dotArgs$useINLAprecomp) ||
+       dotArgs$useINLAprecomp) {
+      vs <- "26.02.05" ## after code structure update
+      ivs <- packageCheck(
+        name = "INLA",
+        minimum_version = vs) >= vs
+      if(is.na(ivs)) {
+        stop("Update INLA or use 'useINLAprecomp = TRUE'\n")
+      }
+    }
+
     if(is.null(dotArgs$shlib)) {
       if(dotArgs$debug){
         cat("searching shlib...\n")
       }
       dotArgs$shlib <- do.call(
         what = INLAtools::cgeneric_shlib,
-        args = c(list(package = "graphpcor"),
-                 dotArgs))
+        args = list(debug = dotArgs$debug,
+                    package = "graphpcor",
+                    useINLAprecomp = dotArgs$useINLAprecomp)
+      )
     }
 
     if(length(lambda)>1) {
@@ -97,7 +116,7 @@ cgeneric_graphpcor <-
     stopifnot(n>0)
     nEdges <- dim(model)[2]
     if(nEdges==0) {
-      stop("This graph is trivial, please consider 'iid' model!")
+      stop("This graph has no edges, consider 'iid' model!")
     }
 
     ## Matrix structure
@@ -138,9 +157,12 @@ cgeneric_graphpcor <-
     ifi <- row(Q0)[qij$ifil]
     jfi <- col(Q0)[qij$ifil]
 
+    ## note: iparams for sigma and correl params
     iparams <- m_iparams_fncheck(nnz, iparams)
     npars1 <- length(unique(iparams[1:n]))
+    stopifnot(npars1>0)
     npars2 <- length(unique(iparams[n+1:nEdges]))
+    stopifnot(npars2>0)
 
     if(dotArgs$debug) {
       print(list(n = n, nnz = nnz, nfi = nfi,
@@ -148,9 +170,64 @@ cgeneric_graphpcor <-
                  npars1 = npars1, npars2 = npars2))
     }
 
+    if(missing(base)){
+      warning("Missing base model! Using 'iid'.")
+      base <- rep(0, npars2)
+    }
+
+    if(missing(d0)) {
+      d0 <- n:1
+    } else {
+      if(is.null(dotArgs$useINLAprecomp) ||
+         dotArgs$useINLAprecomp) {
+        vs <- "26.02.05" ## after code structure update
+        ivs <- packageCheck(
+          name = "INLA",
+          minimum_version = vs) >= vs
+        if(is.na(ivs)) {
+          warning("'d0' is supported after 'INLA 26-02-03'!")
+          stop("Update INLA or use 'useINLAprecomp = TRUE'\n")
+        }
+      }
+    }
+    basemodel <- basepcor(
+      base,
+      p = n,
+      itheta = itheta,
+      d0 = d0,
+      iparams = iparams[n+1:nEdges]-npars1
+    )
+    stopifnot(length(basemodel$theta) == npars2)
+    if(dotArgs$debug) {
+      print(basemodel)
+    }
+
+    theta0 <- basemodel$theta
+    if(missing(cfixed)) {
+      cfixed <- NULL
+    }
+    cfixed <- ((1:npars2) %in% cfixed)
+    I0 <- hessian(basemodel, ifixed = which(cfixed))
+    if(dotArgs$debug) {
+      cat("Hessian\n")
+      print(I0)
+    }
+
+    if(is.null(I0)) {
+      I0d <- list(logDeterminant = 0,
+                  sqrt = matrix(0, 0))
+    } else {
+      I0d <- dspd(I0)
+    }
+    if(dotArgs$debug) {
+      cat("Hessian decomposition\n")
+      print(I0d)
+    }
+
+
     ## sigma prior
     if(missing(sigma.prior.reference)) {
-       sigma.prior.reference <- rep(1, npars1)
+      sigma.prior.reference <- rep(1, npars1)
     }
     if(missing(sigma.prior.probability)) {
       sigma.prior.probability <- rep(0, npars1)
@@ -172,82 +249,42 @@ cgeneric_graphpcor <-
                  nUnkSigmas = nUnkSigmas))
     }
 
-    ## update sigma.* with iparams
-    sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
-    sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
-    sigma.fixed <- sigma.fixed[iparams[(1:n)]]
-    if(any(is.na(sigma.fixed)))
-      stop("Some error in `iparams` or  `sigma.fixed`!")
-    if(dotArgs$debug) {
-      cat("expanded:\n")
-      print(list(sigmaref = sigma.prior.reference,
-                 sigmaprob = sigma.prior.probability,
-                 sfixed = sigma.fixed))
-    }
-
-    if(missing(base)){
-      warning("Missing base model! Using 'iid'.")
-      base <- rep(0, length(itheta))
-    }
-
-    basemodel <- basepcor(
-      base,
-      p = n,
-      itheta = itheta,
-      d0 = n:1,
-      iparams = iparams[n+1:nEdges]-npars1
-    )
-    stopifnot(length(basemodel$theta) == npars2)
-    if(dotArgs$debug) {
-      print(basemodel)
-    }
-
-    theta0 <- basemodel$theta
-    I0 <- hessian(basemodel)
-    if(dotArgs$debug) {
-      cat("Hessian\n")
-      print(I0)
-    }
-
-    if(is.null(I0)) {
-      I0d <- list(logDeterminant = 0,
-                  sqrt = matrix(0, 0))
-    } else {
-      I0d <- dspd(I0)
-    }
-    if(dotArgs$debug) {
-      cat("Hessian decomposition\n")
-      print(I0d)
-    }
-
-    if(missing(ifixed)) {
-      ifixed <- NULL
-    }
-    cfixed <- ((1:npars2) %in% ifixed)
+    # ## update sigma.* with iparams (left this for C code)
+    # sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
+    # sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
+    # sigma.fixed <- sigma.fixed[iparams[(1:n)]]
+    # if(any(is.na(sigma.fixed)))
+    #   stop("Some error in `iparams` or  `sigma.fixed`!")
+    # if(dotArgs$debug) {
+    #   cat("expanded:\n")
+    #   print(list(sigmaref = sigma.prior.reference,
+    #              sigmaprob = sigma.prior.probability,
+    #              sfixed = sigma.fixed))
+    # }
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,
       args = list(
         model = "inla_cgeneric_graphpcor",
-        n = as.integer(n),
-        debug = as.integer(dotArgs$debug),
+        n = as.integer(n),                 ## 0
+        debug = as.integer(dotArgs$debug), ## 1
         shlib = dotArgs$shlib,
-        ne = as.integer(nEdges),
-        nfi = as.integer(nfi),
-        ii = as.integer(jj-1),
-        jj = as.integer(ii-1),
-        iuq = as.integer(iuq-1),
-        iuqpac = as.integer(iuqpac-1),
-        ifi = as.integer(ifi-1),
-        jfi = as.integer(jfi-1),
-        itheta = as.integer(iparams-1),
-        sfixed = as.integer(sigma.fixed),
-        cfixed = as.integer(cfixed),
-        lambda = as.numeric(lambda),
-        sigmaref = as.numeric(sigma.prior.reference),
-        sigmaprob = as.numeric(sigma.prior.probability),
-        lconst = as.numeric(I0d$logDeterminant),
-        thetabase = as.numeric(theta0),
+        ne = as.integer(nEdges),  ## 2
+        nfi = as.integer(nfi),    ## 3
+        ii = as.integer(jj-1),    ## 4
+        jj = as.integer(ii-1),    ## 5
+        iuq = as.integer(iuq-1),  ## 6
+        iuqpac = as.integer(iuqpac-1), ## 7
+        ifi = as.integer(ifi-1),       ## 8
+        jfi = as.integer(jfi-1),       ## 9
+        ifixed = as.integer(c(sigma.fixed, cfixed)), ## 10
+        itheta = as.integer(iparams-1),              ## 11
+        lambda = as.numeric(lambda),                      ## 0
+        sigmaref = as.numeric(sigma.prior.reference),     ## 1
+        sigmaprob = as.numeric(sigma.prior.probability),  ## 2
+        lconst = as.numeric(I0d$logDeterminant),          ## 3
+        thetabase = as.numeric(theta0),                   ## 4
+        d0 = as.numeric(basemodel$d0),                    ## 5
         Ihalf = I0d$sqrt
       )
     )

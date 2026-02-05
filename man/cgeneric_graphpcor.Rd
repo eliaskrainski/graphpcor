@@ -11,7 +11,8 @@ cgeneric_graphpcor(
   sigma.prior.reference,
   sigma.prior.probability,
   iparams,
-  ifixed,
+  cfixed,
+  d0,
   ...
 )
 }
@@ -50,16 +51,22 @@ NOTE: \code{iparams} will be applied here as
 
 \item{iparams}{integer vector with length equal \code{n+m},
 where \code{m} is the number of correlation parameters,
-to identify (possible) common parameters in the model}
+to identify (possible) common parameters in the model.
+Default is \code{1:(n+m)}.
+Note: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 
-\item{ifixed}{integer vector to specify which correlation
-parameters are treated as known when computing the Hessian.
+\item{cfixed}{integer vector to specify which correlation
+parameters are treated as known and fixed.
 By default all correlation parameters are treated as unknown.
-Note: it will be applied to \code{iparams} as \code{iparams[n+1:m]}.
-Example: if \code{ifixed = c(1,3)}, the first and third
+Example: if \code{cfixed = c(1,3)}, the first and third
 correlation parameters will be treated as fixed and the
 Hessian will be computed for the second correlation parameter.
-Please see the examples in \code{\link[=basepcor]{basepcor()}}.}
+Please see the examples in \code{\link[=basepcor]{basepcor()}}.
+Note: consider \code{iparams[n+1:m]-iparams[n]}.}
+
+\item{d0}{numeric vector to specify the diagonal of the
+Cholesky factor for the initial precision matrix \code{Q0},
+passed on to \code{\link[=basepcor]{basepcor()}}. Default is \code{d0 = n:1}.}
 
 \item{...}{additional arguments passed on to
 \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}, such as \code{debug},

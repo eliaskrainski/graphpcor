@@ -38,15 +38,6 @@ If missing, assumed to be \code{1:length(theta)}. Example: By setting
 \code{iparams = c(1,1,2,3)} the first and second parameters are
 considered to be the same.}
 
-\item{ifixed}{integer vector to specify which correlation
-parameters are treated as known when computing the Hessian.
-By default all correlation parameters are treated as unknown.
-Note: it will be applied to \code{iparams} as \code{iparams[n+1:m]}.
-Example: if \code{ifixed = c(1,3)}, the first and third
-correlation parameters will be treated as fixed and the
-Hessian will be computed for the second correlation parameter.
-Please see the examples in \code{\link[=basepcor]{basepcor()}}.}
-
 \item{lambda}{the parameter for the exponential prior on
 the radius of the sphere, see details.}
 

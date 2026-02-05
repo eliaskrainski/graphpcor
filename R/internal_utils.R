@@ -40,7 +40,8 @@ m_iparams_fncheck <- function(m, iparams) {
   }
   stopifnot(length(iparams) == m)
   stopifnot(all(iparams %in% 1:m))
-  stopifnot(all(diff(sort(unique(iparams)))>0))
+  ## next text allow c(1,1,2,2,1) but not c(2,2,1,1,2)
+  stopifnot(all(diff(sort(unique(iparams)))==1))
   attr(iparams, "m") <- m
   return(iparams)
 }

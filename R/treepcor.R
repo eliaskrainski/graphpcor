@@ -237,7 +237,7 @@ plot.treepcor <- function(x, y, ...) {
     trm <- attr(x, "relationship")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
-    haveigraph <- require(igraph)
+    haveigraph <- TRUE ## depends, require(igraph)
     if(haveigraph) {
       tp2a <- function(r) {
         p <- colnames(r)

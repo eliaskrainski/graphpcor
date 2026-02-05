@@ -18,8 +18,8 @@ basepcor(base, p, itheta, d0, iparams)
 \method{print}{basepcor}(x, ...)
 }
 \arguments{
-\item{base}{matrix (or numeric vector) as the base correlation
-(or parameter value at the base model).}
+\item{base}{a correlation matrix, or numeric vector as
+the parameter(s) to define correlation matrix.}
 
 \item{p}{integer (needed if \code{base} is vector): the dimension.}
 
@@ -35,9 +35,10 @@ Default, if not provided, is \code{d0 = p:1}.}
 
 \item{iparams}{integer ordered vector with length equal
 the number of parameters used to specify common parameter values.
-If missing, assumed to be \code{1:length(theta)}. Example: By setting
-\code{iparams = c(1,1,2,3)} the first and second parameters are
-considered to be the same.}
+Default is \code{1:m}, \code{m=length(theta)}. Example: By setting
+\code{iparams = c(1,1,2,3)}, \code{m=3}, the first and second parameters
+are considered to be the same.
+NOTE: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 
 \item{x}{a basepcor object.}
 

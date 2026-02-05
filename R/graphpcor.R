@@ -133,7 +133,7 @@ plot.graphpcor <- function(x, y, ...) {
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
     edgl <- edges(x)
-    haveigraph <- require(igraph)
+    haveigraph <-  TRUE ## depends, require(igraph)
     if(haveigraph) {
       g <- igraph::graph_from_adjacency_matrix(
         adjmatrix = attr(x, "graph")

@@ -55,7 +55,7 @@ Depends:
     R (>= 4.3),
     Matrix,
     igraph,
-    INLAtools,
+    INLAtools (>= 0.0.8),
     numDeriv
 Imports:
     methods,
@@ -63,7 +63,7 @@ Imports:
     utils
 Suggests:
     knitr,
-    INLA (>= 25.12.16)
+    INLA (>= 24.02.09)
 BuildVignettes: true
 VignetteBuilder: knitr
 LazyData: true
