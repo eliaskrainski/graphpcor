@@ -87,23 +87,21 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
 	int np1 = data->doubles[1]->len;
 
-	assert(!strcasecmp(data->ints[11]->name, "itheta"));
-	int npars = data->ints[11]->len;
+	assert(!strcasecmp(data->ints[10]->name, "ifixed"));
+	int npars = data->ints[10]->len;
 	int np2 = npars-np1;
 
-  assert(!strcasecmp(data->ints[10]->name, "ifixed"));
   int nunk1=0, nunk2=0;
-  for(i=0; i<npars; i++) {
-    if(i<np1) {
-      nunk1 += (data->ints[10]->ints[i]==0);
-    } else {
-      nunk2 += (data->ints[10]->ints[i]==0);
-    }
+  for(i=0; i<np1; i++) {
+    nunk1 += (data->ints[10]->ints[i]==0);
+  }
+  for(i=np1; i<npars; i++) {
+    nunk2 += (data->ints[10]->ints[i]==0);
   }
   int nUnk=nunk1+nunk2;
 
-//  printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
-  //       np1, np2, npars, nunk1, nunk2);
+  //printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
+    //     np1, np2, npars, nunk1, nunk2);
 
 	double actualtheta[M], th0[npars];
 	double actualsigmas[N];
@@ -118,6 +116,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	if (theta) {
 
+	  assert(!strcasecmp(data->ints[11]->name, "itheta"));
 	  assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
 	  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
 	  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
