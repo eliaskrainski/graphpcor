@@ -128,6 +128,7 @@ dim.graphpcor <- function(x, ...) {
 #' @param y not used
 #' @method plot graphpcor
 #' @importFrom methods getMethod
+#' @importFrom igraph graph_from_adjacency_matrix
 #' @export
 plot.graphpcor <- function(x, y, ...) {
     ne <- dim(x)
@@ -137,7 +138,7 @@ plot.graphpcor <- function(x, y, ...) {
     edgl <- edges(x)
     haveigraph <-  TRUE ## depends, require(igraph)
     if(haveigraph) {
-      g <- igraph::graph_from_adjacency_matrix(
+      g <- graph_from_adjacency_matrix(
         adjmatrix = attr(x, "graph")
       )
       if(is.null(list(...)$arrow.mode)) {
