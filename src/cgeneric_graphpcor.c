@@ -202,7 +202,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		  for(i = 0; i<N; i++)
 		    d0[i] = (double)(N-i);
 		}
-		//printMat(d0,1,N,"d0:\n");
+//		printMat(d0,1,N,"d0:\n");
 
 		// star L with diag, off-diag are zero
 		k = 0;
@@ -229,7 +229,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 				ll[iuq->ints[i]] = actualtheta[N+k++];
 			}
 		}
-		//printMat(ll, N, N, "L\n");
+//		printMat(ll, N, N, "L\n");
 
 /*
 		 if (debug > 9999) {
