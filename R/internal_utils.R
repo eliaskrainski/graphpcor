@@ -4,29 +4,32 @@ NULL
 #> NULL
 
 #' @describeIn internal-utils
-#' Function to deal with `p` and `itheta`
+#' Function to deal with `p` and `iLtheta`
 #' @inheritParams basepcor
-p_itheta_fncheck <- function(p, itheta) {
-  if(missing(itheta)) {
+p_iLtheta_fncheck <- function(p, iLtheta) {
+  if(missing(iLtheta)) {
     if(missing(p))
-      stop("Please provide 'p' or 'itheta'!")
+      stop("Please provide 'p' or 'iLtheta'!")
     p <- as.integer(p[1])
-    itheta <- which(lower.tri(diag(
-      x = rep(1, p), nrow = p, ncol = p)))
+    iLtheta <- which(lower.tri(matrix(0, p, p)))
   } else {
-    if(inherits(itheta, "graphpcor")) {
-      Q1 <- Laplacian(itheta)
+    if(inherits(iLtheta, "graphpcor")) {
+      Q1 <- Laplacian(iLtheta)
       p <- ncol(Q1)
-      itheta <- which(lower.tri(Q1) & (Q1 != 0.0))
+      iLtheta <- which(lower.tri(Q1) & (Q1 != 0.0))
     } else {
-      if(missing(p))
+      if(missing(p)) {
         stop("Please provide 'p'!")
+      }
+    }
+    if(is.null(iLtheta)) {
+      iLtheta <- which(lower.tri(matrix(0, p, p)))
     }
   }
   il0 <- which(lower.tri(matrix(0, p, p)))
-  stopifnot(all(itheta %in% il0))
-  attr(itheta, 'p') <- as.integer(p)
-  return(itheta)
+  stopifnot(all(iLtheta %in% il0))
+  attr(iLtheta, 'p') <- as.integer(p)
+  return(iLtheta)
 }
 #' @describeIn internal-utils
 #' Function to deal with `m` and `iparams`
@@ -84,55 +87,44 @@ KLD10 <- function(C1, C0, L1, L0) {
   return(0.5*(tr -p) + hld0 - hld1)
 }
 #' @describeIn internal-utils
-#' Function (internal) to decompose a positive definite matrix,
-#' and compute useful elements out of that.
-#' @param x matrix.
-#' @param decomposition character to inform
-#' which decomposition is to be applied to the
-#' hessian. The options are "eigen", "svd" and "chol".
-#' Default is "svd".
-#' @returns `dspd` returns a list with the decomposition elements,
-#'  "logDeterminant" (of the original matrix),
-#' "sqrt" (its 'square root') and
-#' "sqrtInv" (its inverse 'square root').
-dspd <- function(x, decomposition = "svd") {
-  decomposition <- match.arg(
-    tolower(decomposition),
-    c("svd", "eigen", "chol"))
-  stopifnot(nrow(x)==ncol(x))
-  p <- ncol(x)
-  ## next bit follows mvtnorm:::rmvnorm()
-  t0 <- sqrt(.Machine$double.eps)
-  if(decomposition == "eigen") {
-    xd <- eigen(x)
-    tol1 <- t0 * abs(xd$values[1])
-    if(!all(xd$values >= tol1))
-      warning("'x' is numerically not positive semidefinite")
-    xd$logDeterminant <- sum(log(xd$values))
-    s <- sqrt(pmax(xd$values, 0.0))
-    xd$sqrt <- t(xd$vectors %*% (t(xd$vectors) * s))
-    xd$sqrtInv <- t(xd$vectors %*% (t(xd$vectors) / s))
+#' Check the PC-prior arguments for `sigma`.
+#' @param nsigmas number of parameters.
+#' @param sigma.prior.reference numeric vector to set the reference
+#' for each standard deviation parameter for its PC-prior.
+#' @param sigma.prior.probability numeric vector with to
+#' set the probability statement of the PC prior for each
+#' marginal variance parameters. The probability statement is
+#' P(sigma < `sigma.prior.reference`) = p. If missing, all the
+#' marginal variances are considered as known.
+#' If a vector is given and a probability is NA, 0 or 1, the
+#' corresponding `sigma.prior.reference` will be used as fixed.
+pcSigmasCheck <- function(nsigmas,
+                         sigma.prior.reference,
+                         sigma.prior.probability) {
+  if(missing(sigma.prior.reference)) {
+    sigma.prior.reference <- rep(1, nsigmas)
   }
-  if(decomposition == "svd") {
-    xd <- svd(x)
-    tol1 <- t0 * abs(xd$d[1])
-    if(any(xd$d<tol1))
-      warning("'x' is numerically not positive semidefinite")
-    xd$logDeterminant <- sum(log(xd$d))
-    s <- sqrt(pmax(xd$d, 0.0))
-    xd$sqrt <- t(xd$v %*% (t(xd$u) * s))
-    xd$sqrtInv <- t(xd$v %*% (t(xd$u) / s))
+  if(length(sigma.prior.reference)==1) {
+    sigma.prior.reference <- rep(sigma.prior.reference, nsigmas)
   }
-  if(decomposition == "chol") {
-    xd <- chol(x, pivot = TRUE)
-    if(any(diag(xd)<t0))
-      warning("'x' is numerically not positive semidefinite")
-    tol1 <- pmin(t0 * 10, diag(xd))
-    xd$logDeterminant <- sum(diag(xd))*2.0
-    x$sqrt <- matrix(xd[, order(attr(xd, "pivot")), ], p)
-    xn <- chol2inv(chol(x))
-    xn.5 <- chol(xn, pivot = TRUE)
-    xd$sqrtInv <- matrix(xn.5[, order(attr(xn.5, "pivot"))], p)
+  if(missing(sigma.prior.probability)) {
+    sigma.prior.probability <- rep(0, nsigmas)
   }
-  return(xd)
+  if(length(sigma.prior.probability)==1) {
+    sigma.prior.probability <- rep(sigma.prior.probability, nsigmas)
+  }
+
+  stopifnot(length(sigma.prior.reference) == nsigmas)
+  stopifnot(length(sigma.prior.probability) == nsigmas)
+  stopifnot(all(sigma.prior.reference>0))
+  sigma.prior.probability[is.na(sigma.prior.probability)] <- 0
+  stopifnot(all(sigma.prior.probability>=0.0))
+  stopifnot(all(sigma.prior.probability<=1.0))
+  sigma.fixed <- is.zero(sigma.prior.probability) |
+    is.zero(1-sigma.prior.probability)
+  return(list(
+    sigma.prior.reference = sigma.prior.reference,
+    sigma.prior.probability = sigma.prior.probability,
+    sigma.fixed = sigma.fixed
+  ))
 }

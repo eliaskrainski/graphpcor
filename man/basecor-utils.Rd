@@ -5,7 +5,7 @@
 \alias{cholcor}
 \title{Functions used by/to basecor}
 \usage{
-cholcor(theta, p, itheta, parametrization = "cpc")
+cholcor(theta, p, iLtheta, parametrization = "cpc")
 }
 \arguments{
 \item{theta}{numeric parameter vector.}
@@ -13,10 +13,10 @@ cholcor(theta, p, itheta, parametrization = "cpc")
 \item{p}{integer with the dimension,
 the number of rows/columns of the correlation matrix.}
 
-\item{itheta}{integer vector to specify the (vectorized) position
-where 'theta' will be placed in the (initial, before fill-in)
-Cholesky (lower triangle) factor. Default is missing and assumes
-the dense case for when \code{itheta = which(lower.tri(...))}.}
+\item{iLtheta}{integer vector to specify the (vectorized) position
+where 'theta' will be placed in the (lower triangle)  Cholesky
+factorization of the correlation matrix. Default
+(missing, or if NULL) and assumes \code{iLtheta = which(lower.tri(...))}.}
 
 \item{parametrization}{character to specify the
 parametrization used. The available ones are
@@ -28,7 +28,7 @@ matrix with lower triangle as the Cholesky factor
 of a correlation matrix, and atttibutes:
 \code{parametrization} ("cpc" or "sap"), "theta"
 the parameter vector under the parametrization,
-"itheta" the index in the lower triangle matrix for theta,
+"iLtheta" the index in the lower triangle matrix for theta,
 "logDeterminant" the log determinant for the correlation matrix.
 }
 \description{

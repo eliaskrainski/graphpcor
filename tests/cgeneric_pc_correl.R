@@ -1,4 +1,5 @@
 library(graphpcor)
+
 library(INLA)
 
 ## n = 1, m = 1
@@ -21,6 +22,15 @@ prior(C1, theta = 0.0)
 integrate(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
 
 plot(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
+
+par(mfrow = c(3,3), mar=c(3,3,1,1), mgp = c(2,.5,0), bty = 'n')
+for(l in 10^(-3:5)) {
+    b <- .1 + 1/sqrt(l)
+    cl <- cgeneric("pc_correl", n = 2L, base = 0,
+                   lambda = l, useINLAprecomp = FALSE)
+    print(integrate(function(x) exp(prior(cl, theta = matrix(x, 1))), -b, b))
+    plot(function(x) exp(prior(cl, theta = matrix(x, 1))), -b, b, n=1001)
+}
 
 ## n =3, m = 3
 c0 <- matrix(c( 1.0,  0.8, -0.5,
@@ -63,7 +73,7 @@ Cmodel <- cgeneric(
     lambda = lambda,
     useINLAprecomp = FALSE)
 
-str(Cmodel)
+Cmodel
 
 graph(Cmodel, optimize = TRUE)
 
@@ -98,7 +108,7 @@ n
 (sigmas <- c(2,1,0.5,0.1))
 V <- diag(sigmas) %*% base$base %*% diag(sigmas)
 
-ns <- 100
+ns <- 200
 xx <- matrix(rnorm(ns * n), ns) %*% chol(V)
 
 V
@@ -114,11 +124,16 @@ dataf <- data.frame(
 Vmodel <- cgeneric(
     model = "pc_correl",
     n = n,
-    base = theta1,
+    base = theta1, ##debug = 10,
     lambda = lambda,
-    sigma.prior.reference = rep(1, n), 
-    sigma.prior.probability = rep(0.5, n),
+    sigma.prior.reference = 1,#rep(1, n), 
+    sigma.prior.probability = 0.5,##rep(0.5, n),
     useINLAprecomp = FALSE)
+
+initial(Vmodel)
+graph(Vmodel)
+prec(Vmodel, theta = rep(0,10))
+prec(Vmodel, theta = c(rep(0,4), rep(-1,6)))
 
 fit <- inla(
     y ~ 0 + f(i, model = Vmodel, replicate = r),

@@ -48,7 +48,7 @@ for(i in 1:length(etas)) {
 jacobian(function(x) tcrossprod(cholcor(x))[2], theta1)
 
 ptheta <- function(th, eta, p, iL = which(lower.tri(diag(p)))) {
-    L <- cholcor(th, p, itheta = iL)
+    L <- cholcor(th, p, iLtheta = iL)
     R <- tcrossprod(L)
     J <- jacobian(function(x) tcrossprod(cholcor(x))[iL], th)
     exp(dLKJ(R, eta, log = TRUE) +
@@ -98,8 +98,7 @@ eta
 cmodel <- cgeneric(
     model = "LKJ", 
     n = n,
-    eta = eta,
-    useINLAprecomp = FALSE)
+    eta = eta)
 
 ##str(cmodel)
 

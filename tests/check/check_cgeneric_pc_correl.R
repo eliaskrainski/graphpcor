@@ -1,5 +1,6 @@
-library(graphpcor)
 library(INLA)
+
+library(graphpcor)
 
 ################################################################
 ### n = 2, m = 1
@@ -70,7 +71,7 @@ R
 cmodel <- cgeneric(
     model = "pc_correl", 
     base = c0, 
-    lambda = 5,
+    lambda = 3,
     useINLAprecomp = FALSE)
 
 cmodel
@@ -95,15 +96,6 @@ ncol(th3 <- t(expand.grid(sths)))/1e6
 p3 <- array(prior(cmodel, theta = th3), rep(nsth, 3))
 str(p3)
 
-par(mfrow = c(2, 2), mar = c(3, 3, 0.5, 0.5),
-    mgp = c(2, 0.5, 0), bty = "n")
-image(sths[[1]], sths[[2]], p3[,,nsth/2])
-contour(sths[[1]], sths[[2]], p3[,,nsth/2], add = TRUE, nlevels = 5)
-image(sths[[1]], sths[[3]], p3[,nsth/2,])
-contour(sths[[1]], sths[[3]], p3[,nsth/2,], add = TRUE, nlevels = 5)
-image(sths[[2]], sths[[3]], p3[nsth/2,,])
-contour(sths[[2]], sths[[3]], p3[nsth/2,,], add = TRUE, nlevels = 5)
-
 exp(-8:-6)
 
 sum(exp(p3)*(hth^3))
@@ -116,6 +108,15 @@ apply(array(2:30, c(3,5,2)), 3, sum)
 sum(apply(exp(p3)*hth2, 2, sum) * hth)
 sum(apply(exp(p3)*hth2, 2, sum) * hth)
 sum(apply(exp(p3)*hth2, 3, sum) * hth)
+
+par(mfrow = c(2, 2), mar = c(3, 3, 0.5, 0.5),
+    mgp = c(2, 0.5, 0), bty = "n")
+image(sths[[1]], sths[[2]], p3[,,nsth/2])
+contour(sths[[1]], sths[[2]], p3[,,nsth/2], add = TRUE, nlevels = 5)
+image(sths[[1]], sths[[3]], p3[,nsth/2,])
+contour(sths[[1]], sths[[3]], p3[,nsth/2,], add = TRUE, nlevels = 5)
+image(sths[[2]], sths[[3]], p3[nsth/2,,])
+contour(sths[[2]], sths[[3]], p3[nsth/2,,], add = TRUE, nlevels = 5)
 
 plot(sths[[1]], apply(exp(p3)*hth2, 1, sum),
      type = "l", xlab = "", ylab = "density", 
@@ -281,7 +282,8 @@ n <- 4
 (theta0 <- rnorm(m))
 
 lR <- cholcor(theta0, p = n)
-log(attr(lR, 'determinant'))
+lR
+attr(lR, 'logDeterminant')
 R <- tcrossprod(lR)
 il4 <- which(lower.tri(R))
 

@@ -86,6 +86,9 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
 	int np1 = data->doubles[1]->len;
+	for (i = 0; i < np1; i++) {
+	  assert(data->doubles[1]->doubles[i] > 0);
+	}
 
 	assert(!strcasecmp(data->ints[10]->name, "ifixed"));
 	int npars = data->ints[10]->len;
@@ -103,7 +106,6 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 //  printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
   //       np1, np2, npars, nunk1, nunk2);
-  //printMat(th0, 1, npars, "th0\n");
 
 	double actualtheta[M], actualsigmas[N];
 
@@ -111,7 +113,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	  //printMat(theta, 1, nUnk, "theta\n");
 
-	  assert(!strcasecmp(data->ints[11]->name, "itheta"));
+	  assert(!strcasecmp(data->ints[11]->name, "iparams"));
 	  assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
 	  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
 	  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
@@ -133,6 +135,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	    }
 	  }
 	  assert(nUnk==k);
+//	  printMat(th0, 1, npars, "th0\n");
 
 	  for(i=0; i<M; i++) {
 	    actualtheta[i] = th0[data->ints[11]->ints[i]];
@@ -390,11 +393,12 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	  // PC prior for UNKNOWN sigma[i]
 	  if(nunk1>0) {
 	    double lam;
+	    k=0;
 	    for (i = 0; i < np1; i++) {
 	      if (data->ints[10]->ints[i]==0) {
-	        lam = -log(data->doubles[1]->doubles[i]);
-	        lam /= data->doubles[2]->doubles[i];
-	        ret[0] += pclogsigma(theta[i], lam);
+	        lam = -log(data->doubles[2]->doubles[i]);
+	        lam /= data->doubles[1]->doubles[i];
+	        ret[0] += pclogsigma(theta[k++], lam);
 	      }
 	    }
 	  }
@@ -405,8 +409,16 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
 		  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
 		  assert(!strcasecmp(data->mats[0]->name, "Ihalf"));
+		  double thb[nunk2];
+		  k=0;
+		  for(i=0; i<np2; i++) {
+		    j = np1 + i;
+		    if(data->ints[10]->ints[j]==0) {
+		      thb[k++] = data->doubles[4]->doubles[i];
+		    }
+		  }
 		  ret[0] += pcmultivar(
-		    nunk2, data->doubles[0]->doubles[0], &data->doubles[4]->doubles[0],
+		    nunk2, data->doubles[0]->doubles[0], &thb[0],
         &data->mats[0]->x[0], &data->doubles[3]->doubles[0], &theta[nunk1]);
 		}
 

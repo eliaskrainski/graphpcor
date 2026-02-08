@@ -10,27 +10,24 @@
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
 #' the radius of the sphere, see details.
-#' @param base numeric vector with length `m`, `m` is the
-#' number of edges in the graph, or matrix with the reference
-#' correlation model against what the KLD will be evaluated.
-#' If it is a vector, a correlation matrix is defined
-#' considering the graph model and this vector as
-#' the parameters in the lower triangle matrix L.
-#' If it is a matrix, it will be checked if the graph model
-#' can generates this.
+#' @param base numeric vector, correlation matrix or
+#' `basepcor` object. See [basepcor()] for details.
+#' If the output of a [basepcor()] is provided,
+#' `iLtheta` will be considered from it,
+#' and `iparams` for the correlation parameters as well.
 #' @param sigma.prior.reference numeric vector to set the reference
 #' for each standard deviation parameter for its PC-prior.
 #' If missing, the model will be assumed as for a correlation.
-#' NOTE: `iparams` will be applied here as
+#' Note: `iparams` will be applied here as
 #' `sigma.prior.reference[iparams[1:n]]`.
 #' @param sigma.prior.probability numeric vector with to
-#'set the probability statement of the PC prior for each
+#' set the probability statement of the PC prior for each
 #' marginal variance parameters. The probability statement is
 #' P(sigma < `sigma.prior.reference`) = p. If missing, all the
 #' marginal variances are considered as known.
 #' If a vector is given and a probability is NA, 0 or 1, the
 #' corresponding `sigma.prior.reference` will be used as fixed.
-#' NOTE: `iparams` will be applied here as
+#' Note: `iparams` will be applied here as
 #' `sigma.prior.probability[iparams[1:n]]`.
 #' @param iparams integer vector with length equal `n+m`,
 #' where `m` is the number of correlation parameters,
@@ -72,7 +69,7 @@ cgeneric_graphpcor <-
 
     if(is.null(dotArgs$useINLAprecomp) ||
        dotArgs$useINLAprecomp) {
-      vs <- "26.02.06" ## after code structure update
+      vs <- "26.02.08" ## after code structure update
       ivs <- packageCheck(
         name = "INLA",
         minimum_version = vs) >= vs
@@ -130,10 +127,10 @@ cgeneric_graphpcor <-
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
-    itheta <- which(qnz & lower.tri(Q0, diag = FALSE))
+    iLtheta <- which(qnz & lower.tri(Q0, diag = FALSE))
     qij <- list(
-      ii = row(Q0)[itheta],
-      jj = col(Q0)[itheta],
+      ii = row(Q0)[iLtheta],
+      jj = col(Q0)[iLtheta],
       iq = which(Q0!=0))
     qij$ilq <- which(qnz & lower.tri(Q0, diag = TRUE))
     qij$iuq <- which(qnz & upper.tri(Q0, diag = TRUE))
@@ -167,7 +164,7 @@ cgeneric_graphpcor <-
 
     if(dotArgs$debug) {
       print(list(n = n, nnz = nnz, nfi = nfi,
-                 itheta = itheta, iparams = iparams,
+                 iLtheta = iLtheta, iparams = iparams,
                  npars1 = npars1, npars2 = npars2))
     }
 
@@ -194,7 +191,7 @@ cgeneric_graphpcor <-
     basemodel <- basepcor(
       base,
       p = n,
-      itheta = itheta,
+      iLtheta = iLtheta,
       d0 = d0,
       iparams = iparams[n+1:nEdges]-npars1
     )
@@ -225,43 +222,15 @@ cgeneric_graphpcor <-
       print(I0d)
     }
 
-
     ## sigma prior
-    if(missing(sigma.prior.reference)) {
-      sigma.prior.reference <- rep(1, npars1)
-    }
-    if(missing(sigma.prior.probability)) {
-      sigma.prior.probability <- rep(0, npars1)
-    }
-
-    stopifnot(length(sigma.prior.reference) == npars1)
-    stopifnot(length(sigma.prior.probability) == npars1)
-    stopifnot(all(sigma.prior.reference>0))
-    sigma.prior.probability[is.na(sigma.prior.probability)] <- 0
-    stopifnot(all(sigma.prior.probability>=0.0))
-    stopifnot(all(sigma.prior.probability<=1.0))
-    sigma.fixed <- is.zero(sigma.prior.probability) |
-      is.zero(1-sigma.prior.probability)
-    nUnkSigmas <- npars1 - sum(sigma.fixed)
+    scheck <- pcSigmasCheck(
+      nsigmas = npars1,
+      sigma.prior.reference = sigma.prior.reference,
+      sigma.prior.probability = sigma.prior.probability
+    )
     if(dotArgs$debug) {
-      print(list(sigmaref = sigma.prior.reference,
-                 sigmaprob = sigma.prior.probability,
-                 sfixed = sigma.fixed,
-                 nUnkSigmas = nUnkSigmas))
+      print(scheck)
     }
-
-    # ## update sigma.* with iparams (left this for C code)
-    # sigma.prior.reference <- sigma.prior.reference[iparams[(1:n)]]
-    # sigma.prior.probability <- sigma.prior.probability[iparams[(1:n)]]
-    # sigma.fixed <- sigma.fixed[iparams[(1:n)]]
-    # if(any(is.na(sigma.fixed)))
-    #   stop("Some error in `iparams` or  `sigma.fixed`!")
-    # if(dotArgs$debug) {
-    #   cat("expanded:\n")
-    #   print(list(sigmaref = sigma.prior.reference,
-    #              sigmaprob = sigma.prior.probability,
-    #              sfixed = sigma.fixed))
-    # }
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,
@@ -278,12 +247,12 @@ cgeneric_graphpcor <-
         iuqpac = as.integer(iuqpac-1), ## 7
         ifi = as.integer(ifi-1),       ## 8
         jfi = as.integer(jfi-1),       ## 9
-        ifixed = as.integer(c(sigma.fixed, cfixed)), ## 10
-        itheta = as.integer(iparams-1),              ## 11
+        ifixed = as.integer(c(scheck$sigma.fixed, cfixed)), ## 10
+        iparams = as.integer(iparams-1),              ## 11
         lambda = as.numeric(lambda),                      ## 0
-        sigmaref = as.numeric(sigma.prior.reference),     ## 1
-        sigmaprob = as.numeric(sigma.prior.probability),  ## 2
-        lconst = as.numeric(I0d$logDeterminant),          ## 3
+        sigmaref = as.numeric(scheck$sigma.prior.reference),     ## 1
+        sigmaprob = as.numeric(scheck$sigma.prior.probability),  ## 2
+        lconst = as.numeric(I0d$logDeterminant * 0.5),    ## 3
         thetabase = as.numeric(theta0),                   ## 4
         d0 = as.numeric(basemodel$d0),                    ## 5
         Ihalf = I0d$sqrt

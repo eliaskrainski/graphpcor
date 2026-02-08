@@ -59,19 +59,13 @@ cgeneric_LKJ <-
       dotArgs$debug <- FALSE
     }
 
-    stopifnot(all(sigma.prior.reference>0))
-    pp.na <- is.na(sigma.prior.probability)
-    if(any(pp.na)) {
-      sigma.prior.probability[pp.na] <- 0.0
-    }
-    stopifnot(!any(sigma.prior.probability<0))
-    stopifnot(!any(sigma.prior.probability>1))
-    sigma.fixed <- is.zero(sigma.prior.probability) |
-      is.zero(1-sigma.prior.probability)
+    scheck <- pcSigmasCheck(
+      nsigmas = n,
+      sigma.prior.reference = sigma.prior.reference,
+      sigma.prior.probability = sigma.prior.probability
+    )
     if(dotArgs$debug) {
-      print(list(sigmaref = sigma.prior.reference,
-                 sigmaprob = sigma.prior.probability,
-                 sfixed = sigma.fixed))
+      print(scheck)
     }
 
     k <- 1:(n-1)
@@ -102,9 +96,9 @@ cgeneric_LKJ <-
         eta = as.double(eta),
         lc = as.double(lc),
         shlib = dotArgs$shlib,
-        sfixed = as.integer(sigma.fixed),
-        sigmaref = as.numeric(sigma.prior.reference),
-        sigmaprob = as.numeric(sigma.prior.probability)
+        sfixed = as.integer(scheck$sigma.fixed),
+        sigmaref = as.numeric(scheck$sigma.prior.reference),
+        sigmaprob = as.numeric(scheck$sigma.prior.probability)
       )
     )
 

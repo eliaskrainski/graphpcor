@@ -20,18 +20,26 @@ plot(g)
 (Lg <- Laplacian(g))
 
 ## define the cgeneric model (see test/concepts/graphpcor.R for other options)
-theta.base <- rep(0, ne[2])
+theta.base <- rnorm(ne[2])
+s0 <- 3:0+0.5
 
 cmodel <- cgeneric(
     model = g,
     lambda = 10,
     base = theta.base,
-    sigma.prior.reference = rep(1, ne[1]),
-    sigma.prior.probability = rep(0.5, ne[1]))
+    useINLAprecomp = FALSE, 
+    sigma.prior.reference = s0, 
+    sigma.prior.probability = rep(0.01, ne[1]))
 
 cmodel
 
-sigmas <- c(5, 0.5, 1, 0.1)
+c(log(s0), theta.base)
+
+mu(cmodel)
+
+initial(cmodel)
+
+sigmas <- c(5, 1, 0.5, 0.1)
 thetaL <- c(-5, 1, 2, -0.1)
 theta1 <- c(log(sigmas), thetaL)
 
@@ -41,7 +49,10 @@ Vg
 cov2cor(vcov(g, theta = theta.base)) ## base model correlation
 cov2cor(Vg) ## correlation to be used to sample data
 
-prec(cmodel, theta = theta1)
+Q1 <- prec(cmodel, theta = theta1)
+Q1
+
+all.equal(Vg, solve(as.matrix(Q1)), check.attributes = FALSE)
 
 ## some data
 nrep <- 100

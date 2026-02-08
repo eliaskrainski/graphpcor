@@ -44,7 +44,7 @@ all.equal(
     crossprod(
         graphpcor:::Lprec0(
                         theta.low,
-                        itheta = g,
+                        iLtheta = g,
                         d0 = ne[1]:1)))
 
 V0 <- chol2inv(t(Lf))
@@ -73,7 +73,7 @@ stopifnot(all.equal(sqrt(diag(V1)), exp(logsigmas)))
 
 ## base model (theta for L)
 theta0l <- rep(-0.3, ne[2])
-basepcor(theta0l, itheta = g)
+basepcor(theta0l, iLtheta = g)
 
 ## build the cgeneric model
 ## Note: here 'model' is a 'graphpcor'
@@ -82,7 +82,8 @@ vmodel <- cgeneric(
     lambda = 1,
     base = theta0l,
     sigma.prior.probability = rep(0.5, ne[1]),
-    debug = 1e9)
+    debug = 1e9,
+    useINLAprecomp = FALSE)
 
 prior(vmodel, theta = c(logsigmas, theta0l))
 
@@ -104,7 +105,8 @@ cmodel <- cgeneric(
     model = g, ## use the graphpcor
     lambda = 1,
     base = theta0l,
-    debug = 0)
+    debug = 0,
+    useINLAprecomp = FALSE)
 
 c(prior(cmodel, theta = theta0l), 
   prior(cmodel, theta = theta.low))

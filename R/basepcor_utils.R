@@ -16,18 +16,18 @@ NULL
 Lprec0 <- function(
     theta,
     p,
-    itheta,
+    iLtheta,
     d0) {
   stopifnot((m <- length(theta))>0)
-  itheta <- p_itheta_fncheck(p, itheta)
-  p <- attr(itheta, "p")
+  iLtheta <- p_iLtheta_fncheck(p, iLtheta)
+  p <- attr(iLtheta, "p")
   stopifnot(p>1)
   if(missing(d0)) {
     warning("Using 'd0 = p:1'!")
     d0 <- p:1
   }
   L <- diag(x = d0, nrow = p, ncol = p)
-  L[itheta] <- theta
+  L[iLtheta] <- theta
   L <- fillLprec(L)
   return(L)
 }

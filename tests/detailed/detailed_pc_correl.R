@@ -3,15 +3,22 @@ library(INLA)
 library(graphpcor)
 
 n <- 4
+(m <- n * (n-1)/2)
 lambda <- 5
 
+th0 <- rnorm(m)
 model <- cgeneric(
     model = "pc_correl",
     n = n,
+    base = th0,
     lambda = lambda,
-    debug = 1e9,
+    debug = 0*1e9,
     useINLAprecomp = FALSE)
 model
+
+th0
+str(model$f$cgeneric$data$doubles)
+model$f$cgeneric$data$doubles$thetab
 
 graph(model, optimize = TRUE)
 
@@ -19,7 +26,9 @@ graph(model)
 
 round(ith <- initial(model), 4)
 
-m <- n * (n-1)/2
+th0
+prior(model, theta = th0)
+
 theta1 <- rnorm(m)
 
 theta1
@@ -30,6 +39,8 @@ sum(diag(chol(qq)))
 (vv <- solve(qq))
 
 basecor(theta1, n)
+
+prior(model, theta = theta1)
 
 ## call inla with NA to compare
 dat1 <- data.frame(
@@ -119,7 +130,7 @@ for(i in 1:length(lambdas)) {
         L <- graphpcor:::Lprec0(
                              theta = hs[i, ],
                              p = n,
-                             itheta = iil,
+                             iLtheta = iil,
                              d0 = n:1)
         cov2cor(chol2inv(t(L)))[iil]
     })

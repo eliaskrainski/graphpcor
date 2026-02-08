@@ -14,9 +14,9 @@ all.equal(g, graphpcor(G!=0))
 ## base model (theta for L)
 theta0l <- rep(-0.3, ne[2])
 
-basepcor(theta0l, p = ne[1], itheta = g)
+basepcor(theta0l, p = ne[1], iLtheta = g)
 
-basepcor(theta0l, p = ne[1], itheta = g)$I0
+basepcor(theta0l, p = ne[1], iLtheta = g)$I0
 hessian(g, theta0l)
 
 ## build the cgeneric model
@@ -288,7 +288,7 @@ C0 <- matrix(c(1, rho0,
 library(graphpcor)
 gpc <- graphpcor(x1 ~ x2 + x3)
 
-b <- basepcor(C0, itheta = gpc)
+b <- basepcor(C0, iLtheta = gpc)
 b
 
 (theta0 <- b$theta)

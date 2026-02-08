@@ -213,12 +213,12 @@ plot.graphpcor <- function(x, y, ...) {
   }
 #' @describeIn graphpcor
 #' The `vcov` method for a `graphpcor`
-#' @importFrom methods getMethod
+#' @importFrom stats vcov
 #' @export
 setMethod(
-  "vcov",
+ "vcov",
   "graphpcor",
-  function(object, ...) {
+ function(object, ...) {
     ne <- dim(object)
     p <- ne[1]
     m <- ne[2]
@@ -252,11 +252,11 @@ setMethod(
     }
 
     ## build lower Cholesky of Q0
-    itheta <- which(lower.tri(G) & (!is.zero(G)))
+    iLtheta <- which(lower.tri(G) & (!is.zero(G)))
     LQ0 <- Lprec0(
       theta = theta[-(1:ne[1])],
       p = ne[1],
-      itheta = itheta,
+      iLtheta = iLtheta,
       d0 = ne[1]:1)
 
     ## std

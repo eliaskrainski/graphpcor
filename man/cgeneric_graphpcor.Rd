@@ -24,19 +24,16 @@ to define the precision structure of the model.}
 \item{lambda}{the parameter for the exponential prior on
 the radius of the sphere, see details.}
 
-\item{base}{numeric vector with length \code{m}, \code{m} is the
-number of edges in the graph, or matrix with the reference
-correlation model against what the KLD will be evaluated.
-If it is a vector, a correlation matrix is defined
-considering the graph model and this vector as
-the parameters in the lower triangle matrix L.
-If it is a matrix, it will be checked if the graph model
-can generates this.}
+\item{base}{numeric vector, correlation matrix or
+\code{basepcor} object. See \code{\link[=basepcor]{basepcor()}} for details.
+If the output of a \code{\link[=basepcor]{basepcor()}} is provided,
+\code{iLtheta} will be considered from it,
+and \code{iparams} for the correlation parameters as well.}
 
 \item{sigma.prior.reference}{numeric vector to set the reference
 for each standard deviation parameter for its PC-prior.
 If missing, the model will be assumed as for a correlation.
-NOTE: \code{iparams} will be applied here as
+Note: \code{iparams} will be applied here as
 \code{sigma.prior.reference[iparams[1:n]]}.}
 
 \item{sigma.prior.probability}{numeric vector with to
@@ -46,7 +43,7 @@ P(sigma < \code{sigma.prior.reference}) = p. If missing, all the
 marginal variances are considered as known.
 If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.
-NOTE: \code{iparams} will be applied here as
+Note: \code{iparams} will be applied here as
 \code{sigma.prior.probability[iparams[1:n]]}.}
 
 \item{iparams}{integer vector with length equal \code{n+m},

@@ -196,6 +196,7 @@ dim.treepcor <- function(x, ...) {
 #' @param object treepcor
 #' @importFrom INLAtools is.zero
 #' @importFrom grDevices rgb
+#' @importFrom stats drop1
 #' @export
 setMethod(
   "drop1",

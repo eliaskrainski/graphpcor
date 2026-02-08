@@ -2,11 +2,14 @@
 % Please edit documentation in R/numeric_utils.R
 \name{numeric-utils}
 \alias{numeric-utils}
+\alias{dspd}
 \alias{hessian.basecor}
 \alias{hessian.basepcor}
 \alias{hessian.graphpcor}
 \title{Functions for numerical algorithms}
 \usage{
+dspd(M, decomposition = "svd")
+
 \method{hessian}{basecor}(func, x, method = "Richardson", method.args = list(), ...)
 
 \method{hessian}{basepcor}(func, x, method = "Richardson", method.args = list(), ...)
@@ -14,6 +17,13 @@
 \method{hessian}{graphpcor}(func, x, method = "Richardson", method.args = list(), ...)
 }
 \arguments{
+\item{M}{square matrix.}
+
+\item{decomposition}{character to inform
+which decomposition is to be applied to the
+hessian. The options are "eigen", "svd" and "chol".
+Default is "svd".}
+
 \item{func}{model object definition for a correlation matrix.}
 
 \item{x}{for a \code{graphpcor} it is the parameter vector,
@@ -28,6 +38,12 @@ vector to indicate model parameters as fixed.
 If not used, all parameters are treated unknown.}
 }
 \value{
+\code{dspd} returns a list with the decomposition elements,
+"logDeterminant" (of the original matrix),
+"sqrt" (its 'square root') and
+"sqrtInv" (its inverse 'square root').
+\code{hessian} returns the Hessian
+
 matrix with the Hessian
 }
 \description{
@@ -35,7 +51,11 @@ Functions for numerical algorithms
 }
 \section{Functions}{
 \itemize{
-\item \code{hessian(basecor)}: Evaluate the Hessian of the KLD for a \code{basecor}.
+\item \code{dspd()}: \code{hessian}: Evaluate the Hessian of the KLD for a \code{basecor}.
+\code{spd}: decompose a positive definite matrix,
+and compute useful elements out of that.
+
+\item \code{hessian(basecor)}: Evaluate the Hessian for a \code{basecor}.
 
 \item \code{hessian(basepcor)}: Evaluate the hessian of the KLD for a \code{basepcor}.
 
