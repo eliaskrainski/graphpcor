@@ -57,58 +57,63 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->ints[1]->name, "debug"));  // this will always be the case
 //	int debug = data->ints[1]->ints[0];
 
-  assert(!strcasecmp(data->ints[2]->name, "itheta"));
-//  inla_cgeneric_vec_tp *itheta = data->ints[2];
-  //assert(M == itheta->len);
-
-  assert(!strcasecmp(data->ints[3]->name, "sfixed"));
-  int nsigmas = data->ints[3]->len;
-  int nsfixed = 0, sfixed[nsigmas];
-  for (i = 0; i < nsigmas; i++) {
-    sfixed[i] = data->ints[3]->ints[i];
-    nsfixed += sfixed[i];
-  }
-  int nunkparams[3];
-  nunkparams[0] = nsigmas - nsfixed;
-  nunkparams[1] = M-nsigmas;   // TO DO: corparamsfixed
-  nunkparams[2] = nunkparams[0] + nunkparams[1];
-
-  assert(!strcasecmp(data->doubles[0]->name, "lambda"));
-	double lambda = data->doubles[0]->doubles[0];
-	assert(lambda > 0);
-
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
-	inla_cgeneric_vec_tp *sigmaref = data->doubles[1];
-	assert(sigmaref->len > 0);
-	assert(nsigmas == sigmaref->len);
-	for (i = 0; i < nsigmas; i++) {
-	  assert(sigmaref->doubles[i] > 0);
+	int np1 = data->doubles[1]->len;
+	for (i = 0; i < np1; i++) {
+	  assert(data->doubles[1]->doubles[i] > 0);
 	}
-	assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
-	inla_cgeneric_vec_tp *sigmaprob = data->doubles[2];
-	assert(sigmaprob->len > 0);
-	assert(nsigmas == sigmaprob->len);
 
-	assert(!strcasecmp(data->doubles[3]->name, "lconst"));
+	assert(!strcasecmp(data->ints[3]->name, "ifixed"));
+	int npars = data->ints[3]->len;
+	int np2 = npars-np1;
+	double th0[npars];
 
-/*
-	if (debug > 999) {
-		printf("N=%d, nth=%d, M=%d, lambda=%f\n", N, nth, M, lambda);
+	int nunk1=0, nunk2=0;
+	for(i=0; i<np1; i++) {
+	  nunk1 += (data->ints[3]->ints[i]==0);
 	}
-*/
+	for(i=0; i<np2; i++) {
+	  nunk2 += (data->ints[3]->ints[np1+i]==0);
+	}
+	int nUnk=nunk1+nunk2;
+//	printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
+  //      np1, np2, npars, nunk1, nunk2);
 
-  double sigmas[N];
-  if (theta) {
-    k = 0;
-    for (i = 0; i < N; i++) {
-      if (sfixed[i]) {
-        sigmas[i] = sigmaref->doubles[i];
-      } else {
-        sigmas[i] = exp(theta[k++]);
-      }
-    }
-    assert(k==nunkparams[0]);
-  }
+	double actualtheta[npars], actualsigmas[N];
+	if (theta) {
+
+	  assert(!strcasecmp(data->ints[4]->name, "iparams"));
+	  assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
+	  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
+	  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
+
+	  k=0;
+	  for(i=0; i<np1; i++) {
+	    if(data->ints[3]->ints[i]) {
+	      th0[i] = log(data->doubles[1]->doubles[i]);
+	    } else {
+	      th0[i] = theta[k++];
+	    }
+	  }
+	  for(i=0; i<np2; i++) {
+	    j = np1 + i;
+	    if(data->ints[3]->ints[j]) {
+	      th0[j] = data->doubles[4]->doubles[i];
+	    } else {
+	      th0[j] = theta[k++];
+	    }
+	  }
+	  assert(nUnk==k);
+
+	  for(i=0; i<npars; i++) {
+	    actualtheta[i] = th0[data->ints[4]->ints[i]];
+	  }
+
+	  for(i=0; i<N; i++) {
+	    actualsigmas[i] = exp(actualtheta[i]);
+	  }
+
+	}
 
 	switch (cmd) {
 	case INLA_CGENERIC_GRAPH:
@@ -137,11 +142,20 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret[1] = M;				       /* REQUIRED */
 
 // Cholesky of the correlation matrix
-//    if(parametrization==1) {
-      // parametrized as correlation matrix inverse transform
+//    if(parametrization==1) { // cpc parametrization
       double ldet, aJac;
-      cpcCholesky(&N, &theta[nunkparams[0]], &ret[offset], &ldet, &aJac);
-  //  } else {
+      assert(!strcasecmp(data->ints[2]->name, "iLtheta"));
+
+      double ltheta[M-N];
+      for(i=0; i<(M-N); i++) {
+        ltheta[i] = 0.0;
+      }
+      k = N;
+      for(i=0; i<data->ints[2]->len; i++) {
+        ltheta[data->ints[2]->ints[i]] = actualtheta[k++];
+      }
+      cpcCholesky(&N, &ltheta[0], &ret[offset], &ldet, &aJac);
+	//  } else { // old parametrization
     //  double hld;
       //theta2gamma2Lcorr(N, &hld, &theta[0], &ret[offset]);
     //}
@@ -164,7 +178,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
   k = 2;
   for(i=0; i<N; i++) {
     for(j=i; j<N; j++) {
-      ret[k] *= sigmas[j];
+      ret[k] *= actualsigmas[j];
       k++;
     }
   }
@@ -188,12 +202,9 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	{
 		// return c(P, initials)
 		// where P is the number of hyperparameters
-		ret = Calloc(nunkparams[2] + 1, double);
-	  ret[0] = nunkparams[2];
-	  for (i = 0; i < nunkparams[0]; i++) {
-	    ret[1 + i] = 0.0;
-	  }
-	  for (i = nunkparams[0]; i < nunkparams[2]; i++) {
+		ret = Calloc(nUnk + 1, double);
+	  ret[0] = nUnk;
+	  for (i = 0; i < nUnk; i++) {
 	    ret[1 + i] = 0.0;
 	  }
 
@@ -203,26 +214,41 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	case INLA_CGENERIC_LOG_PRIOR:
 	{
 		ret = Calloc(1, double);
+	  ret[0] = 0.0;
+
+	  // PC prior for sigma[i]
+	  if(nunk1>0) {
+	    double lam;
+	    k=0;
+	    for (i = 0; i < np1; i++) {
+	      if (data->ints[3]->ints[i]==0) {
+	        lam = -log(data->doubles[2]->doubles[i]);
+	        lam /= data->doubles[1]->doubles[i];
+	        ret[0] += pclogsigma(theta[k++], lam);
+	      }
+	    }
+	  }
+
 	  // p(theta|lambda) = p(xi|lambda) |det(I(theta0))|
 	  // lconst = |det(I)^{1/2}|
-	  ret[0] = pcmultivar(
-	    nunkparams[1], lambda,
-	    &data->doubles[4]->doubles[0],
-      &data->mats[0]->x[0],
-      &data->doubles[3]->doubles[3],
-      &theta[nunkparams[0]]);
-
-    // PC prior for sigma[i]
-    if(nunkparams[0]>0) {
-      double lam;
-      k=0;
-      for (i = 0; i < nunkparams[0]; i++) {
-        if (!sfixed[i]) {
-          lam = -log(sigmaprob->doubles[i]) / sigmaref->doubles[i];
-          ret[0] += pclogsigma(theta[k++], lam);
-        }
-      }
-    }
+	  if(nunk2>0) {
+	    assert(!strcasecmp(data->doubles[0]->name, "lambda"));
+	    assert(!strcasecmp(data->doubles[3]->name, "lconst"));
+	    assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
+	    assert(!strcasecmp(data->mats[0]->name, "Ihalf"));
+	    double thb[nunk2];
+	    k=0;
+	    for(i=0; i<np2; i++) {
+	      j = np1 + i;
+	      if(data->ints[3]->ints[j]==0) {
+	        thb[k++] = data->doubles[4]->doubles[i];
+	      }
+	    }
+//	    printMat(thb,1,nunk2,"thb\n");
+	    ret[0] += pcmultivar(
+	      nunk2, data->doubles[0]->doubles[0], &thb[0],
+        &data->mats[0]->x[0], &data->doubles[3]->doubles[0], &theta[nunk1]);
+	  }
 
 	}
 		break;
