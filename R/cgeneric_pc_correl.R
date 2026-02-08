@@ -185,6 +185,9 @@ cgeneric.basecor <-
     print(scheck)
   }
 
+  iLvec <- pmatch(model$iLtheta,
+                  which(lower.tri(matrix(0, n, n))))
+
   the_model <- do.call(
     what = INLAtools::cgenericBuilder,
     args = list(
@@ -192,7 +195,7 @@ cgeneric.basecor <-
       n = as.integer(n),                                  ## i0
       debug = as.logical(dotArgs$debug),                  ## i1
       shlib = dotArgs$shlib,
-      iLtheta = as.integer(model$iLtheta-1),              ## i2
+      iLtheta = as.integer(iLvec-1),              ## i2
       ifixed = as.integer(c(scheck$sigma.fixed, cfixed)), ## i3
       iparams = as.integer(iparams-1),                    ## i4
       lambda = as.numeric(lambda),                            ## d0

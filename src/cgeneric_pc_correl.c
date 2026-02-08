@@ -57,10 +57,6 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->ints[1]->name, "debug"));  // this will always be the case
 //	int debug = data->ints[1]->ints[0];
 
-  assert(!strcasecmp(data->ints[2]->name, "iLtheta"));
-  int np2 = data->ints[2]->len;
-  assert(np2>0);
-
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
 	int np1 = data->doubles[1]->len;
 	for (i = 0; i < np1; i++) {
@@ -69,7 +65,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 
 	assert(!strcasecmp(data->ints[3]->name, "ifixed"));
 	int npars = data->ints[3]->len;
-	assert(np2 == (npars-np1));
+	int np2 = npars-np1;
 	double th0[npars];
 
 	int nunk1=0, nunk2=0;
@@ -83,7 +79,7 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 //	printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
   //      np1, np2, npars, nunk1, nunk2);
 
-	double actualtheta[M], actualsigmas[N];
+	double actualtheta[npars], actualsigmas[N];
 	if (theta) {
 
 	  assert(!strcasecmp(data->ints[4]->name, "iparams"));
@@ -108,11 +104,11 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	    }
 	  }
 	  assert(nUnk==k);
-//	  printMat(th0, 1, npars, "th0\n");
 
-	  for(i=0; i<M; i++) {
+	  for(i=0; i<npars; i++) {
 	    actualtheta[i] = th0[data->ints[4]->ints[i]];
 	  }
+
 	  for(i=0; i<N; i++) {
 	    actualsigmas[i] = exp(actualtheta[i]);
 	  }
@@ -148,8 +144,18 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 // Cholesky of the correlation matrix
 //    if(parametrization==1) { // cpc parametrization
       double ldet, aJac;
-      cpcCholesky(&N, &actualtheta[N], &ret[offset], &ldet, &aJac);
-  //  } else { // old parametrization
+      assert(!strcasecmp(data->ints[2]->name, "iLtheta"));
+
+      double ltheta[M-N];
+      for(i=0; i<(M-N); i++) {
+        ltheta[i] = 0.0;
+      }
+      k = N;
+      for(i=0; i<data->ints[2]->len; i++) {
+        ltheta[data->ints[2]->ints[i]] = actualtheta[k++];
+      }
+      cpcCholesky(&N, &ltheta[0], &ret[offset], &ldet, &aJac);
+	//  } else { // old parametrization
     //  double hld;
       //theta2gamma2Lcorr(N, &hld, &theta[0], &ret[offset]);
     //}
