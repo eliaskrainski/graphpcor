@@ -82,8 +82,10 @@ graphpcor.matrix <- function(...) {
 #' @export
 graphpcor.Matrix <- function(...) {
   x <- upperPadding(Sparse(list(...)[[1]]))
-  ne <- c(nrow(x), length(x@x))
-  sij <- split(x@j+1L, x@i+1L)
+  ii <- which(x@j>x@i)
+  stopifnot(length(ii)>0)
+  ne <- c(nrow(x), length(ii))
+  sij <- split(x@j[ii]+1L, x@i[ii]+1L)
   vnams <- rownames(x)
   if(is.null(vnams)) {
     vnams <- paste0("x", 1:ne[1])

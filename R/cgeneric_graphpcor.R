@@ -72,12 +72,13 @@ cgeneric_graphpcor <-
 
     if(is.null(dotArgs$useINLAprecomp) ||
        dotArgs$useINLAprecomp) {
-      vs <- "26.02.05" ## after code structure update
+      vs <- "26.02.06" ## after code structure update
       ivs <- packageCheck(
         name = "INLA",
         minimum_version = vs) >= vs
       if(is.na(ivs)) {
-        stop("Update INLA or use 'useINLAprecomp = TRUE'\n")
+        warning("Update INLA to use 'useINLAprecomp = TRUE'\n")
+        dotArgs$useINLAprecomp = FALSE
       }
     }
 

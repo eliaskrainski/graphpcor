@@ -87,45 +87,57 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaref"));
 	int np1 = data->doubles[1]->len;
 
-	assert(!strcasecmp(data->ints[11]->name, "itheta"));
-	int npars = data->ints[11]->len;
+	assert(!strcasecmp(data->ints[10]->name, "ifixed"));
+	int npars = data->ints[10]->len;
 	int np2 = npars-np1;
+	double th0[npars];
 
-  assert(!strcasecmp(data->ints[10]->name, "ifixed"));
   int nunk1=0, nunk2=0;
-  for(i=0; i<npars; i++) {
-    if(i<np1) {
-      nunk1 += (data->ints[10]->ints[i]==0);
-    } else {
-      nunk2 += (data->ints[10]->ints[i]==0);
-    }
+  for(i=0; i<np1; i++) {
+    nunk1 += (data->ints[10]->ints[i]==0);
+  }
+  for(i=0; i<np2; i++) {
+    nunk2 += (data->ints[10]->ints[np1+i]==0);
   }
   int nUnk=nunk1+nunk2;
 
 //  printf("np1 %d, np2 %d, npars %d, nu1 %d, nu2 %d \n",
   //       np1, np2, npars, nunk1, nunk2);
+  //printMat(th0, 1, npars, "th0\n");
 
-	double actualtheta[M], th0[npars];
-	double actualsigmas[N];
-
-	for(i=0; i<np1; i++) {
-	  th0[i] = log(data->doubles[1]->doubles[i]);
-	}
-	for(i=0; i<np2; i++) {
-	  th0[np1+i] = data->doubles[4]->doubles[i];
-	}
-	//printMat(th0,1,M, "theta0\n");
+	double actualtheta[M], actualsigmas[N];
 
 	if (theta) {
 
+	  //printMat(theta, 1, nUnk, "theta\n");
+
+	  assert(!strcasecmp(data->ints[11]->name, "itheta"));
 	  assert(!strcasecmp(data->doubles[2]->name, "sigmaprob"));
 	  assert(!strcasecmp(data->doubles[3]->name, "lconst"));
 	  assert(!strcasecmp(data->doubles[4]->name, "thetabase"));
 
-	  aethetafn(npars, &theta[0], &th0[0], &data->ints[10]->ints[0],
-             &data->ints[11]->ints[0], &actualtheta[0]);
+	  k=0;
+	  for(i=0; i<np1; i++) {
+	    if(data->ints[10]->ints[i]) {
+	      th0[i] = log(data->doubles[1]->doubles[i]);
+	    } else {
+	      th0[i] = theta[k++];
+	    }
+	  }
+	  for(i=0; i<np2; i++) {
+	    j = np1 + i;
+	    if(data->ints[10]->ints[j]) {
+	      th0[j] = data->doubles[4]->doubles[i];
+	    } else {
+	      th0[j] = theta[k++];
+	    }
+	  }
+	  assert(nUnk==k);
 
-	  //printMat(actualtheta,1,M, "actualtheta\n");
+	  for(i=0; i<M; i++) {
+	    actualtheta[i] = th0[data->ints[11]->ints[i]];
+	  }
+//	  printMat(actualtheta,1,M, "actualtheta\n");
 
 	  for(i=0; i<N; i++) {
 	    actualsigmas[i] = exp(actualtheta[i]);
@@ -378,11 +390,10 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	  // PC prior for UNKNOWN sigma[i]
 	  if(nunk1>0) {
 	    double lam;
-	    for (i = 0; i < nunk1; i++) {
-	      if (data->ints[10]->ints[i]) {
-	        k = data->ints[11]->ints[i];
-	        lam = -log(data->doubles[1]->doubles[k]);
-	        lam /= data->doubles[2]->doubles[k];
+	    for (i = 0; i < np1; i++) {
+	      if (data->ints[10]->ints[i]==0) {
+	        lam = -log(data->doubles[1]->doubles[i]);
+	        lam /= data->doubles[2]->doubles[i];
 	        ret[0] += pclogsigma(theta[i], lam);
 	      }
 	    }
