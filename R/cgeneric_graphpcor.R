@@ -49,6 +49,7 @@
 #' [INLAtools::cgeneric()], such as `debug`,
 #' `shlib` and `useINLAprecomp`.
 #' @seealso [graphpcor()] and [basepcor()]
+#' @importFrom INLAtools packageCheck
 #' @returns `cgeneric` object.
 cgeneric_graphpcor <-
   function(model,
@@ -168,7 +169,7 @@ cgeneric_graphpcor <-
                  npars1 = npars1, npars2 = npars2))
     }
 
-    if(missing(base)){
+    if(missing(base) || is.null(base)) {
       warning("Missing base model! Using 'iid'.")
       base <- rep(0, npars2)
     }
@@ -188,13 +189,17 @@ cgeneric_graphpcor <-
         }
       }
     }
-    basemodel <- basepcor(
-      base,
-      p = n,
-      iLtheta = iLtheta,
-      d0 = d0,
-      iparams = iparams[n+1:nEdges]-npars1
-    )
+    if(inherits(base,"basepcor")) {
+      basemodel <- base
+    } else {
+      basemodel <- basepcor(
+        base,
+        p = n,
+        iLtheta = iLtheta,
+        d0 = d0,
+        iparams = iparams[n+1:nEdges]-npars1
+      )
+    }
     stopifnot(length(basemodel$theta) == npars2)
     if(dotArgs$debug) {
       print(basemodel)
