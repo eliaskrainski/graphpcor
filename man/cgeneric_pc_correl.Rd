@@ -2,19 +2,20 @@
 % Please edit documentation in R/cgeneric_pc_correl.R
 \name{cgeneric_pc_correl}
 \alias{cgeneric_pc_correl}
+\alias{cgeneric.basecor}
 \title{Build an \code{cgeneric} object to implement the PC prior,
 proposed on Simpson et. al. (2007),
 as an informative prior, see details in \code{\link[=basecor]{basecor()}}.}
 \usage{
-cgeneric_pc_correl(
-  n,
-  base,
-  itheta,
-  iparams,
-  ifixed,
+cgeneric_pc_correl(n, base, iLtheta, iparams, ...)
+
+\method{cgeneric}{basecor}(
+  model,
   lambda,
   sigma.prior.reference,
   sigma.prior.probability,
+  iparams,
+  cfixed,
   ...
 )
 }
@@ -22,21 +23,27 @@ cgeneric_pc_correl(
 \item{n}{integer to define the size of the matrix,
 same as \code{p} in \code{\link[=basecor]{basecor()}}.}
 
-\item{base}{numeric vector/matrix used to define the base
-correlation matrix. If numeric vector with length 'm',
-'m' should be 'p(p-1)/2' in the dense model case and
-'length(itheta)' in the sparse model case.}
+\item{base}{numeric vector, matrix  or \code{basecor} to define the base
+correlation model. See \code{\link[=basecor]{basecor()}} for details.
+If the output of a \code{\link[=basecor]{basecor()}} is provided,
+\code{iLtheta} and \code{iparams} (for the correlation parameters)
+will be considered from this.}
 
-\item{itheta}{integer vector to specify the (vectorized) position
-where 'theta' will be placed in the (initial, before fill-in)
-Cholesky (lower triangle) factor. Default is missing and assumes
-the dense case for when \code{itheta = which(lower.tri(...))}.}
+\item{iLtheta}{integer vector to specify the (vectorized) position
+where 'theta' will be placed in the (lower triangle)  Cholesky
+factorization of the correlation matrix.}
 
-\item{iparams}{integer ordered vector with length equal
-the number of parameters used to specify common parameter values.
-If missing, assumed to be \code{1:length(theta)}. Example: By setting
-\code{iparams = c(1,1,2,3)} the first and second parameters are
-considered to be the same.}
+\item{iparams}{integer vector with length equal \code{n+m},
+where \code{m} is the number of correlation parameters,
+to identify (possible) common parameters in the model.
+Default is \code{1:(n+m)}.
+Note: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
+
+\item{...}{additional arguments passed on to
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}, such as \code{debug},
+\code{shlib} and \code{useINLAprecomp}.}
+
+\item{model}{a \code{basecor} object.}
 
 \item{lambda}{the parameter for the exponential prior on
 the radius of the sphere, see details.}
@@ -44,7 +51,7 @@ the radius of the sphere, see details.}
 \item{sigma.prior.reference}{numeric vector to set the reference
 for each standard deviation parameter for its PC-prior.
 If missing, the model will be assumed as for a correlation.
-NOTE: \code{iparams} will be applied here as
+Note: \code{iparams} will be applied here as
 \code{sigma.prior.reference[iparams[1:n]]}.}
 
 \item{sigma.prior.probability}{numeric vector with to
@@ -54,10 +61,17 @@ P(sigma < \code{sigma.prior.reference}) = p. If missing, all the
 marginal variances are considered as known.
 If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.
-NOTE: \code{iparams} will be applied here as
+Note: \code{iparams} will be applied here as
 \code{sigma.prior.probability[iparams[1:n]]}.}
 
-\item{...}{further arguments passed on.}
+\item{cfixed}{integer vector to specify which correlation
+parameters are treated as known and fixed.
+By default all correlation parameters are treated as unknown.
+Example: if \code{cfixed = c(1,3)}, the first and third
+correlation parameters will be treated as fixed and the
+Hessian will be computed for the second correlation parameter.
+Please see the examples in \code{\link[=basepcor]{basepcor()}}.
+Note: consider \code{iparams[n+1:m]-iparams[n]}.}
 }
 \value{
 a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
@@ -67,6 +81,11 @@ Build an \code{cgeneric} object to implement the PC prior,
 proposed on Simpson et. al. (2007),
 as an informative prior, see details in \code{\link[=basecor]{basecor()}}.
 }
+\section{Functions}{
+\itemize{
+\item \code{cgeneric(basecor)}: Build a \code{cgeneric} for a \code{basecor}.
+
+}}
 \references{
 Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
 Martins and Sigrunn H. S\\o rbye (2017).

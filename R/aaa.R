@@ -24,3 +24,10 @@ graphpcor <- function(...) {
 #' parents represent latent variables, and children
 #' represent the variables of interest.
 setClass("treepcor")
+
+#' @importFrom methods new getMethod
+#' @importFrom stats vcov cov2cor runif rexp as.formula drop1
+#' @importFrom grDevices rgb
+#' @importFrom Matrix Matrix forceSymmetric rowSums Diagonal
+#' @importFrom numDeriv hessian
+#' @importFrom INLAtools cgeneric is.zero Sparse upperPadding packageCheck prec

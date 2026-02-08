@@ -4,7 +4,62 @@ NULL
 #> NULL
 
 #' @describeIn numeric-utils
-#' Evaluate the Hessian of the KLD for a `basecor`.
+#' `hessian`: Evaluate the Hessian of the KLD for a `basecor`.
+#' `spd`: decompose a positive definite matrix,
+#' and compute useful elements out of that.
+#' @param M square matrix.
+#' @param decomposition character to inform
+#' which decomposition is to be applied to the
+#' hessian. The options are "eigen", "svd" and "chol".
+#' Default is "svd".
+#' @returns `dspd` returns a list with the decomposition elements,
+#'  "logDeterminant" (of the original matrix),
+#' "sqrt" (its 'square root') and
+#' "sqrtInv" (its inverse 'square root').
+#' `hessian` returns the Hessian
+dspd <- function(M, decomposition = "svd") {
+  decomposition <- match.arg(
+    tolower(decomposition),
+    c("svd", "eigen", "chol"))
+  stopifnot(nrow(M)==ncol(M))
+  p <- ncol(M)
+  ## next bit follows mvtnorm:::rmvnorm()
+  t0 <- sqrt(.Machine$double.eps)
+  if(decomposition == "eigen") {
+    xd <- eigen(M)
+    tol1 <- t0 * abs(xd$values[1])
+    if(!all(xd$values >= tol1))
+      warning("'M' is numerically not positive semidefinite")
+    xd$logDeterminant <- sum(log(xd$values))
+    s <- sqrt(pmax(xd$values, 0.0))
+    xd$sqrt <- t(xd$vectors %*% (t(xd$vectors) * s))
+    xd$sqrtInv <- t(xd$vectors %*% (t(xd$vectors) / s))
+  }
+  if(decomposition == "svd") {
+    xd <- svd(M)
+    tol1 <- t0 * abs(xd$d[1])
+    if(any(xd$d<tol1))
+      warning("'M' is numerically not positive semidefinite")
+    xd$logDeterminant <- sum(log(xd$d))
+    s <- sqrt(pmax(xd$d, 0.0))
+    xd$sqrt <- t(xd$v %*% (t(xd$u) * s))
+    xd$sqrtInv <- t(xd$v %*% (t(xd$u) / s))
+  }
+  if(decomposition == "chol") {
+    xd <- chol(M, pivot = TRUE)
+    if(any(diag(xd)<t0))
+      warning("'M' is numerically not positive semidefinite")
+    tol1 <- pmin(t0 * 10, diag(xd))
+    xd$logDeterminant <- sum(diag(xd))*2.0
+    x$sqrt <- matrix(xd[, order(attr(xd, "pivot")), ], p)
+    xn <- chol2inv(chol(M))
+    xn.5 <- chol(xn, pivot = TRUE)
+    xd$sqrtInv <- matrix(xn.5[, order(attr(xn.5, "pivot"))], p)
+  }
+  return(xd)
+}
+#' @describeIn numeric-utils
+#' Evaluate the Hessian for a `basecor`.
 #' @param func model object definition for a correlation matrix.
 #' @param x for a `graphpcor` it is the parameter vector,
 #' otherwise not used.
@@ -41,7 +96,7 @@ hessian.basecor <- function(
         theta = th[func$iparams],
         p = func$p,
         parametrization = func$parametrization,
-        itheta = func$itheta)
+        iLtheta = func$iLtheta)
       KLD10(L0 = L0,
             L1 = t(L1))
     },
@@ -77,7 +132,7 @@ hessian.basepcor <- function(
       L1Q0 <- Lprec0(
         theta = th[func$iparams],
         p = func$p,
-        itheta = func$itheta,
+        iLtheta = func$iLtheta,
         d0 = func$d0)
       C1 <- cov2cor(chol2inv(t(L1Q0)))
       return(KLD10(L0 = L0, C1 = C1))
@@ -108,6 +163,6 @@ hessian.graphpcor <- function(
     d0 <- d[1]:1
   }
   b0 <- basepcor(base = x, p = d[1],
-                 itheta = iL, d0 = d0)
+                 iLtheta = iL, d0 = d0)
   return(hessian(b0, ...))
 }

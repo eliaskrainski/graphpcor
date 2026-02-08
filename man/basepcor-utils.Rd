@@ -6,7 +6,7 @@
 \alias{fillLprec}
 \title{Functions used by/to basepcor}
 \usage{
-Lprec0(theta, p, itheta, d0)
+Lprec0(theta, p, iLtheta, d0)
 
 fillLprec(L, lfi)
 }
@@ -15,10 +15,10 @@ fillLprec(L, lfi)
 
 \item{p}{integer (needed if \code{base} is vector): the dimension.}
 
-\item{itheta}{integer vector or 'graphpcor' to specify the (vectorized)
+\item{iLtheta}{integer vector or 'graphpcor' to specify the (vectorized)
 position where 'theta' is placed in the initial (before the fill-in)
 Cholesky (lower triangle) factor. If missing, default, assumes
-the dense case as \code{itheta = which(lower.tri(...))}, giving
+the dense case as \code{iLtheta = which(lower.tri(...))}, giving
 \code{length(theta)=p(p-1)/2}.}
 
 \item{d0}{numeric vector to specify the diagonal of the

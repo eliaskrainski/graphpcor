@@ -2,27 +2,27 @@
 % Please edit documentation in R/internal_utils.R
 \name{internal-utils}
 \alias{internal-utils}
-\alias{p_itheta_fncheck}
+\alias{p_iLtheta_fncheck}
 \alias{m_iparams_fncheck}
 \alias{KLD10}
-\alias{dspd}
+\alias{pcSigmasCheck}
 \title{Internal functions.}
 \usage{
-p_itheta_fncheck(p, itheta)
+p_iLtheta_fncheck(p, iLtheta)
 
 m_iparams_fncheck(m, iparams)
 
 KLD10(C1, C0, L1, L0)
 
-dspd(x, decomposition = "svd")
+pcSigmasCheck(nsigmas, sigma.prior.reference, sigma.prior.probability)
 }
 \arguments{
 \item{p}{integer (needed if \code{base} is vector): the dimension.}
 
-\item{itheta}{integer vector or 'graphpcor' to specify the (vectorized)
+\item{iLtheta}{integer vector or 'graphpcor' to specify the (vectorized)
 position where 'theta' is placed in the initial (before the fill-in)
 Cholesky (lower triangle) factor. If missing, default, assumes
-the dense case as \code{itheta = which(lower.tri(...))}, giving
+the dense case as \code{iLtheta = which(lower.tri(...))}, giving
 \code{length(theta)=p(p-1)/2}.}
 
 \item{m}{integer to specify the number of parameters}
@@ -42,18 +42,18 @@ NOTE: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 
 \item{L0}{is the Cholesky of \code{C0}.}
 
-\item{x}{matrix.}
+\item{nsigmas}{number of parameters.}
 
-\item{decomposition}{character to inform
-which decomposition is to be applied to the
-hessian. The options are "eigen", "svd" and "chol".
-Default is "svd".}
-}
-\value{
-\code{dspd} returns a list with the decomposition elements,
-"logDeterminant" (of the original matrix),
-"sqrt" (its 'square root') and
-"sqrtInv" (its inverse 'square root').
+\item{sigma.prior.reference}{numeric vector to set the reference
+for each standard deviation parameter for its PC-prior.}
+
+\item{sigma.prior.probability}{numeric vector with to
+set the probability statement of the PC prior for each
+marginal variance parameters. The probability statement is
+P(sigma < \code{sigma.prior.reference}) = p. If missing, all the
+marginal variances are considered as known.
+If a vector is given and a probability is NA, 0 or 1, the
+corresponding \code{sigma.prior.reference} will be used as fixed.}
 }
 \description{
 Internal functions.
@@ -64,14 +64,13 @@ By assuming equal mean vector we have
 }
 \section{Functions}{
 \itemize{
-\item \code{p_itheta_fncheck()}: Function to deal with \code{p} and \code{itheta}
+\item \code{p_iLtheta_fncheck()}: Function to deal with \code{p} and \code{iLtheta}
 
 \item \code{m_iparams_fncheck()}: Function to deal with \code{m} and \code{iparams}
 
 \item \code{KLD10()}: Compute the KLD between two multivariate Gaussian
 distributions, assuming equal mean vector
 
-\item \code{dspd()}: Function (internal) to decompose a positive definite matrix,
-and compute useful elements out of that.
+\item \code{pcSigmasCheck()}: Check the PC-prior arguments for \code{sigma}.
 
 }}

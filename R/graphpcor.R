@@ -82,8 +82,10 @@ graphpcor.matrix <- function(...) {
 #' @export
 graphpcor.Matrix <- function(...) {
   x <- upperPadding(Sparse(list(...)[[1]]))
-  ne <- c(nrow(x), length(x@x))
-  sij <- split(x@j+1L, x@i+1L)
+  ii <- which(x@j>x@i)
+  stopifnot(length(ii)>0)
+  ne <- c(nrow(x), length(ii))
+  sij <- split(x@j[ii]+1L, x@i[ii]+1L)
   vnams <- rownames(x)
   if(is.null(vnams)) {
     vnams <- paste0("x", 1:ne[1])
@@ -211,12 +213,12 @@ plot.graphpcor <- function(x, y, ...) {
   }
 #' @describeIn graphpcor
 #' The `vcov` method for a `graphpcor`
-#' @importFrom methods getMethod
+#' @importFrom stats vcov
 #' @export
 setMethod(
-  "vcov",
+ "vcov",
   "graphpcor",
-  function(object, ...) {
+ function(object, ...) {
     ne <- dim(object)
     p <- ne[1]
     m <- ne[2]
@@ -250,11 +252,11 @@ setMethod(
     }
 
     ## build lower Cholesky of Q0
-    itheta <- which(lower.tri(G) & (!is.zero(G)))
+    iLtheta <- which(lower.tri(G) & (!is.zero(G)))
     LQ0 <- Lprec0(
       theta = theta[-(1:ne[1])],
       p = ne[1],
-      itheta = itheta,
+      iLtheta = iLtheta,
       d0 = ne[1]:1)
 
     ## std
