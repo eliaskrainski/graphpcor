@@ -1,5 +1,11 @@
-#' @describeIn treepcor
-#' A tree from a formula for each parent.
+#' treepcor: correlation from tree
+#' @description A tree with two kind of nodes,
+#' parents and children. The parents are nodes with
+#' children. The children are nodes with no children.
+#' This is used to model correlation matrices, where
+#' parents represent latent variables, and children
+#' represent the variables of interest.
+#' A tree is defined from a formula for each parent.
 #' @param ... a list of formula used as relationship
 #' to define a three for correlation modeling, see [treepcor()].
 #' Parent nodes shall be in the right side while children
@@ -198,9 +204,7 @@ dim.treepcor <- function(x, ...) {
 #' @importFrom grDevices rgb
 #' @importFrom stats drop1
 #' @export
-setMethod(
-  "drop1",
-  "treepcor",
+drop1 <-
   function(object) {
     trm0 <- attr(object, "relationship")
     m <- ncol(trm0)
@@ -226,7 +230,6 @@ setMethod(
       "treepcor",
       args)
   }
-)
 #' @describeIn treepcor
 #' The `plot` method for a `treepcor`
 #' @param x treepcor object
@@ -462,9 +465,7 @@ etreepcor2precision <- function(d.el) {
 #' @param ... used to pass `theta` as a numeric vector
 #' with the model parameters
 #' @export
-setMethod(
-  "vcov",
-  "treepcor",
+vcov.treepcor <-
   function(object, ...) {
     mc <- list(...)
     nargs <- names(mc)
@@ -498,8 +499,7 @@ setMethod(
     cc <- diag(sigmas) %*% c0 %*% diag(sigmas)
     dimnames(cc) <- dimnames(vv)
     return(cc)
-  }
-)
+}
 #' @describeIn treepcor
 #' Internal function to extract elements to
 #' build the covariance matrix from a `treepcor`.

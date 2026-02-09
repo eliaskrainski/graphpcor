@@ -3,9 +3,7 @@
 \name{cgeneric_pc_correl}
 \alias{cgeneric_pc_correl}
 \alias{cgeneric.basecor}
-\title{Build an \code{cgeneric} object to implement the PC prior,
-proposed on Simpson et. al. (2007),
-as an informative prior, see details in \code{\link[=basecor]{basecor()}}.}
+\title{Build an \code{cgeneric} for a correlation matrix PC-prior.}
 \usage{
 cgeneric_pc_correl(n, base, iLtheta, iparams, ...)
 
@@ -77,9 +75,12 @@ Note: consider \code{iparams[n+1:m]-iparams[n]}.}
 a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
 }
 \description{
-Build an \code{cgeneric} object to implement the PC prior,
-proposed on Simpson et. al. (2007),
-as an informative prior, see details in \code{\link[=basecor]{basecor()}}.
+Build an \code{cgeneric} for a correlation matrix PC-prior.
+}
+\details{
+The parametrization is set as in \code{\link[=basecor]{basecor()}} and the base
+is used to define an informative prior, as derived in
+the pcmultivariate vignette.
 }
 \section{Functions}{
 \itemize{

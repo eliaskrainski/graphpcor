@@ -2,15 +2,25 @@
 % Please edit documentation in R/basepcor_utils.R
 \name{basepcor-utils}
 \alias{basepcor-utils}
-\alias{Lprec0}
 \alias{fillLprec}
+\alias{Lprec0}
 \title{Functions used by/to basepcor}
 \usage{
-Lprec0(theta, p, iLtheta, d0)
-
 fillLprec(L, lfi)
+
+Lprec0(theta, p, iLtheta, d0)
 }
 \arguments{
+\item{L}{matrix as the lower triangle
+containing the Cholesky decomposition of
+a initial precision matrix whose non-zeros are
+only at the position where the lower triangle
+side of the precision matrix is also non-zero}
+
+\item{lfi}{integer vector used as indicator of the
+position in the lower matrix where are the
+fill-in elements. Must be col then row ordered.}
+
 \item{theta}{numeric, the parameter vector.}
 
 \item{p}{integer (needed if \code{base} is vector): the dimension.}
@@ -24,22 +34,12 @@ the dense case as \code{iLtheta = which(lower.tri(...))}, giving
 \item{d0}{numeric vector to specify the diagonal of the
 Cholesky factor for the initial precision matrix \code{Q0}.
 Default, if not provided, is \code{d0 = p:1}.}
-
-\item{L}{matrix as the lower triangle
-containing the Cholesky decomposition of
-a initial precision matrix whose non-zeros are
-only at the position where the lower triangle
-side of the precision matrix is also non-zero}
-
-\item{lfi}{integer vector used as indicator of the
-position in the lower matrix where are the
-fill-in elements. Must be col then row ordered.}
 }
 \value{
-lower triangular matrix
-
 lower triangular matrix with the filled-in
 elements thus \code{Q0} can be computed.
+
+lower triangular matrix
 }
 \description{
 Functions used by/to basepcor
@@ -53,8 +53,8 @@ The filled-in elements are computed from them using \code{\link[=fillLprec]{fill
 }
 \section{Functions}{
 \itemize{
-\item \code{Lprec0()}: Compute the (lower triangle) Cholesky of the initial precision \code{Q0}.
-
 \item \code{fillLprec()}: Function to fill-in a Cholesky matrix
+
+\item \code{Lprec0()}: Compute the (lower triangle) Cholesky of the initial precision \code{Q0}.
 
 }}
