@@ -4,34 +4,6 @@ NULL
 #> NULL
 
 #' @describeIn basepcor-utils
-#' Compute the (lower triangle) Cholesky of the initial precision `Q0`.
-#' @inheritParams basepcor
-#' @param theta numeric, the parameter vector.
-#' @returns lower triangular matrix
-#' @details The (lower triangle) Cholesky factor
-#' of the initial precision for a correlation matrix contains
-#' the parameters in the non-zero elements of the lower triangle side
-#' of the precision matrix.
-#' The filled-in elements are computed from them using [fillLprec()].
-Lprec0 <- function(
-    theta,
-    p,
-    iLtheta,
-    d0) {
-  stopifnot((m <- length(theta))>0)
-  iLtheta <- p_iLtheta_fncheck(p, iLtheta)
-  p <- attr(iLtheta, "p")
-  stopifnot(p>1)
-  if(missing(d0)) {
-    warning("Using 'd0 = p:1'!")
-    d0 <- p:1
-  }
-  L <- diag(x = d0, nrow = p, ncol = p)
-  L[iLtheta] <- theta
-  L <- fillLprec(L)
-  return(L)
-}
-#' @describeIn basepcor-utils
 #' Function to fill-in a Cholesky matrix
 #' @param L matrix as the lower triangle
 #' containing the Cholesky decomposition of
@@ -73,5 +45,33 @@ fillLprec <- function(L, lfi) {
       }
     }
   }
+  return(L)
+}
+#' @describeIn basepcor-utils
+#' Compute the (lower triangle) Cholesky of the initial precision `Q0`.
+#' @inheritParams basepcor
+#' @param theta numeric, the parameter vector.
+#' @returns lower triangular matrix
+#' @details The (lower triangle) Cholesky factor
+#' of the initial precision for a correlation matrix contains
+#' the parameters in the non-zero elements of the lower triangle side
+#' of the precision matrix.
+#' The filled-in elements are computed from them using [fillLprec()].
+Lprec0 <- function(
+    theta,
+    p,
+    iLtheta,
+    d0) {
+  stopifnot((m <- length(theta))>0)
+  iLtheta <- p_iLtheta_fncheck(p, iLtheta)
+  p <- attr(iLtheta, "p")
+  stopifnot(p>1)
+  if(missing(d0)) {
+    warning("Using 'd0 = p:1'!")
+    d0 <- p:1
+  }
+  L <- diag(x = d0, nrow = p, ncol = p)
+  L[iLtheta] <- theta
+  L <- fillLprec(L)
   return(L)
 }

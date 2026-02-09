@@ -1,6 +1,4 @@
-#' Build an `cgeneric` object to implement the PC prior,
-#' proposed on Simpson et. al. (2007),
-#' as an informative prior, see details in [basecor()].
+#' Build an `cgeneric` for a correlation matrix PC-prior.
 #' @param n integer to define the size of the matrix,
 #' same as `p` in [basecor()].
 #' @param base numeric vector, matrix  or `basecor` to define the base
@@ -11,6 +9,10 @@
 #' @param iLtheta integer vector to specify the (vectorized) position
 #' where 'theta' will be placed in the (lower triangle)  Cholesky
 #' factorization of the correlation matrix.
+#' @details
+#' The parametrization is set as in [basecor()] and the base
+#' is used to define an informative prior, as derived in
+#' the pcmultivariate vignette.
 #' @references
 #' Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
 #' Martins and Sigrunn H. S\\o rbye (2017).

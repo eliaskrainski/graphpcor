@@ -1,7 +1,16 @@
+#' graphpcor: correlation from nodes and edges
+#' @description A `graphpcor` is a graph where
+#' a node represents a variable and an edge
+#' represent a conditional distribution.
+#' The correlation built from a `graphpcor` consider
+#' the parameters for the Cholesky of a precision matrix,
+#' whose non-zero pattern is given from the graph.
+#' @export
+graphpcor <- function(...) {
+  UseMethod("graphpcor")
+}
 #' @describeIn graphpcor
-#' Each term to represent a node, and
-#' each `~` to represent an edge.
-#' @param ... a list of arguments
+#' Each formula term represents a node, and each `~` an edge.
 #' @importFrom stats as.formula
 #' @export
 #' @example demo/graphpcor.R
@@ -216,9 +225,7 @@ plot.graphpcor <- function(x, y, ...) {
 #' The `vcov` method for a `graphpcor`
 #' @importFrom stats vcov
 #' @export
-setMethod(
- "vcov",
-  "graphpcor",
+vcov.graphpcor <-
  function(object, ...) {
     ne <- dim(object)
     p <- ne[1]
@@ -267,8 +274,7 @@ setMethod(
     dimnames(V) <- names2
 
     return(V)
-  }
-)
+}
 #' @describeIn graphpcor
 #' The precision method for 'graphpcor'
 #' @param model graphpcor model object

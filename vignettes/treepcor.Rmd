@@ -403,7 +403,7 @@ all.equal(Vg, as.matrix(solve(Qc)))
 
 Model fit (if have INLA installed)
 ```{r haveINLA, echo = FALSE}
-haveINLA <- library(INLA)
+haveINLA <- require(INLA)
 ```
 
 ```{r mfit, eval = haveINLA}

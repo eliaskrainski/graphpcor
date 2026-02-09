@@ -1,4 +1,4 @@
-#' Build an `cgeneric` for a graph, see [graphpcor()]
+#' Build an `cgeneric` for a (graph based) correlation matrix PC-prior.
 #' @description
 #' From either a `graphpcor` (see [graphpcor()]) or
 #' a square matrix (used as a graph),
@@ -48,6 +48,10 @@
 #' @param ... additional arguments passed on to
 #' [INLAtools::cgeneric()], such as `debug`,
 #' `shlib` and `useINLAprecomp`.
+#' @details
+#' The parametrization is set as in [basepcor()] and the base
+#' is used to define an informative prior, as derived in
+#' the pcmultivariate vignette.
 #' @seealso [graphpcor()] and [basepcor()]
 #' @importFrom INLAtools packageCheck
 #' @returns `cgeneric` object.

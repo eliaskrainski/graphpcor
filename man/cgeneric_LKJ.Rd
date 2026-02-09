@@ -44,10 +44,6 @@ a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::c
 Build an \code{cgeneric} model for
 the LKG prior on correlation matrix.
 }
-\details{
-It uses the Cannonical Partial Correlation (CPC),
-see \code{\link[=basepcor]{basepcor()}} for details.
-}
 \examples{
 ## a cgeneric model for the LKJ prior
 ## for theta from the CPC parametrization
@@ -73,5 +69,6 @@ solve(prec(cglkj, theta = c(1,1,1)))
 
 }
 \seealso{
-\code{\link[=dLKJ]{dLKJ()}} and \code{\link[=basepcor]{basepcor()}}
+It uses the Cannonical Partial Correlation (CPC),
+parametrization, see \code{\link[=basecor]{basecor()}} for details.
 }
