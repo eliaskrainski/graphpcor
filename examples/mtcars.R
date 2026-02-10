@@ -1,0 +1,76 @@
+
+sdat <- scale(mtcars)
+
+(n <- nrow(sdat))
+(p <- ncol(sdat))
+
+round((cc <- cov(sdat)) * 100)
+
+image(cc)
+
+lcc <- chol(cc + diag(p) * 0.0)
+lcc
+
+qc <- chol2inv(lcc)
+round(qc, 2)
+
+## partial correlation matrix
+pC <- cov2cor(qc)
+dimnames(pC) <- dimnames(qc) <- dimnames(cc) <-
+    list(colnames(sdat), colnames(sdat))
+round(pC*100)
+
+## define a graphpcor from a minimum spanning tree
+library(spdep)
+nb <- lapply(1:p, function(i) setdiff(1:p,i)); class(nb) <- 'nb'
+nbc <- nbcosts(nb, scale(mtcars))
+nbw <- nb2listw(nb, nbc, style="B")
+mst <- mstree(nbw)
+
+G <- matrix(0, p, p, dimnames = dimnames(pC))
+G
+for(i in 1:nrow(mst)) {
+    G[mst[i,1], mst[i,2]] <- 1
+    G[mst[i,2], mst[i,1]] <- 1
+}
+
+
+library(graphpcor)
+g <- graphpcor(G)
+(dg <- dim(g))
+
+c(p=p, n=n)
+g
+c(p, p*(p-1)/2)
+
+par(mfrow = c(1, 1), mar = c(0,0,0,0))
+plot(g)
+
+c0 <- cgeneric(
+    g, lambda = 1,
+    base = rep(0, dg[2]), 
+    useINLAprecomp = FALSE)
+
+idat <- data.frame(
+    i = rep(1:p, each = n),
+    r = rep(1:n, p),
+    y = as.vector(sdat)
+)
+
+head(sdat,3)
+head(idat,3)
+
+cfam <- list(hyper = list(
+                 prec = list(intial = 10, fixed = TRUE)
+             ))
+
+library(INLA)
+
+fit <- inla(
+    y ~ 0 + f(i, model = c0, replicate = r),
+    data = idat,
+    control.family = cfam,
+    verbose = !TRUE
+)
+
+fit$mode$theta

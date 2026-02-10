@@ -129,6 +129,7 @@ cgeneric_graphpcor <-
       cat("Laplacian is\n")
       print(Q0)
     }
+    Q0 <- as.matrix(Q0)
 
     l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)

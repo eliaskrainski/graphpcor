@@ -7,6 +7,16 @@ plot(graphpcor(y~x, v~x, z~y, z~v))
 plot(graphpcor(y~x+z, v~z+x))
 plot(graphpcor(y~x+z, v~x, z~v))
 
+par(mfrow = c(2, 3), mar = c(0,0,0,0))
+plot(graphpcor("x~y+v", z~y+v))
+plot(graphpcor("x~y",x~v,"z~y","z~v"))
+plot(graphpcor(x~y, v~x, y~z, z~v))
+plot(graphpcor(paste0("x1~x",2:5)))
+plot(graphpcor(list(paste0("x1~x",2:5))))
+plot(graphpcor(
+    sapply(c(paste0("x1~x",3:5),"x1~x2"), as.character)))
+graphpcor(lapply(2:5, function(i) paste0("x1~x",i)))
+
 ## the graph in Example 2.6 of the GMRF book
 g <- graphpcor(x ~ y + v, z ~ y + v)
 
