@@ -10,12 +10,33 @@ graphpcor <- function(...) {
   UseMethod("graphpcor")
 }
 #' @describeIn graphpcor
-#' Each formula term represents a node, and each `~` an edge.
-#' @importFrom stats as.formula
+#' Each element may be a character or formula.
 #' @export
-#' @example demo/graphpcor.R
+graphpcor.list <- function(...) {
+  fch <- lapply(unlist(list(...)), function(x)
+    gsub("\"", "", deparse(x)))
+  do.call(
+    what = "graphpcor",
+    args = fch
+  )
+}
+#' @describeIn graphpcor
+#' Each term represents a node, and each `~` an edge.
+#' @export
 graphpcor.formula <- function(...) {
-  fch <- as.character(match.call())[-1]
+  fch <- lapply(list(...), function(x)
+    gsub("\"", "", deparse(x)))
+  do.call(
+    what = "graphpcor",
+    args = fch
+  )
+}
+#' @describeIn graphpcor
+#' Each term represents a node, and each `~` an edge.
+#' @export
+graphpcor.character <- function(...) {
+  fch <- sapply(unlist(list(...)), function(x)
+    gsub("\"", "", deparse(x)))
   m <- length(fch)
   if(m<1)
     stop("Please provide an argument!")
@@ -23,7 +44,8 @@ graphpcor.formula <- function(...) {
     as.character(as.formula(x)))
   ## right side check, and collect terms
   terms.r <- lapply(ch, function(x) {
-    x <- gsub(" ", "", x[3])
+    k <- length(x)
+    x <- gsub(" ", "", x[k])
     schi <- strsplit(x, "-", fixed = TRUE)[[1]]
     schi <- unlist(strsplit(schi, "+", fixed = TRUE))
     if(schi[1]=="") schi <- schi[-1]
@@ -39,6 +61,7 @@ graphpcor.formula <- function(...) {
   for(i in 1:m) {
     ii <- pmatch(nodesL[i], allNodes)
     jj <- pmatch(terms.r[[i]], allNodes)
+    jj <- setdiff(jj, ii)
     if((length(ii)>0) & (length(jj)>0)) {
       grel[ii, jj] <- 1
       grel[jj, ii] <- 1
@@ -46,7 +69,7 @@ graphpcor.formula <- function(...) {
   }
   class(fch) <- 'graphpcor'
   attr(fch, 'nodes') <- allNodes
-  attr(fch, 'graph') <- grel
+  attr(fch, 'graph') <- Sparse(grel)
   return(fch)
 }
 #' @describeIn graphpcor
@@ -55,7 +78,8 @@ graphpcor.formula <- function(...) {
 #' @importFrom INLAtools is.zero
 #' @export
 graphpcor.matrix <- function(...) {
-  x <- list(...)[[1]]
+  return(graphpcor(Sparse(list(...)[[1]])))
+  ## bellow old code
   stopifnot(all.equal(x, t(x)))
   ne <- c(nrow(x), NA)
   iz <- is.zero(x, tol = 1e-9)
@@ -67,7 +91,7 @@ graphpcor.matrix <- function(...) {
   argl <- list()
   adde <- 0
   nj <- integer(ne[1]-1)
-  for(i in 1:(ne[1]-1)) {
+  for(i in 1:nj) {
     jj <- intersect(
       (i+1):ne[1],
       which(!iz[i, ]))
@@ -87,26 +111,49 @@ graphpcor.matrix <- function(...) {
 #' @describeIn graphpcor
 #' Build a `graphpcor` for a Matrix object
 #' @importFrom stats as.formula
+#' @importFrom Matrix t
 #' @importFrom INLAtools Sparse upperPadding
 #' @export
 graphpcor.Matrix <- function(...) {
-  x <- upperPadding(Sparse(list(...)[[1]]))
+  a <- list(...)[[1]]
+  diag(a) <- 0
+  a <- Sparse(a, na.rm = TRUE, zeros.rm = TRUE)
+  a@x <- rep(1.0, length(a@x))
+  stopifnot(all.equal(a, t(a), check.attributes = FALSE))
+  x <- upperPadding(a)
+  nNames <- colnames(a)
+  if(is.null(nNames))
+    nNames <- rownames(a)
+  n <- ncol(x)
+  if(is.null(nNames)) {
+    nNames <- paste0("x", 1:n)
+  }
+  dimnames(a) <- list(nNames, nNames)
+  ch <- vector("character", n)
   ii <- which(x@j>x@i)
-  stopifnot(length(ii)>0)
-  ne <- c(nrow(x), length(ii))
-  sij <- split(x@j[ii]+1L, x@i[ii]+1L)
-  vnams <- rownames(x)
-  if(is.null(vnams)) {
-    vnams <- paste0("x", 1:ne[1])
+  if(length(ii)>0) {
+    sj <- split(nNames[x@j[ii]+1],
+                factor(nNames[x@i[ii]+1], nNames))
+    for(i in 1:n) {
+      nj <- length(sj[[i]])
+      if(nj==0) {
+        ch[i] <- paste("~", nNames[i])
+      } else {
+        if(nj==1) {
+          ch[i] <- paste(nNames[i], "~", nNames[sj[[i]]])
+        } else {
+          ch[i] <- paste(nNames[i], "~",
+                         paste(nNames[sj[[i]]], collapse = "+"))
+        }
+      }
+    }
+  } else {
+    ch <- paste("~", nNames)
   }
-  argl <- list()
-  for(i in 1:length(sij)) {
-    xi <- vnams[as.integer(names(sij)[i])]
-    xj <- setdiff(vnams[sij[[i]]], xi)
-    argl[[i]] <- paste(xi, "~", paste(xj, collapse = "+"))
-  }
-  return(do.call(what = 'graphpcor',
-                 args = lapply(argl, as.formula)))
+  class(ch) <- "graphpcor"
+  attr(ch, "nodes") <- nNames
+  attr(ch, "graph") <- a
+  return(ch)
 }
 #' @describeIn graphpcor
 #' The print method for `graphpcor`
@@ -147,11 +194,12 @@ plot.graphpcor <- function(x, y, ...) {
     edgl <- edges(x)
     haveigraph <-  TRUE ## depends, require(igraph)
     if(haveigraph) {
+      a <- upperPadding(attr(x, "graph"))
       g <- graph_from_adjacency_matrix(
-        adjmatrix = attr(x, "graph")
+        adjmatrix = a
       )
       if(is.null(list(...)$arrow.mode)) {
-        plot(g, arrow.mode = 0, ...)
+        plot(g, edge.arrow.mode = 0, ...)
       } else {
         plot(g, ...)
       }

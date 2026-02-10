@@ -69,20 +69,19 @@ if(FALSE) { ### just to avoid having to add dependencies we don't really need
 
 }
 
-library(INLA)
+library(fields)
+library(spdep)
 library(graphpcor)
-
-inla.setOption(
-    safe = FALSE,
-    num.threads = 6L
-)
+library(INLA)
 
 ## 11 variables
-(p <- ncol(V <- cov(mtcars)))
-lV <- chol(V)
-Q <- chol2inv(lV)
+sdat <- scale(mtcars)
+(p <- ncol(cc <- cov(sdat)))
+lc <- chol(cc)
+Qc <- chol2inv(lc)
 
-round(Q,1)
+ii <- 1:p
+image.plot(ii, ii, Qc)
 
 ## partial correlation matrix
 pC <- cov2cor(Q)
@@ -91,8 +90,23 @@ dimnames(pC) <- dimnames(Q) <- dimnames(V) <-
 round(pC*100)
 
 ## define a graphpcor from pC threshold
-g <- graphpcor(abs(pC)>0.3)
+library(spdep)
+nb <- lapply(1:p, function(i) setdiff(1:p,i)); class(nb) <- 'nb'
+nbc <- nbcosts(nb, scale(mtcars))
+nbw <- nb2listw(nb, nbc, style="B")
+mst <- mstree(nbw)
+
+G <- matrix(0, p, p, dimnames = dimnames(pC))
+G
+for(i in 1:nrow(mst)) {
+    G[mst[i,1], mst[i,2]] <- 1
+    G[mst[i,2], mst[i,1]] <- 1
+}
+Sparse(G)
+g <- graphpcor(G)
+
 g
+
 c(p, p*(p-1)/2)
 
 par(mfrow = c(1, 1), mar = c(0,0,0,0))

@@ -14,7 +14,7 @@ p_iLtheta_fncheck <- function(p, iLtheta) {
     iLtheta <- which(lower.tri(matrix(0, p, p)))
   } else {
     if(inherits(iLtheta, "graphpcor")) {
-      Q1 <- Laplacian(iLtheta)
+      Q1 <- as.matrix(Laplacian(iLtheta))
       p <- ncol(Q1)
       iLtheta <- which(lower.tri(Q1) & (Q1 != 0.0))
     } else {

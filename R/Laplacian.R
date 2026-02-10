@@ -26,18 +26,15 @@ Laplacian.default <- function(x) {
 #' The Laplacian of a matrix
 #' @export
 Laplacian.matrix <- function(x) {
-  if(inherits(x, "matrix")) {
-    A <- 1 - is.zero(x)
-    if(any(A!=t(A)))
-      warning("Not symmetric!")
-    L <- diag(rowSums(A)) - A
-  } else {
-    Laplacian.default(x)
-  }
+  A <- 1 - is.zero(x)
+  if(any(A!=t(A)))
+    warning("Not symmetric!")
+  L <- diag(colSums(A)) - A
+  return(L)
 }
 #' @describeIn Laplacian
 #' The Laplacian of a Matrix
-#' @importFrom Matrix rowSums Diagonal
+#' @importFrom Matrix colSums Diagonal
 #' @export
 Laplacian.Matrix <- function(x) {
   o <- Sparse(x)
@@ -46,7 +43,7 @@ Laplacian.Matrix <- function(x) {
   if(length(iid)>0) {
     o@x[iid] <- 0
   }
-  d <- rowSums(o)
+  d <- colSums(o)
   return(Sparse(
     Diagonal(n = nrow(o), x = d)-o
   ))
@@ -55,8 +52,6 @@ Laplacian.Matrix <- function(x) {
 #' The Laplacian method for a `graphpcor`
 #' @export
 Laplacian.graphpcor <- function(x) {
-  ne <- dim(x)
-  nodes <- attr(x, "nodes")
   L <- -attr(x, "graph")
   diag(L) <- -colSums(L)
   return(L)
