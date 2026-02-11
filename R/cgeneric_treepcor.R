@@ -92,6 +92,18 @@ cgeneric_treepcor <-
       if(dotArgs$debug){
         cat("searching shlib...\n")
       }
+      ## test if have INLA in case ...
+      if(is.null(dotArgs$useINLAprecomp) ||
+         dotArgs$useINLAprecomp) {
+        vs <- "24.12.11"
+        ivs <- packageCheck(
+          name = "INLA",
+          minimum_version = vs) >= vs
+        if(is.na(ivs)) {
+          warning("Update INLA to use 'useINLAprecomp = TRUE'\n")
+          dotArgs$useINLAprecomp = FALSE
+        }
+      }
       dotArgs$shlib <- do.call(
         what = INLAtools::cgeneric_shlib,
         args = c(list(package = "graphpcor"),
