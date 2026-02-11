@@ -204,8 +204,11 @@ double *inla_cgeneric_pc_correl(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		// where P is the number of hyperparameters
 		ret = Calloc(nUnk + 1, double);
 	  ret[0] = nUnk;
-	  for (i = 0; i < nUnk; i++) {
-	    ret[1 + i] = 0.0;
+	  for (i = 0; i < nunk1; i++) {
+	    ret[1 + i] = -2.0;
+	  }
+	  for (i = nunk1; i < nUnk; i++) {
+	    ret[1 + i] = 2.0;
 	  }
 
 	}

@@ -51,6 +51,9 @@ graphpcor(...)
 \arguments{
 \item{x}{graphpcor}
 
+\item{...}{matrix or Matrix (treated as binary) or a
+vector or list of formula (or character interpreted as formula)}
+
 \item{object}{graphpcor}
 
 \item{y}{not used}

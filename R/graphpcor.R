@@ -5,6 +5,8 @@
 #' The correlation built from a `graphpcor` consider
 #' the parameters for the Cholesky of a precision matrix,
 #' whose non-zero pattern is given from the graph.
+#' @param ... matrix or Matrix (treated as binary) or a
+#' vector or list of formula (or character interpreted as formula)
 #' @export
 graphpcor <- function(...) {
   UseMethod("graphpcor")
@@ -80,6 +82,7 @@ graphpcor.character <- function(...) {
 graphpcor.matrix <- function(...) {
   return(graphpcor(Sparse(list(...)[[1]])))
   ## bellow old code
+  x <- list(...)[[1]]
   stopifnot(all.equal(x, t(x)))
   ne <- c(nrow(x), NA)
   iz <- is.zero(x, tol = 1e-9)
