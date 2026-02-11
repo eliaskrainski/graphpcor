@@ -176,7 +176,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		ret = Calloc(nth + 1, double);
 		ret[0] = nunkparams[2];
 		for (i = 0; i < nunkparams[2]; i++) {
-			ret[1 + i] = 0.0;
+			ret[1 + i] = -2.0;
 		}
 	}
 		break;

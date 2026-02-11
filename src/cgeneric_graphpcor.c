@@ -380,7 +380,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 		ret = Calloc(nUnk + 1, double);
 		ret[0] = nUnk;
 		for (i = 0; i < nUnk; i++) {
-			ret[1 + i] = 0.0;
+			ret[1 + i] = -2.0;
 		}
 	}
 		break;
