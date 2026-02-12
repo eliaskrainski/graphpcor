@@ -5,7 +5,7 @@
 \title{Build an \code{cgeneric} to implement the Wishart
 prior for a precision matrix.}
 \usage{
-cgeneric_Wishart(n, dof, R, debug = FALSE, useINLAprecomp = TRUE, shlib = NULL)
+cgeneric_Wishart(n, dof, R, ...)
 }
 \arguments{
 \item{n}{integer to define the size of the precision matrix}
@@ -14,14 +14,9 @@ cgeneric_Wishart(n, dof, R, debug = FALSE, useINLAprecomp = TRUE, shlib = NULL)
 
 \item{R}{lower triangle of the scale matrix parameter}
 
-\item{debug}{integer, default is zero, indicating the verbose level.
-Will be used as logical by INLA.}
-
-\item{useINLAprecomp}{logical, default is TRUE, indicating if it is to
-be used the shared object pre-compiled by INLA.
-This is not considered if 'shlib' is provided.}
-
-\item{shlib}{string, default is NULL, with the path to the shared object.}
+\item{...}{additional arguments passed on to
+\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}, such as \code{debug},
+\code{shlib} and \code{useINLAprecomp}.}
 }
 \value{
 a \code{cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.

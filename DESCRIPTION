@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.21
+Version: 0.1.21.901
 Maintainer: Elias Teixeira Krainski <eliaskrainski@gmail.com>
 Authors@R: c(
  person(given = c("Elias"),
@@ -45,14 +45,13 @@ Description: Implement some models for
   This allows one to use these models as building 
   blocks combined and to other latent Gaussian models 
   in order to build complex data models.
-Additional_repositories: https://inla.r-inla-download.org/R/testing
 License: GPL (>=2) 
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Depends:
-    R (>= 4.3),
+    R (>= 4.5),
     Matrix,
     igraph,
     INLAtools (>= 0.0.8),
@@ -62,8 +61,7 @@ Imports:
     stats,
     utils
 Suggests:
-    knitr,
-    INLA (>= 24.02.09)
+    knitr
 BuildVignettes: true
 VignetteBuilder: knitr
 LazyData: true
