@@ -195,8 +195,9 @@ plot.graphpcor <- function(x, y, ...) {
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
     edgl <- edges(x)
-    haveigraph <-  TRUE ## depends, require(igraph)
-    if(haveigraph) {
+    dotArgs <- list(...)
+    if(is.null(dotArgs$Rgraphviz) ||
+       !dotArgs$Rgraphviz) { ## depends on igraph
       a <- upperPadding(attr(x, "graph"))
       g <- graph_from_adjacency_matrix(
         adjmatrix = a
@@ -269,6 +270,8 @@ plot.graphpcor <- function(x, y, ...) {
           ag@AgEdge[[k]]@color <- "red"
         }
         getMethod("plot", "Ragraph")(ag)
+      } else {
+        stop("'Rgraphviz' is not available!")
       }
     }
   }

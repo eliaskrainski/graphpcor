@@ -241,8 +241,9 @@ plot.treepcor <- function(x, y, ...) {
     trm <- attr(x, "relationship")
     m <- ncol(trm)
     n <- nrow(trm)-m+1
-    haveigraph <- TRUE ## depends, require(igraph)
-    if(haveigraph) {
+    dotArgs <- list(...)
+    if(is.null(dotArgs$Rgraphviz) ||
+       !dotArgs$Rgraphviz) { ## depends on igraph
       tp2a <- function(r) {
         p <- colnames(r)
         cp <- rownames(r)
@@ -358,6 +359,8 @@ plot.treepcor <- function(x, y, ...) {
             ag@AgEdge[[k]]@lwd <- mc$lwd[1]
         }
         getMethod("plot", "Ragraph")(ag)
+      } else {
+        stop("'Rgraphviz' is not available!")
       }
     }
 }
