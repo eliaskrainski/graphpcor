@@ -319,7 +319,7 @@ vcov.graphpcor <-
       theta = theta[-(1:ne[1])],
       p = ne[1],
       iLtheta = iLtheta,
-      d0 = ne[1]:1)
+      d0 = d0)
 
     ## std
     V <- chol2inv(t(LQ0))
