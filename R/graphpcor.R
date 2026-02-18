@@ -5,6 +5,8 @@
 #' The correlation built from a `graphpcor` consider
 #' the parameters for the Cholesky of a precision matrix,
 #' whose non-zero pattern is given from the graph.
+#' @param ... matrix or Matrix (treated as binary) or a
+#' vector or list of formula (or character interpreted as formula)
 #' @export
 graphpcor <- function(...) {
   UseMethod("graphpcor")
@@ -80,6 +82,7 @@ graphpcor.character <- function(...) {
 graphpcor.matrix <- function(...) {
   return(graphpcor(Sparse(list(...)[[1]])))
   ## bellow old code
+  x <- list(...)[[1]]
   stopifnot(all.equal(x, t(x)))
   ne <- c(nrow(x), NA)
   iz <- is.zero(x, tol = 1e-9)
@@ -192,8 +195,9 @@ plot.graphpcor <- function(x, y, ...) {
     stopifnot(!is.null(nodes))
     stopifnot(ne[1]==length(nodes))
     edgl <- edges(x)
-    haveigraph <-  TRUE ## depends, require(igraph)
-    if(haveigraph) {
+    dotArgs <- list(...)
+    if(is.null(dotArgs$Rgraphviz) ||
+       !dotArgs$Rgraphviz) { ## depends on igraph
       a <- upperPadding(attr(x, "graph"))
       g <- graph_from_adjacency_matrix(
         adjmatrix = a
@@ -266,6 +270,8 @@ plot.graphpcor <- function(x, y, ...) {
           ag@AgEdge[[k]]@color <- "red"
         }
         getMethod("plot", "Ragraph")(ag)
+      } else {
+        stop("'Rgraphviz' is not available!")
       }
     }
   }
@@ -313,7 +319,7 @@ vcov.graphpcor <-
       theta = theta[-(1:ne[1])],
       p = ne[1],
       iLtheta = iLtheta,
-      d0 = ne[1]:1)
+      d0 = d0)
 
     ## std
     V <- chol2inv(t(LQ0))

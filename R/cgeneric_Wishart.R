@@ -3,12 +3,9 @@
 #' @param n integer to define the size of the precision matrix
 #' @param dof degrees of freedom model parameter
 #' @param R lower triangle of the scale matrix parameter
-#' @param debug integer, default is zero, indicating the verbose level.
-#' Will be used as logical by INLA.
-#' @param useINLAprecomp logical, default is TRUE, indicating if it is to
-#' be used the shared object pre-compiled by INLA.
-#' This is not considered if 'shlib' is provided.
-#' @param shlib string, default is NULL, with the path to the shared object.
+#' @param ... additional arguments passed on to
+#' [INLAtools::cgeneric()], such as `debug`,
+#' `shlib` and `useINLAprecomp`.
 #' @details
 #' For a random \eqn{p\times p} precision matrix \eqn{Q},
 #' given the parameters \eqn{d} and \eqn{R},
@@ -21,31 +18,32 @@ cgeneric_Wishart <-
   function(n,
            dof,
            R,
-           debug = FALSE,
-           useINLAprecomp = TRUE,
-           shlib = NULL) {
+           ...) {
 
-    if(is.null(shlib)) {
-      if (useINLAprecomp) {
-        shlib <- INLA::inla.external.lib("graphpcor")
-      } else {
-        shlib <- system.file("libs", package = "graphpcor")
-        if (Sys.info()["sysname"] == "Windows") {
-          shlib <- file.path(shlib, "graphpcor.dll")
-        } else {
-          shlib <- file.path(shlib, "graphpcor.so")
-        }
-      }
+    dotArgs <- list(...)
+    if(is.null(dotArgs$debug)) {
+      dotArgs$debug <- FALSE
     }
-    stopifnot(file.exists(shlib))
 
     stopifnot(n>=1)
     stopifnot(dof>(n+1))
     stopifnot(length(R) == (n*(n+1)/2))
     M <- as.integer(length(R))
 
-    if(debug) {
+    if(dotArgs$debug) {
       cat("N = ", n, ", M = ", M, "\n")
+    }
+
+    if(is.null(dotArgs$shlib)) {
+      if(dotArgs$debug){
+        cat("searching shlib...\n")
+      }
+      dotArgs$shlib <- do.call(
+        what = INLAtools::cgeneric_shlib,
+        args = list(debug = dotArgs$debug,
+                    package = "graphpcor",
+                    useINLAprecomp = dotArgs$useINLAprecomp)
+      )
     }
 
     rr <- diag(R[1:n], nrow = n, ncol = n)
@@ -65,7 +63,7 @@ cgeneric_Wishart <-
       0.25*n*(n-1)*log(pi) -
       sum(lgamma((dof+1-(1:n))/2))
 
-    if(debug) {
+    if(dotArgs$debug) {
       cat('hldet = ', hldetr, ', log const = ', lcprior, '\n')
     }
 
@@ -74,13 +72,13 @@ cgeneric_Wishart <-
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,
       args = list(
-        model = cmodel,
-        n = as.integer(n),
-        debug = as.logical(debug),
-        shlib = shlib,
-        dof = as.numeric(dof),
-        lcprior = as.double(lcprior),
-        R = as.numeric(rr)
+          model = cmodel,
+          n = as.integer(n),
+          debug = as.integer(dotArgs$debug), ## 1
+          shlib = dotArgs$shlib,
+          dof = as.numeric(dof),
+          lcprior = as.double(lcprior),
+          R = as.numeric(rr)
       ))
 
     return(the_model)
