@@ -13,73 +13,29 @@
 ##       where iil is an index vector for the lower triangle
 
 ## MODEL definition
-pccor <- '
+Scode0 <- '
 data {
   int n;
   int p;
-  int m;
   vector[p] y[n];
   vector[p] ymu;
-  real<lower=0> lambda;
-  real<lower=0> logDetIhalf;
-  vector[m] thetaBase;
-  matrix[m,m] Ihalf;
-}
-parameters {
-  vector[m] theta;     // correlation parameters
-}
-transformed parameters {
-  vector[m] xi = Ihalf * (theta - thetaBase);
-  real<lower=0> r = dot_self(xi);
-  matrix[p,p] A;
-  matrix[p,p] B;
-  cholesky_factor_corr[p] L;
-  L[1,1] = 1.0;
-  for(i in 1:p) {
-    A[i,i] = 1.0;
-    B[i,i] = 1.0;
-  }
-  for(i in 1:(p-1)) {
-    for(j in (i+1):p) {
-        A[i,j] = 0.0;
-        B[i,j] = 0.0;
-        L[i,j] = 0.0;
-    }
-  }
-  {
-  int k = 0;
-  for(j in 1:(p-1)) {
-    for(i in (j+1):p) {
-      k = k+1;
-      A[i,j] = tanh(theta[k]);
-      B[i,j] = sqrt(1-A[i,j]^2);
-    }
-  }
-  }
-  for(j in 2:(p-1)) {
-    for(i in j:p) {
-      B[i,j] *= B[i,j-1];
-    }
-  }
-  for(i in 1:p) {
-     L[i, 1] = A[i,1];
-  }
-  for(j in 2:p) {
-    for(i in j:p) {
-      L[i,j] = A[i,j]*B[i,j-1];
-    }
-  }
-  corr_matrix[p] rho = tcrossprod(L);
 }
 model {
-  y ~ multi_normal_cholesky(ymu, L);
-  r ~ exponential(lambda);
-  target += lgamma(m * 0.5) - m*0.5 * log(pi());
-  target += logDetIhalf -(m-1.0)*log(r);
+  y ~ multi_normal_cholesky(ymu, LC);
+}
+generated quantities {
+  corr_matrix[p] rho = tcrossprod(LC);
 }
 '
 
-## strsplit(smodel, "\n", fixed = TRUE)[[1]][35]
+library(graphpcor)
+
+## add the code for the PC prior for the
+## correlation matrix through its Cholesky
+Scode <- stan_add(
+    Scode0, "pc_correl",
+    lambda = 1, name = "LC"
+)
 
 ## MCMC sampling
 library(rstan)
@@ -87,7 +43,7 @@ options(mc.cores = 4L)
 
 system.time(
     Spccor <- stan_model(
-        model_code = pccor, 
+        model_code = Scode, 
         model_name = "pc_dense"
     )
 )
@@ -124,17 +80,16 @@ I0 <- hessian(baseC)
 I0dec <- graphpcor:::dspd(I0)
 
 ## STAN data
-Sdata <- list(
+Sdata0 <- list(
     n = as.integer(n),
     p = as.integer(p),
-    m = as.integer(m), 
     y = y,
-    ymu = rep(0,p),
-    lambda = 1,
-    logDetIhalf = 0.5 * I0dec$logDeterminant,
-    thetaBase = baseC$theta,
-    Ihalf = I0dec$sqrt
-)
+    ymu = rep(0,p))
+
+Sdata <- stan_add(
+    Sdata0, baseC, lambda = 1, name = "LC")
+
+str(Sdata)
 
 ## STAN sampling
 Samples <- sampling(
@@ -148,7 +103,7 @@ Samples <- sampling(
 ## PLOTS
 library(coda)
 
-thnams <- paste0("theta[", 1:m, "]")
+thnams <- paste0("LC_theta[", 1:m, "]")
 
 rhonams <- paste0("rho[",
                   unlist(lapply(2:p, function(i) i:p)), ",",

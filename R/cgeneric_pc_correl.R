@@ -66,15 +66,17 @@ cgeneric_pc_correl <-
       }
     }
 
-    model <- basecor(
-      base = base,
-      p = n,
-      iparams = iparams[-(1:n)]-iparams[n],
-      iLtheta = iLtheta
-    )
+    if(!inherits(base, "basecor")) {
+      base <- basecor(
+        base = base,
+        p = n,
+        iparams = iparams[-(1:n)]-iparams[n],
+        iLtheta = iLtheta
+      )
+    }
 
     return(cgeneric(
-      model = model,
+      model = base,
       iparams = iparams,
       ...))
 }
@@ -82,6 +84,7 @@ cgeneric_pc_correl <-
 #' Build a `cgeneric` for a `basecor`.
 #' @param model a `basecor` object.
 #' @inheritParams cgeneric_graphpcor
+#' @export
 cgeneric.basecor <-
   function(model,
            lambda,

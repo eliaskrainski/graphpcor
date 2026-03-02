@@ -22,7 +22,8 @@ a square matrix (to be used as a graph)
 to define the precision structure of the model.}
 
 \item{lambda}{the parameter for the exponential prior on
-the radius of the sphere, see details.}
+the radius of the sphere, see details in the
+PC-multivariate vignette.}
 
 \item{base}{numeric vector, correlation matrix or
 \code{basepcor} object. See \code{\link[=basepcor]{basepcor()}} for details.
