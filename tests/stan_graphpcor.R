@@ -1,8 +1,14 @@
 ## EXAMPLE definition
-## MODEL definition
+## STAN model definition
+##   initial code
+##   update code
+##   compile code
 ## DATA sample
 ##   PARAMETER definition
 ##   SAMPLE drawn
+##   initial STAN data
+##   base model definition
+##   update STAN data
 ## MCMC sampling
 ## PLOTS
 
@@ -13,155 +19,74 @@
 ##       where iil is an index vector for the lower triangle
 
 ## MODEL definition
-pcgraphpcor <- '
+##   initial STAN code
+grpc0 <- '
 data {
   int n;
   int p;
-  int m;
   vector[p] y[n];
   vector[p] ymu;
-  real<lower=0> lambda;
-  real<lower=0> logDetIhalf;
-  vector[m] thetaBase;
-  matrix[m,m] Ihalf;
-  vector[p] d0;
-  array[m] int ii;
-  array[m] int jj;
-  int nfi;
-  array[nfi] int ifi;
-  array[nfi] int jfi;
-}
-parameters {
-  vector[m] theta;     // correlation parameters
 }
 transformed parameters {
-  vector[m] xi = Ihalf * (theta - thetaBase);
-  real<lower=0> r = dot_self(xi);
-  matrix[p,p] L;
-  for(i in 1:p) {
-    for(j in 1:p) {
-      if(i==j) {
-        L[i,i] = d0[i];
-      } else {
-        L[i,j] = 0.0;
-      } 
-    }
-  }
-  {int i,j;
-  for(k in 1:m) {
-    i = ii[k];
-    j = jj[k];
-    L[i,j] = theta[k];
-  }
-  if(nfi>0) {
-    for(l in 1:nfi) {
-      i = ifi[l];
-      j = jfi[l];
-      if(j>0) {
-        for(k in 1:(j-1)) {
-          L[i,j] -= L[i,k] * L[j,k];
-        }
-      }
-    }
-  }
-  }
-  matrix[p,p] V = chol2inv(L);
-  vector[p] s0inv = inv_sqrt(diagonal(V));
-  matrix[p,p] rho = quad_form_diag(V,s0inv);
+  matrix[p,p] rho;
 }
 model {
   y ~ multi_normal(ymu, rho);
-  r ~ exponential(lambda);
-  target += lgamma(m * 0.5) - m*0.5 * log(pi());
-  target += logDetIhalf -(m-1.0)*log(r);
 }
 '
 
-## strsplit(smodel, "\n", fixed = TRUE)[[1]][35]
+##   update STAN code 
+library(graphpcor)
 
-## MCMC sampling
+grpc_code <- stan_add(grpc0, 'graphpcor', lambda = 1, "rho")
+
+##   compile STAN code
 library(rstan)
 options(mc.cores = 4L)
 
 system.time(
     pcgmodel <- stan_model(
-        model_code = pcgraphpcor,
+        model_code = grpc_code, 
         model_name = "pc_graphpcor"
     )
 )
 
+## DATA sample
 ## Correlation model definition
-library(graphpcor)
 g <- graphpcor(x1~x2+x3, x4~x2+x3)
 p <- dim(g)[1]
 m <- dim(g)[2]
 c(p, m)
 
-## prior parameters definition
-set.seed(1)
-th.base <- rnorm(m)*0
-baseC <- basepcor(th.base, p = p, iLtheta = g)
-
-I0 <- hessian(baseC)
-I0
-I0dec <- graphpcor:::dspd(I0)
-str(I0dec)
-
-## DATA sample
 ##   PARAMETER definition
 set.seed(2)
 th.true <- rnorm(m)
 corr <- basepcor(th.true, p, g)$base
 Uc <- chol(corr)
 
-## DATA sample
+##   SAMPLE drawn
 n <- 100
 set.seed(3)
 y <- matrix(rnorm(n*p), n) %*% Uc
 
 (ycorr <- cor(y))
 
-## prepare the prior definiton
-## index for L[theta]
-Q0 <- Laplacian(g)
-iLth <- which((Q0 !=0) & (lower.tri(Q0)))
-Q0
-iLth
-
-iijj <- list(
-    ii = row(Q0)[iLth],
-    jj = col(Q0)[iLth])
-
-## fill-in index
-iLfill <- setdiff(which(t(chol(Q0 + Diagonal(p))) != 0),
-                  which(Q0 != 0))
-iLfill
-
-iijj$nfi <- length(iLfill)
-if(iijj$nfi>0) {
-    iijj$ifi <- row(Q0)[iLfill]
-    iijj$jfi <- col(Q0)[iLfill]
-}
-iijj
-
-## STAN data
-Sdata <- list(
+##   initial STAN data
+Sdata0 <- list(
     n = as.integer(n),
     p = as.integer(p),
-    m = as.integer(m), 
     y = y,
-    ymu = rep(0,p),
-    lambda = 1,
-    logDetIhalf = 0.5 * abs(I0dec$logDeterminant),
-    thetaBase = baseC$theta,
-    Ihalf = I0dec$sqrt,
-    d0 = baseC$d0,
-    ii = as.array(iijj$ii),
-    jj = as.array(iijj$jj),
-    nfi = iijj$nfi,
-    ifi = as.array(iijj$ifi),
-    jfi = as.array(iijj$jfi)
+    ymu = rep(0,p)
 )
+
+##   base model definition
+## prior parameters definition
+set.seed(1)
+th.base <- rnorm(m)*0
+baseC <- basepcor(th.base, p = p, iLtheta = g)
+
+##   update STAN data
+Sdata <- stan_add(Sdata0, baseC, lambda = 1, name = 'rho')
 
 ## STAN sampling
 Samples <- sampling(
@@ -175,9 +100,7 @@ Samples <- sampling(
 ## PLOTS
 library(coda)
 
-##str(Samples)
-
-thnams <- paste0("theta[", 1:m, "]")
+thnams <- paste0("grpc_theta[", 1:m, "]")
 rhonams <- paste0("rho[",
                   unlist(lapply(2:p, function(i) i:p)), ",",
                   unlist(lapply(2:p, function(i) rep(i-1, p-i+1))),
@@ -250,7 +173,9 @@ for(i in 1:p) {
                        border = 'transparent')
         }
         if(j>i) {
-            if(length(iijj$ii)>k1 && (i==iijj$jj[k1+1]) & (j==iijj$ii[k1+1])) {
+            if(length(Sdata$grpc_ii)>k1 &&
+               (i==Sdata$grpc_jj[k1+1]) &
+               (j==Sdata$grpc_ii[k1+1])) {
                 k1 <- k1 + 1
                 thk1 <- c(NA, th.true[k1], th.base[k1])
                 h <- hist(Sth[, k1], 100, plot = FALSE)
@@ -276,31 +201,3 @@ for(i in 1:p) {
     }
 }
 
-if(FALSE) {  ## some checks at first drawn
-    
-    s1 <- sapply(Samples@sim$samples, sapply, head, 1)
-    s1
-    
-    baseC$theta
-    th.true
-    s1[1:4, ]
-    
-    graphpcor:::Lprec0(s1[1:4, 1], p, iLtheta = g, d0 = baseC$d0)
-    matrix(s1[p*2+1+1:(p^2), 1], p)
-    
-    matrix(s1[p*2 + 1 + p^2 + 1:(p^2), 1], p)
-    chol2inv(t(matrix(s1[p*2+1 + 1:(p^2), 1], p)))
-    
-    sqrt(1/diag(matrix(s1[p*2+1 + p^2 + 1:(p^2), 1], p)))
-    s1[p*2 + 1 + (p^2)*2 + 1:p, 1]
-    
-    matrix(s1[p*2+1+(p^2)*2+p + 1:(p^2), 1], p)
-    basepcor(s1[1:4, 1], p, g)$base
-
-    s1[p+1:p, ]
-    Sdata$Ihalf %*% s1[1:p, ]
-
-    colSums(s1[p+1:4,]^2)
-    s1[p*2+1, ]
-
-}

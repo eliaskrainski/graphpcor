@@ -27,20 +27,32 @@
 #' @return a list of two elements, one as a list of three
 #' additional code to be added into a STAN code and
 #' the other with the required additional data.
+#' @example demo/stan.R
 #' @export
 stan_add <- function(x, base, lambda, name) {
   if(missing(x)) stop("Please provide 'x'!")
   if(missing(base)) stop("Please provide 'base'!")
   if(missing(lambda)) stop("Please provide 'lambda'!")
   if(missing(name)) stop("Please provide 'name'!")
-  if(inherits(base, "basecor") || (base == 'pc_correl')) {
-    return(stan_add_pc_correl(x, base, lambda, name))
+  if(is.character(base)) {
+    if(base == 'pc_correl') {
+      return(stan_add_pc_correl(x, base, lambda, name))
+    }
+    if(base == 'graphpcor') {
+      return(stan_add_graphpcor(x, base, lambda, name))
+    }
+  } else {
+    if(inherits(base, "basecor")) {
+      return(stan_add_pc_correl(x, base, lambda, name))
+    }
+    if(inherits(base, "basepcor")) {
+      return(stan_add_graphpcor(x, base, lambda, name))
+    }
   }
-  if(inherits(base, "basepcor") || (base == 'graphpcor')) {
-    return(stan_add_graphpcor(x, base, lambda, name))
-  }
+  warning("Nothing done!")
+  return(x)
 }
-
+#' @describeIn stan_add method for `basecor`
 stan_add_pc_correl <- function(x, base, lambda, name) {
   if(length(lambda)>1) {
     warning('length(lambda)>1, using lambda[1]!')
@@ -144,7 +156,138 @@ stan_add_pc_correl <- function(x, base, lambda, name) {
 
     sx <- strsplit(x, "}")[[1]]
     i <- lapply(csnams, grep, sx)
-    ad0 <- 0
+    if(length(grep("transformed", sx[[2]])))
+      i[[2]] <- integer(0)
+
+    for(k in seq_along(i)) {
+      if(length(i[[k]])==0) {
+        aC[[k]] <- paste0("\n", csnams[[k]], "{\n", aC[[k]])
+      } else {
+        aC[[k]] <- paste(sx[i[[k]]], aC[[k]])
+      }
+    }
+    return(paste0(paste(unlist(aC), collapse="}\n"), "\n}\n"))
+  }
+
+}
+#' @describeIn stan_add method for `basepcor`
+stan_add_graphpcor <- function(x, base, lambda, name) {
+  if(length(lambda)>1) {
+    warning('length(lambda)>1, using lambda[1]!')
+  }
+  lambda <- as.numeric(lambda[1])
+  stopifnot(lambda>0)
+
+  if(inherits(x, "list")) {
+    ## build the additional data
+    aD <- list(
+      grpc_dim = ncol(base$base),
+      grpc_lambda = lambda)
+    I0 <- hessian(base)
+    I0dec <- dspd(I0)
+    aD$grpc_theta_dim <- as.integer(ncol(I0))
+    aD$grpc_logDetIhalf <- abs(I0dec$logDeterminant) * 0.5
+    aD$grpc_theta_base <- base$theta
+    aD$grpc_Ibase_half <- I0dec$sqrt
+    aD$grpc_d0 <- base$d0
+    L <- matrix(0, base$p, base$p)
+    aD$grpc_ii <- as.array(row(L)[base$iLtheta])
+    aD$grpc_jj <- as.array(col(L)[base$iLtheta])
+    L[base$iLtheta] <- -1
+    diag(L) <- 1-colSums(L)
+    Lf <- t(chol(L))
+    ifl <- setdiff(which((abs(Lf)>0) & lower.tri(L)),
+                   base$iLtheta)
+    aD$grpc_nfi <- length(ifl)
+    aD$grpc_ifi <- as.array(row(L)[ifl])
+    aD$grpc_jfi <- as.array(col(L)[ifl])
+    return(c(x, aD))
+  }
+
+  if(inherits(x, "character")) {
+
+    ##    stopifnot(grep(name, x)) ## check
+
+    ## data input definitions
+    aC <- list(data = "
+    int grpc_dim;
+    int grpc_theta_dim;
+    real<lower=0> grpc_lambda;
+    real<lower=0> grpc_logDetIhalf;
+    vector[grpc_theta_dim] grpc_theta_base;
+    matrix[grpc_theta_dim, grpc_theta_dim] grpc_Ibase_half;
+    vector[grpc_dim] grpc_d0;
+    array[grpc_theta_dim] int grpc_ii;
+    array[grpc_theta_dim] int grpc_jj;
+    int grpc_nfi;
+    array[grpc_nfi] int grpc_ifi;
+    array[grpc_nfi] int grpc_jfi;
+    ")
+
+    ## parameters input
+    aC$parameters <- "
+    vector[grpc_theta_dim] grpc_theta;
+    "
+
+    ## transformed parameters
+    aC$"transformed parameters" <- "
+    vector[grpc_theta_dim] grpc_xi = grpc_Ibase_half * (grpc_theta - grpc_theta_base);
+    real<lower=0> grpc_radius = dot_self(grpc_xi);
+    matrix[grpc_dim,grpc_dim] grpc_L0;
+    for(i in 1:grpc_dim) {
+      for(j in 1:grpc_dim) {
+        if(i==j) {
+          grpc_L0[i,i] = grpc_d0[i];
+        } else {
+          grpc_L0[i,j] = 0.0;
+        }
+      }
+    }
+    {
+      int i,j;
+      for(k in 1:grpc_theta_dim) {
+        i = grpc_ii[k];
+        j = grpc_jj[k];
+        grpc_L0[i,j] = grpc_theta[k];
+      }
+      if(grpc_nfi>0) {
+        for(l in 1:grpc_nfi) {
+          i = grpc_ifi[l];
+          j = grpc_jfi[l];
+          if(j>0) {
+            for(k in 1:(j-1)) {
+              grpc_L0[i,j] -= grpc_L0[i,k] * grpc_L0[j,k];
+            }
+          }
+        }
+      }
+    }
+    matrix[grpc_dim,grpc_dim] grpc_V0 = chol2inv(grpc_L0);
+    vector[grpc_dim] grpc_s0inv = inv_sqrt(diagonal(grpc_V0));
+    graphpcor_cov_mat = quad_form_diag(grpc_V0, grpc_s0inv);
+    "
+
+    ## model part
+    aC$model <- "
+    grpc_radius ~ exponential(grpc_lambda);
+    target += lgamma(grpc_theta_dim * 0.5) -grpc_theta_dim*0.5 * log(pi());
+    target += grpc_logDetIhalf - (grpc_theta_dim-1.0)*log(grpc_radius);
+  "
+    aC$"generated quantities" = ""
+
+    for(i in seq_along(aC)) {
+      aC[[i]] <- gsub("graphpcor_cov_mat", name, aC[[i]], fixed = TRUE)
+    }
+
+    csnams <- c("data", "parameters", "transformed parameters",
+                "model", "generated quantities")
+    stopifnot(all(names(aC)==csnams)) ## check
+
+    sx <- strsplit(x, "}")[[1]]
+    i <- lapply(csnams, grep, sx)
+    if(length(grep("transformed", sx[[2]])))
+      i[[2]] <- integer(0)
+
     for(k in seq_along(i)) {
       if(length(i[[k]])==0) {
         aC[[k]] <- paste0("\n", csnams[[k]], "{\n", aC[[k]])
