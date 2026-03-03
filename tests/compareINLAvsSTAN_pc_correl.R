@@ -133,7 +133,7 @@ for(i in 1:4) {
         sj <- inla.smarginal(ifits[[i]]$internal.marginals.hyperpar[[j]])
         plot(h.thj, freq = FALSE, main = "",
              xlim = range(th.base[j], th.true[j],
-                          h.thj$breaks, ds.th$x, sj$x),
+                          h.thj$breaks, ds.thj$x, sj$x),
              ylim = range(h.thj$density, ds.thj$y, sj$y),
              xlab = as.expression(bquote(theta[j])),
              border = 'transparent')
