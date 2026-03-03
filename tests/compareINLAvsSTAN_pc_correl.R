@@ -135,7 +135,7 @@ for(i in 1:4) {
              xlim = range(th.base[j], th.true[j],
                           h.thj$breaks, ds.thj$x, sj$x),
              ylim = range(h.thj$density, ds.thj$y, sj$y),
-             xlab = as.expression(bquote(theta[j])),
+             xlab = as.expression(bquote(theta[.(j)])),
              border = 'transparent')
         lines(ds.thj, col = cols[1], lwd = 2, lty = 2)        
         lines(sj, col = cols[2], lwd = 2, lty = 2)
