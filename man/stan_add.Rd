@@ -4,6 +4,7 @@
 \alias{stan_add}
 \alias{stan_add_pc_correl}
 \alias{stan_add_graphpcor}
+\alias{stan_add_code}
 \title{Build/add STAN code/data for the correlation's PC-prior.}
 \usage{
 stan_add(x, base, lambda, name)
@@ -11,6 +12,8 @@ stan_add(x, base, lambda, name)
 stan_add_pc_correl(x, base, lambda, name)
 
 stan_add_graphpcor(x, base, lambda, name)
+
+stan_add_code(x, to_add)
 }
 \arguments{
 \item{x}{either a STAN code or list with the data used to fit
@@ -26,6 +29,8 @@ PC-multivariate vignette.}
 \item{name}{character to provide the name for the
 Cholesky of a correlation matrix or the correlation matrix.
 See details.}
+
+\item{to_add}{named list with the code to be added}
 }
 \value{
 a list of two elements, one as a list of three
@@ -49,6 +54,8 @@ the pcmultivariate vignette.
 \item \code{stan_add_pc_correl()}: method for \code{basecor}
 
 \item \code{stan_add_graphpcor()}: method for \code{basepcor}
+
+\item \code{stan_add_code()}: add code at the end of each section
 
 }}
 \examples{

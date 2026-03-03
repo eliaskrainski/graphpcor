@@ -144,31 +144,16 @@ stan_add_pc_correl <- function(x, base, lambda, name) {
     target += lgamma(Lcorrel_theta_dim * 0.5) -Lcorrel_theta_dim*0.5 * log(pi());
     target += Lcorrel_logDetIhalf - (Lcorrel_theta_dim-1.0)*log(Lcorrel_radius);
   "
-    aC$"generated quantities" = ""
 
     for(i in seq_along(aC)) {
       aC[[i]] <- gsub("Lcorrel", name, aC[[i]], fixed = TRUE)
     }
 
-    csnams <- c("data", "parameters", "transformed parameters",
-                "model", "generated quantities")
-    stopifnot(all(names(aC)==csnams)) ## check
-
-    sx <- strsplit(x, "}")[[1]]
-    i <- lapply(csnams, grep, sx)
-    if(length(grep("transformed", sx[[2]])))
-      i[[2]] <- integer(0)
-
-    for(k in seq_along(i)) {
-      if(length(i[[k]])==0) {
-        aC[[k]] <- paste0("\n", csnams[[k]], "{\n", aC[[k]])
-      } else {
-        aC[[k]] <- paste(sx[i[[k]]], aC[[k]])
-      }
-    }
-    return(paste0(paste(unlist(aC), collapse="}\n"), "\n}\n"))
+    return(stan_add_code(x, aC))
   }
 
+  warning("Nothing done!")
+  return(x)
 }
 #' @describeIn stan_add method for `basepcor`
 stan_add_graphpcor <- function(x, base, lambda, name) {
@@ -274,29 +259,110 @@ stan_add_graphpcor <- function(x, base, lambda, name) {
     target += lgamma(grpc_theta_dim * 0.5) -grpc_theta_dim*0.5 * log(pi());
     target += grpc_logDetIhalf - (grpc_theta_dim-1.0)*log(grpc_radius);
   "
-    aC$"generated quantities" = ""
+
 
     for(i in seq_along(aC)) {
       aC[[i]] <- gsub("graphpcor_cov_mat", name, aC[[i]], fixed = TRUE)
     }
 
-    csnams <- c("data", "parameters", "transformed parameters",
-                "model", "generated quantities")
-    stopifnot(all(names(aC)==csnams)) ## check
+    return(stan_add_code(x, aC))
 
-    sx <- strsplit(x, "}")[[1]]
-    i <- lapply(csnams, grep, sx)
-    if(length(grep("transformed", sx[[2]])))
-      i[[2]] <- integer(0)
+    sec_names <- c("data", "parameters",
+                   "transformed parameters", "model")
+    stopifnot(all(names(aC)==sec_names)) ## check
 
-    for(k in seq_along(i)) {
-      if(length(i[[k]])==0) {
-        aC[[k]] <- paste0("\n", csnams[[k]], "{\n", aC[[k]])
-      } else {
-        aC[[k]] <- paste(sx[i[[k]]], aC[[k]])
-      }
-    }
-    return(paste0(paste(unlist(aC), collapse="}\n"), "\n}\n"))
+    spl_x <- stan_code_splits(x)
+    print(spl_x)
+    isx <- pmatch(sec_names, rownames(spl_x))
+    print(isx)
+
+    secs <- lapply(1:length(sec_names), function(i) {
+      ini <- spl_x$ini[isx[i]]
+      end <- spl_x$end[isx[i]]
+      xx <- substr(x, ini, end-1)
+      paste0(xx, aC[[i]], "}")
+    })
+    return(Reduce("paste0", secs))
   }
 
+  warning("Nothing done!")
+  return(x)
+}
+#' @describeIn stan_add add code at the end of each section
+#' @param to_add named list with the code to be added
+stan_add_code <- function(x, to_add) {
+  all_sec_names <- c(
+    "functions", "data", "transformed data",
+    "parameters", "transformed parameters",
+    "model", "generated quantities")
+  stopifnot(sum(names(to_add) %in% all_sec_names)>0)
+  names(all_sec_names) <- c(
+    "fnc", "dat", "tdt", "par", "tpr", "mod", "gqt")
+  nsec <- length(all_sec_names)
+  sec_ini <- lapply(all_sec_names, gregexpr, ## not only the first
+                    x, fixed = TRUE)
+  if(any(sapply(sec_ini, length)>c(1,2,1,2,1,1,1))) {
+    stop("Code fix needed!")
+    ## to do: if section names are used in code as variable
+  }
+  if(any(sec_ini$tdt[[1]]>0)) {
+    if(length(sec_ini$dat[[1]])==1) {
+      sec_ini$dat[[1]] <- -1
+    }
+    if(length(sec_ini$dat[[1]])==2) {
+      sec_ini$dat[[1]] <- sec_ini$dat[[1]][1]
+    }
+  }
+  if(any(sec_ini$tpr[[1]]>0)) {
+    if(length(sec_ini$par[[1]])==1) {
+      sec_ini$par[[1]] <- -1
+    }
+    if(length(sec_ini$par[[1]])==2) {
+      sec_ini$par[[1]] <- sec_ini$par[[1]][1]
+    }
+  }
+  sec_ini <- sapply(sec_ini, function(x) x[[1]][1])
+  icurl <- gregexpr("}", x, fixed = TRUE)[[1]]
+  sec_end <- sec_ini
+  for(i in 1:(nsec-1)) {
+    if(sec_ini[i]>0) {
+      a <- icurl[icurl>sec_ini[i]]
+      j <- i + which(sec_ini[(i+1):nsec]>0)
+      if(length(j)==0) {
+        b <- tail(icurl, 1)
+      } else {
+        b <- icurl[icurl<sec_ini[j[1]]]
+      }
+      sec_end[i] <- intersect(a, b)
+    }
+  }
+  if(sec_ini[nsec]>0) {
+    sec_end[nsec] <- tail(icurl, 1)
+  }
+
+  isx <- pmatch(names(to_add), all_sec_names)
+
+  secs <- lapply(1:nsec, function(x) "")
+  names(secs) <- all_sec_names
+  for(i in 1:nsec) {
+    if(sec_ini[i]>0) {
+      secs[[i]] <- substr(x, sec_ini[i], sec_end[i]-1)
+    }
+  }
+  for(i in seq_along(to_add)) {
+    ini <- sec_ini[isx[i]]
+    if(ini<0) {
+      secs[[isx[i]]] <- paste0(
+        "\n", names(to_add)[i], " {\n",
+        to_add[[i]], "\n")
+    } else {
+      end <- sec_end[isx[i]]
+      secs[[isx[i]]] <- paste0(secs[[isx[i]]], to_add[[i]])
+    }
+  }
+  for(i in 1:nsec) {
+    if (nchar(secs[[i]])>0)
+      secs[[i]] <- paste0(secs[[i]], "}\n")
+  }
+  return(Reduce("paste0", secs))
 }
