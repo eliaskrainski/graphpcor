@@ -194,6 +194,7 @@ stan_add_graphpcor <- function(x, base, lambda, name) {
     aD$grpc_ii <- as.array(row(L)[base$iLtheta])
     aD$grpc_jj <- as.array(col(L)[base$iLtheta])
     L[base$iLtheta] <- -1
+    L <- L + t(L)
     diag(L) <- 1-colSums(L)
     Lf <- t(chol(L))
     ifl <- setdiff(which((abs(Lf)>0) & lower.tri(L)),
@@ -256,7 +257,7 @@ stan_add_graphpcor <- function(x, base, lambda, name) {
           j = grpc_jfi[l];
           if(j>0) {
             for(k in 1:(j-1)) {
-              grpc_L0[i,j] -= grpc_L0[i,k] * grpc_L0[j,k];
+              grpc_L0[i,j] -= grpc_L0[i,k] * grpc_L0[j,k] / grpc_L0[j,j];
             }
           }
         }

@@ -76,11 +76,12 @@ stan.samples <- vector("list", length(lambdas))
 
 for(i in 1:length(lambdas)) {
     cat("SAMPLING with lambda = ", lambdas[i], "\n")
+    Sdata_i <- stan_add(
+        x = Sdata0, base = baseC,
+        lambda = lambdas[i], name = "rho")
     stan.samples[[i]] <- sampling(
         stan_cmpld,
-        data = stan_add(
-            x = Sdata0, base = baseC,
-            lambda = lambdas[i], name = "rho"),
+        data = Sdata_i,
         iter = 30000,
         warmup = 5000,
         chains = 4
@@ -96,7 +97,8 @@ stan.th.samples <- lapply(stan.samples, function(s)
 sapply(stan.th.samples, dim)
 
 ## for the correlations
-rhonams <- c("rho[2,1]", "rho[3,1]", "rho[3,2]")
+rhonams <- c("rho[2,1]", "rho[3,1]", "rho[4,1]",
+             "rho[3,2]", "rho[4,2]", "rho[4,3]")
 stan.cor.samples <- lapply(stan.samples, function(s)
     mcmc(Reduce("cbind", extract(s, rhonams))))
 
@@ -130,14 +132,11 @@ ires <- lapply(ifits, function(ri) {
 })
 
 cols <- c(rgb(1,0,0,.7), rgb(0,0,1,.7), 1, 6)
-xlbs <- list(bquote(rho[2~","~1]),
-             bquote(rho[3~","~1]),
-             bquote(rho[3~","~2]))
 
-par(mfrow = c(4, 6), mar = c(3,3,0.1,0.1),
+par(mfrow = c(length(lambdas), m), mar = c(3,3,0.1,0.1),
     mgp = c(1.5,0.5,0), bty = "n")
-for(i in 1:4) {
-    for(j in 1:3) {
+for(i in 1:length(lambdas)) {
+    for(j in 1:m) {
         thj <- c(th.true[j], th.base[j])
         h.thj <- hist(stan.th.samples[[i]][, j], 100, plot = FALSE)
         ds.thj <- density(stan.th.samples[[i]][, j])
@@ -146,7 +145,7 @@ for(i in 1:4) {
              xlim = range(th.base[j], th.true[j],
                           h.thj$breaks, ds.thj$x, sj$x),
              ylim = range(h.thj$density, ds.thj$y, sj$y),
-             xlab = as.expression(bquote(theta[j])),
+             xlab = as.expression(bquote(theta[.(j)])),
              border = 'transparent')
         lines(ds.thj, col = cols[1], lwd = 2, lty = 2)        
         lines(sj, col = cols[2], lwd = 2, lty = 2)
@@ -155,7 +154,16 @@ for(i in 1:4) {
             legend("topleft", "", bty = "n",
                    title = as.expression(bquote(lambda==.(lambdas[i]))))
     }
-    for(j in 1:3) {
+}
+
+xlbs <- list(bquote(rho[2~","~1]), bquote(rho[3~","~1]),
+             bquote(rho[4~","~1]), bquote(rho[3~","~2]),
+             bquote(rho[4~","~2]), bquote(rho[4~","~3]))
+
+par(mfrow = c(length(lambdas), length(iil)),
+    mar = c(3,3,0.1,0.1), mgp = c(1.5,0.5,0), bty = "n")
+for(i in 1:length(lambdas)) {
+    for(j in 1:length(iil)) {
         h.cj <- hist(stan.cor.samples[[i]][, j], 100, plot = FALSE)
         ds <- density(stan.cor.samples[[i]][, j])
         di <- density(ires[[i]][, j])

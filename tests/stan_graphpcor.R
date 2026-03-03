@@ -22,8 +22,8 @@
 ##   initial STAN code
 grpc0 <- '
 data {
-  int n;
-  int p;
+  int<lower=1> n;
+  int<lower=1> p;
   vector[p] y[n];
   vector[p] ymu;
 }
