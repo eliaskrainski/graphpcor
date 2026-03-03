@@ -1,8 +1,14 @@
 ## EXAMPLE definition
-## MODEL definition
+## STAN model definition
+##   initial code
+##   update code
+##   compile code
 ## DATA sample
-##   PARAMETER definition
+##   CORRELATION matrix definition
 ##   SAMPLE drawn
+##   initial STAN data
+##   base model definition
+##   update STAN data with PC-prior parameters
 ## MCMC sampling
 ## PLOTS
 
@@ -13,6 +19,7 @@
 ##       where iil is an index vector for the lower triangle
 
 ## MODEL definition
+##   initial STAN code
 Scode0 <- '
 data {
   int n;
@@ -28,16 +35,17 @@ generated quantities {
 }
 '
 
+##   update STAN code 
 library(graphpcor)
-
-## add the code for the PC prior for the
-## correlation matrix through its Cholesky
+## add the code for the PC prior for a correlation 
+## matrix through its Cholesky decomposition,
+## which was named "LC" in the initial code
 Scode <- stan_add(
     Scode0, "pc_correl",
     lambda = 1, name = "LC"
 )
 
-## MCMC sampling
+##   compile STAN code
 library(rstan)
 options(mc.cores = 4L)
 
@@ -49,7 +57,7 @@ system.time(
 )
 
 ## DATA sample
-##   PARAMETER definition
+##   CORRELATION matrix definition
 corr <- matrix(c( 1.0, 0.7, 0.5,-0.3,
                   0.7, 1.0,-0.2, 0.4,
                   0.5,-0.2, 1.0,-0.8,
@@ -64,28 +72,28 @@ n <- 100
 set.seed(1)
 y <- matrix(rnorm(n*p), n) %*% Uc
 
-corr
-(ycorr <- cor(y))
-
-library(graphpcor)
-th.obs <- basecor(ycorr)$theta
-(th.true <- basecor(corr)$theta)
-
-## parameters for the PC-prior
-m <- p * (p-1)/2
-set.seed(2)
-th.base <- rnorm(m)
-baseC <- basecor(th.base, p = p)
-I0 <- hessian(baseC)
-I0dec <- graphpcor:::dspd(I0)
-
-## STAN data
+## initial STAN data
 Sdata0 <- list(
     n = as.integer(n),
     p = as.integer(p),
     y = y,
     ymu = rep(0,p))
 
+
+## compute the correlation parameters at the observed data
+## to add into the plots later
+corr
+(ycorr <- cor(y))
+th.obs <- basecor(ycorr)$theta
+(th.true <- basecor(corr)$theta)
+
+## base model definition
+m <- p * (p-1)/2
+set.seed(2)
+th.base <- rnorm(m)
+baseC <- basecor(th.base, p = p)
+
+## update STAN data
 Sdata <- stan_add(
     Sdata0, baseC, lambda = 1, name = "LC")
 

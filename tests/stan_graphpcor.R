@@ -4,19 +4,23 @@
 ##   update code
 ##   compile code
 ## DATA sample
+##   CORRELATION model definition
 ##   PARAMETER definition
 ##   SAMPLE drawn
 ##   initial STAN data
 ##   base model definition
-##   update STAN data
+##   update STAN data with prior parameters
 ## MCMC sampling
 ## PLOTS
 
 ## EXAMPLE definition
 ## y ~ N(\mu, \Sigma)
 ##  where \mu = [0,...,0] and \Sigma = C(\theta) 
-## theta[1:m]: vector of parameters to be placed in L[iil]
-##       where iil is an index vector for the lower triangle
+## theta[1:m]: vector of parameters to be placed in L0[iil]
+##       where iil is an index vector for the parameters in L0,
+##       L0 the initial Cholesky, then compute its fill-in elements,
+##       as it is a Cholesky of initial precision matrix Q0.
+##       Then compute V0 and then C(\theta)
 
 ## MODEL definition
 ##   initial STAN code
@@ -38,6 +42,9 @@ model {
 ##   update STAN code 
 library(graphpcor)
 
+## add the code for the PC prior for a correlation matrix,
+## which was named "rho" in the intial model code,
+## considering a generic graph (not yet defined!!!)
 grpc_code <- stan_add(grpc0, 'graphpcor', lambda = 1, "rho")
 
 ##   compile STAN code
