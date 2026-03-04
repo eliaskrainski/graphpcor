@@ -41,7 +41,6 @@ dLKJ <- function(R, eta, log = FALSE) {
 #' @seealso It uses the Cannonical Partial Correlation (CPC),
 #' parametrization, see [basecor()] for details.
 #' @return a `cgeneric` object, see [INLAtools::cgeneric()] for details.
-#' @example demo/LKJ.R
 cgeneric_LKJ <-
   function(n,
            eta,
