@@ -15,10 +15,11 @@ library(graphpcor)
 ##  age age at onset
 ##  chd response, coronary heart disease
 
-## model idea for other than famhist and chd variables:
-##     y[i,j] = Normal(mu[j] + x_sigmas[j] * x[i,j], y_sigmas[j])
-##   model the latent x as
-##     x ~ multi_normal(0, R), R a correlation matrix
+## model idea for the 8 continuous variables 
+##     y[i,j] = Normal(mu[j], Sigma)
+##   Sigma : diag(s) %*% C %*% diag(s)
+##   s     : standard deviation parameters
+##   C     : correlation matrix
 
 ## STAN model base code
 Scode0 <- '
