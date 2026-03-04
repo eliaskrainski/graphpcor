@@ -1,7 +1,8 @@
 #' Build/add STAN code/data for the correlation's PC-prior.
 #' @param x either a STAN code or list with the data used to fit
 #' a STAN model.
-#' @param base `basecor` or `basepcor` object to define the
+#' @param model either a character ("pc_correl" or "graphcor") or
+#' a `basecor` or a `basepcor` object to define the
 #' base correlation model. See [basecor()] or [basepcor()].
 #' @param lambda the parameter for the exponential prior on
 #' the radius of the sphere, see details in the
@@ -29,31 +30,31 @@
 #' the other with the required additional data.
 #' @example demo/stan.R
 #' @export
-stan_add <- function(x, base, lambda, name) {
+stan_add <- function(x, model, lambda, name) {
   if(missing(x)) stop("Please provide 'x'!")
-  if(missing(base)) stop("Please provide 'base'!")
+  if(missing(model)) stop("Please provide 'model'!")
   if(missing(lambda)) stop("Please provide 'lambda'!")
   if(missing(name)) stop("Please provide 'name'!")
-  if(is.character(base)) {
-    if(base == 'pc_correl') {
-      return(stan_add_pc_correl(x, base, lambda, name))
+  if(is.character(model)) {
+    if(model == 'pc_correl') {
+      return(stan_add_pc_correl(x, model, lambda, name))
     }
-    if(base == 'graphpcor') {
-      return(stan_add_graphpcor(x, base, lambda, name))
+    if(model == 'graphpcor') {
+      return(stan_add_graphpcor(x, model, lambda, name))
     }
   } else {
-    if(inherits(base, "basecor")) {
-      return(stan_add_pc_correl(x, base, lambda, name))
+    if(inherits(model, "basecor")) {
+      return(stan_add_pc_correl(x, model, lambda, name))
     }
-    if(inherits(base, "basepcor")) {
-      return(stan_add_graphpcor(x, base, lambda, name))
+    if(inherits(model, "basepcor")) {
+      return(stan_add_graphpcor(x, model, lambda, name))
     }
   }
   warning("Nothing done!")
   return(x)
 }
 #' @describeIn stan_add method for `basecor`
-stan_add_pc_correl <- function(x, base, lambda, name) {
+stan_add_pc_correl <- function(x, model, lambda, name) {
   if(length(lambda)>1) {
     warning('length(lambda)>1, using lambda[1]!')
   }
@@ -63,13 +64,13 @@ stan_add_pc_correl <- function(x, base, lambda, name) {
   if(inherits(x, "list")) {
   ## build the additional data
     aD <- list(
-      Lcorrel_dim = ncol(base$base),
+      Lcorrel_dim = ncol(model$base),
       Lcorrel_lambda = lambda)
-    I0 <- hessian(base)
+    I0 <- hessian(model)
     I0dec <- dspd(I0)
     aD$Lcorrel_theta_dim <- as.integer(ncol(I0))
     aD$Lcorrel_logDetIhalf <- abs(I0dec$logDeterminant) * 0.5
-    aD$Lcorrel_theta_base <- base$theta
+    aD$Lcorrel_theta_base <- model$theta
     aD$Lcorrel_Ibase_half <- I0dec$sqrt
     names(aD) <- gsub("Lcorrel", name, names(aD), fixed = TRUE)
     return(c(x, aD))
@@ -156,7 +157,7 @@ stan_add_pc_correl <- function(x, base, lambda, name) {
   return(x)
 }
 #' @describeIn stan_add method for `basepcor`
-stan_add_graphpcor <- function(x, base, lambda, name) {
+stan_add_graphpcor <- function(x, model, lambda, name) {
   if(length(lambda)>1) {
     warning('length(lambda)>1, using lambda[1]!')
   }
@@ -166,24 +167,24 @@ stan_add_graphpcor <- function(x, base, lambda, name) {
   if(inherits(x, "list")) {
     ## build the additional data
     aD <- list(
-      grpc_dim = ncol(base$base),
+      grpc_dim = ncol(model$base),
       grpc_lambda = lambda)
-    I0 <- hessian(base)
+    I0 <- hessian(model)
     I0dec <- dspd(I0)
     aD$grpc_theta_dim <- as.integer(ncol(I0))
     aD$grpc_logDetIhalf <- abs(I0dec$logDeterminant) * 0.5
-    aD$grpc_theta_base <- base$theta
+    aD$grpc_theta_base <- model$theta
     aD$grpc_Ibase_half <- I0dec$sqrt
-    aD$grpc_d0 <- base$d0
-    L <- matrix(0, base$p, base$p)
-    aD$grpc_ii <- as.array(row(L)[base$iLtheta])
-    aD$grpc_jj <- as.array(col(L)[base$iLtheta])
-    L[base$iLtheta] <- -1
+    aD$grpc_d0 <- model$d0
+    L <- matrix(0, model$p, model$p)
+    aD$grpc_ii <- as.array(row(L)[model$iLtheta])
+    aD$grpc_jj <- as.array(col(L)[model$iLtheta])
+    L[model$iLtheta] <- -1
     L <- L + t(L)
     diag(L) <- 1-colSums(L)
     Lf <- t(chol(L))
     ifl <- setdiff(which((abs(Lf)>0) & lower.tri(L)),
-                   base$iLtheta)
+                   model$iLtheta)
     aD$grpc_nfi <- length(ifl)
     aD$grpc_ifi <- as.array(row(L)[ifl])
     aD$grpc_jfi <- as.array(col(L)[ifl])

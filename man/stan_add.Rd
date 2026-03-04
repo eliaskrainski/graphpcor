@@ -7,11 +7,11 @@
 \alias{stan_add_code}
 \title{Build/add STAN code/data for the correlation's PC-prior.}
 \usage{
-stan_add(x, base, lambda, name)
+stan_add(x, model, lambda, name)
 
-stan_add_pc_correl(x, base, lambda, name)
+stan_add_pc_correl(x, model, lambda, name)
 
-stan_add_graphpcor(x, base, lambda, name)
+stan_add_graphpcor(x, model, lambda, name)
 
 stan_add_code(x, to_add)
 }
@@ -19,7 +19,8 @@ stan_add_code(x, to_add)
 \item{x}{either a STAN code or list with the data used to fit
 a STAN model.}
 
-\item{base}{\code{basecor} or \code{basepcor} object to define the
+\item{model}{either a character ("pc_correl" or "graphcor") or
+a \code{basecor} or a \code{basepcor} object to define the
 base correlation model. See \code{\link[=basecor]{basecor()}} or \code{\link[=basepcor]{basepcor()}}.}
 
 \item{lambda}{the parameter for the exponential prior on
