@@ -9,7 +9,8 @@
 #' a square matrix (to be used as a graph)
 #' to define the precision structure of the model.
 #' @param lambda the parameter for the exponential prior on
-#' the radius of the sphere, see details.
+#' the radius of the sphere, see details in the
+#' PC-multivariate vignette.
 #' @param base numeric vector, correlation matrix or
 #' `basepcor` object. See [basepcor()] for details.
 #' If the output of a [basepcor()] is provided,

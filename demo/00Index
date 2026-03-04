@@ -5,3 +5,4 @@ basepcor        Base correlation model from graph
 LKJ    		The LKJ prior for correlation
 pc_correl  	The PC-prior for correlation
 minimal  	Minimal INLA fit
+stan     	A STAN example on the PC-prior for correlation
