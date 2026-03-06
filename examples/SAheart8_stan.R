@@ -28,19 +28,19 @@ data {
   int<lower=1> p;
   vector[p] y[n];
   real<lower=0> mu_sigma;
-  real<lower=0> x_sigmas_lambda;
+  real<lower=0> sigmas_lambda;
 }
 parameters {
   vector[p] mu;
-  vector<lower=0>[p] x_sigmas;
+  vector<lower=0>[p] sigmas;
 }
 transformed parameters {
   matrix[p,p] rho;
 }
 model {
   mu ~ normal(0, mu_sigma);
-  x_sigmas ~ exponential(x_sigmas_lambda);
-  y ~ multi_normal(mu, quad_form_diag(rho, x_sigmas));
+  sigmas ~ exponential(sigmas_lambda);
+  y ~ multi_normal(mu, quad_form_diag(rho, sigmas));
 }
 '
 
@@ -84,7 +84,7 @@ Sdata0 <- list(
     p = as.integer(p),
     y = as.matrix(dataf),
     mu_sigma = 10,
-    x_sigmas_lambda = 1,
+    sigmas_lambda = 1,
     y_sigmas_lambda = 1
 )
 
@@ -186,7 +186,7 @@ Samples1 <- sampling(
 library(coda)
 
 munams <- paste0("mu[", 1:p, "]")
-sxnams <- paste0("x_sigmas[", 1:p, "]")
+sxnams <- paste0("sigmas[", 1:p, "]")
 
 thnams0 <- paste0("grpc_theta[", 1:dim(g0)[2], "]")
 thnams1 <- paste0("grpc_theta[", 1:dim(g1)[2], "]")
