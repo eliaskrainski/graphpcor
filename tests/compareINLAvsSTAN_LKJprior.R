@@ -27,7 +27,8 @@ for(i in 1:length(eta0s)) {
 model.eta <- "
 data {
   int<lower=1> p;
-  vector[p] y;
+  int<lower=1> n;
+  vector[p] y[n];
   vector[p] mu;
   real<lower=0> eta;
 }
@@ -36,7 +37,9 @@ parameters {
 }
 model {
   Lcorr ~ lkj_corr_cholesky(eta);
-  y ~ multi_normal_cholesky(mu, Lcorr);
+  for(i in 1:n) {
+    y[i] ~ multi_normal_cholesky(mu, Lcorr);
+  }
 }
 generated quantities {
   corr_matrix[p] corr;
@@ -54,18 +57,22 @@ system.time(
 )
 
 ## choose eta>1 (as inla will only fit one mode)
-eta.s <- c(1.1, 5, 50, 500)
+eta.s <- c(1.05, 5, 50, 500)
 names(eta.s) <- paste0("eta", eta.s)
 eta.s
 
-
 stan.samples <- vector("list", length(eta.s))
+
+xx <- as.matrix(expand.grid(-0.5:0.5, -0.5:0.5, -0.5:0.5))
+cor(xx)
+(n <- nrow(xx))
 
 for(i in 1:length(eta.s)) {
     cat("SAMPLING with eta = ", eta.s[i], "\n")
     stan.samples[[i]] <- sampling(
         stan_cmpld,
-        data = list(p = as.integer(3), y = rep(0, 3),
+        data = list(p = as.integer(3), n = n,
+                    y = xx,
                     mu = rep(0, 3), eta = eta.s[i]),
         iter = 30000,
         warmup = 5000,
@@ -84,8 +91,10 @@ cLKJetas <- lapply(eta.s, function(e)
     cgeneric("LKJ", n = 3, eta = e))
 
 ires <- lapply(cLKJetas, function(cm) {
-    ri <- inla(y ~ 0 + f(i, model = cm),
-               data = data.frame(y = NA, i = 1:3),
+    ri <- inla(y ~ 0 + f(i, model = cm, replicate = r),
+               data = data.frame(y = as.vector(xx),
+                                 i = rep(1:3, each = n), 
+                                 r = rep(1:n, 3)), 
                control.family = list(
                    hyper = list(prec = list(
                                     initial = 20, fixed = TRUE))))
@@ -102,12 +111,13 @@ xlbs <- list(bquote(rho[2~","~1]),
 par(mfrow = c(4, 3), mar = c(3,3,1,0.5), mgp = c(1.5,0.5,0))
 for(i in 1:4) {
     for(j in 1:3) {
-        ds <- density(stan.cor.samples[[i]][, j])
+        ds <- density(stan.cor.samples[[i]][, j], na.rm = TRUE)
         di <- density(ires[[i]][, j])
         plot(function(x) dbeta((1+x)/2, eta.s[i], eta.s[i])/2,
              -1, 1, n = 1+1e4,
              ylim = c(0, max(dbeta(c(1e-4, 0.5, 1-1e-4),
-                                   eta.s[i], eta.s[i])/2)),
+                                   eta.s[i], eta.s[i])/2,
+                             ds$y, di$y)),
              xlab = as.expression(xlbs[[j]]),
              ylab = "marginal prior density")
         lines(ds, col = cols[1], lwd = 2, lty = 2)
