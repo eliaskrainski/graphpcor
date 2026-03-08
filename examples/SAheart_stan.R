@@ -141,7 +141,7 @@ Sdata0 <- list(
 
 str(Sdata0)
 
-round((cc <- cor(xdata) * 100))
+round((cc <- cor(xdata)) * 100)
 
 lcc <- chol(cc)
 qc <- chol2inv(lcc)
@@ -226,11 +226,22 @@ Samples1 <- sampling(
     chains = 4
 )
 
+chd0fit <- glm(
+    SAheart$chd ~ as.matrix(xdata),
+    family = 'binomial'
+)
+chd0betas <- coef(summary(chd0fit))[-1,]
+chd0betas
+
+alphas0 <- c(qnorm(sum(xdata$famHist)/n),
+             coef(chd0fit)[1])
+alphas0
+
 ## PLOTS
 library(coda)
 
-munams <- paste0("mu[", 1:p, "]")
-sxnams <- paste0("sigmas[", 1:p, "]")
+anames <- paste0("alphas[", 1:2, "]")
+bnames <- paste0("betas[", 1:p, "]")
 
 thnams0 <- paste0("grpc_theta[", 1:dim(g0)[2], "]")
 thnams1 <- paste0("grpc_theta[", 1:dim(g1)[2], "]")
@@ -245,6 +256,22 @@ library("bayesplot")
 
 library(ggpubr)
 
+## CI for the alphas and betas 
+ggarrange(mcmc_intervals(Samples0, c(anames, bnames)) +
+          geom_abline(slope = 0, intercept = 0) +
+          geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+                       data.frame(
+                           x = c(alphas0, chd0betas[, 1]),
+                           ya = (2+p):1-0.1,
+                           yb = (2+p):1+0.5), color = 'red'),
+         mcmc_intervals(Samples1, c(anames, bnames)) +
+         geom_abline(slope = 0, intercept = 0) +
+          geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+                       data.frame(
+                           x = c(alphas0, chd0betas[, 1]),
+                           ya = (2+p):1-0.1,
+                           yb = (2+p):1+0.5), color = 'red'))
+
 ## CI for the graphpcor model parameters (all edges are 'significant')
 ggarrange(mcmc_intervals(Samples0, thnams0) +
          geom_abline(slope = 0, intercept = 0),
@@ -253,98 +280,46 @@ ggarrange(mcmc_intervals(Samples0, thnams0) +
 
 
 ycorr <- cc
+ylcorr <- cor(cbind(xdata[, 1:(p-3)],
+                    log(xdata[, (p-2):(p-1)]), xdata[, p, drop = FALSE]))
 iil <- which(lower.tri(ycorr))
 
 ## CI for the correlation pairs (observed in 'red')
 ## g0 not enough
 ggarrange(
     mcmc_intervals(Samples0, rhonams) +
-    geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+    geom_segment(aes(x = x, y = ya, xend = x, yend = yb, color = ctype),
                  data.frame(
-                     x = ycorr[iil],
+                     ctype = rep(c("y", "log(y)"), each = length(iil)),
+                     x = c(ycorr[iil], ylcorr[iil]),
                      ya = length(iil):1-0.1,
-                     yb = length(iil):1+0.5), color = 'red'),
+                     yb = length(iil):1+0.5)), 
     mcmc_intervals(Samples1, rhonams) +
-    geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+    geom_segment(aes(x = x, y = ya, xend = x, yend = yb, color = ctype),
                  data.frame(
-                     x = ycorr[iil],
+                     ctype = rep(c("y", "log(y)"), each = length(iil)),
+                     x = c(ycorr[iil], ylcorr[iil]),
                      ya = length(iil):1-0.1,
-                     yb = length(iil):1+0.5), color = 'red')
+                     yb = length(iil):1+0.5))
     )
 
-library(ggplot2)
-
-
-### the mu and sigmas from both graphpcor models
-ggmu0 <- mcmc_areas(
-  Samples0,
-  pars = munams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-ggmu1 <- mcmc_areas(
-  Samples1,
-  pars = munams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-ggsd0 <- mcmc_areas(
-  Samples0,
-  pars = sxnams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-ggsd1 <- mcmc_areas(
-  Samples1,
-  pars = sxnams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-
-ggm_add <- geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
-                        data.frame(
-                            x = colMeans(Sdata0$y),
-                            ya = ncol(Sdata0$y):1-0.1,
-                            yb = ncol(Sdata0$y):1+0.5), color = 'red')
-ggsd_add <-  geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
-                          data.frame(
-                              x = apply(Sdata0$y, 2, sd),
-                              ya = ncol(Sdata0$y):1-0.1,
-                              yb = ncol(Sdata0$y):1+0.5), color = 'red') 
-
-
-ggarrange(ggmu0 + ggm_add,
-          ggmu1 + ggm_add,
-          ggsd0 + ggsd_add,
-          ggsd1 + ggsd_add)
-
- 
-ggcc0 <- mcmc_areas(
-  Samples0,
-  pars = rhonams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-
-ggcc1 <- mcmc_areas(
-  Samples1,
-  pars = rhonams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-
-ggcc_add <- geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
-                         data.frame(
-                             x = ycorr[iil],
-                             ya = length(iil):1-0.1,
-                             yb = length(iil):1+0.5), color = 'red')
-
-## it is clear that g1 is better and enough
-ggarrange(ggcc0 + ggcc_add,
-          ggcc1 + ggcc_add)
+## the latents
+par(mfrow = c(3, 3), mar = c(4,4,1,1), mgp = c(2,0.5,0), bty = "n")
+for(j in 1:(p-3)) {
+    xnm <- paste0("x[", 1:n, ",", j, "]")
+    xxsamples <- do.call('cbind', extract(Samples1, xnm))
+    plot(colMeans(xxsamples), xdata[, j], 
+         xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
+}
+for(j in (p-2):(p-1)) {
+    xnm <- paste0("x[", 1:n, ",", j, "]")
+    xxsamples <- do.call('cbind', extract(Samples1, xnm))
+    plot(xdata[, j]+0.01, exp(colMeans(xxsamples)), log = 'xy',
+    xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
+}
+j = p
+    xnm <- paste0("x[", 1:n, ",", j, "]")
+    xxsamples <- do.call('cbind', extract(Samples1, xnm))
+plot(colMeans(xxsamples) ~ SAheart$famhist,
+     xlab = "famHist",
+     ylab = as.expression(bquote(x[.(j)])))
