@@ -47,37 +47,40 @@ data {
   int<lower=1> n;
   int<lower=1> p;
   array[n] int<lower=0,upper=1> chd;
-  matrix[n,p-1] yx;
+  vector[p-1] yx[n];
   array[n] int<lower=0,upper=1> famHist;
   real<lower=0> alphas_sigma;
   real<lower=0> betas_sigma;
 }
 parameters {
-  vector[3] alphas;
+  vector[2] alphas;
   vector[p] betas;
+  vector[p] x[n]; // latent for E() of the covariates
 }
 transformed parameters {
-  matrix[p,p] rho;
-  vector[p] x[n]; // as E() for the covariates
+  corr_matrix[p] rho;
 }
 model {
   alphas ~ normal(0.0, alphas_sigma);
   betas ~ normal(0.0, betas_sigma);
-  x ~ multi_normal(rep_vector(0,p), rho);
-  for(j in 1:(p-3)) {
-    for(i in 1:n) {
-      yx[i,j] ~ normal(x[i,j], 0.0001); 
-    }
-  }
-  for(j in (p-2):(p-1)) {
-    for(i in 1:n) {
-      yx[i,j] ~ gamma(exp(x[i,j]), 1.0);
-    }
+  x ~ multi_normal(rep_vector(0.0, p), rho);
+  for(i in 1:n) {
+      yx[i,1:(p-3)] ~ normal(x[i,1:(p-3)], 0.001);
   }
   for(i in 1:n) {
-    famHist[i] ~ bernoulli_logit(alphas[2] + alphas[3] * x[i,p]);    
-    chd[i] ~ bernoulli_logit(alphas[1] + dot_product(x[i,], betas));
+      yx[i,(p-2):(p-1)] ~ gamma(exp(x[i,(p-2):(p-1)]), 1.0);
   }
+  vector[n] eta;
+  for(i in 1:n) {
+    famHist[i] ~ bernoulli(Phi(alphas[2] + x[i,p]));
+    eta[i] = alphas[1];
+  }
+  for(i in 1:n) {
+    for(j in 1:p) {
+      eta[i] += x[i,j] * betas[j];
+    }
+  }
+  chd ~ bernoulli_logit(eta);
 }
 "
 
@@ -86,6 +89,8 @@ model {
 Sgrpc <- stan_add(
     Scode0, 'graphpcor',
     lambda = 1, name = "rho")
+
+##Sgrpc <- Scode0
 
 cat(Sgrpc)
 
@@ -128,7 +133,7 @@ Sdata0 <- list(
     n = as.integer(n),
     p = as.integer(p),
     chd = as.integer(SAheart[, p + 1]),
-    yx = as.matrix(SAheart[, jj2]), 
+    yx = as.matrix(xdata[, 1:(p-1)]),
     famHist = (SAheart$famhist=="Present")+0L, 
     alphas_sigma = 10,
     betas_sigma = 10
@@ -186,7 +191,7 @@ if(FALSE)
     png("g01SAheart.png", width = 1800, height = 900, res = 300)
 par(mfrow = c(1, 2), mar = c(0,0,0,0))
 plot(g0, Rgraphviz = TRUE)
-plot(g1, Rgraphviz = TRUE)
+b <- plot(g1, Rgraphviz = TRUE)
 if(FALSE)
     dev.off()
 
@@ -206,8 +211,8 @@ SdataM1 <- stan_add(Sdata0, baseM1, lambda = 1, name = 'rho')
 Samples0 <- sampling(
     Sgpc_cmpld, 
     data = SdataM0,
-    iter = 30000,
-    warmup = 5000,
+    iter = 3000,
+    warmup = 500,
     thin = 10,
     chains = 4
 )
@@ -215,8 +220,8 @@ Samples0 <- sampling(
 Samples1 <- sampling(
     Sgpc_cmpld, 
     data = SdataM1,
-    iter = 30000,
-    warmup = 5000,
+    iter = 3000,
+    warmup = 500,
     thin = 10,
     chains = 4
 )
