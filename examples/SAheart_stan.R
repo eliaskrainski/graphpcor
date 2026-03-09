@@ -47,7 +47,7 @@ data {
   int<lower=1> n;
   int<lower=1> p;
   array[n] int<lower=0,upper=1> chd;
-  vector[p-1] yx[n];
+  matrix[n,p-1] yx;
   array[n] int<lower=0,upper=1> famHist;
   real<lower=0> alphas_sigma;
   real<lower=0> betas_sigma;
@@ -55,7 +55,7 @@ data {
 parameters {
   vector[2] alphas;
   vector[p] betas;
-  vector[p] x[n]; // latent for E() of the covariates
+  matrix[n,p] z; // latent for E() of the covariates
 }
 transformed parameters {
   corr_matrix[p] rho;
@@ -63,26 +63,18 @@ transformed parameters {
 model {
   alphas ~ normal(0.0, alphas_sigma);
   betas ~ normal(0.0, betas_sigma);
-  x ~ multi_normal(rep_vector(0.0, p), rho);
-  for(i in 1:n) {
-      yx[i,1:(p-3)] ~ normal(x[i,1:(p-3)], 0.001);
-  }
-  for(i in 1:n) {
-      yx[i,(p-2):(p-1)] ~ gamma(exp(x[i,(p-2):(p-1)]), 1.0);
-  }
-  vector[n] eta;
-  for(i in 1:n) {
-    famHist[i] ~ bernoulli(Phi(alphas[2] + x[i,p]));
-    eta[i] = alphas[1];
-  }
-  for(i in 1:n) {
-    for(j in 1:p) {
-      eta[i] += x[i,j] * betas[j];
-    }
-  }
-  chd ~ bernoulli_logit(eta);
+  to_vector(z) ~ std_normal();
+  matrix[p,p] L_rho;
+  L_rho = cholesky_decompose(rho);
+  matrix[n,p] x = z * (L_rho');
+  to_vector(yx[,1:(p-3)]) ~ normal(to_vector(x[, 1:(p-3)]), 0.001);
+  to_vector(yx[,(p-2):(p-1)]) ~ gamma(to_vector(exp(x[,(p-2):(p-1)])), 1.0);
+  famHist ~ bernoulli(Phi(alphas[2] + x[,p]));
+  chd ~ bernoulli_logit(alphas[1] + x * betas);
 }
 "
+
+cat(Scode0, file = "Scode0_v2.txt")
 
 ## STEP 2: update the STAN code with code for the
 ## graphpcor prior for 'rho'
@@ -96,7 +88,8 @@ cat(Sgrpc)
 
 ## STEP 3:  compile STAN code
 library(rstan)
-options(mc.cores = 4L)
+options(mc.cores = 5L)
+rstan_options(auto_write = TRUE)
 
 system.time(
     Sgpc_cmpld <- stan_model(
@@ -211,18 +204,18 @@ SdataM1 <- stan_add(Sdata0, baseM1, lambda = 1, name = 'rho')
 Samples0 <- sampling(
     Sgpc_cmpld, 
     data = SdataM0,
-    iter = 3000,
-    warmup = 500,
-    thin = 10,
+    iter = 2500,
+    warmup = 0,
+    thin = 1,
     chains = 4
 )
 
 Samples1 <- sampling(
     Sgpc_cmpld, 
     data = SdataM1,
-    iter = 3000,
-    warmup = 500,
-    thin = 10,
+    iter = 2500,
+    warmup = 0,
+    thin = 1,
     chains = 4
 )
 
@@ -253,6 +246,12 @@ rhonams <- paste0("rho[",
 rhonams
 
 library("bayesplot")
+
+mcmc_trace(Samples0, c(anames, bnames))
+mcmc_trace(Samples1, c(anames, bnames))
+
+mcmc_trace(Samples0, thnams0)
+mcmc_trace(Samples1, thnams1)
 
 library(ggpubr)
 
@@ -306,19 +305,19 @@ ggarrange(
 ## the latents
 par(mfrow = c(3, 3), mar = c(4,4,1,1), mgp = c(2,0.5,0), bty = "n")
 for(j in 1:(p-3)) {
-    xnm <- paste0("x[", 1:n, ",", j, "]")
+    xnm <- paste0("z[", 1:n, ",", j, "]")
     xxsamples <- do.call('cbind', extract(Samples1, xnm))
     plot(colMeans(xxsamples), xdata[, j], 
          xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
 }
 for(j in (p-2):(p-1)) {
-    xnm <- paste0("x[", 1:n, ",", j, "]")
+    xnm <- paste0("z[", 1:n, ",", j, "]")
     xxsamples <- do.call('cbind', extract(Samples1, xnm))
     plot(xdata[, j]+0.01, exp(colMeans(xxsamples)), log = 'xy',
     xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
 }
 j = p
-    xnm <- paste0("x[", 1:n, ",", j, "]")
+    xnm <- paste0("z[", 1:n, ",", j, "]")
     xxsamples <- do.call('cbind', extract(Samples1, xnm))
 plot(colMeans(xxsamples) ~ SAheart$famhist,
      xlab = "famHist",
