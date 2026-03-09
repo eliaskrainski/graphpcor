@@ -714,7 +714,7 @@ C0 <- matrix(c(1, rho0,
 rownames(C0) <- colnames(C0) <- paste0("x", 1:3)
 
 gpc <- graphpcor(x1 ~ x2 + x3)
-b01 <- basepcor(C0, itheta = gpc, d0 = rep(1,3))
+b01 <- basepcor(C0, iLtheta = gpc, d0 = rep(1,3))
 b01
 ```
 
@@ -725,7 +725,7 @@ correlations far from zero, we suggest the
 which is the default.
 
 ```{r gpc0, echo = TRUE}
-b0 <- basepcor(C0, itheta = gpc)
+b0 <- basepcor(C0, iLtheta = gpc)
 b0
 theta0 <- b0$theta
 all.equal(C0,
@@ -835,8 +835,10 @@ $I(\theta_0)^{1/2}$, from the
 Hessian of KLD around the base model 
 and its determinant
 ```{r h.5}
-h.5 <- attr(b0$I0, 'h.5')
-(dh.5 <- prod(attr(b0, 'decomposition')$values^0.5))
+I0 <- hessian(b0)
+I0d <- graphpcor:::dspd(I0)
+h.5 <- I0d$sqrt
+(dh.5 <- I0d$logDeterminant)
 ```
 
 Set up a grid of theta around theta0
@@ -907,7 +909,7 @@ a set of conditional distributions represented by a graph
 ```{r graph4}
 g4 <- graphpcor(x1 ~ x2 + x3, x4 ~ x2 + x3)
 (ne <- dim(g4))
-plot(g4)
+plot(g4, Rgraphviz = TRUE)
 ```
 
 This graph has 4 edges and so we will use a four parameters model.
@@ -941,7 +943,7 @@ or, in other words, if it can be generated from this model.
 We can use the 'hessian' method for a `graphpcor`, 
 which find which parameters will give such correlation matrix as base model with
 ```{r H4}
-basepcor(b4, itheta = g4)
+basepcor(b4, iLtheta = g4)
 ```
 
 ```{r cmodel}
