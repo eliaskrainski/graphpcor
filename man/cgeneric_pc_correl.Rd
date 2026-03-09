@@ -44,7 +44,8 @@ Note: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 \item{model}{a \code{basecor} object.}
 
 \item{lambda}{the parameter for the exponential prior on
-the radius of the sphere, see details.}
+the radius of the sphere, see details in the
+PC-multivariate vignette.}
 
 \item{sigma.prior.reference}{numeric vector to set the reference
 for each standard deviation parameter for its PC-prior.
