@@ -23,7 +23,8 @@ generated quantities {
 
 ## add the pc_correl code
 Scode <- stan_add(Scode0, 'pc_correl', lambda = 1, name = "LCorr")
-Scode
+
+cat(Scode)
 
 ## it takes time to compile the model
 system.time(
@@ -69,7 +70,7 @@ for(i in 1:length(lambdas)) {
     stan.samples[[i]] <- sampling(
         stan_cmpld,
         data = stan_add(
-            x = Sdata0, base = baseC,
+            x = Sdata0, model = baseC,
             lambda = lambdas[i], name = "LCorr"),
         iter = 30000,
         warmup = 5000,

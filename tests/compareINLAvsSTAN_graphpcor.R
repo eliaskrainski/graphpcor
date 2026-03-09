@@ -23,7 +23,8 @@ model {
 
 ## add the pc_correl code
 Scode <- stan_add(Scode0, 'graphpcor', lambda = 1, name = "rho")
-Scode
+
+cat(Scode)
 
 ## it takes time to compile the model
 system.time(
@@ -77,7 +78,7 @@ stan.samples <- vector("list", length(lambdas))
 for(i in 1:length(lambdas)) {
     cat("SAMPLING with lambda = ", lambdas[i], "\n")
     Sdata_i <- stan_add(
-        x = Sdata0, base = baseC,
+        x = Sdata0, model = baseC,
         lambda = lambdas[i], name = "rho")
     stan.samples[[i]] <- sampling(
         stan_cmpld,
