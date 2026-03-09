@@ -267,23 +267,6 @@ stan_add_graphpcor <- function(x, model, lambda, name) {
     }
 
     return(stan_add_code(x, aC))
-
-    sec_names <- c("data", "parameters",
-                   "transformed parameters", "model")
-    stopifnot(all(names(aC)==sec_names)) ## check
-
-    spl_x <- stan_code_splits(x)
-    print(spl_x)
-    isx <- pmatch(sec_names, rownames(spl_x))
-    print(isx)
-
-    secs <- lapply(1:length(sec_names), function(i) {
-      ini <- spl_x$ini[isx[i]]
-      end <- spl_x$end[isx[i]]
-      xx <- substr(x, ini, end-1)
-      paste0(xx, aC[[i]], "}")
-    })
-    return(Reduce("paste0", secs))
   }
 
   warning("Nothing done!")
@@ -291,6 +274,7 @@ stan_add_graphpcor <- function(x, model, lambda, name) {
 }
 #' @describeIn stan_add add code at the end of each section
 #' @param to_add named list with the code to be added
+#' @importFrom utils tail
 stan_add_code <- function(x, to_add) {
   all_sec_names <- c(
     "functions", "data", "transformed data",
