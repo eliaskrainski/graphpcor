@@ -51,7 +51,7 @@ RoxygenNote: 7.3.3
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Depends:
-    R (>= 4.5),
+    R (>= 4.3),
     Matrix,
     igraph,
     INLAtools (>= 0.0.8),

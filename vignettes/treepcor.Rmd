@@ -388,8 +388,12 @@ cmodel <- cgeneric(
   sigma.prior.probability = rep(0.05, np[1]))
 ```
 
-Perform some checks:
-```{r ccheck}
+```{r haveINLA, echo = FALSE}
+haveINLA <- do.call(what = "require", args=list(package = "INLA"))
+```
+
+Perform some checks (INLA is required):
+```{r ccheck, eval = haveINLA}
 graph(cmodel)
 initial(cmodel)
 prior(cmodel, theta = rep(0, sum(np)))
@@ -402,9 +406,6 @@ all.equal(Vg, as.matrix(solve(Qc)))
 ```
 
 Model fit (if have INLA installed)
-```{r haveINLA, echo = FALSE}
-haveINLA <- do.call(what = "require", args=list(package = "INLA"))
-```
 
 ```{r mfit, eval = haveINLA}
 m1 <- y ~ f(i, model = cmodel, replicate = r)
