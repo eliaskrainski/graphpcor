@@ -53,33 +53,28 @@ data {
   real<lower=0> betas_sigma;
 }
 parameters {
-  vector[3] alphas;
+  vector[2] alphas;
   vector[p] betas;
+  matrix[n,p] z; // latent for E() of the covariates
 }
 transformed parameters {
-  matrix[p,p] rho;
-  vector[p] x[n]; // as E() for the covariates
+  corr_matrix[p] rho;
 }
 model {
   alphas ~ normal(0.0, alphas_sigma);
   betas ~ normal(0.0, betas_sigma);
-  x ~ multi_normal(rep_vector(0,p), rho);
-  for(j in 1:(p-3)) {
-    for(i in 1:n) {
-      yx[i,j] ~ normal(x[i,j], 0.0001); 
-    }
-  }
-  for(j in (p-2):(p-1)) {
-    for(i in 1:n) {
-      yx[i,j] ~ gamma(exp(x[i,j]), 1.0);
-    }
-  }
-  for(i in 1:n) {
-    famHist[i] ~ bernoulli_logit(alphas[2] + alphas[3] * x[i,p]);    
-    chd[i] ~ bernoulli_logit(alphas[1] + dot_product(x[i,], betas));
-  }
+  to_vector(z) ~ std_normal();
+  matrix[p,p] L_rho;
+  L_rho = cholesky_decompose(rho);
+  matrix[n,p] x = z * (L_rho');
+  to_vector(yx[,1:(p-3)]) ~ normal(to_vector(x[, 1:(p-3)]), 0.001);
+  to_vector(yx[,(p-2):(p-1)]) ~ gamma(to_vector(exp(x[,(p-2):(p-1)])), 1.0);
+  famHist ~ bernoulli(Phi(alphas[2] + x[,p]));
+  chd ~ bernoulli_logit(alphas[1] + x * betas);
 }
 "
+
+cat(Scode0, file = "Scode0_v2.txt")
 
 ## STEP 2: update the STAN code with code for the
 ## graphpcor prior for 'rho'
@@ -87,11 +82,14 @@ Sgrpc <- stan_add(
     Scode0, 'graphpcor',
     lambda = 1, name = "rho")
 
+##Sgrpc <- Scode0
+
 cat(Sgrpc)
 
 ## STEP 3:  compile STAN code
 library(rstan)
-options(mc.cores = 4L)
+options(mc.cores = 5L)
+rstan_options(auto_write = TRUE)
 
 system.time(
     Sgpc_cmpld <- stan_model(
@@ -128,7 +126,7 @@ Sdata0 <- list(
     n = as.integer(n),
     p = as.integer(p),
     chd = as.integer(SAheart[, p + 1]),
-    yx = as.matrix(SAheart[, jj2]), 
+    yx = as.matrix(xdata[, 1:(p-1)]),
     famHist = (SAheart$famhist=="Present")+0L, 
     alphas_sigma = 10,
     betas_sigma = 10
@@ -136,7 +134,7 @@ Sdata0 <- list(
 
 str(Sdata0)
 
-round((cc <- cor(xdata) * 100))
+round((cc <- cor(xdata)) * 100)
 
 lcc <- chol(cc)
 qc <- chol2inv(lcc)
@@ -186,7 +184,7 @@ if(FALSE)
     png("g01SAheart.png", width = 1800, height = 900, res = 300)
 par(mfrow = c(1, 2), mar = c(0,0,0,0))
 plot(g0, Rgraphviz = TRUE)
-plot(g1, Rgraphviz = TRUE)
+b <- plot(g1, Rgraphviz = TRUE)
 if(FALSE)
     dev.off()
 
@@ -206,26 +204,37 @@ SdataM1 <- stan_add(Sdata0, baseM1, lambda = 1, name = 'rho')
 Samples0 <- sampling(
     Sgpc_cmpld, 
     data = SdataM0,
-    iter = 30000,
-    warmup = 5000,
-    thin = 10,
+    iter = 2500,
+    warmup = 0,
+    thin = 1,
     chains = 4
 )
 
 Samples1 <- sampling(
     Sgpc_cmpld, 
     data = SdataM1,
-    iter = 30000,
-    warmup = 5000,
-    thin = 10,
+    iter = 2500,
+    warmup = 0,
+    thin = 1,
     chains = 4
 )
+
+chd0fit <- glm(
+    SAheart$chd ~ as.matrix(xdata),
+    family = 'binomial'
+)
+chd0betas <- coef(summary(chd0fit))[-1,]
+chd0betas
+
+alphas0 <- c(qnorm(sum(xdata$famHist)/n),
+             coef(chd0fit)[1])
+alphas0
 
 ## PLOTS
 library(coda)
 
-munams <- paste0("mu[", 1:p, "]")
-sxnams <- paste0("sigmas[", 1:p, "]")
+anames <- paste0("alphas[", 1:2, "]")
+bnames <- paste0("betas[", 1:p, "]")
 
 thnams0 <- paste0("grpc_theta[", 1:dim(g0)[2], "]")
 thnams1 <- paste0("grpc_theta[", 1:dim(g1)[2], "]")
@@ -238,7 +247,29 @@ rhonams
 
 library("bayesplot")
 
+mcmc_trace(Samples0, c(anames, bnames))
+mcmc_trace(Samples1, c(anames, bnames))
+
+mcmc_trace(Samples0, thnams0)
+mcmc_trace(Samples1, thnams1)
+
 library(ggpubr)
+
+## CI for the alphas and betas 
+ggarrange(mcmc_intervals(Samples0, c(anames, bnames)) +
+          geom_abline(slope = 0, intercept = 0) +
+          geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+                       data.frame(
+                           x = c(alphas0, chd0betas[, 1]),
+                           ya = (2+p):1-0.1,
+                           yb = (2+p):1+0.5), color = 'red'),
+         mcmc_intervals(Samples1, c(anames, bnames)) +
+         geom_abline(slope = 0, intercept = 0) +
+          geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+                       data.frame(
+                           x = c(alphas0, chd0betas[, 1]),
+                           ya = (2+p):1-0.1,
+                           yb = (2+p):1+0.5), color = 'red'))
 
 ## CI for the graphpcor model parameters (all edges are 'significant')
 ggarrange(mcmc_intervals(Samples0, thnams0) +
@@ -248,98 +279,46 @@ ggarrange(mcmc_intervals(Samples0, thnams0) +
 
 
 ycorr <- cc
+ylcorr <- cor(cbind(xdata[, 1:(p-3)],
+                    log(xdata[, (p-2):(p-1)]), xdata[, p, drop = FALSE]))
 iil <- which(lower.tri(ycorr))
 
 ## CI for the correlation pairs (observed in 'red')
 ## g0 not enough
 ggarrange(
     mcmc_intervals(Samples0, rhonams) +
-    geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+    geom_segment(aes(x = x, y = ya, xend = x, yend = yb, color = ctype),
                  data.frame(
-                     x = ycorr[iil],
+                     ctype = rep(c("y", "log(y)"), each = length(iil)),
+                     x = c(ycorr[iil], ylcorr[iil]),
                      ya = length(iil):1-0.1,
-                     yb = length(iil):1+0.5), color = 'red'),
+                     yb = length(iil):1+0.5)), 
     mcmc_intervals(Samples1, rhonams) +
-    geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
+    geom_segment(aes(x = x, y = ya, xend = x, yend = yb, color = ctype),
                  data.frame(
-                     x = ycorr[iil],
+                     ctype = rep(c("y", "log(y)"), each = length(iil)),
+                     x = c(ycorr[iil], ylcorr[iil]),
                      ya = length(iil):1-0.1,
-                     yb = length(iil):1+0.5), color = 'red')
+                     yb = length(iil):1+0.5))
     )
 
-library(ggplot2)
-
-
-### the mu and sigmas from both graphpcor models
-ggmu0 <- mcmc_areas(
-  Samples0,
-  pars = munams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-ggmu1 <- mcmc_areas(
-  Samples1,
-  pars = munams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-ggsd0 <- mcmc_areas(
-  Samples0,
-  pars = sxnams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-ggsd1 <- mcmc_areas(
-  Samples1,
-  pars = sxnams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-
-ggm_add <- geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
-                        data.frame(
-                            x = colMeans(Sdata0$y),
-                            ya = ncol(Sdata0$y):1-0.1,
-                            yb = ncol(Sdata0$y):1+0.5), color = 'red')
-ggsd_add <-  geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
-                          data.frame(
-                              x = apply(Sdata0$y, 2, sd),
-                              ya = ncol(Sdata0$y):1-0.1,
-                              yb = ncol(Sdata0$y):1+0.5), color = 'red') 
-
-
-ggarrange(ggmu0 + ggm_add,
-          ggmu1 + ggm_add,
-          ggsd0 + ggsd_add,
-          ggsd1 + ggsd_add)
-
- 
-ggcc0 <- mcmc_areas(
-  Samples0,
-  pars = rhonams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-
-ggcc1 <- mcmc_areas(
-  Samples1,
-  pars = rhonams, 
-  prob = 0.9, # 90% intervals
-  prob_outer = 0.99, # 99%
-  point_est = "mean"
-)
-
-ggcc_add <- geom_segment(aes(x = x, y = ya, xend = x, yend = yb),
-                         data.frame(
-                             x = ycorr[iil],
-                             ya = length(iil):1-0.1,
-                             yb = length(iil):1+0.5), color = 'red')
-
-## it is clear that g1 is better and enough
-ggarrange(ggcc0 + ggcc_add,
-          ggcc1 + ggcc_add)
+## the latents
+par(mfrow = c(3, 3), mar = c(4,4,1,1), mgp = c(2,0.5,0), bty = "n")
+for(j in 1:(p-3)) {
+    xnm <- paste0("z[", 1:n, ",", j, "]")
+    xxsamples <- do.call('cbind', extract(Samples1, xnm))
+    plot(colMeans(xxsamples), xdata[, j], 
+         xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
+}
+for(j in (p-2):(p-1)) {
+    xnm <- paste0("z[", 1:n, ",", j, "]")
+    xxsamples <- do.call('cbind', extract(Samples1, xnm))
+    plot(xdata[, j]+0.01, exp(colMeans(xxsamples)), log = 'xy',
+    xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
+}
+j = p
+    xnm <- paste0("z[", 1:n, ",", j, "]")
+    xxsamples <- do.call('cbind', extract(Samples1, xnm))
+plot(colMeans(xxsamples) ~ SAheart$famhist,
+     xlab = "famHist",
+     ylab = as.expression(bquote(x[.(j)])))

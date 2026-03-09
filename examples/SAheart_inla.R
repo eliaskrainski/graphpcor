@@ -159,23 +159,29 @@ lxy1 <- cbind(
     c(63, 55, 72, 63, 60, 53, 55, 47, 63)
 )
 
+lxy0 <- cbind(
+    c(45, 15, 25, 35, 30, 30, 20, 20, 35),
+    c(50, 50, 70, 60, 50, 40, 30, 20, 30)          
+)
+
 par(mfrow = c(1, 2), mar = c(0,0,0,0))
-plot(g0, layout = lxy1, ##Rgraphviz = TRUE)
-     edge.arrow.mode = 0, edge.color = "red", edge.width = 2,
-     vertex.size = 25, ##vertex.shape = "sphere",
-     vertex.color = "lightblue", vertex.frame.color = "blue",
-     vertex.label.color = 'black', vertex.label.cex = 1.75,
-     vertex.label.family = "Hershey", vertex.label.font = 1
-)
-plot(g1, ##Rgraphviz=TRUE)
-     layout = lxy1,
-     edge.arrow.mode = 0, edge.color = "red",
-     edge.width = 1+c(1,3,1,3,3,3,3,1,3,1,1,3,1,3), 
-     vertex.size = 25, ##vertex.shape = "sphere",
-     vertex.color = "lightblue", vertex.frame.color = "blue",
-     vertex.label.color = 'black', vertex.label.cex = 1.75,
-     vertex.label.family = "Hershey", vertex.label.font = 1
-)
+plot(g0, Rgraphviz = TRUE)
+##layout = lxy0, asp = 1, 
+  ##   edge.arrow.mode = 0, edge.color = "red", edge.width = 2,
+    ## vertex.size = 25, ##vertex.shape = "sphere",
+##     vertex.color = "lightblue", vertex.frame.color = "blue",
+  ##   vertex.label.color = 'black', vertex.label.cex = 1.75,
+    ## vertex.label.family = "Hershey", vertex.label.font = 1
+##)
+plot(g1, Rgraphviz=TRUE)
+##     layout = lxy1,
+  ##   edge.arrow.mode = 0, edge.color = "red",
+    ## edge.width = 1+c(1,3,1,3,3,3,3,1,3,1,1,3,1,3), 
+##     vertex.size = 25, ##vertex.shape = "sphere",
+  ##   vertex.color = "lightblue", vertex.frame.color = "blue",
+    ## vertex.label.color = 'black', vertex.label.cex = 1.75,
+     ##vertex.label.family = "Hershey", vertex.label.font = 1
+##)
 
 as.matrix(attr(g1, "graph"))
 
