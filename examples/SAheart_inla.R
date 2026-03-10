@@ -1,3 +1,7 @@
+
+setwd(here::here("examples"))
+getwd()
+
 library(graphpcor)
 library(ggplot2)
 library(GGally)
@@ -254,21 +258,31 @@ cfam <- list(
 
 library(INLA)
 
-fit0 <- inla(
-    formula = ffg0,
-    family = c("binomial", "gaussian", "gammajw", "binomial"),
-    data = inla.stack.data(sdata),
-    control.predictor = list(A = inla.stack.A(sdata)),
-    control.family = cfam
-)
+if(file.exists("fit0.rds")) {
+    fit0 <- readRDS("fit0.rds")
+} else {
+    fit0 <- inla(
+        formula = ffg0,
+        family = c("binomial", "gaussian", "gammajw", "binomial"),
+        data = inla.stack.data(sdata),
+        control.predictor = list(A = inla.stack.A(sdata)),
+        control.family = cfam
+    )
+    saveRDS(fit0, "fit0.rds")
+}
 
-fit1 <- inla(
-    formula = ffg1,
-    family = c("binomial", "gaussian", "gammajw", "binomial"),
-    data = inla.stack.data(sdata),
-    control.predictor = list(A = inla.stack.A(sdata)),
-    control.family = cfam
-)
+if(file.exists("fit1.rds")) {
+    fit1 <- readRDS("fit1.rds")
+} else {
+    fit1 <- inla(
+        formula = ffg1,
+        family = c("binomial", "gaussian", "gammajw", "binomial"),
+        data = inla.stack.data(sdata),
+        control.predictor = list(A = inla.stack.A(sdata)),
+        control.family = cfam
+    )
+    saveRDS(fit1, "fit1.rds")
+}
 
 rbind(fit0$cpu.used, fit1$cpu.used)
 
@@ -425,7 +439,7 @@ for(i in 1:p) {
 dev.off()
 
 
-if(FALSE)
+if(FALSE) {
     system("eog SAheartResultJoint.png &")
 
 }
