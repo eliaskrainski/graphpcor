@@ -1,3 +1,7 @@
+
+setwd(here::here("examples"))
+getwd()
+
 library(graphpcor)
 library(ggplot2)
 library(GGally)
