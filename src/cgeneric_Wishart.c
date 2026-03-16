@@ -154,7 +154,7 @@ double *inla_cgeneric_Wishart(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgen
 		ret[0] = M;
 
 		for (i = 1; i <= M; i++) {
-			ret[i] = 0.0;
+			ret[i] = -2.0;
 		}
 
 		/*

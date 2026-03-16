@@ -262,10 +262,10 @@ double *inla_cgeneric_treepcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cge
 		ret = Calloc(nparam + 1, double);
 		ret[0] = nparam;
 		for (i = 0; i < N; i++) {
-			ret[1 + i] = -1.0;
+			ret[1 + i] = -2.0;
 		}
 		for (i = 0; i < np; i++) {
-			ret[1 + N + i] = 0.0;
+			ret[1 + N + i] = 1.0;
 		}
 	}
 		break;
