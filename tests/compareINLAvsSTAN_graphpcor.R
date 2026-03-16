@@ -5,7 +5,7 @@ library(coda)
 library(rstan)
 options(mc.cores = 4L)
 
-## STAN model code without the prior for L, as LCorr
+## STAN model code without the prior for 'rho' (corr mat)
 Scode0 <- "
 data {
   int<lower=1> p;
@@ -21,7 +21,7 @@ model {
 }
 "
 
-## add the pc_correl code
+## add the PC-prior code
 Scode <- stan_add(Scode0, 'graphpcor', lambda = 1, name = "rho")
 
 cat(Scode)

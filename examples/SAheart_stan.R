@@ -1,3 +1,6 @@
+setwd(here::here("examples"))
+getwd()
+
 library(graphpcor)
 
 ## STEP 1: data model definition
@@ -88,7 +91,7 @@ cat(Sgrpc)
 
 ## STEP 3:  compile STAN code
 library(rstan)
-options(mc.cores = 5L)
+options(mc.cores = 4L)
 rstan_options(auto_write = TRUE)
 
 system.time(
@@ -163,7 +166,6 @@ for(i in 1:nrow(mst)) {
 }
 G0
 
-library(graphpcor)
 g0 <- graphpcor(G0)
 (dg0 <- dim(g0))
 
@@ -184,7 +186,7 @@ if(FALSE)
     png("g01SAheart.png", width = 1800, height = 900, res = 300)
 par(mfrow = c(1, 2), mar = c(0,0,0,0))
 plot(g0, Rgraphviz = TRUE)
-b <- plot(g1, Rgraphviz = TRUE)
+plot(g1, Rgraphviz = TRUE)
 if(FALSE)
     dev.off()
 
@@ -204,8 +206,8 @@ SdataM1 <- stan_add(Sdata0, baseM1, lambda = 1, name = 'rho')
 Samples0 <- sampling(
     Sgpc_cmpld, 
     data = SdataM0,
-    iter = 2500,
-    warmup = 0,
+    iter = 3000,
+    warmup = 500,
     thin = 1,
     chains = 4
 )
@@ -213,8 +215,8 @@ Samples0 <- sampling(
 Samples1 <- sampling(
     Sgpc_cmpld, 
     data = SdataM1,
-    iter = 2500,
-    warmup = 0,
+    iter = 3000,
+    warmup = 500,
     thin = 1,
     chains = 4
 )
