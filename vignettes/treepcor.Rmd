@@ -388,8 +388,10 @@ cmodel <- cgeneric(
   sigma.prior.probability = rep(0.05, np[1]))
 ```
 
+The following code chunks require INLA installed.
+
 ```{r haveINLA, echo = FALSE}
-haveINLA <- do.call(what = "require", args=list(package = "INLA"))
+haveINLA <- FALSE
 ```
 
 Perform some checks (INLA is required):
