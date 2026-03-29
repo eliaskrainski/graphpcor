@@ -202,9 +202,8 @@ dim.treepcor <- function(x, ...) {
 #' @param object treepcor
 #' @importFrom INLAtools is.zero
 #' @importFrom grDevices rgb
-#' @importFrom stats drop1
 #' @export
-drop1 <-
+drop1.treepcor <-
   function(object) {
     trm0 <- attr(object, "relationship")
     m <- ncol(trm0)

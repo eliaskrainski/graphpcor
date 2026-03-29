@@ -5,7 +5,7 @@
 \alias{print.treepcor}
 \alias{summary.treepcor}
 \alias{dim.treepcor}
-\alias{drop1}
+\alias{drop1.treepcor}
 \alias{plot.treepcor}
 \alias{prec.treepcor}
 \alias{etreepcor2precision}
@@ -22,7 +22,7 @@ treepcor(...)
 
 \method{dim}{treepcor}(x, ...)
 
-drop1(object)
+\method{drop1}{treepcor}(object)
 
 \method{plot}{treepcor}(x, y, ...)
 
@@ -83,6 +83,8 @@ have an ancestor, which is a parent variable.
 
 \item \code{dim(treepcor)}: The \code{dim} for a \code{treepcor}
 
+\item \code{drop1(treepcor)}: The \code{drop1} method for a \code{treepcor}
+
 \item \code{plot(treepcor)}: The \code{plot} method for a \code{treepcor}
 
 \item \code{prec(treepcor)}: The \code{prec} for a \code{treepcor}
@@ -94,8 +96,6 @@ have an ancestor, which is a parent variable.
 }}
 \section{Functions}{
 \itemize{
-\item \code{drop1()}: The \code{drop1} method for a \code{treepcor}
-
 \item \code{etreepcor2precision()}: Internal function to extract elements to
 build the precision from the \code{treepcor} edges.
 
