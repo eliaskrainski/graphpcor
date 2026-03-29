@@ -4,4 +4,5 @@
 #' @importFrom grDevices rgb
 #' @importFrom Matrix Matrix forceSymmetric colSums Diagonal
 #' @importFrom numDeriv hessian
-#' @importFrom INLAtools cgeneric is.zero Sparse upperPadding packageCheck prec
+#' @importFrom INLAtools is.zero Sparse upperPadding packageCheck
+#' @importFrom INLAtools cgeneric prec graph mu initial prior
