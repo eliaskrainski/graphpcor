@@ -388,8 +388,10 @@ cmodel <- cgeneric(
   sigma.prior.probability = rep(0.05, np[1]))
 ```
 
+The following code chunks require INLA installed.
+
 ```{r haveINLA, echo = FALSE}
-haveINLA <- do.call(what = "require", args=list(package = "INLA"))
+haveINLA <- FALSE
 ```
 
 Perform some checks (INLA is required):
@@ -418,16 +420,11 @@ fit <- inla(
 fit$cpu.used
 ```
 
-Compare the true covariance
-```{r true}
+Compare the true covariance, the observed covariance 
+and the fitted covariance (from the posterior mode for theta)
+```{r Vcompare, eval = haveINLA}
 round(Vg, 2)
-```
-the observed covariance
-```{r Vxx}
 round(cov(xx), 2)
-``` 
-and the fitted covariance (from posterior mode)
-```{r Vfitg, eval = haveINLA}
 round(Vfit <- vcov(tree2, theta = fit$mode$theta), 2)
 ```
 

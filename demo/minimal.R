@@ -1,7 +1,6 @@
 suppressPackageStartupMessages({
-	library(INLAtools)
-	library(graphpcor)
-	library(INLA)
+    library(graphpcor)
+    library(INLA)
 })
 
 g <- graphpcor(a ~ b + c)

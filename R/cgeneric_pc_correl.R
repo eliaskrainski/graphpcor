@@ -110,7 +110,7 @@ cgeneric.basecor <-
 
   if(is.null(dotArgs$useINLAprecomp) ||
      dotArgs$useINLAprecomp) {
-    vs <- "26.02.08" ## after code structure update
+    vs <- "26.03.19"
     ivs <- packageCheck(
       name = "INLA",
       minimum_version = vs) >= vs
