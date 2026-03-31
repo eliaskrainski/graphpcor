@@ -59,12 +59,12 @@ plot(gs)
 plot(ogs)
 
 ## 4. define the SAME base model/correlation matrix from each one
-thp <- c(-1,1,-0.5,0.5)
+thp <- c(-1, 1.0, 1.0, -0.5)
 
 bp <- basepcor(thp, p, iLtheta = gs)
 bp
 
-bp$base[oj, oj]
+round(100*bp$base[oj, oj])
 
 obp <- basepcor(bp$base[oj, oj], iLtheta = ogs)
 obp
@@ -90,8 +90,8 @@ str(xxs)
 par(mfcol = c(2, p-1), mar = c(1.5,1.5,0,0), 
     mgp = c(1,0.5,0), bty = 'n')
 for(k in 1:(p-1)) {
-    hist(xxs[, k], 100, xlab = '', ylab = '', main = '')
-    hist(xxso[, k], 100, xlab = '', ylab = '', main = '')
+    hist(xxs[, k], 50, xlab = '', ylab = '', main = '', border = 'transparent')
+    hist(xxso[, k], 50, xlab = '', ylab = '', main = '', border = 'transparent')
 }
 
 ccs <- t(sapply(
@@ -113,8 +113,8 @@ par(mfrow = c(3, 4), mar = c(1.5,1.5,0,0),
 for(k in 1:(p*(p-1)/2)) {
     d1 <- density(ccs[, k])
     d2 <- density(ccso[, k])
-    h1 <- hist(ccs[, k], 100, plot = FALSE)
-    h2 <- hist(ccso[, k], 100, plot = FALSE)
+    h1 <- hist(ccs[, k], 50, plot = FALSE)
+    h2 <- hist(ccso[, k], 50, plot = FALSE)
     plot(h1, xlab = '', ylab = '', main = '', freq = FALSE,
          xlim = range(h1$breaks, h2$breaks),
          ylim = range(h1$dens, h2$dens),
@@ -123,6 +123,7 @@ for(k in 1:(p*(p-1)/2)) {
          col = cfill[2], border = 'transparent')
     lines(d1, col = 2, lwd = 1)
     lines(d2, col = 4, lwd = 1)
+    abline(v = obp$base[iil[k]], lty = 2)
 }
 legend("topright", c("initial", "ordered"), bty = "n",
        fill = cfill, border = 'transparent', cex = 1.5)
