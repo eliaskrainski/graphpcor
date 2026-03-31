@@ -78,10 +78,12 @@ cgeneric_LKJ <-
       if(dotArgs$debug){
         cat("searching shlib...\n")
       }
-      dotArgs$shlib <- do.call(
-        what = INLAtools::cgeneric_shlib,
-        args = c(list(package = "graphpcor"),
-                    dotArgs))
+      dotArgs$shlib <-
+        INLAtools::cgeneric_shlib(
+          package = "graphpcor",
+          useINLAprecomp = dotArgs$useINLAprecomp,
+          debug = dotArgs$debug
+        )
     }
 
     the_model <- do.call(
