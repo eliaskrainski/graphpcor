@@ -104,10 +104,12 @@ cgeneric_treepcor <-
           dotArgs$useINLAprecomp = FALSE
         }
       }
-      dotArgs$shlib <- do.call(
-        what = INLAtools::cgeneric_shlib,
-        args = c(list(package = "graphpcor"),
-                 dotArgs))
+      dotArgs$shlib <-
+        INLAtools::cgeneric_shlib(
+          package = "graphpcor",
+          useINLAprecomp = dotArgs$useINLAprecomp,
+          debug = dotArgs$debug
+        )
     }
 
     return(

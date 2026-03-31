@@ -89,12 +89,12 @@ cgeneric_graphpcor <-
       if(dotArgs$debug){
         cat("searching shlib...\n")
       }
-      dotArgs$shlib <- do.call(
-        what = INLAtools::cgeneric_shlib,
-        args = list(debug = dotArgs$debug,
-                    package = "graphpcor",
-                    useINLAprecomp = dotArgs$useINLAprecomp)
-      )
+      dotArgs$shlib <-
+        INLAtools::cgeneric_shlib(
+          package = "graphpcor",
+          useINLAprecomp = dotArgs$useINLAprecomp,
+          debug = dotArgs$debug
+          )
     }
 
     if(length(lambda)>1) {

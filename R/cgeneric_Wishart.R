@@ -38,12 +38,12 @@ cgeneric_Wishart <-
       if(dotArgs$debug){
         cat("searching shlib...\n")
       }
-      dotArgs$shlib <- do.call(
-        what = INLAtools::cgeneric_shlib,
-        args = list(debug = dotArgs$debug,
-                    package = "graphpcor",
-                    useINLAprecomp = dotArgs$useINLAprecomp)
-      )
+      dotArgs$shlib <-
+        INLAtools::cgeneric_shlib(
+          package = "graphpcor",
+          useINLAprecomp = dotArgs$useINLAprecomp,
+          debug = dotArgs$debug
+        )
     }
 
     rr <- diag(R[1:n], nrow = n, ncol = n)
