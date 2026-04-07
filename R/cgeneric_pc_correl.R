@@ -180,14 +180,19 @@ cgeneric.basecor <-
   }
 
   ## sigma prior
-  scheck <- pcSigmasCheck(
-    nsigmas = n,
-    sigma.prior.reference = sigma.prior.reference,
-    sigma.prior.probability = sigma.prior.probability
+  if(is.na(packageCheck(
+    name = "INLAtools",
+    minimum_version = "0.1.1.904"
+  ))) {
+    stop("Please update INLAtools")
+  }
+  pcSigmas <- INLAtools::pcParamCheck(
+    npars = npars1,
+    reference = sigma.prior.reference,
+    probability = sigma.prior.probability
   )
-
   if(dotArgs$debug) {
-    print(scheck)
+    print(pcSigmas)
   }
 
   iLvec <- pmatch(model$iLtheta,
@@ -197,17 +202,17 @@ cgeneric.basecor <-
     what = INLAtools::cgenericBuilder,
     args = list(
       model = "inla_cgeneric_pc_correl",
-      n = as.integer(n),                                  ## i0
-      debug = as.logical(dotArgs$debug),                  ## i1
+      n = as.integer(n),                              ## i0
+      debug = as.logical(dotArgs$debug),              ## i1
       shlib = dotArgs$shlib,
-      iLtheta = as.integer(iLvec-1),              ## i2
-      ifixed = as.integer(c(scheck$sigma.fixed, cfixed)), ## i3
-      iparams = as.integer(iparams-1),                    ## i4
-      lambda = as.numeric(lambda),                            ## d0
-      sigmaref = as.numeric(scheck$sigma.prior.reference),    ## d1
-      sigmaprob = as.numeric(scheck$sigma.prior.probability), ## d2
-      lconst = as.numeric(I0d$logDeterminant * 0.5),          ## d3
-      thetabase = as.numeric(theta0),                         ## d4
+      iLtheta = as.integer(iLvec-1),                  ## i2
+      ifixed = as.integer(c(pcSigmas$fixed, cfixed)), ## i3
+      iparams = as.integer(iparams-1),                ## i4
+      lambda = as.numeric(lambda),                   ## d0
+      sigmaref = as.numeric(pcSigmas$reference),     ## d1
+      sigmaprob = as.numeric(pcSigmas$probability),  ## d2
+      lconst = as.numeric(I0d$logDeterminant * 0.5), ## d3
+      thetabase = as.numeric(theta0),                ## d4
       Ihalf = I0d$sqrt
     )
   )

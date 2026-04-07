@@ -234,13 +234,19 @@ cgeneric_graphpcor <-
     }
 
     ## sigma prior
-    scheck <- pcSigmasCheck(
-      nsigmas = npars1,
-      sigma.prior.reference = sigma.prior.reference,
-      sigma.prior.probability = sigma.prior.probability
+    if(is.na(packageCheck(
+      name = "INLAtools",
+      minimum_version = "0.1.1.904"
+    ))) {
+      stop("Please update INLAtools")
+    }
+    pcSigmas <- INLAtools::pcParamCheck(
+      npars = npars1,
+      reference = sigma.prior.reference,
+      probability = sigma.prior.probability
     )
     if(dotArgs$debug) {
-      print(scheck)
+      print(pcSigmas)
     }
 
     the_model <- do.call(
@@ -258,11 +264,11 @@ cgeneric_graphpcor <-
         iuqpac = as.integer(iuqpac-1), ## 7
         ifi = as.integer(ifi-1),       ## 8
         jfi = as.integer(jfi-1),       ## 9
-        ifixed = as.integer(c(scheck$sigma.fixed, cfixed)), ## 10
+        ifixed = as.integer(c(pcSigmas$fixed, cfixed)), ## 10
         iparams = as.integer(iparams-1),              ## 11
         lambda = as.numeric(lambda),                      ## 0
-        sigmaref = as.numeric(scheck$sigma.prior.reference),     ## 1
-        sigmaprob = as.numeric(scheck$sigma.prior.probability),  ## 2
+        sigmaref = as.numeric(pcSigmas$reference),     ## 1
+        sigmaprob = as.numeric(pcSigmas$probability),  ## 2
         lconst = as.numeric(I0d$logDeterminant * 0.5),    ## 3
         thetabase = as.numeric(theta0),                   ## 4
         d0 = as.numeric(basemodel$d0),                    ## 5
