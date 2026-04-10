@@ -86,26 +86,20 @@ attr(g1, 'graph')
 
 png("g01swiss.png", width = 1800, height = 900, res = 300)
 par(mfrow = c(1, 2), mar = c(0,2,0,2))
-set.seed(1)
-plot(g0)
-set.seed(1)
-plot(g1)
+plot(g0, Rgraphviz = TRUE)
+plot(g1, Rgraphviz = TRUE)
 dev.off()
 
 if(FALSE)
     system("eog g01swiss.png &")
 
 c0 <- cgeneric(g0, lambda = 5,
-     base = rep(0, dg0[2]), 
-     useINLAprecomp = FALSE)
+     base = rep(0, dg0[2]))
 c1 <- cgeneric(g1, lambda = 5,
-     base = rep(0, dg1[2]), 
-             useINLAprecomp = FALSE)
+     base = rep(0, dg1[2]))
 cpc <- cgeneric("pc_correl", lambda = 5, n = p,
-                base = rep(0, p*(p-1)/2), 
-                useINLAprecomp = FALSE)
-lkj <- cgeneric("LKJ", eta = 10, n = p,
-                useINLAprecomp = FALSE)
+                base = rep(0, p*(p-1)/2))
+lkj <- cgeneric("LKJ", eta = 10, n = p)
 
 idat <- data.frame(
     i = rep(1:p, each = n),
@@ -153,16 +147,6 @@ c(fit0$misc$nfunc, fit1$misc$nfunc,
 c0fit <- vcov(g0, theta = fit0$mode$theta)
 c1fit <- vcov(g1, theta = fit1$mode$theta)
 cpcfit <- tcrossprod(cholcor(fitcpc$mode$theta, p = p))
-
-if(FALSE)
-    all.equal(chol2inv(chol(as.matrix(prec(lkj, theta = fitcpc$mode$theta)))),
-              chol2inv(chol(as.matrix(prec(cpc, theta = fitcpc$mode$theta)))))
-if(FALSE)
-    all.equal(chol2inv(chol(as.matrix(prec(lkj, theta = fitlkj$mode$theta)))),
-              chol2inv(chol(as.matrix(prec(cpc, theta = fitlkj$mode$theta)))))
-
-all.equal(chol2inv(t(cholcor(fitcpc$mode$theta, p = p))),
-          as.matrix(prec(cpc, theta = fitcpc$mode$theta)))
 
 c0fit.v <- c0fit; c0fit.v[upper.tri(cc, TRUE)] <- NA
 c1fit.v <- c1fit; c1fit.v[upper.tri(cc, TRUE)] <- NA
