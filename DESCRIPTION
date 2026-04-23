@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.24.902
+Version: 0.1.24.903
 Maintainer: Elias Teixeira Krainski <eliaskrainski@gmail.com>
 Authors@R: c(
  person(given = c("Elias"),
@@ -53,14 +53,15 @@ Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.3),
     Matrix,
-    conflicted,
-    igraph,
-    INLAtools (>= 0.0.8),
-    numDeriv
+    INLAtools (>= 0.0.8)
 Imports:
     methods,
     stats,
-    utils
+    utils,
+    numDeriv,
+    igraph,
+    Rgraphviz,
+    conflicted
 Suggests:
     knitr
 BuildVignettes: true

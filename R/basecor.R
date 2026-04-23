@@ -187,14 +187,7 @@ basecor.matrix <- function(
   iparams <- m_iparams_fncheck(m, iparams)
   m0 <- iparams[m]
 
-  theta <- stats::optim(
-    rep(0.0, m0), function(x)
-      mean((tcrossprod(cholcor(
-        theta = x[iparams],
-        p = p,
-        iLtheta = iLtheta,
-        parametrization = parametrization))-base)^2),
-      method = 'BFGS')$par
+  theta <- corr2theta(base)
 
   out <- list(
     base = base,

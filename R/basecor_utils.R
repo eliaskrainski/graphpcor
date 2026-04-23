@@ -59,4 +59,26 @@ cholcor <- function(
   attr(L, "logDeterminant") <- sum(diag(L))*2.0
   return(L)
 }
-
+#' Map a correlation matrix to theta.
+#' @describeIn basecor-utils
+#' This function takes a correlation matrix and return
+#' the parameter vector that generates it with the
+#' canonical partial correlation parametrization.
+#' @param corr matrix as a correlation matrix
+corr2theta <- function(corr) {
+  corr <- as.matrix(corr)
+  stopifnot(nrow(corr) == (p <- ncol(corr)))
+  stopifnot(p>1)
+  stopifnot(all.equal(diag(corr), rep(1.0, p)))
+  L <- t(chol(corr))
+  B <- A <- diag(p)
+  A[, 1] <- L[, 1]
+  if(p>2) {
+    B[2:p, 1] <- sqrt(1 - (A[2:p, 1]^2))
+    for(j in 2:(p-1)) {
+      A[j:p, j] <- L[j:p, j]/B[j:p, j-1]
+      B[j:p, j] <- sqrt(1 - (A[j:p, j]^2)) * B[j:p, j-1]
+    }
+  }
+  atanh(A[which(lower.tri(L))])
+}
