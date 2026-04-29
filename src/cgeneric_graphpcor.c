@@ -398,7 +398,7 @@ double *inla_cgeneric_graphpcor(inla_cgeneric_cmd_tp cmd, double *theta, inla_cg
 	      if (data->ints[10]->ints[i]==0) {
 	        lam = -log(data->doubles[2]->doubles[i]);
 	        lam /= data->doubles[1]->doubles[i];
-	        ret[0] += pclogsigma(theta[k++], lam);
+	        ret[0] += gpc_pc_logsigma(theta[k++], lam);
 	      }
 	    }
 	  }

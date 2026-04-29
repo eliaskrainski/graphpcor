@@ -28,7 +28,7 @@
 #include "graphpcor.h"
 #include "graphpcor_utils.h"
 
-double pclogsigma(double lsigma, double lam)
+double gpc_pc_logsigma(double lsigma, double lam)
 {
 	// PC-prior: \sigma ~ Exp(\lambda)
 	// return log of the PC-prior density for tlog(\sigma).

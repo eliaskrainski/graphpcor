@@ -204,7 +204,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		    if (!sfixed[i]) {
 		      k = i; //theta->ints[i];
 		      lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
-		      ret[0] += pclogsigma(theta[i], lam);
+		      ret[0] += gpc_pc_logsigma(theta[i], lam);
 		    }
 		  }
 		}
