@@ -54,7 +54,6 @@
 #' is used to define an informative prior, as derived in
 #' the pcmultivariate vignette.
 #' @seealso [graphpcor()] and [basepcor()]
-#' @importFrom INLAtools packageCheck graph prec mu initial prior
 #' @returns `cgeneric` object.
 cgeneric_graphpcor <-
   function(model,
@@ -234,38 +233,44 @@ cgeneric_graphpcor <-
     }
 
     ## sigma prior
-    scheck <- pcSigmasCheck(
-      nsigmas = npars1,
-      sigma.prior.reference = sigma.prior.reference,
-      sigma.prior.probability = sigma.prior.probability
+    if(is.na(packageCheck(
+      name = "INLAtools",
+      minimum_version = "0.1.1.904"
+    ))) {
+      stop("Please update INLAtools")
+    }
+    pcSigmas <- INLAtools::pcParamCheck(
+      npars = npars1,
+      reference = sigma.prior.reference,
+      probability = sigma.prior.probability
     )
     if(dotArgs$debug) {
-      print(scheck)
+      print(pcSigmas)
     }
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,
       args = list(
         model = "inla_cgeneric_graphpcor",
-        n = as.integer(n),                 ## 0
-        debug = as.integer(dotArgs$debug), ## 1
+        n = as.integer(n),                 ## i0
+        debug = as.integer(dotArgs$debug), ## i1
         shlib = dotArgs$shlib,
-        ne = as.integer(nEdges),  ## 2
-        nfi = as.integer(nfi),    ## 3
-        ii = as.integer(jj-1),    ## 4
-        jj = as.integer(ii-1),    ## 5
-        iuq = as.integer(iuq-1),  ## 6
-        iuqpac = as.integer(iuqpac-1), ## 7
-        ifi = as.integer(ifi-1),       ## 8
-        jfi = as.integer(jfi-1),       ## 9
-        ifixed = as.integer(c(scheck$sigma.fixed, cfixed)), ## 10
-        iparams = as.integer(iparams-1),              ## 11
-        lambda = as.numeric(lambda),                      ## 0
-        sigmaref = as.numeric(scheck$sigma.prior.reference),     ## 1
-        sigmaprob = as.numeric(scheck$sigma.prior.probability),  ## 2
-        lconst = as.numeric(I0d$logDeterminant * 0.5),    ## 3
-        thetabase = as.numeric(theta0),                   ## 4
-        d0 = as.numeric(basemodel$d0),                    ## 5
+        ne = as.integer(nEdges),  ## i2
+        nfi = as.integer(nfi),    ## i3
+        ii = as.integer(jj-1),    ## i4
+        jj = as.integer(ii-1),    ## i5
+        iuq = as.integer(iuq-1),  ## i6
+        iuqpac = as.integer(iuqpac-1), ## i7
+        ifi = as.integer(ifi-1),       ## i8
+        jfi = as.integer(jfi-1),       ## i9
+        ifixed = as.integer(c(pcSigmas$fixed, cfixed)), ## i10
+        iparams = as.integer(iparams-1),                ## i11
+        lambda = as.numeric(lambda),                   ## d0
+        sigmaref = as.numeric(pcSigmas$reference),     ## d1
+        sigmaprob = as.numeric(pcSigmas$probability),  ## d2
+        lconst = as.numeric(I0d$logDeterminant * 0.5), ## d3
+        thetabase = as.numeric(theta0),                ## d4
+        d0 = as.numeric(basemodel$d0),                 ## d5
         Ihalf = I0d$sqrt
       )
     )

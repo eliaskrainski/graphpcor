@@ -215,7 +215,7 @@ tcrossprod(cholcor(-1, p))
 or invert the `prec` evaluated over a `cgeneric` object for the
 `pc_correl` with
 ```{r prec1}
-solve(prec(Cmodel, theta = -1))
+solve(cgeneric_Q(Cmodel, theta = -1))
 ```
 
 We can use the `inla.hyperpar.sample` to drawn samples from
@@ -288,13 +288,13 @@ cmodel <- cgeneric(
 
 cmodel
 
-graph(cmodel)
+cgeneric_cgeneric_graph(cmodel)
 
-initial(cmodel)
+cgeneric_initial(cmodel)
 
-prec(cmodel, theta = theta3)
+cgeneric_Q(cmodel, theta = theta3)
 
-all.equal(as.matrix(solve(prec(cmodel, theta = theta3))),
+all.equal(as.matrix(solve(cgeneric_Q(cmodel, theta = theta3))),
           c0)
 
 ```

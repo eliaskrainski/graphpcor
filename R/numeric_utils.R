@@ -69,7 +69,6 @@ dspd <- function(M, decomposition = "svd") {
 #' vector to indicate model parameters as fixed.
 #' If not used, all parameters are treated unknown.
 #' @returns matrix with the Hessian
-#' @importFrom numDeriv hessian
 #' @export
 hessian.basecor <- function(
     func,
@@ -106,8 +105,6 @@ hessian.basecor <- function(
 
 #' @describeIn numeric-utils
 #' Evaluate the hessian of the KLD for a `basepcor`.
-#' @importFrom stats cov2cor
-#' @importFrom numDeriv hessian
 #' @export
 hessian.basepcor <- function(
     func,
@@ -144,7 +141,6 @@ hessian.basepcor <- function(
 #' @describeIn numeric-utils
 #' Evaluate the hessian of the KLD for a `graphpcor`
 #' correlation model around a base model.
-#' @importFrom INLAtools is.zero
 #' @export
 hessian.graphpcor <- function(
     func,

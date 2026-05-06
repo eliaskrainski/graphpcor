@@ -8,7 +8,7 @@ edges <- function(object) {
 #' Default method for edges
 #' @export
 edges.default <- function(object) {
-  stop("No 'edges' method for this class!")
+  stop("No edges method for this class!")
 }
 #' @describeIn edges
 #' Extract the edges of a `graphpcor`.
@@ -37,7 +37,6 @@ edges.graphpcor <- function(object) {
 }
 #' @describeIn edges
 #' Extract the edges of a `treepcor`
-#' @importFrom methods new
 #' @export
 edges.treepcor <- function(object) {
   trm <- attr(object, "relationship")

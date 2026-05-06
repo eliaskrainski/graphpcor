@@ -274,7 +274,6 @@ stan_add_graphpcor <- function(x, model, lambda, name) {
 }
 #' @describeIn stan_add add code at the end of each section
 #' @param to_add named list with the code to be added
-#' @importFrom utils tail
 stan_add_code <- function(x, to_add) {
   all_sec_names <- c(
     "functions", "data", "transformed data",

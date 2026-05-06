@@ -56,13 +56,20 @@ cgeneric_LKJ <-
       dotArgs$debug <- FALSE
     }
 
-    scheck <- pcSigmasCheck(
-      nsigmas = n,
-      sigma.prior.reference = sigma.prior.reference,
-      sigma.prior.probability = sigma.prior.probability
+    ## sigma prior
+    if(is.na(packageCheck(
+      name = "INLAtools",
+      minimum_version = "0.1.1.904"
+    ))) {
+      stop("Please update INLAtools")
+    }
+    pcSigmas <- INLAtools::pcParamCheck(
+      npars = n,
+      reference = sigma.prior.reference,
+      probability = sigma.prior.probability
     )
     if(dotArgs$debug) {
-      print(scheck)
+      print(pcSigmas)
     }
 
     k <- 1:(n-1)
@@ -95,9 +102,9 @@ cgeneric_LKJ <-
         eta = as.double(eta),
         lc = as.double(lc),
         shlib = dotArgs$shlib,
-        sfixed = as.integer(scheck$sigma.fixed),
-        sigmaref = as.numeric(scheck$sigma.prior.reference),
-        sigmaprob = as.numeric(scheck$sigma.prior.probability)
+        sfixed = as.integer(pcSigmas$fixed),
+        sigmaref = as.numeric(pcSigmas$reference),
+        sigmaprob = as.numeric(pcSigmas$probability)
       )
     )
 

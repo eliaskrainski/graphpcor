@@ -3,9 +3,12 @@
 \name{basecor-utils}
 \alias{basecor-utils}
 \alias{cholcor}
+\alias{corr2theta}
 \title{Functions used by/to basecor}
 \usage{
 cholcor(theta, p, iLtheta, parametrization = "cpc")
+
+corr2theta(corr)
 }
 \arguments{
 \item{theta}{numeric parameter vector.}
@@ -22,6 +25,8 @@ factorization of the correlation matrix. Default
 parametrization used. The available ones are
 "cpc" (or "CPC") or "sap" (or "SAP").
 See Details. The default is "cpc".}
+
+\item{corr}{matrix as a correlation matrix}
 }
 \value{
 matrix with lower triangle as the Cholesky factor
@@ -33,9 +38,15 @@ the parameter vector under the parametrization,
 }
 \description{
 Functions used by/to basecor
+
+Map a correlation matrix to theta.
 }
 \section{Functions}{
 \itemize{
 \item \code{cholcor()}: Build the (lower) Cholesky for a correlation matrix
+
+\item \code{corr2theta()}: This function takes a correlation matrix and return
+the parameter vector that generates it with the
+canonical partial correlation parametrization.
 
 }}

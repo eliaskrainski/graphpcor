@@ -52,7 +52,7 @@ C0 <- vcov(g, theta = theta0l)
 C0
 
 ## the precision for a correlation matrix
-Q0 <- prec(g, theta = theta0l)
+Q0 <- cgeneric_Q(g, theta = theta0l)
 Q0
 
 all.equal(C0, as.matrix(solve(Q0)))

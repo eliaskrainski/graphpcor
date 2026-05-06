@@ -474,9 +474,9 @@ for(i in 1:K) {
 
 
 nrepl <- 3e3
-prec4 <- replicate(nrepl, prec(graph4, theta = rnorm(4))[il4])
-prec5 <- replicate(nrepl, prec(graph5, theta = rnorm(5))[il4])
-prec5b <- replicate(nrepl, prec(graph5b, theta = rnorm(5))[il4])
+prec4 <- replicate(nrepl, cgeneric_Q(graph4, theta = rnorm(4))[il4])
+prec5 <- replicate(nrepl, cgeneric_Q(graph5, theta = rnorm(5))[il4])
+prec5b <- replicate(nrepl, cgeneric_Q(graph5b, theta = rnorm(5))[il4])
 
 par(mfrow = c(2, 3), mar = c(4,4,1,1), mgp = c(3, 0.5, 0))
 for(i in 1:6) {
