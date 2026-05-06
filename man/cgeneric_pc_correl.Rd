@@ -7,7 +7,7 @@
 \usage{
 cgeneric_pc_correl(n, base, iLtheta, iparams, ...)
 
-cgeneric.basecor(
+\method{cgeneric}{basecor}(
   model,
   lambda,
   sigma.prior.reference,
@@ -85,7 +85,7 @@ the pcmultivariate vignette.
 }
 \section{Functions}{
 \itemize{
-\item \code{cgeneric.basecor()}: Build a \code{cgeneric} for a \code{basecor}.
+\item \code{cgeneric(basecor)}: Build a \code{cgeneric} for a \code{basecor}.
 
 }}
 \references{
