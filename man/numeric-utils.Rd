@@ -10,11 +10,11 @@
 \usage{
 dspd(M, decomposition = "svd")
 
-hessian.basecor(func, x, method = "Richardson", method.args = list(), ...)
+\method{hessian}{basecor}(func, x, method = "Richardson", method.args = list(), ...)
 
-hessian.basepcor(func, x, method = "Richardson", method.args = list(), ...)
+\method{hessian}{basepcor}(func, x, method = "Richardson", method.args = list(), ...)
 
-hessian.graphpcor(func, x, method = "Richardson", method.args = list(), ...)
+\method{hessian}{graphpcor}(func, x, method = "Richardson", method.args = list(), ...)
 }
 \arguments{
 \item{M}{square matrix.}
@@ -55,11 +55,11 @@ Functions for numerical algorithms
 \code{spd}: decompose a positive definite matrix,
 and compute useful elements out of that.
 
-\item \code{hessian.basecor()}: Evaluate the Hessian for a \code{basecor}.
+\item \code{hessian(basecor)}: Evaluate the Hessian for a \code{basecor}.
 
-\item \code{hessian.basepcor()}: Evaluate the hessian of the KLD for a \code{basepcor}.
+\item \code{hessian(basepcor)}: Evaluate the hessian of the KLD for a \code{basepcor}.
 
-\item \code{hessian.graphpcor()}: Evaluate the hessian of the KLD for a \code{graphpcor}
+\item \code{hessian(graphpcor)}: Evaluate the hessian of the KLD for a \code{graphpcor}
 correlation model around a base model.
 
 }}
