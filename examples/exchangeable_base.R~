@@ -1,0 +1,108 @@
+
+library(graphpcor)
+
+## setup
+n <- 50
+p <- 5 ## with p>10, 'ccd' is not available, but 'eb' is ok
+r <- 0.7
+
+## base model
+b <- basecor(toeplitz(c(1,rep(r,p-1))))
+b
+
+## PC-prior at the base model
+m <- cgeneric(b, lambda = 1)
+
+## drawn samples (but n*100)
+x <- matrix(rnorm(n*p*100), ncol = p) %*% t(b$L)
+cor(x)
+
+## take the first n samples
+dataf <- data.frame(
+    r = rep(1:n, p),
+    i = rep(1:p, each = n),
+    y = as.vector(x[1:n, ]) ## first n samples
+)
+
+## model fit
+library(INLA)
+
+fit <- inla(
+    formula = y ~ 0 + f(i, model = m, replicate = r),
+    data = dataf,
+    control.family = list(
+        hyper = list(
+            prec = list(initial = 10, fixed = TRUE)
+        )
+    ),
+    control.inla = list(
+        int.strategy = ifelse(p>10,'eb','ccd')
+    )
+)
+
+fit$misc$nfunc ## lower it providing b$theta as start
+
+plot(fit$mode$theta, b$theta)
+
+tcrossprod(cholcor(b$theta, p = p, parametrization = 'cpc'))
+tcrossprod(cholcor(fit$mode$theta, p = p))
+
+hsamples <- inla.hyperpar.sample(
+    n = 10000,
+    result = fit,
+    intern = TRUE
+)
+
+iiu <- which(upper.tri(b$base))
+ccsamples <- t(sapply(1:nrow(hsamples), function(i) {
+    ll <- cholcor(hsamples[i, ], p = p, parametrization = 'cpc')
+    tcrossprod(ll)[iiu]
+}))
+
+k2 <- k1 <- 1; 
+par(mfrow = c(p, p), mar = c(1.5,1.5,0.1,0.1), mgp = c(0.5,0.5,0), bty = 'n')
+for(i in 1:p) {
+    for(j in 1:p) {
+        if (i==j) {
+            plot(0, 0, pch = paste(i), axes = FALSE, xlab = '', ylab = '')
+        }
+        if(j>i) {
+            xlm <- range(r, ccsamples[, k1])
+            hist(ccsamples[, k1], 50, xlim = xlm,
+                 freq = FALSE, xlab = '', ylab = '', main = '')
+            lines(density(ccsamples[, k1]), lwd = 2, col = 4)
+            abline(v = r, lty = 2, lwd = 2, col = 2)
+            k1 <- k1 + 1
+        }
+        if(i>j) {
+            mk2 <- inla.smarginal(fit$internal.marginals.hyperpar[[k2]])
+            xlm <- range(b$theta[k2], mk2$x)
+            plot(mk2, xlim = xlm,
+                 xlab = '', ylab = '', main = '', type = "l", lwd = 2, col = 4)
+            abline(v = b$theta[k2], lty = 2, lwd = 2, col = 2)
+            k2 <- k2 + 1
+        }
+    }
+}
+
+base <- b$base
+m0 <- length(b$theta)
+aaa <- stats::optim(
+    rep(0.0, m0), function(x)
+      mean((tcrossprod(cholcor(
+        theta = x,
+        p = p))-base)^2), 
+    method = 'BFGS')$par
+aaa
+
+base
+tcrossprod(cholcor(theta = aaa))
+
+      mean((tcrossprod(cholcor(
+        theta = fit$mode$theta,
+        p = p))-base)^2)
+
+L0 <- t(chol(b$base))
+tanh(L0[lower.tri(L0)])
+
+plot(tanh, -5, 5)

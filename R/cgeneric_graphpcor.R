@@ -54,7 +54,6 @@
 #' is used to define an informative prior, as derived in
 #' the pcmultivariate vignette.
 #' @seealso [graphpcor()] and [basepcor()]
-#' @importFrom INLAtools packageCheck graph prec mu initial prior
 #' @returns `cgeneric` object.
 cgeneric_graphpcor <-
   function(model,
@@ -90,7 +89,7 @@ cgeneric_graphpcor <-
         cat("searching shlib...\n")
       }
       dotArgs$shlib <-
-        INLAtools::cgeneric_shlib(
+        INLAtools::cgeneric_shlib_path(
           package = "graphpcor",
           useINLAprecomp = dotArgs$useINLAprecomp,
           debug = dotArgs$debug

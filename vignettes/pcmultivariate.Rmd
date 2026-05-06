@@ -866,7 +866,7 @@ c_model <- cgeneric(
     base = C0)
 
 ## check: evaluate at the base model
-solve(prec(c_model, theta = th0))
+solve(cgeneric_Q(c_model, theta = th0))
 ```
 
 Now, query the `cgeneric` with

@@ -38,9 +38,9 @@ summary(tree1)
 
 plot(tree1)
 
-prec(tree1)
+cgeneric_Q(tree1)
 
-(q1 <- prec(tree1, theta = c(0)))
+(q1 <- cgeneric_Q(tree1, theta = c(0)))
 
 v1 <- chol2inv(chol(q1))
 
@@ -68,14 +68,14 @@ tree2
 dim(tree2)
 summary(tree2)
 
-prec(tree2)
-prec(tree2, theta = c(0, 0))
-prec(tree2, theta = c(-1, 1))
+cgeneric_Q(tree2)
+cgeneric_Q(tree2, theta = c(0, 0))
+cgeneric_Q(tree2, theta = c(-1, 1))
 
 vcov(tree2, raw = TRUE)
 cov2cor(vcov(tree2, raw = TRUE))
 
-cov2cor(solve(prec(tree2, theta = c(0,0))))
+cov2cor(solve(cgeneric_Q(tree2, theta = c(0,0))))
 vcov(tree2, theta = c(0,0))
 vcov(tree2, theta = c(log(4:1), 0,0))
 
@@ -98,12 +98,12 @@ par(mfrow = c(1, 2), mar = c(0,0,0,0))
 plot(tree2)
 plot(tree2b)
 
-prec(tree2)
-prec(tree2b)
+cgeneric_Q(tree2)
+cgeneric_Q(tree2b)
 
 ## prec is not equal
-all.equal(prec(tree2, theta = c(0, 0)),
-          prec(tree2b, theta = c(0, 0)))
+all.equal(cgeneric_Q(tree2, theta = c(0, 0)),
+          cgeneric_Q(tree2b, theta = c(0, 0)))
 
 ## vcov is equal
 all.equal(vcov(tree2, theta = c(0, 0)),

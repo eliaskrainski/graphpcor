@@ -34,7 +34,6 @@ Laplacian.matrix <- function(x) {
 }
 #' @describeIn Laplacian
 #' The Laplacian of a Matrix
-#' @importFrom Matrix colSums Diagonal
 #' @export
 Laplacian.Matrix <- function(x) {
   o <- Sparse(x)

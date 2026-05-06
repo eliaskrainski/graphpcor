@@ -173,7 +173,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 	{
 		// return c(P, initials)
 		// where P is the number of hyperparameters
-		ret = Calloc(nth + 1, double);
+		ret = Calloc(nunkparams[2] + 1, double);
 		ret[0] = nunkparams[2];
 		for (i = 0; i < nunkparams[2]; i++) {
 			ret[1 + i] = -2.0;
@@ -204,7 +204,7 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		    if (!sfixed[i]) {
 		      k = i; //theta->ints[i];
 		      lam = -log(sigmaprob->doubles[k]) / sigmaref->doubles[k];
-		      ret[0] += pclogsigma(theta[i], lam);
+		      ret[0] += gpc_pc_logsigma(theta[i], lam);
 		    }
 		  }
 		}

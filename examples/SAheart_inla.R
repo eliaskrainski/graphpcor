@@ -130,6 +130,26 @@ for(i in 1:nrow(mst)) {
 }
 G0
 
+rg <- function(g) {
+    Q0 <- Laplacian(g)
+    n <- nrow(Q0)
+    il <- lower.tri(Q0)
+    iql0 <- which((abs(Q0)>0) & il)
+    Q0 <- Q0 + Diagonal(n)
+    L0 <- chol(Q0)
+    ill0 <- which(abs(L0)>0)
+    ro <- inla.qreordering(Q0)
+    Q1 <- Q0[ro$reordering, ro$reordering] + Diagonal(n)
+    L1 <- chol(Q1)
+    ill1 <- which(abs(L1)>0)
+    list(i0=ill0, i1=ill1)
+}
+
+str(rg(g0))
+
+
+
+
 library(graphpcor)
 g0 <- graphpcor(G0)
 (dg0 <- dim(g0))
@@ -190,11 +210,9 @@ plot(g1, Rgraphviz=TRUE)
 as.matrix(attr(g1, "graph"))
 
 cg0 <- cgeneric(g0, lambda = 10,
-                base = rep(0, dg0[2]), 
-                useINLAprecomp = FALSE)
+                base = rep(0, dg0[2]))
 cg1 <- cgeneric(g1, lambda = 10,
-                base = rep(0, dg1[2]), 
-                useINLAprecomp = FALSE)
+                base = rep(0, dg1[2]))
 
 library(INLA)
 

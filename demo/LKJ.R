@@ -12,11 +12,11 @@ cc <- matrix(c(1,.8,-.625, 0.8,1,-.5, -0.625,-.5,1), 3)
 th <- bb$theta
 
 ## p(theta | eta)
-prior(cglkj, theta = th)
+cgeneric_prior(cglkj, theta = th)
 
 ## precision inverse
-solve(prec(cglkj, theta = th))
-solve(prec(cglkj, theta = c(0,0,0)))
-solve(prec(cglkj, theta = c(1,1,1)))
+solve(cgeneric_Q(cglkj, theta = th))
+solve(cgeneric_Q(cglkj, theta = c(0,0,0)))
+solve(cgeneric_Q(cglkj, theta = c(1,1,1)))
 
 

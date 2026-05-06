@@ -28,7 +28,7 @@
 #include "graphpcor.h"
 #include "graphpcor_utils.h"
 
-double pclogsigma(double lsigma, double lam)
+double gpc_pc_logsigma(double lsigma, double lam)
 {
 	// PC-prior: \sigma ~ Exp(\lambda)
 	// return log of the PC-prior density for tlog(\sigma).
@@ -439,8 +439,8 @@ void dl2fullQ(int n, double *d, double *l, double *qq)
 
 //		printMat(aa,n,n,"aa:\n");
 
-		char tra = 'N';				       // upper in C is lower in Fortran
-		char trb = 'T';
+		const char tra = 'N';				       // upper in C is lower in Fortran
+		const char trb = 'T';
 		double alpha = 1, beta = 0;
 		dgemm_(&tra, &trb, &n, &n, &n, &alpha, &aa[0], &n, &bb[0], &n, &beta, &qq[0], &n, F_ONE);
 

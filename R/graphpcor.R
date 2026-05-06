@@ -76,8 +76,6 @@ graphpcor.character <- function(...) {
 }
 #' @describeIn graphpcor
 #' Build a `graphpcor` from a matrix object
-#' @importFrom stats as.formula
-#' @importFrom INLAtools is.zero
 #' @export
 graphpcor.matrix <- function(...) {
   return(graphpcor(Sparse(list(...)[[1]])))
@@ -113,9 +111,6 @@ graphpcor.matrix <- function(...) {
 }
 #' @describeIn graphpcor
 #' Build a `graphpcor` for a Matrix object
-#' @importFrom stats as.formula
-#' @importFrom Matrix t
-#' @importFrom INLAtools Sparse upperPadding
 #' @export
 graphpcor.Matrix <- function(...) {
   a <- list(...)[[1]]
@@ -186,8 +181,6 @@ dim.graphpcor <- function(x, ...) {
 #' The `plot` method for a `graphpcor`
 #' @param y not used
 #' @method plot graphpcor
-#' @importFrom methods getMethod
-#' @importFrom igraph graph_from_adjacency_matrix
 #' @export
 plot.graphpcor <- function(x, y, ...) {
     ne <- dim(x)
@@ -198,8 +191,15 @@ plot.graphpcor <- function(x, y, ...) {
     dotArgs <- list(...)
     if(is.null(dotArgs$Rgraphviz) ||
        !dotArgs$Rgraphviz) { ## depends on igraph
+      higraph <- try(do.call(
+        what = "require",
+        args = list(package = "igraph")), silent = TRUE)
+      if(inherits(higraph, "try-error")) {
+        cat(higraph)
+        stop("Please install 'igraph'!")
+      }
       a <- upperPadding(attr(x, "graph"))
-      g <- graph_from_adjacency_matrix(
+      g <- igraph::graph_from_adjacency_matrix(
         adjmatrix = a
       )
       if(is.null(list(...)$arrow.mode)) {
@@ -277,7 +277,6 @@ plot.graphpcor <- function(x, y, ...) {
   }
 #' @describeIn graphpcor
 #' The `vcov` method for a `graphpcor`
-#' @importFrom stats vcov
 #' @export
 vcov.graphpcor <-
  function(object, ...) {
@@ -332,10 +331,8 @@ vcov.graphpcor <-
 #' @describeIn graphpcor
 #' The precision method for 'graphpcor'
 #' @param model graphpcor model object
-#' @importFrom Matrix Matrix forceSymmetric
-#' @importFrom INLAtools Sparse prec
 #' @export
-prec.graphpcor <- function(model, ...) {
+gphcQ <- function(model, ...) {
   V <- vcov(model, ...)
   Q <- chol2inv(chol(V))
   Q[is.zero(Q)] <- 0
@@ -344,7 +341,6 @@ prec.graphpcor <- function(model, ...) {
 }
 #' @describeIn graphpcor
 #' The `cgeneric` method for `graphpcor` uses [cgeneric_graphpcor()]
-#' @importFrom INLAtools cgeneric
 #' @export
 cgeneric.graphpcor <- function(model, ...) {
   args <- list(...)

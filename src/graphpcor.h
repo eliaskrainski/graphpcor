@@ -71,7 +71,7 @@ void dgeqp3_(int *N, int *M, double *A, int *LDA, int *PIVOT, double *tau, doubl
 
 void dsyrk_(char *uplo, char *transa, int *n, int *k, double *alpha, double *a, int *lda, double *beta, double *c, int *ldc, fortran_charlen_t);
 
-void dgemv_(char *trans, int *M, int *N, double *alpha,
+void dgemv_(const char *trans, int *M, int *N, double *alpha,
 	    double *A, int *LDA, double *x, int *incx, double *beta, double *y, int *incy, fortran_charlen_t);
 
 void dtpttr_(char *uplo, int *n, double *ap, double *a, int *lda, int *info, fortran_charlen_t);
@@ -83,7 +83,7 @@ void dtrmm_(char *side, char *uplo, char *transa, char *diag,
 void dsymm_(char *side, char *uplo,
 	    int *m, int *n, double *alpha, double *a, int *lda, double *b, int *ldb, double *beta, double *c, int *ldc, fortran_charlen_t);
 
-void dgemm_(char *transa, char *transb,
+void dgemm_(const char *transa, const char *transb,
 	    int *m, int *n, int *k, double *alpha, double *a, int *lda, double *b, int *ldb, double *beta, double *c, int *ldc, fortran_charlen_t);
 
 void dgesv_(int *N, int *NRHS, double *A, int *LDA, int *IPIV, double *B, int *LDB, int *INFO, fortran_charlen_t);
@@ -103,5 +103,5 @@ inla_cgeneric_func_tp inla_cgeneric_treepcor;
 inla_cgeneric_func_tp inla_cgeneric_kronecker;
 inla_cgeneric_func_tp inla_cgeneric_LKJ;
 inla_cgeneric_func_tp inla_cgeneric_Wishart;
-inla_cgeneric_func_tp inla_cgeneric_pc_prec_correl;
+inla_cgeneric_func_tp inla_cgeneric_pc_correl;
 inla_cgeneric_func_tp inla_cgeneric_graphpcor;

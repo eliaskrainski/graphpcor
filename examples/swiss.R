@@ -61,6 +61,7 @@ for(i in 1:nrow(mst)) {
 G0
 
 library(graphpcor)
+detach(".conflicts")
 g0 <- graphpcor(G0)
 (dg0 <- dim(g0))
 
@@ -171,6 +172,7 @@ cols <- rgbcfn((bkc[-1] + bkc[1:ncols])/2)
 
 c(length(bkc), length(cols))
 
+library(igraph)
 ig0v <- graph_from_adjacency_matrix(
     upperPadding(attr(g0, "graph")))
 ig0v$layout <- layout.fruchterman.reingold ##layout.kamada.kawai

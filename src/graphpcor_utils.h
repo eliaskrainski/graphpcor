@@ -87,7 +87,7 @@
 
 
 double cov2kld(int n, double *C0, double *C1);
-double pclogsigma(double lsigma, double lam);
+double gpc_pc_logsigma(double lsigma, double lam);
 double pcmultivar(int m, double param, double *theta0,
                   double *halfI, double *ldhI, double *theta);
 void aethetafn(int m, double *th, double *th0, int *isfix, int *ith, double *ath);

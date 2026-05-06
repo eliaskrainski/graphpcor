@@ -53,8 +53,6 @@ x2rphi <- function(x) {
 #' @param R scaling matrix (square root of the Hessian
 #' around the base model)
 #' @param theta.base numeric vector of the base model
-#' @importFrom stats runif
-#' @importFrom stats rexp
 rtheta <- function(n, lambda=1, R, theta.base) {
   m <- n*(n-1)/2
   r <- rexp(1, lambda) ## radial coordinate

@@ -189,12 +189,12 @@ to build the correlation matrix.
 First, we build the precision matrix structure
 (that is not yet a precision matrix):
 ```{r qs1, include = chinclude}
-prec(tree1)
+tpcQ(tree1)
 ```
 and we can use inform the log of $\gamma_1$, 
 which is the standard error for $p_1$, with:
 ```{r q, include = chinclude}
-q1 <- prec(tree1, theta = 0)
+q1 <- tpcQ(tree1, theta = 0)
 q1
 ```
 
@@ -257,7 +257,7 @@ and $\gamma_2^2$ the conditional variance of $p_2$.
 For $\gamma_1 = \gamma_2 = 1$, 
 the precision matrix can be obtained with:
 ```{r q2}
-q2 <- prec(tree2, theta = c(0, 0))
+q2 <- tpcQ(tree2, theta = c(0, 0))
 q2
 ```
 
@@ -289,7 +289,7 @@ summary(tree2b)
 
 This gives the precision matrix as 
 ```{r prec2}
-q2b <- prec(tree2b, theta = c(0, 0))
+q2b <- tpcQ(tree2b, theta = c(0, 0))
 q2b
 ``` 
 
@@ -396,14 +396,14 @@ haveINLA <- FALSE
 
 Perform some checks (INLA is required):
 ```{r ccheck, eval = haveINLA}
-graph(cmodel)
-initial(cmodel)
+cgeneric_cgeneric_graph(cmodel)
+cgeneric_initial(cmodel)
 prior(cmodel, theta = rep(0, sum(np)))
 prior(cmodel, theta = rep(1, sum(np)))
 
 np
-prec(cmodel, theta = rep(0, sum(np)))
-(Qc <- prec(cmodel, theta = theta1))
+cgeneric_Q(cmodel, theta = rep(0, sum(np)))
+(Qc <- cgeneric_Q(cmodel, theta = theta1))
 all.equal(Vg, as.matrix(solve(Qc)))
 ```
 
