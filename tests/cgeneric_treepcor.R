@@ -30,7 +30,7 @@ cmodel <- cgeneric(
     sigma.prior.reference = rep(1, np[1]),
     sigma.prior.probability = rep(0.05, np[1]))
 
-(Qg <- prec(cmodel, theta = theta1))
+(Qg <- cgeneric_Q(cmodel, theta = theta1))
 all.equal(Vg, as.matrix(solve(Qg)), check.attributes = FALSE)
 
 ## some data
@@ -49,14 +49,14 @@ datar <- data.frame(
 )
 
 
-graph(cmodel)
-initial(cmodel)
-prior(cmodel, theta = rep(0, sum(np)))
-prior(cmodel, theta = rep(1, sum(np)))
+cgeneric_graph(cmodel)
+cgeneric_initial(cmodel)
+cgeneric_prior(cmodel, theta = rep(0, sum(np)))
+cgeneric_prior(cmodel, theta = rep(1, sum(np)))
 
 np
-prec(cmodel, theta = rep(0, sum(np)))
-(Qc <- prec(cmodel, theta = theta1))
+cgeneric_Q(cmodel, theta = rep(0, sum(np)))
+(Qc <- cgeneric_Q(cmodel, theta = theta1))
 all.equal(Vg, as.matrix(solve(Qc)), check.attributes = FALSE)
 
 m1 <- y ~ f(i, model = cmodel, replicate = r)

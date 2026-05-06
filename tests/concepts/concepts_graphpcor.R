@@ -43,7 +43,7 @@ C0 <- vcov(g, theta = theta0l)
 C0
 
 ## the precision for a correlation matrix
-Q0 <- prec(g, theta = theta0l)
+Q0 <- cgeneric_Q(g, theta = theta0l)
 Q0
 
 all.equal(C0, as.matrix(solve(Q0)))
@@ -156,7 +156,7 @@ if(FALSE) { ## this give an error because Ci is not compatible
         sigma.prior.probability = rep(0.5, ne[1]))
 }
 
-graph(cmodel)
+cgeneric_graph(cmodel)
 
 ## define some model parameters
 theta1 <- c(
@@ -164,9 +164,9 @@ theta1 <- c(
     l = rep(-1, ne[2])
 )
 
-prior(cmodel, theta = rnorm(sum(ne)))
-prior(cmodel, theta = rnorm(sum(ne)))
-prior(cmodel, theta = theta1)
+cgeneric_prior(cmodel, theta = rnorm(sum(ne)))
+cgeneric_prior(cmodel, theta = rnorm(sum(ne)))
+cgeneric_prior(cmodel, theta = theta1)
 
 V1 <- vcov(g, theta = theta1)
 V1
@@ -176,7 +176,7 @@ C1
 
 round(solve(V1), 2)
 
-Q1c <- prec(cmodel, theta = theta1)
+Q1c <- cgeneric_Q(cmodel, theta = theta1)
 Q1c
 
 round(Q1c, 2)
@@ -185,7 +185,7 @@ all.equal(solve(as.matrix(Q1c)),
           vcov(g, theta = theta1))
 
 all.equal(Q1c, 
-          prec(g, theta = theta1))
+          cgeneric_Q(g, theta = theta1))
 
 dataf <- list(
     i = 1:ne[1],
@@ -201,5 +201,5 @@ fit0 <- inla(
     control.mode = list(theta = theta1, fixed = TRUE)
 )
 
-all.equal(Q1c, prec(fit0))
+all.equal(Q1c, cgeneric_Q(fit0))
 

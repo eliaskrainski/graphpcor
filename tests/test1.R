@@ -50,18 +50,15 @@ gmodel <- cgeneric(
     model = g1,
     sigma.prior.reference = rep(1, nc),
     sigma.prior.probability = rep(0.05, nc),
-    lambda = 2,
-    useINLAprecomp = FALSE,
-    debug =  0 ## bigger debug prints llllooootttttsss of details
-)
+    lambda = 2)
 
-initial(gmodel)
+cgeneric_initial(gmodel)
 
-prior(gmodel, theta = initial(gmodel))
+cgeneric_prior(gmodel, theta = cgeneric_initial(gmodel))
 
-graph(gmodel)
-prec(gmodel, theta = initial(gmodel))
-prec(gmodel, theta = initial(gmodel), optimize = TRUE)
+cgeneric_graph(gmodel)
+cgeneric_Q(gmodel, theta = cgeneric_initial(gmodel))
+cgeneric_Q(gmodel, theta = cgeneric_initial(gmodel), optimize = TRUE)
 
 ff <- y ~ 0 +
     f(idx1, model = gmodel, replicate = repl) +

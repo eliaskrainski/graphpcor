@@ -28,7 +28,7 @@ cmodel <- cgeneric(
     sigma.prior.reference = rep(1, ne[1]),
     sigma.prior.probability = rep(0.5, ne[1]))
 
-graph(cmodel)
+cgeneric_graph(cmodel)
 
 ## define initial L
 theta.low <- rep(-1, ne[2])
@@ -107,7 +107,7 @@ round(matrix(cmodel$f$cgeneric$data$matrices$Ihalf[-(1:2)], ne[2]), 3)
 ### [3,] -0.014 -0.014  1.086 0.000
 ### [4,]  0.000  0.000  0.000 1.086
 
-Q1c <- prec(cmodel, theta = theta1)
+Q1c <- cgeneric_Q(cmodel, theta = theta1)
 
 round(Q1c, 4)
 round(Q1 <- chol2inv(chol(V1)), 4)
@@ -119,9 +119,9 @@ round(Q1 <- chol2inv(chol(V1)), 4)
 
 all.equal(Q1, as.matrix(Q1c))
 
-prior(cmodel, theta = rnorm(sum(ne)))
-prior(cmodel, theta = rnorm(sum(ne)))
-prior(cmodel, theta = theta1)
+cgeneric_prior(cmodel, theta = rnorm(sum(ne)))
+cgeneric_prior(cmodel, theta = rnorm(sum(ne)))
+cgeneric_prior(cmodel, theta = theta1)
 
 
 dataf <- list(
@@ -137,7 +137,7 @@ fit1 <- inla(
     control.mode = list(theta = theta1, fixed = TRUE)
 )
 
-all.equal(Q1c, prec(fit1))
+all.equal(Q1c, cgeneric_Q(fit1))
 
 
 ## PRIOR
@@ -245,7 +245,7 @@ str(ths0)
 ## number of evals /M
 length(th0) * ncol(ths0) * m /1e6
 
-str(prior(lmodels[[1]], theta = matrix(rnorm(m*3), m)))
+str(cgeneric_prior(lmodels[[1]], theta = matrix(rnorm(m*3), m)))
 
 library(parallel)
 system.time(pth <- mclapply(lmodels, function(cm) {
@@ -255,7 +255,7 @@ system.time(pth <- mclapply(lmodels, function(cm) {
         thr[i, ] <- 0.0
         sapply(th0, function(th) {
             thr[i, ] <- th
-            sum(exp(prior(cm, theta = thr) + log(hth)*(m-1)))
+            sum(exp(cgeneric_prior(cm, theta = thr) + log(hth)*(m-1)))
         })
     })
 }, mc.cores = length(lmodels)))
@@ -301,22 +301,22 @@ ptheta <- function(theta, H) {
 
 all.equal(C0,
           vcov(gpc, theta = theta0))
-prec(gpc, theta = theta0)
+cgeneric_Q(gpc, theta = theta0)
 
 cpc <- cgeneric(gpc, base = theta0, lambda = 5,
           ##      debug = 100000,
                 useINLAprecomp = FALSE)
 
-graph(cpc)
+cgeneric_graph(cpc)
 
-all.equal(as.matrix(prec(cpc, theta = theta0)),
-          as.matrix(prec(gpc, theta = theta0)))
+all.equal(as.matrix(cgeneric_Q(cpc, theta = theta0)),
+          as.matrix(cgeneric_Q(gpc, theta = theta0)))
 
-all.equal(as.matrix(prec(cpc, theta = theta0+c(0.33, -0.1))),
-          as.matrix(prec(gpc, theta = theta0+c(0.33, -0.1))))
+all.equal(as.matrix(cgeneric_Q(cpc, theta = theta0+c(0.33, -0.1))),
+          as.matrix(cgeneric_Q(gpc, theta = theta0+c(0.33, -0.1))))
 
 ## multiple theta (columns)
-prior(cpc, theta = cbind(c(0,0), c(1,1)))
+cgeneric_prior(cpc, theta = cbind(c(0,0), c(1,1)))
 
 h0 <- 0.05
 x0 <- seq(-10+h0/2, 10-h0/2, h0)
@@ -326,7 +326,7 @@ xx <- t(expand.grid(x0 + theta0[1],
 
 summary(t(xx))
 
-dxx <- prior(cpc, theta = xx)
+dxx <- cgeneric_prior(cpc, theta = xx)
 
 dxx2 <- matrix(exp(dxx), nx0)
 

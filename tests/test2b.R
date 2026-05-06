@@ -80,7 +80,7 @@ mcorr.fit <- cov2cor(vcov(
     theta = fit$mode$theta[nc+1:np]))
 mcorr.fit
 
-q.fit <- prec(gmodel, theta = fit$mode$theta)
+q.fit <- cgeneric_Q(gmodel, theta = fit$mode$theta)
 mcov.fit <- solve(q.fit)
 
 mcov

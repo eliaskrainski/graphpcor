@@ -85,20 +85,20 @@ vmodel <- cgeneric(
     debug = 1e9,
     useINLAprecomp = FALSE)
 
-prior(vmodel, theta = c(logsigmas, theta0l))
+cgeneric_prior(vmodel, theta = c(logsigmas, theta0l))
 
 theta1 <- c(d = logsigmas,
             l = theta.low)
-prior(vmodel, theta = theta1)
+cgeneric_prior(vmodel, theta = theta1)
 
 mu(vmodel)
 
-initial(vmodel)
+cgeneric_initial(vmodel)
 
-graph(vmodel) ## the structure of the precision
+cgeneric_graph(vmodel) ## the structure of the precision
 
 all.equal(solve(V1),
-          as.matrix(prec(vmodel, theta = theta1)))
+          as.matrix(cgeneric_Q(vmodel, theta = theta1)))
 
 ## Note: here 'model' is a 'graphpcor'
 cmodel <- cgeneric(
@@ -108,17 +108,17 @@ cmodel <- cgeneric(
     debug = 0,
     useINLAprecomp = FALSE)
 
-c(prior(cmodel, theta = theta0l), 
-  prior(cmodel, theta = theta.low))
-prior(cmodel, theta = cbind(theta0l, theta.low))
+c(cgeneric_prior(cmodel, theta = theta0l), 
+  cgeneric_prior(cmodel, theta = theta.low))
+cgeneric_prior(cmodel, theta = cbind(theta0l, theta.low))
 
-prior(cmodel, theta = rnorm(ne[2]*5, ne[2]))
+cgeneric_prior(cmodel, theta = rnorm(ne[2]*5, ne[2]))
 
 all.equal(solve(C0),
-          as.matrix(prec(cmodel, theta = theta.low)))
+          as.matrix(cgeneric_Q(cmodel, theta = theta.low)))
 
-all.equal(prec(g, theta = theta.low),
-          prec(cmodel, theta = theta.low))
+all.equal(cgeneric_Q(g, theta = theta.low),
+          cgeneric_Q(cmodel, theta = theta.low))
 
 dataf <- list(
     i = 1:ne[1],
@@ -134,5 +134,5 @@ fit1 <- inla(
     control.mode = list(theta = theta.low, fixed = TRUE)
 )
 
-all.equal(prec(cmodel, theta = theta.low), prec(fit1))
+all.equal(cgeneric_Q(cmodel, theta = theta.low), prec(fit1))
 

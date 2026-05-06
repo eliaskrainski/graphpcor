@@ -74,7 +74,7 @@ for(i in 1:length(etas)) {
     plot(function(x) sapply(x, function(xx)
         ptheta(xx, etas[i], 2)), -3, 3, n = 601, 
         add = TRUE, lwd = 3, col = i+1)
-    lines(sth, exp(prior(cm, theta = matrix(sth,1))), lty = 2)
+    lines(sth, exp(cgeneric_prior(cm, theta = matrix(sth,1))), lty = 2)
 }
 
 ################################################################
@@ -102,21 +102,21 @@ cmodel <- cgeneric(
 
 ##str(cmodel)
 
-graph(cmodel)
+cgeneric_graph(cmodel)
 
-initial(cmodel)
+cgeneric_initial(cmodel)
 
-prec(cmodel, theta = theta1)
+cgeneric_Q(cmodel, theta = theta1)
 
-all.equal(as.matrix(solve(prec(cmodel, theta = theta1))),
+all.equal(as.matrix(solve(cgeneric_Q(cmodel, theta = theta1))),
           R)
 
-prior(cmodel, theta = theta1)
+cgeneric_prior(cmodel, theta = theta1)
 
 th3 <- t(expand.grid(th1 = sth, th2 = sth, th3 = sth))
 str(th3)
 
-p3 <- array(prior(cmodel, theta = th3), rep(nsth, 3))
+p3 <- array(cgeneric_prior(cmodel, theta = th3), rep(nsth, 3))
 
 par(mfrow = c(2, 2), mar = c(3, 3, 0.5, 0.5),
     mgp = c(2, 0.5, 0), bty = "n")
@@ -166,7 +166,7 @@ prholabs <- c(
 par(mfrow = c(3, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(e in c(1/2, 3, 30)) {
     cm <- cgeneric("LKJ", n = n, eta = e, useINLAprecomp = FALSE)
-    p3a <- array(exp(prior(cm, theta = th3)), rep(nsth, 3))
+    p3a <- array(exp(cgeneric_prior(cm, theta = th3)), rep(nsth, 3))
     itest <- inla(
         y ~ 0 + f(i, model = cm),
         data = list(y = rep(NA, n), i = 1:n),
@@ -227,7 +227,7 @@ cfam <- list(
 par(mfrow = c(3, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(e in c(1/2, 3, 30)) {
     cmodel <- cgeneric("LKJ", n = n, eta = e, useINLAprecomp = FALSE)
-    p3a <- array(exp(prior(cmodel, theta = th3)), rep(nsth, 3))
+    p3a <- array(exp(cgeneric_prior(cmodel, theta = th3)), rep(nsth, 3))
     itests <- lapply(datf3, function(ddf)
         inla(formula = fr, 
              data = ddf, 

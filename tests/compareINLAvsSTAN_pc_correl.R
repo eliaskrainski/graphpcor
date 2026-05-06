@@ -5,6 +5,8 @@ library(coda)
 library(rstan)
 options(mc.cores = 4L)
 
+conflicted::conflicts_prefer(rstan::traceplot)
+
 ## STAN model code without the prior for L, as LCorr
 Scode0 <- "
 data {
@@ -50,10 +52,15 @@ n <- 50
 set.seed(2)
 xx <- matrix(rnorm(n * 3), n) %*% chol(corr)
 
-Sdata0 <- list(p = as.integer(3),
-               n = as.integer(n),
-               y = xx, 
-               mu = rep(0, 3))
+corr.obs <- cor(xx)
+th.obs <- graphpcor:::corr2theta(corr.obs)
+th.obs
+
+Sdata0 <- list(
+    p = as.integer(3),
+    n = as.integer(n),
+    y = xx, 
+    mu = rep(0, 3))
 
 str(Sdata0)
 
@@ -119,7 +126,7 @@ ires <- lapply(ifits, function(ri) {
         tcrossprod(cholcor(hs[i, ], 3))[iil]))
 })
 
-cols <- c(rgb(1,0,0,.7), rgb(0,0,1,.7), 1, 6)
+cols <- c(rgb(1,0,0,.7), rgb(0,0,1,.7), 1, 6, 5)
 xlbs <- list(bquote(rho[2~","~1]),
              bquote(rho[3~","~1]),
              bquote(rho[3~","~2]))
@@ -128,7 +135,7 @@ par(mfrow = c(4, 6), mar = c(3,3,0.1,0.1),
     mgp = c(1.5,0.5,0), bty = "n")
 for(i in 1:4) {
     for(j in 1:3) {
-        thj <- c(th.true[j], th.base[j])
+        thj <- c(th.true[j], th.base[j], th.obs[j])
         h.thj <- hist(stan.th.samples[[i]][, j], 100, plot = FALSE)
         ds.thj <- density(stan.th.samples[[i]][, j])
         sj <- inla.smarginal(ifits[[i]]$internal.marginals.hyperpar[[j]])
@@ -140,7 +147,7 @@ for(i in 1:4) {
              border = 'transparent')
         lines(ds.thj, col = cols[1], lwd = 2, lty = 2)        
         lines(sj, col = cols[2], lwd = 2, lty = 2)
-        abline(v = thj, lty = 3, col = cols[3:4])
+        abline(v = thj, lty = 3, col = cols[3:5])
         if(j==1)
             legend("topleft", "", bty = "n",
                    title = as.expression(bquote(lambda==.(lambdas[i]))))
@@ -149,7 +156,7 @@ for(i in 1:4) {
         h.cj <- hist(stan.cor.samples[[i]][, j], 100, plot = FALSE)
         ds <- density(stan.cor.samples[[i]][, j])
         di <- density(ires[[i]][, j])
-        ccj <- c(corr[iil[j]], baseC$base[iil[j]])
+        ccj <- c(corr[iil[j]], baseC$base[iil[j]], corr.obs[iil[j]])
         plot(h.cj, freq = FALSE, main = "",
              xlim = range(ccj, h.cj$breaks, ds$x, di$x),
              ylim = range(h.cj$density, ds$y, di$y),
@@ -157,10 +164,10 @@ for(i in 1:4) {
              border = "transparent")
         lines(ds, col = cols[1], lwd = 2, lty = 2)
         lines(di, col = cols[2], lwd = 2, lty = 2)
-        abline(v = ccj, lty = 3, col = cols[3:4])
+        abline(v = ccj, lty = 3, col = cols[3:5])
     }
     if(i==1)
         legend("topright", bty = "n",
-               c("STAN", "INLA", "TRUE", "base"),
-               col = c(cols), lty = c(2,2,3,3))
+               c("STAN", "INLA", "TRUE", "base", "Obs."),
+               col = c(cols), lty = c(2,2,3,3,2))
 }

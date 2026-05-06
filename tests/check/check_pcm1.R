@@ -130,7 +130,7 @@ for(i in 1:nlambs) {
         base = 0,
         useINLAprecomp = FALSE)
     print(integrate(
-      function(th) exp(prior(Cmodel, theta = th)), 
+      function(th) exp(cgeneric_prior(Cmodel, theta = th)), 
       lower = -5, upper = 5)) 
 }
 
@@ -143,7 +143,7 @@ for(l in 1:2) {
             lambda = lseq[k],
             base = 0,
             useINLAprecomp = FALSE)
-        plot(function(x) exp(prior(Cmodel, theta = matrix(x, 1) )), 
+        plot(function(x) exp(cgeneric_prior(Cmodel, theta = matrix(x, 1) )), 
              -3, 3, n=1001, 
              log = ifelse(l==1, "", "y"),
              main = as.expression(bquote(lambda==.(lseq[k]))),
@@ -154,7 +154,7 @@ for(l in 1:2) {
             lambda = lseq[k],
             base = 0,
             useINLAprecomp = FALSE)
-        plot(function(x) exp(prior(Cmodel, theta = matrix(x, 1) )), 
+        plot(function(x) exp(cgeneric_prior(Cmodel, theta = matrix(x, 1) )), 
              -3, 3, n=1001, add = TRUE, col = 2, lty = 2)
     }
 }

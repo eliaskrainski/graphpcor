@@ -20,19 +20,19 @@ th0
 str(model$f$cgeneric$data$doubles)
 model$f$cgeneric$data$doubles$thetab
 
-graph(model, optimize = TRUE)
+cgeneric_graph(model, optimize = TRUE)
 
-graph(model)
+cgeneric_graph(model)
 
-round(ith <- initial(model), 4)
+round(ith <- cgeneric_initial(model), 4)
 
 th0
-prior(model, theta = th0)
+cgeneric_prior(model, theta = th0)
 
 theta1 <- rnorm(m)
 
 theta1
-(qq <- prec(model, theta = theta1))
+(qq <- cgeneric_Q(model, theta = theta1))
 
 sum(diag(chol(qq)))
 
@@ -40,7 +40,7 @@ sum(diag(chol(qq)))
 
 basecor(theta1, n)
 
-prior(model, theta = theta1)
+cgeneric_prior(model, theta = theta1)
 
 ## call inla with NA to compare
 dat1 <- data.frame(
@@ -61,7 +61,7 @@ fitfix <- inla(
     verbose = !TRUE
 )
 
-all.equal(qq, prec(fitfix))
+all.equal(qq, cgeneric_Q(fitfix))
 
 iil <- which(lower.tri(diag(n)))
 iil
@@ -176,13 +176,13 @@ length(th0 <- c(seq(-1+h0/2, -h0/2, h0),
                 seq(h0/2, 1-h0/2, h0)))
 str(th0)
 
-prior(m2, theta=rnorm(6))
+cgeneric_prior(m2, theta=rnorm(6))
 
 system.time(pth <- sapply(1:6, function(i) {
     thr <- rbind(0, ths0)[c(i, setdiff(1:6, i)), ]
     sapply(th0, function(th) {
         thr[i, ] <- th
-        mean(exp(prior(m2, theta = thr)))
+        mean(exp(cgeneric_prior(m2, theta = thr)))
     })
 })
 )

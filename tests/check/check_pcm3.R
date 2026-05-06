@@ -24,7 +24,7 @@ th0
 
 ### check: evaluating theta0 gives the base model
 vcov(gph_model, theta = th0)
-solve(prec(c_model, theta = th0))
+solve(cgeneric_Q(c_model, theta = th0))
 
 
 attr(hh, 'h.5')
@@ -42,7 +42,7 @@ h.5
 all.equal(log(abs(dh.5)), lc)
 
 th1 <- c(.1,.2,-.3)
-prior(c_model, theta = th1)
+cgeneric_prior(c_model, theta = th1)
 
 ## set up a grid of theta around theta0
 h <- 0.01
@@ -58,7 +58,7 @@ head(log(dthR))
 
 ## eval, in C (through 'cgeneric' query method in INLAtools)
 dth <- exp(
-    prior(
+    cgeneric_prior(
         c_model, 
         theta = rbind(th0x[1,] + th0[1],
                       th0x[2,] + th0[2],

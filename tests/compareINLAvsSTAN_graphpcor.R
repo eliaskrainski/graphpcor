@@ -5,6 +5,8 @@ library(coda)
 library(rstan)
 options(mc.cores = 4L)
 
+conflicted::conflicts_prefer(rstan::traceplot)
+
 ## STAN model code without the prior for 'rho' (corr mat)
 Scode0 <- "
 data {

@@ -17,7 +17,7 @@ if(FALSE) { ### just to avoid having to add dependencies we don't really need
     mcl <- structure(mc$r, class = 'dist', Size = ncol(mtcars),
                      Diag = FALSE, Upper = FALSE, method='marginal')
     pcl <- structure(pc$r, class = 'dist', Size = ncol(mtcars),
-                       Diag = FALSE, Upper = FALSE, method='partial')    
+                       Diag = FALSE, Upper = FALSE, method='partial')
 
     mc.f <- mc[abs(mc$r)>0.7, ]
     pc.f <- pc[abs(pc$r)>0.3, ]
@@ -115,7 +115,7 @@ plot(g)
 lp <- Laplacian(g)
 
 Lplot <- function(L, ij) {
-    xy <- eigen(L)$vectors[,ij]    
+    xy <- eigen(L)$vectors[,ij]
     plot(xy[, 1:2], cex = 10, xlab = "", ylab = "", axes = FALSE)
     text(xy[, 1], xy[, 2], colnames(L))
     for(i in 1:nrow(lp)) {
@@ -148,27 +148,24 @@ plot(gg)
 attr(g, "graph")
 g2graph <- function(g) {
     g <- attr(g, "graph")
-    
+
 }
 
 round(sigmas <- data.frame(obs = sqrt(diag(V))), 1)
 
 ## define the cgeneric model (including variances)
 cmodel0 <- cgeneric(
-    "LKJ", n = p, eta = 5, 
-    sigma.prior.reference = sigmas$obs, 
-    sigma.prior.probability = rep(0.5, p),
-    useINLAprecomp = FALSE)
+    "LKJ", n = p, eta = 5,
+    sigma.prior.reference = sigmas$obs,
+    sigma.prior.probability = rep(0.5, p))
 cmodel1 <- cgeneric(
-    "pc_correl", n = p, lambda = 2, 
-    sigma.prior.reference = sigmas$obs, 
-    sigma.prior.probability = rep(0.5, p),
-    useINLAprecomp = FALSE)
+    "pc_correl", n = p, lambda = 2,
+    sigma.prior.reference = sigmas$obs,
+    sigma.prior.probability = rep(0.5, p))
 cmodel2 <- cgeneric(
-    g, lambda = 1, 
-    sigma.prior.reference = sigmas$obs, 
-    sigma.prior.probability = rep(0.5, p),
-    useINLAprecomp = FALSE)
+    g, lambda = 1,
+    sigma.prior.reference = sigmas$obs,
+    sigma.prior.probability = rep(0.5, p))
 
 ## prepare the (long format) data for INLA
 n <- nrow(mtcars)
@@ -212,7 +209,7 @@ fits <- lapply(datac, function(datax) {
              control.inla = list(int.strategy = "eb"))
          )
 })
-    
+
 cor(colMeans(mtcars),
     sapply(fits[[1]], function(x)
         x$summary.fix[, 1]))
@@ -222,7 +219,7 @@ iil <- which(lower.tri(V))
 sc1f <- function(theta) {
     t(sapply(1:nrow(theta), function(i) {
         cc <- tcrossprod(cholcor(theta[i, -(1:p)]))
-        c(s = exp(theta[i, 1:p]), c = cc[iil])       
+        c(s = exp(theta[i, 1:p]), c = cc[iil])
     }))
 }
 sc2f <- function(theta) {
@@ -274,10 +271,12 @@ ij
 for(i in 2:p) {
     cat(sapply(1:(i-1), function(j) ij[[j]][i-j]), "\n")
 }
-ji <- lapply(2:p, function(i) sapply(1:(i-1), function(j) ij[[j]][i-j]))
+ji <- lapply(2:p, function(i)
+  sapply(1:(i-1), function(j) ij[[j]][i-j]))
 ji
 
-par(mfrow = c(p, p), mar = c(3,3,0.5,0.5), mgp = c(1,.5,0), bty = "n")
+par(mfrow = c(p, p), mar = c(3,3,0.5,0.5),
+    mgp = c(1,.5,0), bty = "n")
 for(i in 1:p) {
     for(j in 1:p) {
         if(j<i) {
@@ -294,7 +293,7 @@ for(i in 1:p) {
                      border = 'transparent')
                 plot(h1, add = TRUE, col = cols[2], border = 'transparent')
                 plot(h2, add = TRUE, col = cols[3], border = 'transparent')
-                legend("topright", bty = "n", 
+                legend("topright", bty = "n",
                        title = paste(i,j, collapse = ","),
                        format(cij*100, digits = 1))
                 abline(v = cij, lty = 2, lwd = 2)
@@ -305,7 +304,7 @@ for(i in 1:p) {
                 hist(vc0samples[, jj], -10:10/10,
                      col = cols[1], border = 'transparent',
                      main = '', xlab = "")
-                legend("topright", bty = "n", 
+                legend("topright", bty = "n",
                        title = paste(i,j, collapse = ","),
                        format(cij*100, digits = 1))
                 abline(v = cij, lty = 2, lwd = 2, col = 2)
@@ -339,7 +338,7 @@ for(i in 1:p) {
                  border = 'transparent')
             plot(h1, add = TRUE, col = cols[2], border = 'transparent')
             plot(h2, add = TRUE, col = cols[3], border = 'transparent')
-            legend("topright", bty = "n", 
+            legend("topright", bty = "n",
                    title = paste(i,j, collapse = ","),
                    format(cij*100, digits = 1))
             abline(v = cij, lty = 2, lwd = 2)

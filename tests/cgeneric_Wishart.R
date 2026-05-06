@@ -23,30 +23,29 @@ W <- cgeneric(
     model = "Wishart",
     n = n,
     dof = dof,
-    R = R,
-##    debug = 1e9,
-    useINLAprecomp = FALSE
+    R = R
 )
 
 W
 
 str(W)
 
-graph(W, optimize = TRUE)
+cgeneric_graph(W, optimize = TRUE)
 
-graph(W)
+cgeneric_graph(W)
 
-round(ini <- initial(W), 4)
+round(ini <- cgeneric_initial(W), 4)
 
 theta1 <- c(log(diag(lQ)), lQ[upper.tri(lQ)])
 theta1
 
-prec(W, theta = theta1)
+cgeneric_Q(W, theta = theta1)
 
 
-(theta0 <- c(-log(diag(V)), log((1 + cc[upper.tri(cc)]) / (1 -cc[upper.tri(cc)]))))
+(theta0 <- c(-log(diag(V)),
+             log((1 + cc[upper.tri(cc)]) / (1 -cc[upper.tri(cc)]))))
 
-dat0 <- data.frame(    
+dat0 <- data.frame(
     i = 1:n,
     y = rep(NA, n)
 )
@@ -81,9 +80,9 @@ fit2 <- inla(
     control.mode = cmode
 )
 
-pp3 <- list(prec(fit0),
-            prec(fit1),
-            prec(fit2))
+pp3 <- list(cgeneric_Q(fit0),
+            cgeneric_Q(fit1),
+            cgeneric_Q(fit2))
 pp3[[1]]
 
 c(q12=all.equal(pp3[[1]], pp3[[2]]),
@@ -91,7 +90,7 @@ c(q12=all.equal(pp3[[1]], pp3[[2]]),
 
 cbind(fit0$mlik, fit1$mlik, fit2$mlik)
 
-### 
+###
 nrep <- 1000
 xx <- matrix(rnorm(nrep * n), nrep) %*% lV
 str(xx)
@@ -104,14 +103,14 @@ dat1 <- data.frame(
 str(dat1)
 
 fit0r <- inla(
-    y ~ 0 + f(i, model = 'iid3d', order = n, n = n, replicate = r), 
+    y ~ 0 + f(i, model = 'iid3d', order = n, n = n, replicate = r),
     data = dat1,
     control.family = cfam,
     control.inla = cinla
 )
 
 fit1r <- inla(
-    y ~ 0 + f(i, model = 'iidkd', order = n, n = n, replicate = r, 
+    y ~ 0 + f(i, model = 'iidkd', order = n, n = n, replicate = r,
               hyper = list(theta1 = list(
                                param = c(dof, rep(1, n), rep(0, n*(n-1)/2))))),
     data = dat1,
@@ -153,7 +152,7 @@ p <- 10
 m.p <- p * (p-1)/2
 dof.p <- 10 + p
 Wp <- cgeneric("Wishart", n = p, dof = dof.p,
-               R = rep(1:0, c(p,m.p)), useINLAprecomp = FALSE)
+               R = rep(1:0, c(p,m.p)))
 
 datp <- data.frame(
     i = rep(1:p, each = nrep),
@@ -164,9 +163,9 @@ datp <- data.frame(
 cmdp <- list(theta = rep(0, p+m.p), restart = TRUE)
 
 fitp <- inla(
-    y ~ 0 + f(i, model = 'iidkd', order = p, n = p, replicate = r, 
+    y ~ 0 + f(i, model = 'iidkd', order = p, n = p, replicate = r,
               hyper = list(theta1 = list(
-                               param = c(dof.p, rep(1, p), rep(0,m.p))))), 
+                               param = c(dof.p, rep(1, p), rep(0,m.p))))),
     data = datp,
     control.family = cfam,
     control.inla = cinla,

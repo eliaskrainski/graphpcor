@@ -21,11 +21,11 @@ W <- cgeneric(
     debug = 1e8 * 1## print lots of details
 )
 
-graph(W, optimize = TRUE)
+cgeneric_graph(W, optimize = TRUE)
 
-graph(W)
+cgeneric_graph(W)
 
-round(ini <- initial(W), 4)
+round(ini <- cgeneric_initial(W), 4)
 
 theta1 <- c(log(diag(lQ)), lQ[upper.tri(lQ)])
 theta1
@@ -59,11 +59,11 @@ myJ <- function(l, h = 0.005, verbose = FALSE) {
 
 myJ(rnorm(length(R)), verbose = TRUE)
 
-prior(W, theta = theta1)
+cgeneric_prior(W, theta = theta1)
 myJ(theta1, 1e-3, verbose = TRUE)
 myJ(theta1, 1e-5, verbose = TRUE)
 
-prec(W, theta = theta1)
+cgeneric_Q(W, theta = theta1)
 
 theta2iidkd <- function(th, old = FALSE, covar = TRUE, corr = FALSE) {
     m <- length(th)
@@ -98,7 +98,7 @@ theta2iidkd <- function(th, old = FALSE, covar = TRUE, corr = FALSE) {
 V
 theta2iidkd(theta0, old = TRUE)
 theta2iidkd(theta1, old = FALSE)
-solve(prec(W, theta = theta1))
+solve(cgeneric_Q(W, theta = theta1))
 
 theta2iidkd(theta0, old = TRUE, covar = FALSE)
 theta2iidkd(theta1, old = FALSE, covar = FALSE)
@@ -126,9 +126,9 @@ theta2prior <- function(th, R, d) {
     dW(Q, R, d) + log(abs(myJ(th)))
 }
 
-prior(W, theta = theta1) -log(abs(myJ(theta1)))
+cgeneric_prior(W, theta = theta1) -log(abs(myJ(theta1)))
 dW(Q, RR, dof) 
-theta2prior(theta1, RR, dof) -log(abs(myJ(theta1)))
+theta2cgeneric_prior(theta1, RR, dof) -log(abs(myJ(theta1)))
 
 c(qq=CholWishart::dWishart(
                       as.matrix(Q),
@@ -185,11 +185,11 @@ fit2 <- inla(
     control.compute = ccomp
 )
 
-c(all.equal(Q, as.matrix(prec(fit0))),
-  all.equal(prec(fit0),
-            prec(fit1)),
-  all.equal(prec(fit0),
-            prec(fit2)))
+c(all.equal(Q, as.matrix(cgeneric_Q(fit0))),
+  all.equal(cgeneric_Q(fit0),
+            cgeneric_Q(fit1)),
+  all.equal(cgeneric_Q(fit0),
+            cgeneric_Q(fit2)))
 
 cbind(fit0$mlik, fit1$mlik, fit2$mlik)
 
@@ -230,9 +230,9 @@ fit2r <- inla(
 )
 
 Q
-round(prec(fit0r), 3)
-round(prec(fit1r), 3)
-round(prec(fit2r), 3)
+round(cgeneric_Q(fit0r), 3)
+round(cgeneric_Q(fit1r), 3)
+round(cgeneric_Q(fit2r), 3)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)

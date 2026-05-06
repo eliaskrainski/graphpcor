@@ -4,8 +4,7 @@ library(graphpcor)
 ## a cgeneric model for the LKJ prior
 ## for theta from the CPC parametrization
 cglkj <- cgeneric(
-    model = "LKJ", n = 3, eta = 2,
-    useINLAprecomp = FALSE)
+    model = "LKJ", n = 3, eta = 2)
 
 ## correlation matrix, p = 3
 cc <- matrix(c( 1.0,  0.8, -0.5,
@@ -17,10 +16,10 @@ cc <- matrix(c( 1.0,  0.8, -0.5,
 th <- bb$theta
 
 ## p(theta | eta)
-prior(cglkj, theta = th)
+cgeneric_prior(cglkj, theta = th)
 
 ## precision
-(qq <- prec(cglkj, theta = th))
+(qq <- cgeneric_Q(cglkj, theta = th))
 solve(qq)
 
 ## setup a grid around theta0
@@ -30,7 +29,7 @@ n0 <- length(th0)
 thg <- t(expand.grid(th0 + th[1], th0 + th[2], th0 + th[3]))
 dim(thg)
 
-ptheta <- array(exp(prior(cglkj, theta = thg)), c(n0, n0, n0))
+ptheta <- array(exp(cgeneric_prior(cglkj, theta = thg)), c(n0, n0, n0))
 sum(ptheta*(h^3))
 
 par(mfrow = c(2, 2), mar = c(3, 3, 0.1, 0.1), mgp = c(2, 0.5, 0))
@@ -55,21 +54,20 @@ eta <- 10
 Cmodel <- cgeneric(
     model = "LKJ",
     n = n,
-    eta = eta,
-    useINLAprecomp = FALSE
+    eta = eta
 )
 
 str(Cmodel)
 
-graph(Cmodel, optimize = TRUE)
+cgeneric_graph(Cmodel, optimize = TRUE)
 
-graph(Cmodel)
+cgeneric_graph(Cmodel)
 
-initial(Cmodel)
+cgeneric_initial(Cmodel)
 
 theta1 <- rnorm(m)
 
-(qc <- prec(Cmodel, theta = theta1))
+(qc <- cgeneric_Q(Cmodel, theta = theta1))
 
 (cc <- solve(qc))
 
@@ -95,7 +93,7 @@ fit <- inla(
 )
 
 all.equal(as.matrix(qc),
-          as.matrix(prec(fit)))
+          as.matrix(cgeneric_Q(fit)))
 
 ### now consider variances as well (PC-prior for this)
 Vmodel <- cgeneric(
@@ -103,14 +101,13 @@ Vmodel <- cgeneric(
     n = n,
     eta = eta,
     sigma.prior.reference = rep(1, n),
-    sigma.prior.probability = rep(0.5, n),
-    useINLAprecomp = FALSE
+    sigma.prior.probability = rep(0.5, n)
 )
 
 sigmas <- n:1/2
 diag(sigmas) %*% cc %*% diag(sigmas)
 
-QiV <- prec(Vmodel, theta = c(log(sigmas), theta1))
+QiV <- cgeneric_Q(Vmodel, theta = c(log(sigmas), theta1))
 (V <- chol2inv(chol(QiV)))
 
 ### simulate some data
@@ -133,11 +130,11 @@ fitr <- inla(
 )
 
 cc
-round(solve(prec(Cmodel, theta = tail(fitr$mode$theta, m))), 4)
-round(solve(prec(Vmodel, theta = c(rep(0, n), tail(fitr$mode$theta,m)))), 4)
+round(solve(cgeneric_Q(Cmodel, theta = tail(fitr$mode$theta, m))), 4)
+round(solve(cgeneric_Q(Vmodel, theta = c(rep(0, n), tail(fitr$mode$theta,m)))), 4)
 
 V
-round(solve(prec(Vmodel, theta = fitr$mode$theta)), 4)
+round(solve(cgeneric_Q(Vmodel, theta = fitr$mode$theta)), 4)
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)

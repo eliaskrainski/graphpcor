@@ -18,7 +18,7 @@ for(i in 1:nlambs) {
         lambda = lambdas[i],
         base = 0,
         useINLAprecomp = FALSE)
-    print(integrate(function(th) exp(prior(Cmodel, theta = th)), -3, 3))
+    print(integrate(function(th) exp(cgeneric_prior(Cmodel, theta = th)), -3, 3))
 }
 
 
@@ -41,13 +41,13 @@ for(i in 1:nlambs) {
         formula = fi, data = d1n, control.family = cfam
     )
     pm <- ifit$marginals.hyperpar[[1]]
-    plot(ths, exp(prior(Cmodel, theta = matrix(ths, 1))),
+    plot(ths, exp(cgeneric_prior(Cmodel, theta = matrix(ths, 1))),
          xlim = range(pm[, 1]) * 3, type = "l")
     lines(pm, col = 2, lty = 3)
 }
 
 basecor(-1, 2)
-solve(prec(Cmodel, theta = -1))
+solve(cgeneric_Q(Cmodel, theta = -1))
 
 ################################################################
 ## n = 3, m = 3
@@ -76,16 +76,16 @@ cmodel <- cgeneric(
 
 cmodel
 
-graph(cmodel)
+cgeneric_graph(cmodel)
 
-initial(cmodel)
+cgeneric_initial(cmodel)
 
-prec(cmodel, theta = theta3)
+cgeneric_Q(cmodel, theta = theta3)
 
-all.equal(as.matrix(solve(prec(cmodel, theta = theta3))),
+all.equal(as.matrix(solve(cgeneric_Q(cmodel, theta = theta3))),
           R)
 
-prior(cmodel, theta = theta3)
+cgeneric_prior(cmodel, theta = theta3)
 
 hth <- 0.02; hth2 <- hth^2
 str(sths <- lapply(1:3, function(i)
@@ -93,7 +93,7 @@ str(sths <- lapply(1:3, function(i)
 (nsth <- length(sths[[1]]))
 ncol(th3 <- t(expand.grid(sths)))/1e6
 
-p3 <- array(prior(cmodel, theta = th3), rep(nsth, 3))
+p3 <- array(cgeneric_prior(cmodel, theta = th3), rep(nsth, 3))
 str(p3)
 
 exp(-8:-6)
@@ -208,7 +208,7 @@ par(mfrow = c(nlambs, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(lamb in lambdas) {
     cmodel <- cgeneric("pc_correl", n = n, lambda = lamb,
                        useINLAprecomp = FALSE)
-    p3a <- array(exp(prior(cmodel, theta = th3)), rep(nsth, 3))
+    p3a <- array(exp(cgeneric_prior(cmodel, theta = th3)), rep(nsth, 3))
     itests <- lapply(datf3, function(ddf)
         inla(formula = fr, 
              data = ddf, 

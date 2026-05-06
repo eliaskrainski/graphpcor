@@ -54,7 +54,7 @@ gmodel <- cgeneric(
     sigma.prior.probability = rep(0.1, nc)
 )
 
-initial(gmodel)
+cgeneric_initial(gmodel)
 
 cff <- y ~ 0 + factor(i) +
     f(i, model = gmodel, replicate = r, vb.correct = FALSE)

@@ -27,7 +27,6 @@ cmodel <- cgeneric(
     model = g,
     lambda = 10,
     base = theta.base,
-    useINLAprecomp = FALSE, 
     sigma.prior.reference = s0, 
     sigma.prior.probability = rep(0.01, ne[1]))
 
@@ -37,7 +36,7 @@ c(log(s0), theta.base)
 
 mu(cmodel)
 
-initial(cmodel)
+cgeneric_initial(cmodel)
 
 sigmas <- c(5, 1, 0.5, 0.1)
 thetaL <- c(-5, 1, 2, -0.1)
@@ -49,7 +48,7 @@ Vg
 cov2cor(vcov(g, theta = theta.base)) ## base model correlation
 cov2cor(Vg) ## correlation to be used to sample data
 
-Q1 <- prec(cmodel, theta = theta1)
+Q1 <- cgeneric_Q(cmodel, theta = theta1)
 Q1
 
 all.equal(Vg, solve(as.matrix(Q1)), check.attributes = FALSE)
@@ -83,7 +82,7 @@ rbind(true = c(theta1),
       fit = fit$mode$theta)
 fit$mode$theta - c(theta1)
 
-prec(cmodel, theta = fit$mode$theta)
+cgeneric_Q(cmodel, theta = fit$mode$theta)
 
 round(Vg, 2)
 

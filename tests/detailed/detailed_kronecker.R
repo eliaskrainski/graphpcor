@@ -34,22 +34,22 @@ head(m1$f$cgeneric$data$smatrices)
 
 theta1 <- 0
 
-str(initial(m1))
+str(cgeneric_initial(m1))
 
-str(graph(m1, optimize = TRUE))
-str(graph(m1))
+str(cgeneric_graph(m1, optimize = TRUE))
+str(cgeneric_graph(m1))
 
-str(prec(m1))
-str(prec(m1, optimize = TRUE))
+str(cgeneric_Q(m1))
+str(cgeneric_Q(m1, optimize = TRUE))
 
-str(prec(m1, optimize = TRUE, theta = -1))
-str(prec(m1, optimize = TRUE, theta = 0))
+str(cgeneric_Q(m1, optimize = TRUE, theta = -1))
+str(cgeneric_Q(m1, optimize = TRUE, theta = 0))
 
 if(FALSE) ### test model1
     inla(y ~ 0 + f(i, model = m1), "poisson",
          data = data.frame(y=rpois(n,1), i = 1:n))$cpu.used
 
-Q1 <- prec(m1, theta = theta1)
+Q1 <- cgeneric_Q(m1, theta = theta1)
 Q1[1:min(5, n), 1:min(20, n)]
 
 solve(Q1)
@@ -75,15 +75,15 @@ m2 <- cgeneric(
     param = c(1, 0.5),
     useINLAprecomp=FALSE)
 
-initial(m2)
+cgeneric_initial(m2)
 
 str(mu(m2))
 
-str(graph(m2, optimize = TRUE))
-str(graph(m2))
+str(cgeneric_graph(m2, optimize = TRUE))
+str(cgeneric_graph(m2))
 
 theta2 <- c(0)
-str(Q2 <- prec(m2, theta = theta2))
+str(Q2 <- cgeneric_Q(m2, theta = theta2))
 
 Q2
 solve(Q2)
@@ -101,7 +101,7 @@ kmodel12 <- kronecker(
     m2,
     debug = !TRUE)
 
-Q12 <- prec(kmodel12, theta = c(theta2))
+Q12 <- cgeneric_Q(kmodel12, theta = c(theta2))
 all.equal(Q1Q2, Q12)
 
 str(kmodel12)
@@ -142,7 +142,7 @@ kmodel21 <- kronecker(
     m2,
     m1)
 
-Q21 <- prec(kmodel21, theta = c(theta2))
+Q21 <- cgeneric_Q(kmodel21, theta = c(theta2))
 all.equal(Q2Q1, Q21)
 
 str(kmodel21)
@@ -154,25 +154,25 @@ summary(diff(kmodel21$f$cgeneric$data$smatrices$Kgraph[3+1:M]))
 summary(kmodel21$f$cgeneric$data$smatrices$Kgraph[3+M+1:M])
 summary(kmodel21$f$cgeneric$data$smatrices$Kgraph[3+M+M+1:M])
 
-initial(kmodel12)
+cgeneric_initial(kmodel12)
 mu(kmodel12)
-str(graph(kmodel12, optimize = TRUE))
-str(graph(kmodel12))
+str(cgeneric_graph(kmodel12, optimize = TRUE))
+str(cgeneric_graph(kmodel12))
 
 image(Q12)
 
-initial(kmodel21)
+cgeneric_initial(kmodel21)
 mu(kmodel21)
-str(graph(kmodel21, optimize = TRUE))
-str(graph(kmodel21))
+str(cgeneric_graph(kmodel21, optimize = TRUE))
+str(cgeneric_graph(kmodel21))
 
-image(graph(m1))
+image(cgeneric_graph(m1))
 x11()
-image(graph(m2))
+image(cgeneric_graph(m2))
 x11()
-image(graph(kmodel12))
+image(cgeneric_graph(kmodel12))
 x11()
-image(graph(kmodel21))
+image(cgeneric_graph(kmodel21))
 
 kmodel12 <- kronecker(
     m1,
@@ -209,8 +209,8 @@ out21 <- inla(
     control.mode = list(theta = theta2, fixed = TRUE)
 )
 
-all.equal(prec(out12), Q1Q2)
-all.equal(prec(out21), Q2Q1)
+all.equal(cgeneric_Q(out12), Q1Q2)
+all.equal(cgeneric_Q(out21), Q2Q1)
 
 ## with data
 nrepl <- 1000

@@ -48,9 +48,9 @@ qcmodel <- cgeneric(
     lambda = 1,
     debug = 1e9)
 
-prior(qcmodel, theta = x)
+cgeneric_prior(qcmodel, theta = x)
 
-Qx <- prec(qcmodel, theta = x)
+Qx <- cgeneric_Q(qcmodel, theta = x)
 n <- ncol(Qx)
 Qx
 
@@ -70,7 +70,7 @@ fit0 <- inla(
 
 (x - fit0$mode$theta)
 
-q.fit0 <- prec(fit0)
+q.fit0 <- cgeneric_Q(fit0)
 
 all.equal(Qx, q.fit0)
 
@@ -100,7 +100,7 @@ fit <- inla(
 
 x-fit$mode$theta
 
-Q1 <- prec(qcmodel, theta = fit$mode$theta)
+Q1 <- cgeneric_Q(qcmodel, theta = fit$mode$theta)
 Q1
 
 cc

@@ -6,30 +6,28 @@ library(INLA)
 C1 <- cgeneric(
     model = "pc_correl",
     n = 2L,
-    lambda = 3.0,
-    useINLAprecomp = FALSE
+    lambda = 3.0
 )
 
-initial(C1)
-graph(C1)
-prec(C1, theta = 0)
-prec(C1, theta = -1)
-prec(C1, theta = 1)
+cgeneric_initial(C1)
+cgeneric_graph(C1)
+cgeneric_Q(C1, theta = 0)
+cgeneric_Q(C1, theta = -1)
+cgeneric_Q(C1, theta = 1)
 mu(C1)
 
-prior(C1, theta = 0.0)
+cgeneric_prior(C1, theta = 0.0)
 
-integrate(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
+integrate(function(x) exp(cgeneric_prior(C1, theta = matrix(x, 1))), -5, 5)
 
-plot(function(x) exp(prior(C1, theta = matrix(x, 1))), -5, 5)
+plot(function(x) exp(cgeneric_prior(C1, theta = matrix(x, 1))), -5, 5)
 
 par(mfrow = c(3,3), mar=c(3,3,1,1), mgp = c(2,.5,0), bty = 'n')
 for(l in 10^(-3:5)) {
     b <- .1 + 1/sqrt(l)
-    cl <- cgeneric("pc_correl", n = 2L, base = 0,
-                   lambda = l, useINLAprecomp = FALSE)
-    print(integrate(function(x) exp(prior(cl, theta = matrix(x, 1))), -b, b))
-    plot(function(x) exp(prior(cl, theta = matrix(x, 1))), -b, b, n=1001)
+    cl <- cgeneric("pc_correl", n = 2L, base = 0, lambda = l)
+    print(integrate(function(x) exp(cgeneric_prior(cl, theta = matrix(x, 1))), -b, b))
+    plot(function(x) exp(cgeneric_prior(cl, theta = matrix(x, 1))), -b, b, n=1001)
 }
 
 ## n =3, m = 3
@@ -51,7 +49,7 @@ ncol(ths <- t(expand.grid(
          th2 = th0 + th0b[2],
          th3 = th0 + th0b[3])))
 
-dim(p1ths <- array(exp(prior(C1, theta = ths)), rep(nth0, 3)))
+dim(p1ths <- array(exp(cgeneric_prior(C1, theta = ths)), rep(nth0, 3)))
 
 sum(h0*apply(p1ths * (h0^2), 1:2, sum))
 sum(h0*apply(p1ths * (h0^2), c(1,3), sum))
@@ -70,19 +68,20 @@ Cmodel <- cgeneric(
     model = "pc_correl",
     n = n,
     base = theta1,
-    lambda = lambda,
-    useINLAprecomp = FALSE)
+    lambda = lambda
+)
 
 Cmodel
 
-graph(Cmodel, optimize = TRUE)
+cgeneric_graph(Cmodel, optimize = TRUE)
 
-graph(Cmodel)
+cgeneric_graph(Cmodel)
 
-initial(Cmodel)
+cgeneric_initial(Cmodel)
 
-all.equal(as.matrix(solve(prec(Cmodel, theta = theta1))),
-          base$base)
+all.equal(as.matrix(solve(
+  cgeneric_Q(Cmodel, theta = theta1))),
+  base$base)
 
 dat1 <- data.frame(
     i = 1:n,
@@ -102,7 +101,7 @@ fit0 <- inla(
     verbose = !TRUE
 )
 
-all.equal(base$base, as.matrix(solve(prec(fit0))))
+all.equal(base$base, as.matrix(solve(cgeneric_Q(fit0))))
 
 n
 (sigmas <- c(2,1,0.5,0.1))
@@ -126,14 +125,14 @@ Vmodel <- cgeneric(
     n = n,
     base = theta1, ##debug = 10,
     lambda = lambda,
-    sigma.prior.reference = 1,#rep(1, n), 
-    sigma.prior.probability = 0.5,##rep(0.5, n),
-    useINLAprecomp = FALSE)
+    sigma.prior.reference = 1,#rep(1, n),
+    sigma.prior.probability = 0.5
+)
 
-initial(Vmodel)
-graph(Vmodel)
-prec(Vmodel, theta = rep(0,10))
-prec(Vmodel, theta = c(rep(0,4), rep(-1,6)))
+cgeneric_initial(Vmodel)
+cgeneric_graph(Vmodel)
+cgeneric_Q(Vmodel, theta = rep(0,10))
+cgeneric_Q(Vmodel, theta = c(rep(0,4), rep(-1,6)))
 
 fit <- inla(
     y ~ 0 + f(i, model = Vmodel, replicate = r),

@@ -5,6 +5,8 @@ library(coda)
 library(rstan)
 options(mc.cores = 4L)
 
+conflicted::conflicts_prefer(rstan::traceplot)
+
 eta0s <- c(0.1, 0.5, 1, 1.1, 3, 5, 20, 50, 1000)
 names(eta0s) <- sprintf("%1.1f", eta0s)
 

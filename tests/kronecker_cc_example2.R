@@ -39,13 +39,13 @@ m1 <- cgeneric(
     param = c(1, 0.0) ## to fix it at this value
 )
 
-prior(m1, theta = -1.0)
-prior(m1, theta = +1.0)
+cgeneric_prior(m1, theta = -1.0)
+cgeneric_prior(m1, theta = +1.0)
 
-initial(m1)
+cgeneric_initial(m1)
 
 theta1 <- 0
-Q1 <- prec(m1, theta = theta1)
+Q1 <- cgeneric_Q(m1, theta = theta1)
 
 summary(diag(inla.qinv(Q1 + Diagonal(n, 1e-5), cntr)))
 
@@ -65,10 +65,10 @@ m2 <- cgeneric(
     sigma.prior.probability = rep(.5, n2), 
     lambda = 1)
 
-str(initial(m2))
+str(cgeneric_initial(m2))
 length(theta2 <- c(0.5, 0.3, 0, -1, 1))
 
-Q2 <- prec(m2, theta = theta2)
+Q2 <- cgeneric_Q(m2, theta = theta2)
 Q2
 
 solve(Q2)
@@ -84,11 +84,11 @@ k21 <- kronecker(m2, m1)
 
 ### two ways of getting the precision matrix
 Q12 <- kronecker(Q1, Q2)
-q12 <- prec(k12, theta = c(theta2))
+q12 <- cgeneric_Q(k12, theta = c(theta2))
 all.equal(Q12, q12)
 
 Q21 <- kronecker(Q2, Q1)
-q21 <- prec(k21, theta = c(theta2))
+q21 <- cgeneric_Q(k21, theta = c(theta2))
 all.equal(Q21, q21)
 
 ## reorder test
@@ -199,8 +199,8 @@ rbind(c(th = theta2),
 
 
 diag(solve(Q2))
-diag(solve(prec(m2, theta = out12$mode$theta)))
-diag(solve(prec(m2, theta = out21$mode$theta)))
+diag(solve(cgeneric_Q(m2, theta = out12$mode$theta)))
+diag(solve(cgeneric_Q(m2, theta = out21$mode$theta)))
 
 cov2cor(as.matrix(solve(Q2)))
 

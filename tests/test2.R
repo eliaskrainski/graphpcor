@@ -47,7 +47,6 @@ gmodel <- cgeneric(
     lambda = 2,
     sigma.prior.reference = rep(1, d[1]),
     sigma.prior.probability = rep(0.1, d[1]),
-    useINLAprecomp = FALSE,
     debug = 1### if debug>999 and inla(..., verbose = TRUE) prints looooooottttssss of details
 )
 

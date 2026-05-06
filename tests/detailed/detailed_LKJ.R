@@ -14,15 +14,15 @@ cmodel <- cgeneric(
     useINLAprecomp = FALSE
 )
 
-graph(cmodel, optimize = TRUE)
+cgeneric_graph(cmodel, optimize = TRUE)
 
-graph(cmodel)
+cgeneric_graph(cmodel)
 
-initial(cmodel)
+cgeneric_initial(cmodel)
 
 theta1 <- rnorm(m)
 
-(qq <- prec(cmodel, theta = theta1))
+(qq <- cgeneric_Q(cmodel, theta = theta1))
 
 (vv <- chol2inv(chol(qq)))
 (ll <- t(chol(vv)))
@@ -74,7 +74,7 @@ t(l1 <- graphpcor:::c4theta(th1))
 c1 <- crossprod(l1)
 c1
 
-prior(cmodel, theta = th1)
+cgeneric_prior(cmodel, theta = th1)
 c(sum(log(diag(l1))),
   (eta-1)*2*sum(log(diag(l1))),
   lconst(n, eta), 
@@ -87,7 +87,7 @@ ds <- sapply(1:1000, function(j)
     dLKJ(crossprod(graphpcor:::c4theta(ths[, j])),
          eta = eta, log = TRUE))
 
-lj <- prior(cmodel, theta = ths) - ds
+lj <- cgeneric_prior(cmodel, theta = ths) - ds
 
 ljn <- sapply(1:1000, function(j) 
     log(det(
@@ -118,7 +118,7 @@ fit <- inla(
     control.mode = cmode
 )
 
-all.equal(qq, prec(fit))
+all.equal(qq, cgeneric_Q(fit))
 
 fit$summary.hy
 
@@ -152,7 +152,7 @@ fitr <- inla(
 )
 
 if(nrep<4)
-    round(solve(prec(fitr)), 2)
+    round(solve(cgeneric_Q(fitr)), 2)
 
 (Lfitted <- graphpcor:::c4theta(fitr$mode$theta))
 round(crossprod(Lfitted), 2)
