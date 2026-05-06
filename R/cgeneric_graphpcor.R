@@ -89,7 +89,7 @@ cgeneric_graphpcor <-
         cat("searching shlib...\n")
       }
       dotArgs$shlib <-
-        INLAtools::cgeneric_shlib(
+        INLAtools::cgeneric_shlib_path(
           package = "graphpcor",
           useINLAprecomp = dotArgs$useINLAprecomp,
           debug = dotArgs$debug
