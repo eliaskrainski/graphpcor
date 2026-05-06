@@ -44,9 +44,9 @@ graphpcor(...)
 
 gphcQ(model, ...)
 
-cgeneric.graphpcor(model, ...)
+\method{cgeneric}{graphpcor}(model, ...)
 
-cgeneric.Matrix(model, ...)
+\method{cgeneric}{Matrix}(model, ...)
 }
 \arguments{
 \item{x}{graphpcor}
@@ -95,13 +95,13 @@ whose non-zero pattern is given from the graph.
 
 \item \code{vcov(graphpcor)}: The \code{vcov} method for a \code{graphpcor}
 
+\item \code{cgeneric(graphpcor)}: The \code{cgeneric} method for \code{graphpcor} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
+
 }}
 \section{Functions}{
 \itemize{
 \item \code{gphcQ()}: The precision method for 'graphpcor'
 
-\item \code{cgeneric.graphpcor()}: The \code{cgeneric} method for \code{graphpcor} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
-
-\item \code{cgeneric.Matrix()}: The \code{cgeneric} method for \code{Matrix} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
+\item \code{cgeneric(Matrix)}: The \code{cgeneric} method for \code{Matrix} uses \code{\link[=cgeneric_graphpcor]{cgeneric_graphpcor()}}
 
 }}

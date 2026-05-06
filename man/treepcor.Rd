@@ -34,7 +34,7 @@ etreepcor2precision(d.el)
 
 etreepcor2variance(d.el)
 
-cgeneric.treepcor(model, ...)
+\method{cgeneric}{treepcor}(model, ...)
 }
 \arguments{
 \item{...}{used to pass \code{theta} as a numeric vector
@@ -89,6 +89,8 @@ have an ancestor, which is a parent variable.
 
 \item \code{vcov(treepcor)}: The \code{vcov} method for a \code{treepcor}
 
+\item \code{cgeneric(treepcor)}: The \code{cgeneric} method for \code{treepcor}, uses \code{\link[=cgeneric_treepcor]{cgeneric_treepcor()}}
+
 }}
 \section{Functions}{
 \itemize{
@@ -99,8 +101,6 @@ build the precision from the \code{treepcor} edges.
 
 \item \code{etreepcor2variance()}: Internal function to extract elements to
 build the covariance matrix from a \code{treepcor}.
-
-\item \code{cgeneric.treepcor()}: The \code{cgeneric} method for \code{treepcor}, uses \code{\link[=cgeneric_treepcor]{cgeneric_treepcor()}}
 
 }}
 \examples{
