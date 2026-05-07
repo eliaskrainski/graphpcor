@@ -15,11 +15,11 @@ cgeneric_Wishart(n, dof, R, ...)
 \item{R}{lower triangle of the scale matrix parameter}
 
 \item{...}{additional arguments passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}, such as \code{debug},
+\code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}}, such as \code{debug},
 \code{shlib} and \code{useINLAprecomp}.}
 }
 \value{
-a \code{cgeneric}, \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} object.
+a \code{cgeneric}, \code{\link[INLAtools:cgeneric]{cgeneric()}} object.
 }
 \description{
 Build an \code{cgeneric} to implement the Wishart

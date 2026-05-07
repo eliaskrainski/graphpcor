@@ -38,7 +38,7 @@ Default is \code{1:(n+m)}.
 Note: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 
 \item{...}{additional arguments passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}, such as \code{debug},
+\code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}}, such as \code{debug},
 \code{shlib} and \code{useINLAprecomp}.}
 
 \item{model}{a \code{basecor} object.}
@@ -73,7 +73,7 @@ Please see the examples in \code{\link[=basepcor]{basepcor()}}.
 Note: consider \code{iparams[n+1:m]-iparams[n]}.}
 }
 \value{
-a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
+a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric]{cgeneric()}} for details.
 }
 \description{
 Build an \code{cgeneric} for a correlation matrix PC-prior.
