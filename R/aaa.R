@@ -7,8 +7,6 @@
 #' @importFrom INLAtools is.zero Sparse upperPadding packageCheck
 #' @importFrom INLAtools cgeneric cgeneric_Q cgeneric_graph
 #' @importFrom INLAtools cgeneric_initial cgeneric_prior
-#' @importFrom graph graphNEL
-#' @importFrom Rgraphviz agopen
 #' @importFrom igraph graph_from_adjacency_matrix
 #' @useDynLib graphpcor, .registration = TRUE
 NULL

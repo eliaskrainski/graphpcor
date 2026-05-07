@@ -58,8 +58,6 @@ Imports:
     methods,
     stats,
     utils,
-    graph,
-    Rgraphviz,
     igraph
 Suggests:
     knitr
