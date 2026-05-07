@@ -24,13 +24,13 @@ to define the prior for the standard deviation parameters.}
 to define the prior for the standard deviation parameters.}
 
 \item{...}{additional arguments passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgenericBuilder()}}.}
+\code{\link[INLAtools:cgenericBuilder]{INLAtools::cgenericBuilder()}}.}
 }
 \value{
 \code{cgeneric}/\code{cgeneric} object.
 }
 \description{
-This creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
+This creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}})
 containing the necessary data to implement the penalized
 complexity prior for a correlation matrix considering
 a three as proposed in Sterrantino et. al. 2025
@@ -52,5 +52,5 @@ sigma.prior.probability = c(0.05, 0.0, 0.01)
 then the sigma is fixed to 2 and not estimated.
 }
 \seealso{
-\code{\link[=treepcor]{treepcor()}} and \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}
+\code{\link[=treepcor]{treepcor()}} and \code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}}
 }

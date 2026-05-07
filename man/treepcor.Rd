@@ -22,7 +22,7 @@ treepcor(...)
 
 \method{dim}{treepcor}(x, ...)
 
-\method{drop1}{treepcor}(object)
+\method{drop1}{treepcor}(object, scope, ...)
 
 \method{plot}{treepcor}(x, y, ...)
 
@@ -43,6 +43,8 @@ with the model parameters}
 \item{x}{treepcor object}
 
 \item{object}{treepcor}
+
+\item{scope}{not used}
 
 \item{y}{not used}
 

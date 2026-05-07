@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.24.905
+Version: 0.1.24.906
 Maintainer: Elias Teixeira Krainski <elias.krainski@kaust.edu.sa>
 Authors@R: c(
  person(given = c("Elias"),
@@ -47,23 +47,24 @@ Description: Implement some models for
   in order to build complex data models.
 License: GPL (>=2) 
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.3),
     Matrix,
-    numDeriv,
-    INLAtools (> 0.1.3)
+    INLAtools (> 0.1.3),
+    numDeriv
 Imports:
     methods,
     stats,
     utils,
-    igraph,
-    Rgraphviz
+    graph,
+    Rgraphviz,
+    igraph
 Suggests:
     knitr
 BuildVignettes: true
 VignetteBuilder: knitr
 LazyData: true
 LazyDataCompression: xz
+Config/roxygen2/version: 8.0.0

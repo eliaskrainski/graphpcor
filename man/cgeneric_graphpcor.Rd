@@ -67,7 +67,7 @@ Cholesky factor for the initial precision matrix \code{Q0},
 passed on to \code{\link[=basepcor]{basepcor()}}. Default is \code{d0 = n:1}.}
 
 \item{...}{additional arguments passed on to
-\code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}, such as \code{debug},
+\code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}}, such as \code{debug},
 \code{shlib} and \code{useINLAprecomp}.}
 }
 \value{
@@ -76,7 +76,7 @@ passed on to \code{\link[=basepcor]{basepcor()}}. Default is \code{d0 = n:1}.}
 \description{
 From either a \code{graphpcor} (see \code{\link[=graphpcor]{graphpcor()}}) or
 a square matrix (used as a graph),
-creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}})
+creates an \code{cgeneric} (see \code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}})
 to implement the Penalized Complexity prior using the
 Kullback-Leibler divergence - KLD from a base graphpcor.
 }

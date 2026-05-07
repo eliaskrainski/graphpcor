@@ -35,10 +35,10 @@ marginal variances are considered as known, as described in
 If a vector is given and a probability is NA, 0 or 1, the
 corresponding \code{sigma.prior.reference} will be used as fixed.}
 
-\item{...}{additional arguments passed to \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}}.}
+\item{...}{additional arguments passed to \code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}}.}
 }
 \value{
-a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric-class]{INLAtools::cgeneric()}} for details.
+a \code{cgeneric} object, see \code{\link[INLAtools:cgeneric]{INLAtools::cgeneric()}} for details.
 }
 \description{
 Build an \code{cgeneric} model for

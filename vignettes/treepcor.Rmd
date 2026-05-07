@@ -15,19 +15,17 @@ header-includes:
 bibliography: references.bib
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE, 
   warning = FALSE,
   fig.width = 9, 
-  fig.height = 5, 
   out.width = '0.49\\textwidth', 
   fig.align = 'center')
 library(graphpcor)
 chinclude = TRUE
 ```
-
 
 This material illustrate and detail the model properties of the 
 graphical approach to model correlations proposed in @sterrantino2025graphical.
