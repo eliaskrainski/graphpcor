@@ -45,6 +45,7 @@ Description: Implement some models for
   This allows one to use these models as building 
   blocks combined and to other latent Gaussian models 
   in order to build complex data models.
+Additional_repositories: https://inla.r-inla-download.org/R/testing
 License: GPL (>=2) 
 Encoding: UTF-8
 NeedsCompilation: yes
@@ -60,7 +61,8 @@ Imports:
     utils,
     igraph
 Suggests:
-    knitr
+    knitr,
+    INLA (>= 24.02.09)
 BuildVignettes: true
 VignetteBuilder: knitr
 LazyData: true
