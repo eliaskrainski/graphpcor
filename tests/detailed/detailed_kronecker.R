@@ -77,7 +77,7 @@ m2 <- cgeneric(
 
 cgeneric_initial(m2)
 
-str(mu(m2))
+str(cgeneric_mu(m2))
 
 str(cgeneric_graph(m2, optimize = TRUE))
 str(cgeneric_graph(m2))
@@ -155,14 +155,14 @@ summary(kmodel21$f$cgeneric$data$smatrices$Kgraph[3+M+1:M])
 summary(kmodel21$f$cgeneric$data$smatrices$Kgraph[3+M+M+1:M])
 
 cgeneric_initial(kmodel12)
-mu(kmodel12)
+cgeneric_mu(kmodel12)
 str(cgeneric_graph(kmodel12, optimize = TRUE))
 str(cgeneric_graph(kmodel12))
 
 image(Q12)
 
 cgeneric_initial(kmodel21)
-mu(kmodel21)
+cgeneric_mu(kmodel21)
 str(cgeneric_graph(kmodel21, optimize = TRUE))
 str(cgeneric_graph(kmodel21))
 

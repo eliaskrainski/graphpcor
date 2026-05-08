@@ -14,7 +14,7 @@ cgeneric_graph(C1)
 cgeneric_Q(C1, theta = 0)
 cgeneric_Q(C1, theta = -1)
 cgeneric_Q(C1, theta = 1)
-mu(C1)
+cgeneric_mu(C1)
 
 cgeneric_prior(C1, theta = 0.0)
 

@@ -199,9 +199,11 @@ dim.treepcor <- function(x, ...) {
 #' @describeIn treepcor
 #' The `drop1` method for a `treepcor`
 #' @param object treepcor
+#' @param scope not used
+#' @param ... not used
 #' @export
 drop1.treepcor <-
-  function(object) {
+  function(object, scope, ...) {
     trm0 <- attr(object, "relationship")
     m <- ncol(trm0)
     if(m==1) return(NULL)

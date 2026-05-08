@@ -34,7 +34,7 @@ cmodel
 
 c(log(s0), theta.base)
 
-mu(cmodel)
+cgeneric_mu(cmodel)
 
 cgeneric_initial(cmodel)
 

@@ -1,3 +1,4 @@
+./main_branch_copy_to.sh
 rm -rf ~/temp/graphpcor*
 mkdir ~/temp/graphpcor/
 cd ../main_branch_graphpcor/

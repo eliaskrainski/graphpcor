@@ -55,12 +55,12 @@ str(SAheart)
 
 jj0 <- c(1, 3:4, 6:7, p)
 jj1 <- c(2, 8)
-jj2 <- c(jj0, jj1)
+jj <- c(jj0, jj1)
 
-pm <- ggpairs(SAheart, columns = jj2,
-              ggplot2::aes(colour = factor(chd), alpha = 0.5))
+##pm <- ggpairs(SAheart, columns = jj,
+  ##            ggplot2::aes(colour = factor(chd), alpha = 0.5))
 
-(pm)
+##(pm)
 
 xdata <- data.frame(
     scale(SAheart[, jj0]), ### first p-2 continuous (standardized)
@@ -97,7 +97,7 @@ cor_ci <- function(data, mapping, method = "pearson",
 
 ## Create customized pairs plot
 ggpairs(
-  SAheart[, c(jj2, 5)],
+  SAheart[, c(jj, 5)],
   upper = list(continuous = wrap("points", alpha = 0.6, size = 0.7)),
   diag  = list(continuous = wrap("barDiag", bins = 15, fill = "gray70")),
   lower = list(continuous = cor_ci)
@@ -129,26 +129,6 @@ for(i in 1:nrow(mst)) {
     G0[mst[i,2], mst[i,1]] <- 1
 }
 G0
-
-rg <- function(g) {
-    Q0 <- Laplacian(g)
-    n <- nrow(Q0)
-    il <- lower.tri(Q0)
-    iql0 <- which((abs(Q0)>0) & il)
-    Q0 <- Q0 + Diagonal(n)
-    L0 <- chol(Q0)
-    ill0 <- which(abs(L0)>0)
-    ro <- inla.qreordering(Q0)
-    Q1 <- Q0[ro$reordering, ro$reordering] + Diagonal(n)
-    L1 <- chol(Q1)
-    ill1 <- which(abs(L1)>0)
-    list(i0=ill0, i1=ill1)
-}
-
-str(rg(g0))
-
-
-
 
 library(graphpcor)
 g0 <- graphpcor(G0)
@@ -227,7 +207,7 @@ sdata <- inla.stack(
         tag = 'chd',
         data = list(chd = SAheart[, p+1]),
         effects = list(data.frame(
-            alpha1 = 1, ic, rc)), 
+            beta0 = 1, ic, rc)), 
         A = list(1)),
     inla.stack(
         tag = "yx1", 
@@ -247,7 +227,7 @@ sdata <- inla.stack(
         tag = "famHist", 
         data = list(famHist = xdata[, p]), 
         effects = list(data.frame(
-            alpha2 = rep(1, n), 
+            alpha = rep(1, n), 
             a3 = rep(p, n), ## as copy to fit alpha3
             a3r = 1:n, p)),
         A = list(1))
@@ -256,7 +236,7 @@ sdata <- inla.stack(
 str(inla.stack.data(sdata))
 
 ff0 <- paste(
-    "list(chd, yx1, yx2, famHist)~0+alpha1+alpha2+",
+    "list(chd, yx1, yx2, famHist)~0+beta0+alpha+",
     "f(i, model = cg0, replicate = r, n = 9, values = 1:9) +",
     paste(paste0("f(i.", 1:p, ", copy = 'i', replicate = r.",
                        1:p, ", fixed = FALSE)"), collapse = "+"),
@@ -271,7 +251,7 @@ cfam <- list(
     list(),
     list(hyper = list(prec = list(intial = 10, fixed = TRUE))),
     list(),
-    list()
+    list(link = "probit")
 )
 
 library(INLA)
@@ -318,6 +298,7 @@ sg0 <- fit0$summary.hyperpar[dg0[2] + 1:p,]
 sg1 <- fit1$summary.hyperpar[dg1[2] + 1:p,]
 
 ## compare the regression coefficients with the simlple GLM: "M0"
+png("SAheart_coefficientsM0G0G1.png", 2500, 1500, res = 300)
 par(mfrow = c(1, 1), mar = c(4,4,1,1), mgp = c(2,0.5,0), bty = 'n')
 plot(1:p-0.2, coef(m0.chd)[-1], axes = FALSE, xlab = '',
      ylab = expression(beta[j]), xlim = c(0.5, p+0.5),
@@ -335,6 +316,7 @@ axis(2)
 axis(1, 1:p, names(xdata))
 legend("topleft", c("M0", "G0", "G1"), bty = "n",
        lty = 1, col = c(1,2,4), lwd = 2)
+dev.off()
 
 c0fit <- vcov(g0, theta = fit0$mode$theta[1:dg0[2]])
 c1fit <- vcov(g1, theta = fit1$mode$theta[1:dg1[2]])
@@ -365,7 +347,7 @@ lG1 <- upperPadding(G1)
 
 fcols <- c(gray(0.35), rgb(0,0,1,0.7))
 
-png("SAheartResultJoint.png", width = 4000, height = 3000, res = 300)
+png("SAheartResultJoint.png", width = 4000, height = 2500, res = 300)
 par(mfrow = c(p,p), mar = c(1.6, 1.6, 0.1, 0.1),
     mgp = c(1, 0.5, 0), bty = 'n')
 kc <- k2 <- k1 <- k0 <- 0
@@ -449,8 +431,8 @@ for(i in 1:p) {
                    lty = c(0), lwd = c(2), col = c(1), text.col = 6)
         }
         if((i==1) & (j==2)) {
-            legend("top", title = "prior", bty = "n",
-                   c("G0", "G1"), lty = 2, lwd = 2, col = c(2, 4))
+            legend("top", bty = "n",
+                   c("G0", "G1"), lty = 1, lwd = 2, col = fcols)
         }
     }
 }

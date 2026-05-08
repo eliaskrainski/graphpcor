@@ -91,7 +91,7 @@ theta1 <- c(d = logsigmas,
             l = theta.low)
 cgeneric_prior(vmodel, theta = theta1)
 
-mu(vmodel)
+cgeneric_mu(vmodel)
 
 cgeneric_initial(vmodel)
 
