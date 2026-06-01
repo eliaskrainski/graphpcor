@@ -194,7 +194,7 @@ cgeneric_graphpcor <-
         }
       }
     }
-    if(inherits(base,"basepcor")) {
+    if(inherits(base, "basepcor")) {
       basemodel <- base
     } else {
       basemodel <- basepcor(
@@ -277,3 +277,32 @@ cgeneric_graphpcor <-
     return(the_model)
 
   }
+#' @describeIn cgeneric_graphpcor
+#' Build a `cgeneric` for a `basepcor`.
+#' @export
+cgeneric.basepcor <-
+  function(model,
+           lambda,
+           base,
+           sigma.prior.reference,
+           sigma.prior.probability,
+           iparams,
+           cfixed,
+           d0,
+           ...) {
+    G <- matrix(0, model$p, model$p)
+    G[model$iLtheta] <- 1
+    return(
+      cgeneric_graphpcor(
+        model = G + t(G),
+        lambda = lambda,
+        base = model,
+        sigma.prior.reference = sigma.prior.reference,
+        sigma.prior.probability = sigma.prior.probability,
+        iparams = iparams,
+        cfixed = cfixed,
+        d0 = model$d0,
+        ...
+      )
+    )
+}

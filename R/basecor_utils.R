@@ -69,7 +69,9 @@ corr2theta <- function(corr) {
   corr <- as.matrix(corr)
   stopifnot(nrow(corr) == (p <- ncol(corr)))
   stopifnot(p>1)
-  stopifnot(all.equal(diag(corr), rep(1.0, p)))
+  stopifnot(all.equal(
+    new("numeric", diag(corr)),
+    rep(1.0, p)))
   L <- t(chol(corr))
   B <- A <- diag(p)
   A[, 1] <- L[, 1]
