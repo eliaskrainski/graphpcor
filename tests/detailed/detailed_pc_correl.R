@@ -11,9 +11,7 @@ model <- cgeneric(
     model = "pc_correl",
     n = n,
     base = th0,
-    lambda = lambda,
-    debug = 0*1e9,
-    useINLAprecomp = FALSE)
+    lambda = lambda)
 model
 
 th0
@@ -61,7 +59,7 @@ fitfix <- inla(
     verbose = !TRUE
 )
 
-all.equal(qq, cgeneric_Q(fitfix))
+all.equal(qq, inlaQ(fitfix))
 
 iil <- which(lower.tri(diag(n)))
 iil
@@ -69,9 +67,7 @@ iil
 m2 <- cgeneric(
     model = "pc_correl",
     n = n,
-    lambda = lambda,
-    debug = FALSE,
-    useINLAprecomp = FALSE)
+    lambda = lambda)
 
 th2corr <- function(th) {
     tcrossprod(cholcor(th))[iil]
@@ -108,17 +104,18 @@ for(k in 1:6)
 lambdas <- c(0.5, 1, 10, 100, 10000)
 
 (th0 <- (1:m)-m/2)
-b0 <- basepcor(th0, n)
+b0 <- basecor(th0, n)
 b0
 b0$base[iil]
+
+basepcor()
 
 par(mfrow = c(5, 6), mar = c(3,3,.1,.1), mgp = c(2,1,0), las = 1, bty = "n")
 for(i in 1:length(lambdas)) {
     Cmodel <- cgeneric(
         model = "pc_correl",
         n = n, base = th0,
-        lambda = lambdas[i],
-        useINLAprecomp = FALSE)
+        lambda = lambdas[i])
     fit <- inla(
         y ~ 0 + f(i, model = Cmodel),
         data = dat1,
@@ -126,23 +123,19 @@ for(i in 1:length(lambdas)) {
         control.inla = cinla
     )
     hs <- inla.hyperpar.sample(1000, fit)
-    ccs <- sapply(1:nrow(hs), function(i) {
-        L <- graphpcor:::Lprec0(
-                             theta = hs[i, ],
-                             p = n,
-                             iLtheta = iil,
-                             d0 = n:1)
-        cov2cor(chol2inv(t(L)))[iil]
-    })
+    ccs <- t(sapply(1:nrow(hs), function(i) {
+        basepcor(base = hs[i, ],
+                 p = n,
+                 iLtheta = iil)$base[iil]
+    }))
     for(k in 1:6) {
-        h <- hist(ccs[k, ], (-100:100)/100, plot = FALSE)
+        h <- hist(ccs[, k], (-100:100)/100, plot = FALSE)
         ck <- b0$base[iil[k]]
         plot(h, xlim = c(max(-1, ck-0.2), min(ck+0.2,1)),
              main = '', xlab = '', ylab = '', freq = FALSE)
         abline(v = ck, col = 2, lty = 2, lwd = 2)
     }
 }
-
 
 ### now fit some data
 nrep <- 200
@@ -191,7 +184,7 @@ str(pth)
 
 par(mfrow = c(2, 3), mar = c(3,3,1,1), mgp = c(2,1,0), las = 1, bty = "n")
 for(k in 1:6)
-    plot(th0, pth[, 1], type = 'o')
+    plot(th0, pth[, k], type = 'o')
 
 detach("package:graphpcor", unload = TRUE)
 library(graphpcor)

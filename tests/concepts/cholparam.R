@@ -1,5 +1,5 @@
 
-## 1. sampleing on the sphere
+## 1. sampling on the sphere
 rsphere <- function(n, m) {
     z <- matrix(rnorm(n*m), m)
     r <- sqrt(colSums(z^2))
@@ -43,12 +43,57 @@ plot(rmpcp(1000, 3, 1, H3, th3)[,1:2], xlab = '', ylab = '')
 plot(rmpcp(1000, 3, 1, H3, th3)[,2:3], xlab = '', ylab = '')
 plot(rmpcp(1000, 3, 1, H3, th3)[,c(1,3)], xlab = '', ylab = '')
 
-## 3. set up two different ordering for the 'same' graph
 library(graphpcor)
+
+c0 <- matrix(
+    c( 1.0,  0.8, -0.5,
+       0.8,  1.0, -0.4,
+      -0.5, -0.4,  1.0), 3)
+c0
+
+bc0 <- basecor(c0)
+I0 <- hessian(bc0)
+I0d <- graphpcor:::dspd(I0)
+
+str(I0d)
+
+th1 <- rmpcp(10000, m = 3, lambda = 1,
+             Hneg.5 = I0d$sqrtInv,
+             theta0 = bc0$theta)
+th5 <- rmpcp(10000, m = 3, lambda = 5,
+             Hneg.5 = I0d$sqrtInv,
+             theta0 = bc0$theta)
+
+il3 <- c(2,3,6)
+cs1 <- t(sapply(1:nrow(th1), function(i)
+    tcrossprod(cholcor(th1[i,]))[il3]))
+cs5 <- t(sapply(1:nrow(th5), function(i)
+    tcrossprod(cholcor(th5[i,]))[il3]))
+
+par(mfrow = c(2,3), mar = c(4,4,0.5,0.5), mgp = c(2,0.5,0),
+    las = 1, bty = 'n')
+hist(cs1[, 1], xlab = expression(rho[2~","~1]), ylab = '', main = '')
+abline(v = c0[il3[1]], col = 2, lwd = 2, lty = 2)
+legend("topleft", expression(lambda == 1))
+hist(cs1[, 2], xlab = expression(rho[3~","~1]), ylab = '', main = '')
+abline(v = c0[il3[2]], col = 2, lwd = 2, lty = 2)
+hist(cs1[, 3], xlab = expression(rho[3~","~2]), ylab = '', main = '')
+abline(v = c0[il3[3]], col = 2, lwd = 2, lty = 2)
+hist(cs5[, 1], xlab = expression(rho[2~","~1]), ylab = '', main = '')
+abline(v = c0[il3[1]], col = 2, lwd = 2, lty = 2)
+legend("topleft", expression(lambda == 5))
+hist(cs5[, 2], xlab = expression(rho[3~","~1]), ylab = '', main = '')
+abline(v = c0[il3[2]], col = 2, lwd = 2, lty = 2)
+hist(cs5[, 3], xlab = expression(rho[3~","~2]), ylab = '', main = '')
+abline(v = c0[il3[3]], col = 2, lwd = 2, lty = 2)
+
+## 3. set up two different ordering for the 'same' graph
 
 p <- 5
 gs <- graphpcor(paste0("X1~", paste0("X",2:p)))
 gs
+
+Ls <- Laplacian(gs)
 
 oj <- c(2:p,1)
 ogs <- graphpcor(Ls[oj, oj])

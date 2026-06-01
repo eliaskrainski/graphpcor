@@ -4,7 +4,10 @@ gph_model <- graphpcor(
     graph = matrix(1, 3, 3) ## dense
 )
 
-C0 <- matrix(c(1,0.5,0.5,0.5,1,0.4,0.5,0.4,1), nrow = 3)
+C0 <- matrix(c( 1.0,  0.8, -0.5,
+                0.8,  1.0, -0.4,
+               -0.5, -0.4,  1.0), 3)
+C0
 
 hh <- hessian(gph_model, x = C0)
 
@@ -14,8 +17,7 @@ param <- 5
 c_model <- cgeneric(
     model = gph_model,
     lambda = param,
-    base = C0,
-    useINLAprecomp = FALSE##, debug = 99999 ## print loooots of details
+    base = C0
 )
 
 ## the base model represented at 
@@ -26,15 +28,11 @@ th0
 vcov(gph_model, theta = th0)
 solve(cgeneric_Q(c_model, theta = th0))
 
-
-attr(hh, 'h.5')
-attr(hh, 'decomposition')$values
-
-prod(attr(hh, 'decomposition')$values^0.5)
-
 ## H^0.5: "SQRT" of the Hessian of KLD around the base model
+
 h.5 <- matrix(c_model$f$cgeneric$data$matrices[[1]][-(1:2)], 3)
 h.5 
+graphpcor:::dspd(hessian(gph_model, th0))$sqrt
 
 ## its determinant
 (dh.5 <- det(h.5))
@@ -53,7 +51,7 @@ ncol(th0x)/1e6 ## size of the grid
 ## eval, in R
 R <- sqrt(colSums( (h.5 %*% th0x)^2 ))
 Sr <- 2 * (pi^(3/2)) * R^2 / gamma(3/2)
-dthR <- param * exp(-param * R) * dh.5 / Sr
+dthR <- param * exp(-param * R) * abs(dh.5) / Sr
 head(log(dthR))
 
 ## eval, in C (through 'cgeneric' query method in INLAtools)
@@ -92,25 +90,21 @@ out.inla <- inla(
 
 str(inla.hyperpar.sample(1000, out.inla))
 
-(th.r2 <- inla.cgeneric.sample(
-     n = 2,
-     result = out.inla,
-     name = 'i', model = c_model))
-    
-qu2corr <- function(qu)
-    solve(matrix(qu[c(1,2,3, 2,4,5, 3,5,6)], 3))[c(2,3,6)]
-qu2corr(th.r2[[1]])
-qu2corr(th.r2[[2]])
+th.samples <- inla.hyperpar.sample(n = 2000, result = out.inla)
 
-r.corr <- sapply(inla.cgeneric.sample(
-    result = out.inla,
-    name = 'i', model = c_model), qu2corr)
+iil <- which(lower.tri(diag(ncol(C0))))
+th2corr <- function(th) {
+    vcov(gph_model, theta = th)[iil]
+}
+
+r.corr <- t(sapply(1:nrow(th.samples), function(i)
+    th2corr(th.samples[i, ])))
 str(r.corr)
 
 par(mfrow = c(1, 3), bty = 'n')
 for(i in 1:3) {
-    hist(r.corr[i, ], freq = FALSE)
-    abline(v=C0[c(2,3,6)[i]], col = 2, lty = 2)
+    hist(r.corr[, i], 50, freq = FALSE)
+    abline(v=C0[c(2,3,6)[i]], col = 2, lwd = 4, lty = 2)
 }
 
 ## sampling direclty from the sphere with radius r
