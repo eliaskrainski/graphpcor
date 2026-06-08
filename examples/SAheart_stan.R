@@ -47,37 +47,41 @@ library(graphpcor)
 ## supply yx as the first p-1 covariates
 Scode0 <- "
 data {
-  int<lower=1> n;
-  int<lower=1> p;
-  array[n] int<lower=0,upper=1> chd;
-  matrix[n,p-1] yx;
+  int<lower=1> n;       // data size
+  int<lower=1> p;       // latent size
+  matrix[n,p-3] yGauss;  // Gaussian obs
+  matrix[n,2] yGamma;   // Gamma obs
   array[n] int<lower=0,upper=1> famHist;
-  real<lower=0> alphas_sigma;
-  real<lower=0> betas_sigma;
+  array[n] int<lower=0,upper=1> chd;
+  real<lower=0> alphas_sigma; // sigma prior for alpha
+  real<lower=0> betas_sigma;  // sigma prior for beta
 }
 parameters {
   vector[2] alphas;
   vector[p] betas;
-  matrix[n,p] z; // latent for E() of the covariates
+  array[n] vector[p] x; // latent for E() of the covariates
 }
 transformed parameters {
-  corr_matrix[p] rho;
+  matrix[p,p] rho;
 }
 model {
+  x ~ multi_normal(rep_vector(0.0, p), rho);
   alphas ~ normal(0.0, alphas_sigma);
   betas ~ normal(0.0, betas_sigma);
-  to_vector(z) ~ std_normal();
-  matrix[p,p] L_rho;
-  L_rho = cholesky_decompose(rho);
-  matrix[n,p] x = z * (L_rho');
-  to_vector(yx[,1:(p-3)]) ~ normal(to_vector(x[, 1:(p-3)]), 0.001);
-  to_vector(yx[,(p-2):(p-1)]) ~ gamma(to_vector(exp(x[,(p-2):(p-1)])), 1.0);
-  famHist ~ bernoulli(Phi(alphas[2] + x[,p]));
-  chd ~ bernoulli_logit(alphas[1] + x * betas);
+  for(k in 1:(p-3))
+    for(i in 1:n)
+      yGauss[i,k] ~ normal(x[i][k], 0.001);
+  for(k in 1:2)
+    for(i in 1:n)
+      yGamma[i,k] ~ gamma(exp(x[i][6+k]), 1.0);
+  for(i in 1:n) {
+    famHist[i] ~ bernoulli(Phi(alphas[2] + x[i][p]));
+    chd[i] ~ bernoulli_logit(alphas[1] + dot_product(betas, x[i]));
+  }
 }
 "
 
-cat(Scode0, file = "Scode0_v2.txt")
+cat(Scode0, file = "Scode0_v3.txt")
 
 ## STEP 2: update the STAN code with code for the
 ## graphpcor prior for 'rho'
@@ -128,9 +132,10 @@ sapply(xdata, sd)
 Sdata0 <- list(
     n = as.integer(n),
     p = as.integer(p),
-    chd = as.integer(SAheart[, p + 1]),
-    yx = as.matrix(xdata[, 1:(p-1)]),
+    yGauss = as.matrix(xdata[, 1:(p-3)]),
+    yGamma = as.matrix(xdata[, 7:8]),
     famHist = (SAheart$famhist=="Present")+0L, 
+    chd = as.integer(SAheart[, p + 1]),
     alphas_sigma = 10,
     betas_sigma = 10
 )
@@ -201,8 +206,7 @@ baseM1 <- basepcor(diag(p), iLtheta = g1)
 SdataM0 <- stan_add(Sdata0, baseM0, lambda = 1, name = 'rho')
 SdataM1 <- stan_add(Sdata0, baseM1, lambda = 1, name = 'rho')
 
-## STAN sampling
-## STAN sampling for each graph
+## STAN sampling from model with graph0
 Samples0 <- sampling(
     Sgpc_cmpld, 
     data = SdataM0,
@@ -212,6 +216,7 @@ Samples0 <- sampling(
     chains = 4
 )
 
+## STAN sampling from model with graph1
 Samples1 <- sampling(
     Sgpc_cmpld, 
     data = SdataM1,
@@ -304,23 +309,3 @@ ggarrange(
                      yb = length(iil):1+0.5))
     )
 
-## the latents
-par(mfrow = c(3, 3), mar = c(4,4,1,1), mgp = c(2,0.5,0), bty = "n")
-for(j in 1:(p-3)) {
-    xnm <- paste0("z[", 1:n, ",", j, "]")
-    xxsamples <- do.call('cbind', extract(Samples1, xnm))
-    plot(colMeans(xxsamples), xdata[, j], 
-         xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
-}
-for(j in (p-2):(p-1)) {
-    xnm <- paste0("z[", 1:n, ",", j, "]")
-    xxsamples <- do.call('cbind', extract(Samples1, xnm))
-    plot(xdata[, j]+0.01, exp(colMeans(xxsamples)), log = 'xy',
-    xlab = as.expression(bquote(x[.(j)])), ylab = xnames[j])
-}
-j = p
-    xnm <- paste0("z[", 1:n, ",", j, "]")
-    xxsamples <- do.call('cbind', extract(Samples1, xnm))
-plot(colMeans(xxsamples) ~ SAheart$famhist,
-     xlab = "famHist",
-     ylab = as.expression(bquote(x[.(j)])))
