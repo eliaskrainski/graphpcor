@@ -119,7 +119,7 @@ cgeneric_graphpcor <-
     stopifnot(n>0)
     nEdges <- dim(model)[2]
     if(nEdges==0) {
-      stop("This graph has no edges, consider 'iid' model!")
+      stop("This graph has no edges, consider the 'stds' model!")
     }
 
     ## Matrix structure

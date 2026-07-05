@@ -33,7 +33,7 @@ double gpc_pc_logsigma(double lsigma, double lam)
 	// PC-prior: \sigma ~ Exp(\lambda)
 	// return log of the PC-prior density for tlog(\sigma).
 	// See Simpson et. al. (2017) for this prior definition.
-	return log(lam) + lsigma - lam * exp(lsigma);
+	return log(lam) - lam * exp(lsigma) + lsigma ;
 }
 
 double pcmultivar(int m, double param, double *theta0, double *halfI, double *ldhI, double *theta) {

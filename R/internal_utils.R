@@ -45,7 +45,7 @@ m_iparams_fncheck <- function(m, iparams) {
     if(missing(iparams) || is.null(iparams)) {
       stop("Missing 'm' and 'iparams'!")
     }
-    m <- 1:length(unique(iparams))
+    m <- length(unique(iparams))
   }
   stopifnot(length(unique(iparams)) == m)
   ## next text allow c(1,1,2,2,1) but not c(2,2,3,3,2)
