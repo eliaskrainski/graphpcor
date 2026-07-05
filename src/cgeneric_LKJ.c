@@ -175,8 +175,11 @@ double *inla_cgeneric_LKJ(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric
 		// where P is the number of hyperparameters
 		ret = Calloc(nunkparams[2] + 1, double);
 		ret[0] = nunkparams[2];
-		for (i = 0; i < nunkparams[2]; i++) {
+		for (i = 0; i < nunkparams[0]; i++) {
 			ret[1 + i] = -2.0;
+		}
+		for (i = nunkparams[0]; i < nunkparams[2]; i++) {
+		  ret[1 + i] = 0.0;
 		}
 	}
 		break;
