@@ -49,15 +49,18 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 //	int debug = data->ints[1]->ints[0];
 	//assert(debug>=0);
 
-	assert(!strcasecmp(data->ints[2]->name, "ifixed"));
-	int npars = data->ints[2]->len;
+	assert(!strcasecmp(data->ints[2]->name, "iparams"));
+	assert(N == data->ints[2]->len);
+
+	assert(!strcasecmp(data->ints[3]->name, "ifixed"));
+	int npars = data->ints[3]->len;
 	assert(npars>0);
 	assert(npars<=N);
 	double th0[npars];
 
 	int nUnk = npars;
 	for(i=0; i<npars; i++) {
-	  nUnk -= data->ints[2]->ints[i];
+	  nUnk -= data->ints[3]->ints[i];
 	}
 	assert(nUnk<=npars);
 
@@ -67,10 +70,8 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 	  assert(data->doubles[0]->doubles[i] > 0);
 	}
 
-	assert(!strcasecmp(data->ints[3]->name, "iparams"));
-	assert(N == data->ints[3]->len);
 	assert(!strcasecmp(data->doubles[1]->name, "sigmaprob"));
-	assert(N == data->doubles[1]->len);
+	assert(npars == data->doubles[1]->len);
 
 	double actualtheta[N];
 
