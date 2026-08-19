@@ -97,8 +97,8 @@ cgeneric_stds <-
         n = as.integer(n),                 ## i0
         debug = as.integer(dotArgs$debug), ## i1
         shlib = dotArgs$shlib,
-        ifixed = as.integer(pcSigmas$fixed), ## i2
-        iparams = as.integer(iparams-1),          ## i3
+        iparams = as.integer(iparams-1),          ## i2
+        ifixed = as.integer(pcSigmas$fixed),       ## i3
         sigmaref = as.numeric(pcSigmas$reference),    ## d0
         sigmaprob = as.numeric(pcSigmas$probability)  ## d1
       )
