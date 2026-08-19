@@ -48,30 +48,38 @@ export(graphpcor)
 export(stan_add)
 export(tpcQ)
 export(treepcor)
-importFrom(INLAtools,Sparse)
-importFrom(INLAtools,cgeneric)
-importFrom(INLAtools,cgeneric_Q)
-importFrom(INLAtools,cgeneric_graph)
-importFrom(INLAtools,cgeneric_initial)
-importFrom(INLAtools,cgeneric_prior)
-importFrom(INLAtools,is.zero)
-importFrom(INLAtools,packageCheck)
-importFrom(INLAtools,upperPadding)
-importFrom(Matrix,Diagonal)
-importFrom(Matrix,Matrix)
-importFrom(Matrix,colSums)
-importFrom(Matrix,forceSymmetric)
-importFrom(Matrix,t)
+importFrom(INLAtools,
+  Sparse,
+  cgeneric,
+  cgeneric_Q,
+  cgeneric_graph,
+  cgeneric_initial,
+  cgeneric_prior,
+  is.zero,
+  packageCheck,
+  upperPadding
+)
+importFrom(Matrix,
+  Diagonal,
+  Matrix,
+  colSums,
+  forceSymmetric,
+  t
+)
 importFrom(grDevices,rgb)
 importFrom(igraph,graph_from_adjacency_matrix)
-importFrom(methods,getMethod)
-importFrom(methods,new)
+importFrom(methods,
+  getMethod,
+  new
+)
 importFrom(numDeriv,hessian)
-importFrom(stats,as.formula)
-importFrom(stats,cov2cor)
-importFrom(stats,drop1)
-importFrom(stats,rexp)
-importFrom(stats,runif)
-importFrom(stats,vcov)
+importFrom(stats,
+  as.formula,
+  cov2cor,
+  drop1,
+  rexp,
+  runif,
+  vcov
+)
 importFrom(utils,tail)
 useDynLib(graphpcor, .registration = TRUE)
