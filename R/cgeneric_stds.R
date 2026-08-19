@@ -90,10 +90,14 @@ cgeneric_stds <-
       print(pcSigmas)
     }
 
+    cgmodel <- paste0(
+      "inla_cgeneric_stds",
+      ifelse(dotArgs$useINLAprecomp, "", "_dev"))
+
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,
       args = list(
-        model = "inla_cgeneric_stds",
+        model = cgmodel,
         n = as.integer(n),                 ## i0
         debug = as.integer(dotArgs$debug), ## i1
         shlib = dotArgs$shlib,
