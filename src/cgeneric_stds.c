@@ -77,7 +77,7 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 
 	  k=0;
 	  for(i=0; i<npars; i++) {
-	    if(data->ints[2]->ints[i]) {
+	    if(data->ints[3]->ints[i]) {
 	      th0[i] = log(data->doubles[0]->doubles[i]);
 	    } else {
 	      if(theta) {
@@ -90,7 +90,7 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 	  assert(nUnk==k);
 
 	  for(i=0; i<N; i++) {
-	    actualtheta[i] = th0[data->ints[3]->ints[i]];
+	    actualtheta[i] = th0[data->ints[2]->ints[i]];
 	  }
 
 	switch (cmd) {
@@ -152,7 +152,7 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 	    double lam;
 	    k=0;
 	    for (i = 0; i < npars; i++) {
-	      if (data->ints[2]->ints[i]==0) {
+	      if (data->ints[3]->ints[i]==0) {
 	        lam = -log(data->doubles[1]->doubles[i]);
 	        lam /= data->doubles[0]->doubles[i];
 	        ret[0] += gpc_pc_logsigma(theta[k++], lam);
