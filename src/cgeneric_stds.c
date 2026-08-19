@@ -45,6 +45,8 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 	int N = data->ints[0]->ints[0];
 	assert(N > 0);
 
+//	printf("N = %d \n", N);
+
 	assert(!strcasecmp(data->ints[1]->name, "debug")); // this will always be the case
 //	int debug = data->ints[1]->ints[0];
 	//assert(debug>=0);
@@ -58,11 +60,15 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 	assert(npars<=N);
 	double th0[npars];
 
+//	printf("npars = %d \n", npars);
+
 	int nUnk = npars;
 	for(i=0; i<npars; i++) {
 	  nUnk -= data->ints[3]->ints[i];
 	}
 	assert(nUnk<=npars);
+
+//	printf("N=%d, npars=%d, nUnk=%d\n", N, npars, nUnk);
 
 	assert(!strcasecmp(data->doubles[0]->name, "sigmaref"));
 	assert(data->doubles[0]->len == npars);
