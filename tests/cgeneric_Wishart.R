@@ -80,9 +80,15 @@ fit2 <- inla(
     control.mode = cmode
 )
 
-pp3 <- list(cgeneric_Q(fit0),
-            cgeneric_Q(fit1),
-            cgeneric_Q(fit2))
+inla_Q <- function(r) {
+    r$.args$control.inla$int.strategy = 'eb'
+    r$.args$control.compute$config = TRUE
+    inla.rerun(r)$misc$configs$config[[1]]$Q
+}
+
+pp3 <- list(inla_Q(fit0),
+            inla_Q(fit1),
+            inla_Q(fit2))
 pp3[[1]]
 
 c(q12=all.equal(pp3[[1]], pp3[[2]]),

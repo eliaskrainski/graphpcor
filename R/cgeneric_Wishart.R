@@ -77,8 +77,8 @@ cgeneric_Wishart <-
           debug = as.integer(dotArgs$debug), ## 1
           shlib = dotArgs$shlib,
           dof = as.numeric(dof),
-          lcprior = as.double(lcprior),
-          R = as.numeric(rr)
+          R = as.numeric(rr),
+          lcprior = as.double(lcprior)
       ))
 
     return(the_model)
