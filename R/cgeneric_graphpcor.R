@@ -78,9 +78,8 @@ cgeneric_graphpcor <-
       ivs <- packageCheck(
         name = "INLA",
         minimum_version = vs) >= vs
-      if(is.na(ivs)) {
-        warning("Update INLA to use 'useINLAprecomp = TRUE'\n")
-        dotArgs$useINLAprecomp = FALSE
+      if(is.na(ivs) | (ivs>"26.08.07")) {
+        dotArgs$useINLAprecomp <- FALSE
       }
     }
 

@@ -85,6 +85,13 @@ cgeneric_LKJ <-
       if(dotArgs$debug){
         cat("searching shlib...\n")
       }
+      vs <- "26.03.19"
+      ivs <- packageCheck(
+        name = "INLA",
+        minimum_version = vs) >= vs
+      if(is.na(ivs) | (ivs>"26.08.07")) {
+        dotArgs$useINLAprecomp <- FALSE
+      }
       dotArgs$shlib <-
         INLAtools::cgeneric_shlib_path(
           package = "graphpcor",

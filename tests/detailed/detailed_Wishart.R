@@ -128,7 +128,7 @@ theta2prior <- function(th, R, d) {
 
 cgeneric_prior(W, theta = theta1) -log(abs(myJ(theta1)))
 dW(Q, RR, dof) 
-theta2cgeneric_prior(theta1, RR, dof) -log(abs(myJ(theta1)))
+cgeneric_prior(W, theta1) -log(abs(myJ(theta1)))
 
 c(qq=CholWishart::dWishart(
                       as.matrix(Q),
