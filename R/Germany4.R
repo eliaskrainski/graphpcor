@@ -8,6 +8,7 @@
 #' @keywords disease mapping, cancer, Germany
 #' @examples
 #' data(Germany4)
-#' ggplot2::ggplot(Germany4) +
-#'   ggplot2::geom_sf(aes(fill = lung_obs/lung_exp))
+#' names(Germany4)
+#' ## ggplot2::ggplot(Germany4) +
+#'   ## ggplot2::geom_sf(aes(fill = lung_obs/lung_exp))
 "Germany4"
