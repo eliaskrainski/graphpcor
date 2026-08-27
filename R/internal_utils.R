@@ -36,14 +36,20 @@ p_iLtheta_fncheck <- function(p, iLtheta) {
 #' @param m integer to specify the number of parameters
 m_iparams_fncheck <- function(m, iparams) {
   if(missing(iparams) || is.null(iparams)) {
-    if(missing(m)) {
+    if(missing(m) || is.null(m)) {
       stop("Missing 'm' and 'iparams'!")
     }
     iparams <- 1:m
   }
-  stopifnot(length(iparams) == m)
+  if(missing(m) || is.null(m)) {
+    if(missing(iparams) || is.null(iparams)) {
+      stop("Missing 'm' and 'iparams'!")
+    }
+    m <- length(unique(iparams))
+  }
+  stopifnot(length(unique(iparams)) == m)
+  ## next text allow c(1,1,2,2,1) but not c(2,2,3,3,2)
   stopifnot(all(iparams %in% 1:m))
-  ## next text allow c(1,1,2,2,1) but not c(2,2,1,1,2)
   stopifnot(all(diff(sort(unique(iparams)))==1))
   attr(iparams, "m") <- m
   return(iparams)

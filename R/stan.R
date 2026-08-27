@@ -98,7 +98,7 @@ stan_add_pc_correl <- function(x, model, lambda, name) {
     ## transformed parameters
     aC$"transformed parameters" <- "
     vector[Lcorrel_theta_dim] Lcorrel_xi = Lcorrel_Ibase_half * (Lcorrel_theta - Lcorrel_theta_base);
-    real<lower=0> Lcorrel_radius = dot_self(Lcorrel_xi);
+    real<lower=0> Lcorrel_radius = sqrt(dot_self(Lcorrel_xi));
     matrix[Lcorrel_dim,Lcorrel_dim] Lcorrel_A;
     matrix[Lcorrel_dim,Lcorrel_dim] Lcorrel_B;
     cholesky_factor_corr[Lcorrel_dim] Lcorrel;
@@ -219,7 +219,7 @@ stan_add_graphpcor <- function(x, model, lambda, name) {
     ## transformed parameters
     aC$"transformed parameters" <- "
     vector[grpc_theta_dim] grpc_xi = grpc_Ibase_half * (grpc_theta - grpc_theta_base);
-    real<lower=0> grpc_radius = dot_self(grpc_xi);
+    real<lower=0> grpc_radius = sqrt(dot_self(grpc_xi));
     matrix[grpc_dim,grpc_dim] grpc_L0;
     for(i in 1:grpc_dim) {
       for(j in 1:grpc_dim) {

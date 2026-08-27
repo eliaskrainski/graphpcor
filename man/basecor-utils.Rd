@@ -3,12 +3,12 @@
 \name{basecor-utils}
 \alias{basecor-utils}
 \alias{cholcor}
-\alias{corr2theta}
+\alias{corr2CPCtheta}
 \title{Functions used by/to basecor}
 \usage{
 cholcor(theta, p, iLtheta, parametrization = "cpc")
 
-corr2theta(corr)
+corr2CPCtheta(corr)
 }
 \arguments{
 \item{theta}{numeric parameter vector.}
@@ -45,7 +45,7 @@ Map a correlation matrix to theta.
 \itemize{
 \item \code{cholcor()}: Build the (lower) Cholesky for a correlation matrix
 
-\item \code{corr2theta()}: This function takes a correlation matrix and return
+\item \code{corr2CPCtheta()}: This function takes a correlation matrix and return
 the parameter vector that generates it with the
 canonical partial correlation parametrization.
 

@@ -1,4 +1,4 @@
-### useful packages
+### fit some models to model 4 diseaes in Germany
 
 library(graphpcor)
 library(INLA)
@@ -16,12 +16,6 @@ scc.fn <- function(x, mat = FALSE) {
     diag(r) <- sqrt(diag(r))
     return(r)
 }
-
-### INLA setup
-inla.setOption(
-    num.threads = "6:1",
-    safe = FALSE
-)
 
 ### inla setup controls
 ctrc <- list(
@@ -56,11 +50,13 @@ round(svcor.obs, 2) ## upper.tri as in Table 2 of Held et. al. (2005)
 (n.areas <- nrow(smr.obs))
 
 ### Models 1: scaled Besag model for each disease
-pcprec <- list(prior = "pc.prec", param = c(1, 0.01))
 m1f <- Obs ~
-    f(id.area, model = "besag", graph = graphGermany)
+    f(id.area, model = "besag", graph = graphGermany,
+      scale.model = TRUE,
+      hyper = list(theta = list(prior = "pc.prec", param = c(0.5, 0.05))))
 
-vnames <- c("oral", "osph", "lary", "lung")
+vnames <- c("oral", "osph", "lary", "lung"
+            ); names(vnames) <- vnames
 
 lres.m1 <- lapply(vnames, function(v) {
     inla(formula = m1f, 
@@ -76,10 +72,9 @@ lres.m1 <- lapply(vnames, function(v) {
 })
 
 ## covariance, correlation and std for the fitted log(smr)
-svcor.m1 <- scc.fn(sapply(
-    lres.m1, function(r) r$summary.random$id$mean))
-colnames(svcor.m1) <- rownames(svcor.m1) <-
-    gsub("obs", "m1", rownames(svcor.obs))
+smr_fit1 <- sapply(lres.m1, function(r)
+    r$summary.random$id$mean)
+svcor.m1 <- scc.fn(smr_fit1)
 round(svcor.m1, 2)
 
 ### long data format
@@ -92,25 +87,22 @@ ldata <- data.frame(
     E = unlist(dataf[paste0(vnames, "_exp")])
 )
 
-
 ##########################################################
-### Model 2: tree model (tree in Fig. 8 of paper1) 
+### Model 2: correlated disease models 
 ##########################################################
+cgWishart <- cgeneric(
+    model = "Wishart", n = K, dof = K + 2,
+    R = c(rep(1, K), diag(K)[lower.tri(diag(K))]))
+cgLKJ <- cgeneric(
+    model = "LKJ", n = K, eta = 2,
+    sigma.prior.reference = rep(0.5, K),
+    sigma.prior.probability = rep(0.05, K))
+cgPC <- cgeneric(
+    model = "pc_correl", n = K, lambda = 1, 
+    sigma.prior.reference = rep(0.5, K),
+    sigma.prior.probability = rep(0.05, K))
 
-tree3 <- treepcor(
-    p1 ~ p2 + c4,
-    p2 ~ p3 + c2 + c3,
-    p3 ~ c1)
-
-### cgeneric tree model
-tree3model <- cgeneric(
-    model = tree3, 
-    lambda = 5,
-    sigma.prior.reference = c(1, 1, 1, 1),
-    sigma.prior.probability = c(0.1, 0.1, 0.1, 0.1)
-)
-
-### The kronecker product model: besag with treepcor
+### The cgeneric Besag model definition 
 R.spatial <- inla.as.sparse(
     Diagonal(n.areas, x = colSums(graphGermany)) - graphGermany)
 
@@ -123,22 +115,48 @@ cBesag <- cgeneric(
 
 str(cBesag$f$extraconstr)
 
-tree3Besag <- kronecker(tree3model, cBesag)
-str(tree3Besag$f$extraconstr)
+cstds <- cgeneric("stds", n=K, lambda = 1,
+                  sigma.prior.reference = rep(0.5, K),
+                  sigma.prior.probability = rep(0.05, K))
+brepl <- kronecker(cstds, cBesag)
+bWishart <- kronecker(cgWishart, cBesag)
+bLKJ <- kronecker(cgLKJ, cBesag)
+bPC <- kronecker(cgPC, cBesag)
 
-m2f <- Obs ~ 0 + disease + 
-    f(iddata, model = tree3Besag)
+ffl <- list(
+    rpl = Obs ~ f(iddata, model = brepl) + disease-1,
+   ## Wish = Obs ~ f(iddata, model = bWishart) + disease-1,
+    LKJ = Obs ~ f(iddata, model = bLKJ) + disease-1,
+    PC = Obs ~ f(iddata, model = bPC) + disease-1)
 
-### fit the model
-res.m2 <- inla(
-    formula = m2f, 
-    family = "poisson",
-    data = ldata, 
-    E = E,
-    verbose = TRUE,
-    control.compute = ctrc,
-    control.inla = ctri
-)
+inla.setOption(inla.call = "/home/eliask/.cache/R/INLA/stiles-binary/v26.08.20/bin/inla.run")
+inla.setOption(smtp = "stiles")
+
+fits <- lapply(ffl, function(ff) {
+    print(ff)
+    t0 <- Sys.time()
+    o <- inla(
+        formula = ff, 
+        family = "poisson",
+        data = ldata, 
+        E = E,
+        verbose = TRUE,
+        control.compute = ctrc,
+       control.inla = ctri
+    )
+    print(Sys.time()-t0)
+    o
+})
+
+sapply(fits, function(r) r$cpu.used)
+
+sapply(fits, function(r) r$misc$nfunc)
+
+c(sum(sapply(lres.m1, function(x) x$dic$dic)),
+  sapply(fits, function(x) x$dic$dic)
+  )
+
+sapply(fits, function(x) sum(x$gcv$gcv))
 
 ## covariance, correlation and std for the fitted log(smr)
 svcor.m2 <- scc.fn(
@@ -492,3 +510,4 @@ legend("topleft", c("graph 4", "graph 5", "graph 5b"),
        bty = 'n', border = 'transparent', cex = 1.5)
 
 sessionInfo()
+

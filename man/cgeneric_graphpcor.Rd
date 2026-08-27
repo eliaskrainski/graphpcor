@@ -2,9 +2,22 @@
 % Please edit documentation in R/cgeneric_graphpcor.R
 \name{cgeneric_graphpcor}
 \alias{cgeneric_graphpcor}
+\alias{cgeneric.basepcor}
 \title{Build an \code{cgeneric} for a (graph based) correlation matrix PC-prior.}
 \usage{
 cgeneric_graphpcor(
+  model,
+  lambda,
+  base,
+  sigma.prior.reference,
+  sigma.prior.probability,
+  iparams,
+  cfixed,
+  d0,
+  ...
+)
+
+\method{cgeneric}{basepcor}(
   model,
   lambda,
   base,
@@ -85,6 +98,11 @@ The parametrization is set as in \code{\link[=basepcor]{basepcor()}} and the bas
 is used to define an informative prior, as derived in
 the pcmultivariate vignette.
 }
+\section{Functions}{
+\itemize{
+\item \code{cgeneric(basepcor)}: Build a \code{cgeneric} for a \code{basepcor}.
+
+}}
 \seealso{
 \code{\link[=graphpcor]{graphpcor()}} and \code{\link[=basepcor]{basepcor()}}
 }

@@ -107,7 +107,8 @@ b1 <- basepcor(c0)
 b1
 
 ## p = 3, m = 2
-b2 <- basepcor(c0, iLtheta = c(2,3))
+g2 <- graphpcor(a ~ b + c)
+b2 <- basepcor(c0, iLtheta = g2)##c(2,3))
 b2
 
 all.equal(b1$base, b2$base)

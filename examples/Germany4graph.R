@@ -3,26 +3,6 @@
 library(graphpcor)
 library(INLA)
 
-### function to scale covariance matrix as
-##    sqrt(variance) in the diagonal
-###   correlation at the off diagonal
-scc.fn <- function(x, mat = FALSE) {
-    if(mat) {
-        r <- x
-    } else {
-        r <- cov(x)
-    }
-    r[upper.tri(r)] <- cov2cor(r)[upper.tri(r)]
-    diag(r) <- sqrt(diag(r))
-    return(r)
-}
-
-### INLA setup
-inla.setOption(
-    num.threads = "6:1",
-    safe = FALSE
-)
-
 ### inla setup controls
 ctrc <- list(
     dic = TRUE, waic = TRUE, cpo = TRUE,
@@ -135,7 +115,6 @@ res.m2 <- inla(
     family = "poisson",
     data = ldata, 
     E = E,
-    verbose = TRUE,
     control.compute = ctrc,
     control.inla = ctri
 )

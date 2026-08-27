@@ -72,6 +72,12 @@ basepcor.numeric <- function(
 
   theta <- base
 
+  if(inherits(iLtheta, "graphpcor")) {
+    nodes <- attr(iLtheta, "nodes")
+  } else {
+    nodes <- NULL
+  }
+
   ## check p and iLtheta
   iLtheta <- p_iLtheta_fncheck(p, iLtheta)
   if(missing(p)) {
@@ -107,6 +113,8 @@ basepcor.numeric <- function(
   U0correl <- chol(base)
 
   ## output
+  dimnames(base) <- dimnames(L0) <- dimnames(U0correl) <-
+    list(nodes, nodes)
   out <- list(
     base = base,
     theta = theta,

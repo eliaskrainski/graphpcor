@@ -75,3 +75,17 @@ Lprec0 <- function(
   L <- fillLprec(L)
   return(L)
 }
+#' Map a correlation matrix to theta.
+#' @describeIn basepcor-utils
+#' This function takes a correlation matrix and return
+#' the parameter vector that approximates it under a `graphpcor`.
+#' @param corr matrix as a correlation matrix
+corr2graphpcor_theta <- function(corr) {
+  corr <- as.matrix(corr)
+  stopifnot(nrow(corr) == (p <- ncol(corr)))
+  stopifnot(p>1)
+  stopifnot(all.equal(
+    new("numeric", diag(corr)),
+    rep(1.0, p)))
+  L <- t(chol(corr))
+}
