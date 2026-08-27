@@ -135,6 +135,7 @@ res.m2 <- inla(
     family = "poisson",
     data = ldata, 
     E = E,
+    verbose = TRUE,
     control.compute = ctrc,
     control.inla = ctri
 )

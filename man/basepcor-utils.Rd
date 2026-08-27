@@ -4,11 +4,14 @@
 \alias{basepcor-utils}
 \alias{fillLprec}
 \alias{Lprec0}
+\alias{corr2graphpcor_theta}
 \title{Functions used by/to basepcor}
 \usage{
 fillLprec(L, lfi)
 
 Lprec0(theta, p, iLtheta, d0)
+
+corr2graphpcor_theta(corr)
 }
 \arguments{
 \item{L}{matrix as the lower triangle
@@ -34,6 +37,8 @@ the dense case as \code{iLtheta = which(lower.tri(...))}, giving
 \item{d0}{numeric vector to specify the diagonal of the
 Cholesky factor for the initial precision matrix \code{Q0}.
 Default, if not provided, is \code{d0 = p:1}.}
+
+\item{corr}{matrix as a correlation matrix}
 }
 \value{
 lower triangular matrix with the filled-in
@@ -43,6 +48,8 @@ lower triangular matrix
 }
 \description{
 Functions used by/to basepcor
+
+Map a correlation matrix to theta.
 }
 \details{
 The (lower triangle) Cholesky factor
@@ -56,5 +63,8 @@ The filled-in elements are computed from them using \code{\link[=fillLprec]{fill
 \item \code{fillLprec()}: Function to fill-in a Cholesky matrix
 
 \item \code{Lprec0()}: Compute the (lower triangle) Cholesky of the initial precision \code{Q0}.
+
+\item \code{corr2graphpcor_theta()}: This function takes a correlation matrix and return
+the parameter vector that approximates it under a \code{graphpcor}.
 
 }}

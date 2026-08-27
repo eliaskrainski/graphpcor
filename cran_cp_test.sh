@@ -2,7 +2,7 @@
 rm -rf ~/temp/graphpcor*
 mkdir ~/temp/graphpcor/
 cd ../main_branch_graphpcor/
-cp -r DESCRIPTION NAMESPACE R/ man/ demo/ ~/temp/graphpcor/
+cp -r DESCRIPTION NAMESPACE data/ demo/ man/ R/ src/ ~/temp/graphpcor/
 cd vignettes/
 mkdir ~/temp/graphpcor/vignettes/
 cp preamble.tex references.bib treepcor.Rmd ~/temp/graphpcor/vignettes/

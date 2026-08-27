@@ -187,7 +187,7 @@ basecor.matrix <- function(
   iparams <- m_iparams_fncheck(m, iparams)
   m0 <- iparams[m]
 
-  theta <- corr2theta(base)
+  theta <- corr2CPCtheta(base)
 
   out <- list(
     base = base,

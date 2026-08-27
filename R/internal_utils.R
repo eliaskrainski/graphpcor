@@ -40,11 +40,7 @@ m_iparams_fncheck <- function(m, iparams) {
       stop("Missing 'm' and 'iparams'!")
     }
     iparams <- 1:m
-  }
-  if(missing(m) || is.null(m)) {
-    if(missing(iparams) || is.null(iparams)) {
-      stop("Missing 'm' and 'iparams'!")
-    }
+  } else {
     m <- length(unique(iparams))
   }
   stopifnot(length(unique(iparams)) == m)
