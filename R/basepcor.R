@@ -86,9 +86,14 @@ basepcor.numeric <- function(
   stopifnot(p>1)
 
   ## check iparams
-  iparams <- m_iparams_fncheck(
-    length(iLtheta), iparams)
-  m <- attr(iparams, "m")
+  if(is.null(iparams)) {
+    m <- length(iLtheta)
+    iparams <- 1L:m
+    attr(iparams, "m") <- m
+  } else {
+    iparams <- m_iparams_fncheck(NULL, iparams)
+    m <- attr(iparams, "m")
+  }
 
   if(missing(d0)) {
     d0 <- p:1
