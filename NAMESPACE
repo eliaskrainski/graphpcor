@@ -82,3 +82,4 @@ importFrom(stats,
   vcov
 )
 importFrom(utils,tail)
+useDynLib(graphpcor, .registration = TRUE)
