@@ -394,7 +394,7 @@ haveINLA <- require(INLA)
 
 Perform some checks (INLA is required):
 ```{r ccheck, eval = haveINLA}
-cgeneric_cgeneric_graph(cmodel)
+cgeneric_graph(cmodel)
 cgeneric_initial(cmodel)
 prior(cmodel, theta = rep(0, sum(np)))
 prior(cmodel, theta = rep(1, sum(np)))
