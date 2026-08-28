@@ -400,8 +400,8 @@ cgeneric_prior(cmodel, theta = rep(0, sum(np)))
 cgeneric_prior(cmodel, theta = rep(1, sum(np)))
 
 np
-tpcQ(cmodel, theta = rep(0, sum(np)))
-(Qc <- tpcQ(cmodel, theta = theta1))
+cgeneric_Q(cmodel, theta = rep(0, sum(np)))
+(Qc <- cgeneric_Q(cmodel, theta = theta1))
 all.equal(Vg, as.matrix(solve(Qc)))
 ```
 
