@@ -389,7 +389,7 @@ cmodel <- cgeneric(
 The following code chunks require INLA installed.
 
 ```{r haveINLA, echo = FALSE}
-haveINLA <- FALSE
+haveINLA <- require(INLA)
 ```
 
 Perform some checks (INLA is required):
