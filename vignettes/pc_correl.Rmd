@@ -490,7 +490,7 @@ par(mfrow = c(nlambs, 6), mar = c(4,4,0,0), mgp = c(2,0.5,0))
 for(lamb in lambdas) {
     cmodel <- cgeneric("pc_correl", n = p, lambda = lamb,
                        useINLAprecomp = FALSE)
-    p3a <- array(exp(prior(cmodel, theta = th3)), rep(nsth, 3))
+    p3a <- array(exp(cgeneric_prior(cmodel, theta = th3)), rep(nsth, 3))
     itests <- lapply(datf3, function(ddf)
         inla(formula = fr,
              data = ddf,
