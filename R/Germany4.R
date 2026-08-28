@@ -5,7 +5,10 @@
 #' This is an `sf` object containing the observed
 #' and expected number of cases on oral, oesophagus,
 #' larynx and lung.
-#' @keywords disease mapping, cancer, Germany
+#' @keywords datasets
+#' @keywords disease mapping
+#' @keywords cancer
+#' @keywords Germany
 #' @examples
 #' data(Germany4)
 #' names(Germany4)
