@@ -36,6 +36,7 @@ knitr::opts_chunk$set(
   fig.width = 10, fig.height = 7)
 library(graphpcor)
 library(INLA)
+haveINLA <- require(INLA)
 set.seed(1)
 ```
 
