@@ -25,20 +25,16 @@ build complex data models.
 1.  local clone repository
     1)  R CMD build then R CMD INSTALL
     2)  within Rstudio: \<Ctrl+Shift+B\>
-2.  from this source with the github token (obtain the token at Github
-    account settings: click on <Developer settings>, then
-    <Personal access tokens>, and select \<Tokens (classic)\> and
-    following the steps.)
+2.  from this source with the github 
 
 <!-- -->
 
-    atok <- 'your_github_token'
     remotes::install_github(
     repo = 'https://github.com/eliaskrainski/graphpcor',
+    ref = "main"
     build = TRUE, ## to completely build the package
     build_vignettes = TRUE, ## it will take a bit of time, but helps
-    build_opts = c("--no-resave-data"),
-    auth_token = atok)
+    build_opts = c("--no-resave-data"))
 
 ## Installing dependencies
 
