@@ -389,19 +389,19 @@ cmodel <- cgeneric(
 The following code chunks require INLA installed.
 
 ```{r haveINLA, echo = FALSE}
-haveINLA <- FALSE
+haveINLA <- require(INLA)
 ```
 
 Perform some checks (INLA is required):
 ```{r ccheck, eval = haveINLA}
-cgeneric_cgeneric_graph(cmodel)
+cgeneric_graph(cmodel)
 cgeneric_initial(cmodel)
-prior(cmodel, theta = rep(0, sum(np)))
-prior(cmodel, theta = rep(1, sum(np)))
+cgeneric_prior(cmodel, theta = rep(0, sum(np)))
+cgeneric_prior(cmodel, theta = rep(1, sum(np)))
 
 np
-tpcQ(cmodel, theta = rep(0, sum(np)))
-(Qc <- tpcQ(cmodel, theta = theta1))
+cgeneric_Q(cmodel, theta = rep(0, sum(np)))
+(Qc <- cgeneric_Q(cmodel, theta = theta1))
 all.equal(Vg, as.matrix(solve(Qc)))
 ```
 

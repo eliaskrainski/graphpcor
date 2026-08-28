@@ -5,9 +5,13 @@
 #' This is an `sf` object containing the observed
 #' and expected number of cases on oral, oesophagus,
 #' larynx and lung.
-#' @keywords disease mapping, cancer, Germany
+#' @keywords datasets
+#' @keywords disease mapping
+#' @keywords cancer
+#' @keywords Germany
 #' @examples
 #' data(Germany4)
-#' ggplot2::ggplot(Germany4) +
-#'   ggplot2::geom_sf(aes(fill = lung_obs/lung_exp))
+#' names(Germany4)
+#' ## ggplot2::ggplot(Germany4) +
+#'   ## ggplot2::geom_sf(aes(fill = lung_obs/lung_exp))
 "Germany4"

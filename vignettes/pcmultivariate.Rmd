@@ -35,6 +35,7 @@ knitr::opts_chunk$set(
   fig.height = 4)
 library(graphpcor)
 library(plot3D)
+haveINLA <- require(INLA)
 
 ```
 
@@ -749,7 +750,7 @@ th0x <- t(expand.grid(th0s + theta0[1],
 dth <- lapply(lseq, function(lambda) {
   cm <- cgeneric(gpc, base = C0, 
                  lambda = lambda)
-  matrix(exp(prior(cm, theta = th0x)), nth0)
+  matrix(exp(cgeneric_prior(cm, theta = th0x)), nth0)
 })
 
 par(mfrow = c(1, 2), mar = c(4,4,1,1), mgp = c(3,1,0))
@@ -872,7 +873,7 @@ solve(cgeneric_Q(c_model, theta = th0))
 Now, query the `cgeneric` with
 ```{r pCeval}
 dth <- exp(
-    prior(
+    cgeneric_prior(
         c_model, 
         theta = rbind(th0x[1,] + th0[1],
                       th0x[2,] + th0[2],
