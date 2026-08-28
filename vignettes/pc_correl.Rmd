@@ -133,10 +133,10 @@ as $\theta=0$ (no correlation).
 ## The prior
 
 We evaluate the integral of the density (for $\theta$)
-by applying `prior()` to the `generic` model as
+by applying `cgeneric_prior()` to the `generic` model as
 ```{r iprior, eval = FALSE}
 plot(function(th) 
-  exp(prior(Cmodel, theta = th)), 
+  exp(cgeneric_prior(Cmodel, theta = th)), 
   from = a, to = b)
 ```
 where `a` and `b` are the limits.
@@ -150,7 +150,7 @@ for(i in 1:nlambs) {
         base = 0,
         useINLAprecomp = FALSE)
     print(integrate(
-      function(th) exp(prior(Cmodel, theta = th)), 
+      function(th) exp(cgeneric_prior(Cmodel, theta = th)), 
       lower = -5, upper = 5)) 
 }
 ```
@@ -174,7 +174,7 @@ cfam <- list(hyper = list(prec = list(
   initial = 10, fixed = TRUE)))
 ```
 
-We visualize both, the prior directly computed with `prior()` and the one from `inla()`, 
+We visualize both, the prior directly evaluated with `cgeneric_prior()` and the one from `inla()`, 
 for different prior parameter. 
 
 ```{r vizthn2m1}
@@ -189,7 +189,7 @@ for(i in 1:nlambs) {
         formula = fi, data = d1p, control.family = cfam
     )
     pm <- ifit$marginals.hyperpar[[1]]
-    plot(function(th) exp(prior(Cmodel, theta = th)),
+    plot(function(th) exp(cgeneric_prior(Cmodel, theta = th)),
          from = min(pm[, 1])*2, to = max(pm[, 1]) * 2, 
          xlab = expression(theta), 
          ylab = expression(pi[theta]))
@@ -289,7 +289,7 @@ cmodel <- cgeneric(
 
 cmodel
 
-cgeneric_cgeneric_graph(cmodel)
+cgeneric_graph(cmodel)
 
 cgeneric_initial(cmodel)
 
@@ -302,11 +302,11 @@ all.equal(as.matrix(solve(cgeneric_Q(cmodel, theta = theta3))),
 
 The prior can be evaluated at one $\btheta$ (vector) value with
 ```{r prior3_1}
-prior(cmodel, theta = theta3)
+cgeneric_prior(cmodel, theta = theta3)
 ```
 or at several (one at each column)
 ```{r prior3_2}
-prior(cmodel, theta = cbind(theta3, rnorm(m)))
+cgeneric_prior(cmodel, theta = cbind(theta3, rnorm(m)))
 ```
 
 
@@ -320,7 +320,7 @@ ncol(th3 <- t(expand.grid(sths)))/1e6
 ```
 evaluate the prior and organize it into an array with
 ```{r p3}
-p3 <- array(prior(cmodel, theta = th3), rep(nsth, 3))
+p3 <- array(cgeneric_prior(cmodel, theta = th3), rep(nsth, 3))
 str(p3)
 ```
 
