@@ -80,12 +80,77 @@ Lprec0 <- function(
 #' This function takes a correlation matrix and return
 #' the parameter vector that approximates it under a `graphpcor`.
 #' @param corr matrix as a correlation matrix
-corr2graphpcor_theta <- function(corr) {
+#' @inheritParams basepcor d0 ...
+corr2graphpcor_theta <- function(corr, ..., d0) {
+  have_qgraph <- try(do.call(
+    what = "require",
+    args = list(package = "qgraph")), silent = TRUE)
+  if(inherits(have_qgraph, "try-error")) {
+    cat(have_qgraph)
+    stop("Please install the 'qgraph' package!")
+  }
   corr <- as.matrix(corr)
   stopifnot(nrow(corr) == (p <- ncol(corr)))
   stopifnot(p>1)
+  stopifnot(all.equal(corr, t(corr)))
   stopifnot(all.equal(
     new("numeric", diag(corr)),
     rep(1.0, p)))
-  L <- t(chol(corr))
+##  gms_args <- list(...)
+  ##ggmfit <- do.call(
+    ##what = paste0("qgraph", "::", "ggmModSelect"),
+     ##args = c(list(S=corr, gms_args)))
+  ggmfit <- qgraph::ggmModSelect(
+    S = corr, ...)
+  pCorr0 <- Diagonal(p) - ggmfit$graph
+  Upc <- chol(pCorr0)
+  iil <- which(lower.tri(diag(p)))
+  iLth <- which(lower.tri(diag(p)) & pCorr0!=0)
+  L0 <- t(Upc)
+  if(missing(d0) | is.null(d0)) {
+    d0 <- p:1
+  }
+  stopifnot(length(d0)==p)
+  for(i in 1:p)
+    L0[i, ] <- (d0[i]/Upc[i,i]) * Upc[,i]
+  theta <- L0[iLth]
+  attr(theta, 'pCorr0') <- pCorr0
+  return(theta)
+}
+#' Draw samples from a `basepcor`.
+#' @describeIn basepcor-utils
+#' Sample from the model parameters and map it to the correlation matrix.
+#' @param x the correlation model
+#' @param size the number of samples
+#' @param lambda the penalization parameter
+#' @export
+sample.basepcor <- function(x, size, lambda) {
+  stopifnot((m <- length(x$theta))>0)
+  stopifnot(lambda>0)
+  stopifnot(size>0)
+  p <- ncol(x$base)
+  r <- rexp(size, lambda)
+  theta <- t(sapply(1:size, function(i) {
+    z <- rnorm(m)
+    z <- z / sqrt(sum(z^2))
+  })) * r
+  H <- hessian(x)
+  sHi <- graphpcor:::dspd(H)$sqrtInv
+  theta <- sweep(theta %*% sHi, 2, x$theta)
+  lfi <- setdiff(which(abs(x$L0)>0 & lower.tri(x$L0)),
+                 x$iLtheta)
+  L0 <- diag(x$d0, p, p)
+  if(length(lfi)>0) {
+    out <- sapply(1:size, function(i){
+      L0[x$iLtheta] <- theta[i, ]
+      cov2cor(tcrossprod(fillLprec(L0,lfi)))
+    })
+  } else {
+    out <- sapply(1:size, function(i){
+      L0[x$iLtheta] <- theta[i, ]
+      cov2cor(tcrossprod(L0))
+    })
+  }
+  dim(out) <- c(p, p, size)
+  return(out)
 }

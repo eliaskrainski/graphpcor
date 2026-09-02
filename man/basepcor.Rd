@@ -7,11 +7,11 @@
 \alias{print.basepcor}
 \title{A base precision's Cholesky model for a correlation matrix}
 \usage{
-basepcor(base, p, iLtheta, d0, iparams)
+basepcor(base, p, iLtheta, d0, iparams, ...)
 
-\method{basepcor}{numeric}(base, p, iLtheta, d0, iparams)
+\method{basepcor}{numeric}(base, p, iLtheta, d0, iparams, ...)
 
-\method{basepcor}{matrix}(base, p, iLtheta, d0, iparams)
+\method{basepcor}{matrix}(base, p, iLtheta, d0, iparams, ...)
 
 \method{print}{basepcor}(x, ...)
 }
@@ -38,9 +38,9 @@ Default is \code{1:m}, \code{m=length(theta)}. Example: By setting
 are considered to be the same.
 NOTE: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 
-\item{x}{a basepcor object.}
-
 \item{...}{further arguments passed on.}
+
+\item{x}{a basepcor object.}
 }
 \value{
 a basepcor object

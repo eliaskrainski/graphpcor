@@ -24,6 +24,8 @@
 #' `iparams = c(1,1,2,3)`, `m=3`, the first and second parameters
 #' are considered to be the same.
 #' NOTE: `c(1,2,1)` is allowed, but `c(2,1,2)` is not.
+#' @param ... arguments passed to the function
+#' ggmModSelect of the 'qgraph' package when `base` is a matrix.
 #' @details
 #' The Inverse Transform Parametrization - ITP,
 #' is applied by starting with a
@@ -55,7 +57,8 @@ basepcor <- function(
     p,
     iLtheta,
     d0,
-    iparams) {
+    iparams,
+    ...) {
   UseMethod("basepcor")
 }
 #' @describeIn basepcor
@@ -68,7 +71,8 @@ basepcor.numeric <- function(
     p,
     iLtheta,
     d0,
-    iparams) {
+    iparams,
+    ...) {
 
   theta <- base
 
@@ -128,7 +132,6 @@ basepcor.numeric <- function(
 
   return(out)
 }
-
 #' @describeIn basepcor
 #' Build a `basepcor` from a correlation matrix.
 #' @export
@@ -137,30 +140,18 @@ basepcor.matrix <- function(
     p,
     iLtheta,
     d0,
-    iparams) {
-  stopifnot(all.equal(base, t(base)))
-  p <- as.integer(nrow(base))
-  if(missing(d0)) {
-    d0 <- p:1
-  } else {
-    stopifnot(length(d0)==p)
-    stopifnot(all(d0>0))
-  }
-  stopifnot((length(d0)==p) && (all(d0>0)))
-  U0correl <- chol(base)
-  Q <- chol2inv(U0correl)
-  ilQ <-  which(
-    lower.tri(matrix(1, p, p)) &
-      (!is.zero(Q, tol = 0.001)))
-  iLtheta <- p_iLtheta_fncheck(p, iLtheta)
-  stopifnot(all(ilQ %in% iLtheta))
+    iparams,
+    ...) {
 
-  ## compute theta
-  LQ0 <- t(chol(Q))
-  for(i in 1:p) {
-      LQ0[i, ] <- (d0[i]/LQ0[i, i]) * LQ0[i, ]
+  if(missing(p) || is.null(p))
+    p <- ncol(base)
+  stopifnot(p == ncol(base))
+  if(missing(d0) || is.null(d0)) {
+    d0 <- p:1
   }
-  theta <- LQ0[iLtheta]
+
+  ## find theta
+  theta <- corr2graphpcor_theta(base, ..., d0)
 
   ## check iparams
   iparams <- m_iparams_fncheck(
