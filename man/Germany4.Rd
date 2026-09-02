@@ -3,12 +3,17 @@
 \docType{data}
 \name{Germany4}
 \alias{Germany4}
+\alias{graphGermany}
 \title{Germany data on four disease with geometry}
 \format{
 sf with an 544 areas and 9 variables
+
+An object of class \code{dgTMatrix} with 544 rows and 544 columns.
 }
 \usage{
 data(Germany4)
+
+graphGermany
 }
 \description{
 This is an \code{sf} object containing the observed
@@ -17,10 +22,16 @@ larynx and lung.
 }
 \examples{
 data(Germany4)
-ggplot2::ggplot(Germany4) +
-  ggplot2::geom_sf(aes(fill = lung_obs/lung_exp))
+names(Germany4)
+\dontrun{
+## ggplot2::ggplot(Germany4) +
+  ## ggplot2::geom_sf(aes(fill = lung_obs/lung_exp))
+}
 }
 \keyword{Germany}
-\keyword{cancer,}
+\keyword{cancer}
+\keyword{dataset}
+\keyword{datasets}
 \keyword{disease}
-\keyword{mapping,}
+\keyword{map}
+\keyword{mapping}

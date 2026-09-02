@@ -5,8 +5,12 @@
 #' The correlation built from a `graphpcor` consider
 #' the parameters for the Cholesky of a precision matrix,
 #' whose non-zero pattern is given from the graph.
-#' @param ... matrix or Matrix (treated as binary) or a
-#' vector or list of formula (or character interpreted as formula)
+#' @param ... matrix or Matrix (treated as binary), or a
+#' vector or list of formula (or character interpreted as formula),
+#' or an integer vector for the index of the non-zero pattern of
+#' a dimensional graph for `p` nodes.
+#' For integer index `p` may be provided or a
+#' guess is made from the provided index.
 #' @export
 graphpcor <- function(...) {
   UseMethod("graphpcor")
@@ -75,14 +79,35 @@ graphpcor.character <- function(...) {
   return(fch)
 }
 #' @describeIn graphpcor
+#' Build a `graphpcor` from index for the non-zero pattern.
+#' @export
+graphpcor.numeric <- graphpcor.integer <- function(...) {
+  args <- list(...)
+  if(any(names(args)=="p")) {
+    p <- args$p
+    idx <- unlist(args[-which(names(args)=="p")])
+  } else {
+    idx <- unlist(args)
+    if(length(idx)==1) {
+      return(graphpcor(diag(idx)))
+    }
+    p <- ceiling(sqrt(max(idx)))
+  }
+  G <- matrix(0L, p, p)
+  G[idx] <- 1
+  return(graphpcor(G))
+}
+#' @describeIn graphpcor
 #' Build a `graphpcor` from a matrix object
 #' @export
 graphpcor.matrix <- function(...) {
   return(graphpcor(Sparse(list(...)[[1]])))
   ## bellow old code
   x <- list(...)[[1]]
-  stopifnot(all.equal(x, t(x)))
+  stopifnot((p <- dim(x))>0)
+  x <- matrix((abs(x) + t(abs(x)))>0 + 0L, p, p) ## no directional edges
   ne <- c(nrow(x), NA)
+  diag(x) <- rep(0, ne[1])
   iz <- is.zero(x, tol = 1e-9)
   ne[2] <- sum(lower.tri(iz) & (!iz))
   vnams <- rownames(x)
@@ -115,10 +140,9 @@ graphpcor.matrix <- function(...) {
 graphpcor.Matrix <- function(...) {
   a <- list(...)[[1]]
   diag(a) <- 0
-  a <- Sparse(a, na.rm = TRUE, zeros.rm = TRUE)
-  a@x <- rep(1.0, length(a@x))
-  stopifnot(all.equal(a, t(a), check.attributes = FALSE))
-  x <- upperPadding(a)
+  a <- (abs(a) + abs(t(a)))>0 + 0L ## no directional edges
+  x <- upperPadding(
+    M = a, na.rm = TRUE, zeros.rm = TRUE)
   nNames <- colnames(a)
   if(is.null(nNames))
     nNames <- rownames(a)
