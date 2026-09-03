@@ -12,9 +12,10 @@
 #' @param p integer (needed if `base` is vector): the dimension.
 #' @param iLtheta integer vector or 'graphpcor' to specify the (vectorized)
 #' position where 'theta' is placed in the initial (before the fill-in)
-#' Cholesky (lower triangle) factor. If missing, default, assumes
-#' the dense case as `iLtheta = which(lower.tri(...))`, giving
-#' `length(theta)=p(p-1)/2`.
+#' Cholesky (lower triangle) factor. If missing, it uses the function
+#' [qgraph::ggmModSelect()] to "search for an optimal Gaussian graphical
+#' model by minimizing the (extended) Bayesian information criterion of
+#' unregularized GGM models.
 #' @param d0 numeric vector to specify the diagonal of the
 #' Cholesky factor for the initial precision matrix `Q0`.
 #' Default, if not provided, is `d0 = p:1`.

@@ -114,24 +114,35 @@ corr2graphpcor_theta <- function(corr, ..., d0, iLtheta) {
         (as.matrix(attr(iLtheta, "graph"))>0) &
           lower.tri(diag(p)))
     }
-    ## minimize 0.5 * [ trace(C0^{-1} C1) - p - log(|C1|) + log(|C0|) ]
     U0correl <- chol(corr)
-    hl0 <- sum(log(diag(U0correl))) ## log(|C0|)/2
     Qbase <- chol2inv(U0correl) ## C0^{-1}
-    lQ1 <- diag(d0, p, p) ## working matrix
-    ## get initials
-    lQ0 <- t(chol(Qbase))
+    L0 <- t(chol(Qbase))
     for(i in 1:p)
-      lQ0[i, ] <- (d0[i]/lQ0[i,i]) * lQ0[i,]
-    opt <- optim(lQ0[iLtheta], function(x) {
-      lQ1[iLtheta] <- x
-      C1 <- cov2cor(chol2inv(t(lQ1)))
-      r <- sum(diag(Qbase %*% C1))
-      return((r-p)/2 + hl0 -sum(diag(chol(C1))))
-    })
-    L0 <- diag(d0, p, p)
-    L0[iLtheta] <- opt$par
-    L0 <- fillLprec(L0)
+      L0[i, ] <- (d0[i]/L0[i,i]) * L0[i,]
+    m <- length(iLtheta)
+    if(sum(abs(Qbase)>1e-9)>(2*m+p)) {
+      warning("searching theta to minimize KLD!")
+      ## 0.5 * [ trace(C0^{-1} C1) - p - log(|C1|) + log(|C0|) ]
+      hl0 <- sum(log(diag(U0correl))) ## log(|C0|)/2
+      qq <- matrix(0, p, p)
+      qq[iLtheta] <- -1
+      qq <- qq + t(qq)
+      diag(qq) <- 1 -colSums(qq)
+      lqq <- t(chol(qq))
+      ill <- which(abs(lqq)>1e-9 & lower.tri(L0))
+      lfi <- setdiff(ill, iLtheta)
+      lQ1 <- diag(d0, p, p) ## working matrix
+      opt <- optim(L0[iLtheta], function(x) {
+        lQ1[iLtheta] <- x
+        lQ1 <- fillLprec(lQ1, lfi)
+        C1 <- cov2cor(chol2inv(t(lQ1)))
+        r <- sum(diag(Qbase %*% C1))
+        return((r-p)/2 + hl0 -sum(diag(chol(C1))))
+      })
+      L0 <- diag(d0, p, p)
+      L0[iLtheta] <- opt$par
+      L0 <- fillLprec(L0)
+    }
   }
   U0correl <- chol(cov2cor(chol2inv(t(L0))))
   theta <- L0[iLtheta]
