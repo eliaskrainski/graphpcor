@@ -9,6 +9,7 @@
 \alias{graphpcor.numeric}
 \alias{graphpcor.matrix}
 \alias{graphpcor.Matrix}
+\alias{graphpcor.basepcor}
 \alias{print.graphpcor}
 \alias{summary.graphpcor}
 \alias{dim.graphpcor}
@@ -34,6 +35,8 @@ graphpcor(...)
 \method{graphpcor}{matrix}(...)
 
 \method{graphpcor}{Matrix}(...)
+
+\method{graphpcor}{basepcor}(...)
 
 \method{print}{graphpcor}(x, ...)
 
@@ -88,6 +91,8 @@ whose non-zero pattern is given from the graph.
 \item \code{graphpcor(matrix)}: Build a \code{graphpcor} from a matrix object
 
 \item \code{graphpcor(Matrix)}: Build a \code{graphpcor} for a Matrix object
+
+\item \code{graphpcor(basepcor)}: Build a \code{graphpcor} for a \code{basepcor} object
 
 }}
 \section{Methods (by generic)}{

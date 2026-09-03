@@ -178,6 +178,17 @@ graphpcor.Matrix <- function(...) {
   return(ch)
 }
 #' @describeIn graphpcor
+#' Build a `graphpcor` for a `basepcor` object
+#' @export
+graphpcor.basepcor <- function(...) {
+  bpc <- list(...)[[1]]
+  p <- ncol(bpc$base)
+  G <- matrix(0, p, p)
+  dimnames(G) <- dimnames(bpc$base)
+  G[bpc$iLtheta] <- 1
+  return(graphpcor(G))
+}
+#' @describeIn graphpcor
 #' The print method for `graphpcor`
 #' @param x graphpcor
 #' @export

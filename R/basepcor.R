@@ -150,15 +150,25 @@ basepcor.matrix <- function(
     d0 <- p:1
   }
 
+  nodes <- colnames(base)
+  if(is.null(nodes))
+    nodes <- colnames(base)
+
   ## find theta
-  theta <- corr2graphpcor_theta(base, ..., d0)
+  theta <- corr2graphpcor_theta(
+    corr = base, ...,
+    d0 = d0,
+    iLtheta = iLtheta)
+  iLtheta <- attr(theta, "iLtheta")
+  LQ0 <- attr(theta, "L0")
+  U0correl <- attr(theta, "U0correl")
 
   ## check iparams
   iparams <- m_iparams_fncheck(
     length(iLtheta), iparams)
   m <- attr(iparams, "m")
 
-  if(iparams[m]<m) {
+  if(length(iparams)>length(theta)) {
     ## Check if the parameters assumed to be common actually are
     stheta <- split(theta, iparams)
     theta.diff <- all(sapply(stheta, function(x)
@@ -168,21 +178,21 @@ basepcor.matrix <- function(
       print(stheta[which(theta.diff)])
       stop("Please review `iparams` definition!")
     }
-    theta0 <- sapply(stheta, mean)
-  } else {
-    theta0 <- tapply(theta, iparams, mean)
+    theta <- sapply(stheta, mean)
   }
 
   ## output
   out <- list(
-    base = base,
-    theta = new("numeric", theta0),
+    base = crossprod(U0correl),
+    theta = new("numeric", theta),
     p = p,
     d0 = d0,
     iLtheta = iLtheta,
     iparams = iparams,
     L0 = LQ0, ## initial precision (lower) Cholesky
     L = t(U0correl)) ## the correlation's (lower) Cholesky
+  dimnames(out$base) <- dimnames(out$L0) <-
+    dimnames(out$L) <- list(nodes, nodes)
 
   class(out) <- "basepcor"
 

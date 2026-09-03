@@ -81,14 +81,7 @@ Lprec0 <- function(
 #' the parameter vector that approximates it under a `graphpcor`.
 #' @param corr matrix as a correlation matrix
 #' @inheritParams basepcor d0 ...
-corr2graphpcor_theta <- function(corr, ..., d0) {
-  have_qgraph <- try(do.call(
-    what = "require",
-    args = list(package = "qgraph")), silent = TRUE)
-  if(inherits(have_qgraph, "try-error")) {
-    cat(have_qgraph)
-    stop("Please install the 'qgraph' package!")
-  }
+corr2graphpcor_theta <- function(corr, ..., d0, iLtheta) {
   corr <- as.matrix(corr)
   stopifnot(nrow(corr) == (p <- ncol(corr)))
   stopifnot(p>1)
@@ -96,25 +89,55 @@ corr2graphpcor_theta <- function(corr, ..., d0) {
   stopifnot(all.equal(
     new("numeric", diag(corr)),
     rep(1.0, p)))
-##  gms_args <- list(...)
-  ##ggmfit <- do.call(
-    ##what = paste0("qgraph", "::", "ggmModSelect"),
-     ##args = c(list(S=corr, gms_args)))
-  ggmfit <- qgraph::ggmModSelect(
-    S = corr, ...)
-  pCorr0 <- Diagonal(p) - ggmfit$graph
-  Upc <- chol(pCorr0)
-  iil <- which(lower.tri(diag(p)))
-  iLth <- which(lower.tri(diag(p)) & pCorr0!=0)
-  L0 <- t(Upc)
-  if(missing(d0) | is.null(d0)) {
+  if(missing(d0) || is.null(d0)) {
     d0 <- p:1
   }
   stopifnot(length(d0)==p)
-  for(i in 1:p)
-    L0[i, ] <- (d0[i]/Upc[i,i]) * Upc[,i]
-  theta <- L0[iLth]
-  attr(theta, 'pCorr0') <- pCorr0
+  if(missing(iLtheta)) {
+    have_qgraph <- try(do.call(
+      what = "require",
+      args = list(package = "qgraph")), silent = TRUE)
+    if(inherits(have_qgraph, "try-error")) {
+      cat(have_qgraph)
+      stop("Please install the 'qgraph' package!")
+    }
+    ## Fit the sparse partial correlation matrix
+    ggmfit <- qgraph::ggmModSelect(S = corr, ...)
+    iLtheta <- which((abs(ggmfit$graph)>0) & lower.tri(corr))
+    pCorr0 <- diag(p) - ggmfit$graph
+    L0 <- t(chol(pCorr0))
+    for(i in 1:p)
+      L0[i, ] <- (d0[i]/L0[i,i]) * L0[i,]
+  } else {
+    if(inherits(iLtheta, "graphpcor")) {
+      iLtheta <- which(
+        (as.matrix(attr(iLtheta, "graph"))>0) &
+          lower.tri(diag(p)))
+    }
+    ## minimize 0.5 * [ trace(C0^{-1} C1) - p - log(|C1|) + log(|C0|) ]
+    U0correl <- chol(corr)
+    hl0 <- sum(log(diag(U0correl))) ## log(|C0|)/2
+    Qbase <- chol2inv(U0correl) ## C0^{-1}
+    lQ1 <- diag(d0, p, p) ## working matrix
+    ## get initials
+    lQ0 <- t(chol(Qbase))
+    for(i in 1:p)
+      lQ0[i, ] <- (d0[i]/lQ0[i,i]) * lQ0[i,]
+    opt <- optim(lQ0[iLtheta], function(x) {
+      lQ1[iLtheta] <- x
+      C1 <- cov2cor(chol2inv(t(lQ1)))
+      r <- sum(diag(Qbase %*% C1))
+      return((r-p)/2 + hl0 -sum(diag(chol(C1))))
+    })
+    L0 <- diag(d0, p, p)
+    L0[iLtheta] <- opt$par
+    L0 <- fillLprec(L0)
+  }
+  U0correl <- chol(cov2cor(chol2inv(t(L0))))
+  theta <- L0[iLtheta]
+  attr(theta, "iLtheta") <- iLtheta
+  attr(theta, "L0") <- L0
+  attr(theta, "U0correl") <- U0correl
   return(theta)
 }
 #' Draw samples from a `basepcor`.

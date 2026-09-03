@@ -12,7 +12,7 @@ fillLprec(L, lfi)
 
 Lprec0(theta, p, iLtheta, d0)
 
-corr2graphpcor_theta(corr, ..., d0)
+corr2graphpcor_theta(corr, ..., d0, iLtheta)
 
 sample.basepcor(x, size, lambda)
 }
