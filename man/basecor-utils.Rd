@@ -3,12 +3,15 @@
 \name{basecor-utils}
 \alias{basecor-utils}
 \alias{cholcor}
-\alias{corr2CPCtheta}
+\alias{corr2CPC_theta}
+\alias{sample.basecor}
 \title{Functions used by/to basecor}
 \usage{
 cholcor(theta, p, iLtheta, parametrization = "cpc")
 
-corr2CPCtheta(corr)
+corr2CPC_theta(corr)
+
+sample.basecor(x, size, lambda)
 }
 \arguments{
 \item{theta}{numeric parameter vector.}
@@ -27,6 +30,12 @@ parametrization used. The available ones are
 See Details. The default is "cpc".}
 
 \item{corr}{matrix as a correlation matrix}
+
+\item{x}{the correlation model}
+
+\item{size}{the number of samples}
+
+\item{lambda}{the penalization parameter}
 }
 \value{
 matrix with lower triangle as the Cholesky factor
@@ -40,13 +49,17 @@ the parameter vector under the parametrization,
 Functions used by/to basecor
 
 Map a correlation matrix to theta.
+
+Draw samples from a \code{basecor}.
 }
 \section{Functions}{
 \itemize{
 \item \code{cholcor()}: Build the (lower) Cholesky for a correlation matrix
 
-\item \code{corr2CPCtheta()}: This function takes a correlation matrix and return
+\item \code{corr2CPC_theta()}: This function takes a correlation matrix and return
 the parameter vector that generates it with the
 canonical partial correlation parametrization.
+
+\item \code{sample.basecor()}: Sample from the model parameters and map it to the correlation matrix.
 
 }}

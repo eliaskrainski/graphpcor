@@ -5,13 +5,16 @@
 \alias{fillLprec}
 \alias{Lprec0}
 \alias{corr2graphpcor_theta}
+\alias{sample.basepcor}
 \title{Functions used by/to basepcor}
 \usage{
 fillLprec(L, lfi)
 
 Lprec0(theta, p, iLtheta, d0)
 
-corr2graphpcor_theta(corr)
+corr2graphpcor_theta(corr, ..., d0, iLtheta, fmin = c("mae", "mse", "kld"))
+
+sample.basepcor(x, size, lambda)
 }
 \arguments{
 \item{L}{matrix as the lower triangle
@@ -30,15 +33,24 @@ fill-in elements. Must be col then row ordered.}
 
 \item{iLtheta}{integer vector or 'graphpcor' to specify the (vectorized)
 position where 'theta' is placed in the initial (before the fill-in)
-Cholesky (lower triangle) factor. If missing, default, assumes
-the dense case as \code{iLtheta = which(lower.tri(...))}, giving
-\code{length(theta)=p(p-1)/2}.}
+Cholesky (lower triangle) factor. If missing, it uses the function
+\code{\link[qgraph:ggmModSelect]{qgraph::ggmModSelect()}} to "search for an optimal Gaussian graphical
+model by minimizing the (extended) Bayesian information criterion of
+unregularized GGM models.}
 
 \item{d0}{numeric vector to specify the diagonal of the
 Cholesky factor for the initial precision matrix \code{Q0}.
 Default, if not provided, is \code{d0 = p:1}.}
 
 \item{corr}{matrix as a correlation matrix}
+
+\item{...}{further arguments passed on.}
+
+\item{x}{the correlation model}
+
+\item{size}{the number of samples}
+
+\item{lambda}{the penalization parameter}
 }
 \value{
 lower triangular matrix with the filled-in
@@ -50,6 +62,8 @@ lower triangular matrix
 Functions used by/to basepcor
 
 Map a correlation matrix to theta.
+
+Draw samples from a \code{basepcor}.
 }
 \details{
 The (lower triangle) Cholesky factor
@@ -66,5 +80,7 @@ The filled-in elements are computed from them using \code{\link[=fillLprec]{fill
 
 \item \code{corr2graphpcor_theta()}: This function takes a correlation matrix and return
 the parameter vector that approximates it under a \code{graphpcor}.
+
+\item \code{sample.basepcor()}: Sample from the model parameters and map it to the correlation matrix.
 
 }}

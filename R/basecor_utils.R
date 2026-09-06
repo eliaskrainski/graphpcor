@@ -65,7 +65,7 @@ cholcor <- function(
 #' the parameter vector that generates it with the
 #' canonical partial correlation parametrization.
 #' @param corr matrix as a correlation matrix
-corr2CPCtheta <- function(corr) {
+corr2CPC_theta <- function(corr) {
   corr <- as.matrix(corr)
   stopifnot(nrow(corr) == (p <- ncol(corr)))
   stopifnot(p>1)
@@ -80,8 +80,35 @@ corr2CPCtheta <- function(corr) {
     B[2:p, 1] <- sqrt(1 - (A[2:p, 1]^2))
     for(j in 2:(p-1)) {
       A[j:p, j] <- L[j:p, j]/B[j:p, j-1]
-      B[j:p, j] <- sqrt(1 - (A[j:p, j]^2)) * B[j:p, j-1]
+      sj <- pmax(0, 1 - (A[j:p, j]^2))
+      B[j:p, j] <- sqrt(sj) * B[j:p, j-1]
     }
   }
   atanh(A[which(lower.tri(L))])
+}
+#' Draw samples from a `basecor`.
+#' @describeIn basecor-utils
+#' Sample from the model parameters and map it to the correlation matrix.
+#' @param x the correlation model
+#' @param size the number of samples
+#' @param lambda the penalization parameter
+#' @export
+sample.basecor <- function(x, size, lambda) {
+  stopifnot((m <- length(x$theta))>0)
+  stopifnot(lambda>0)
+  stopifnot(size>0)
+  p <- ncol(x$base)
+  r <- rexp(size, lambda)
+  theta <- t(sapply(1:size, function(i) {
+    z <- rnorm(m)
+    z <- z / sqrt(sum(z^2))
+  })) * r
+  H <- hessian(x)
+  sHi <- graphpcor:::dspd(H)$sqrtInv
+  theta <- sweep(theta %*% sHi, 2, x$theta)
+  out <- sapply(1:size, function(i){
+    tcrossprod(cholcor(theta[i, ], p))
+  })
+  dim(out) <- c(p, p, size)
+  return(out)
 }

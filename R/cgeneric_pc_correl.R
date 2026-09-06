@@ -166,10 +166,10 @@ cgeneric.basecor <-
   }
 
   if(is.null(I0)) {
-    stop("This is not suppose to happen!")
+    warning("This is not suppose to happen!")
     I0d <- list(
       logDeterminant = 0,
-      sqrt = NULL)
+      sqrt = matrix(1,1,1))
   } else {
     I0d <- dspd(I0)
   }

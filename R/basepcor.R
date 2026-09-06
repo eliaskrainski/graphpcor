@@ -12,9 +12,10 @@
 #' @param p integer (needed if `base` is vector): the dimension.
 #' @param iLtheta integer vector or 'graphpcor' to specify the (vectorized)
 #' position where 'theta' is placed in the initial (before the fill-in)
-#' Cholesky (lower triangle) factor. If missing, default, assumes
-#' the dense case as `iLtheta = which(lower.tri(...))`, giving
-#' `length(theta)=p(p-1)/2`.
+#' Cholesky (lower triangle) factor. If missing, it uses the function
+#' [qgraph::ggmModSelect()] to "search for an optimal Gaussian graphical
+#' model by minimizing the (extended) Bayesian information criterion of
+#' unregularized GGM models.
 #' @param d0 numeric vector to specify the diagonal of the
 #' Cholesky factor for the initial precision matrix `Q0`.
 #' Default, if not provided, is `d0 = p:1`.
@@ -24,6 +25,8 @@
 #' `iparams = c(1,1,2,3)`, `m=3`, the first and second parameters
 #' are considered to be the same.
 #' NOTE: `c(1,2,1)` is allowed, but `c(2,1,2)` is not.
+#' @param ... arguments passed to the function
+#' ggmModSelect of the 'qgraph' package when `base` is a matrix.
 #' @details
 #' The Inverse Transform Parametrization - ITP,
 #' is applied by starting with a
@@ -55,7 +58,8 @@ basepcor <- function(
     p,
     iLtheta,
     d0,
-    iparams) {
+    iparams,
+    ...) {
   UseMethod("basepcor")
 }
 #' @describeIn basepcor
@@ -68,7 +72,8 @@ basepcor.numeric <- function(
     p,
     iLtheta,
     d0,
-    iparams) {
+    iparams,
+    ...) {
 
   theta <- base
 
@@ -128,7 +133,6 @@ basepcor.numeric <- function(
 
   return(out)
 }
-
 #' @describeIn basepcor
 #' Build a `basepcor` from a correlation matrix.
 #' @export
@@ -137,37 +141,35 @@ basepcor.matrix <- function(
     p,
     iLtheta,
     d0,
-    iparams) {
-  stopifnot(all.equal(base, t(base)))
-  p <- as.integer(nrow(base))
-  if(missing(d0)) {
-    d0 <- p:1
-  } else {
-    stopifnot(length(d0)==p)
-    stopifnot(all(d0>0))
-  }
-  stopifnot((length(d0)==p) && (all(d0>0)))
-  U0correl <- chol(base)
-  Q <- chol2inv(U0correl)
-  ilQ <-  which(
-    lower.tri(matrix(1, p, p)) &
-      (!is.zero(Q, tol = 0.001)))
-  iLtheta <- p_iLtheta_fncheck(p, iLtheta)
-  stopifnot(all(ilQ %in% iLtheta))
+    iparams,
+    ...) {
 
-  ## compute theta
-  LQ0 <- t(chol(Q))
-  for(i in 1:p) {
-      LQ0[i, ] <- (d0[i]/LQ0[i, i]) * LQ0[i, ]
+  if(missing(p) || is.null(p))
+    p <- ncol(base)
+  stopifnot(p == ncol(base))
+  if(missing(d0) || is.null(d0)) {
+    d0 <- p:1
   }
-  theta <- LQ0[iLtheta]
+
+  nodes <- colnames(base)
+  if(is.null(nodes))
+    nodes <- colnames(base)
+
+  ## find theta
+  theta <- corr2graphpcor_theta(
+    corr = base, ...,
+    d0 = d0,
+    iLtheta = iLtheta)
+  iLtheta <- attr(theta, "iLtheta")
+  LQ0 <- attr(theta, "L0")
+  U0correl <- attr(theta, "U0correl")
 
   ## check iparams
   iparams <- m_iparams_fncheck(
     length(iLtheta), iparams)
   m <- attr(iparams, "m")
 
-  if(iparams[m]<m) {
+  if(length(iparams)>length(theta)) {
     ## Check if the parameters assumed to be common actually are
     stheta <- split(theta, iparams)
     theta.diff <- all(sapply(stheta, function(x)
@@ -177,21 +179,21 @@ basepcor.matrix <- function(
       print(stheta[which(theta.diff)])
       stop("Please review `iparams` definition!")
     }
-    theta0 <- sapply(stheta, mean)
-  } else {
-    theta0 <- tapply(theta, iparams, mean)
+    theta <- sapply(stheta, mean)
   }
 
   ## output
   out <- list(
-    base = base,
-    theta = new("numeric", theta0),
+    base = crossprod(U0correl),
+    theta = new("numeric", theta),
     p = p,
     d0 = d0,
     iLtheta = iLtheta,
     iparams = iparams,
     L0 = LQ0, ## initial precision (lower) Cholesky
     L = t(U0correl)) ## the correlation's (lower) Cholesky
+  dimnames(out$base) <- dimnames(out$L0) <-
+    dimnames(out$L) <- list(nodes, nodes)
 
   class(out) <- "basepcor"
 

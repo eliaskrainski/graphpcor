@@ -80,12 +80,127 @@ Lprec0 <- function(
 #' This function takes a correlation matrix and return
 #' the parameter vector that approximates it under a `graphpcor`.
 #' @param corr matrix as a correlation matrix
-corr2graphpcor_theta <- function(corr) {
+#' @inheritParams basepcor d0 ...
+corr2graphpcor_theta <- function(
+    corr, ..., d0, iLtheta,
+    fmin = c("mae", "mse", "kld")) {
+
   corr <- as.matrix(corr)
   stopifnot(nrow(corr) == (p <- ncol(corr)))
   stopifnot(p>1)
+  stopifnot(all.equal(corr, t(corr)))
   stopifnot(all.equal(
     new("numeric", diag(corr)),
     rep(1.0, p)))
-  L <- t(chol(corr))
+  if(missing(d0) || is.null(d0)) {
+    d0 <- p:1
+  }
+  stopifnot(length(d0)==p)
+  ilp <- lower.tri(diag(p))
+  if(missing(iLtheta)) {
+    have_qgraph <- try(do.call(
+      what = "require",
+      args = list(package = "qgraph")), silent = TRUE)
+    if(inherits(have_qgraph, "try-error")) {
+      cat(have_qgraph)
+      stop("Please install the 'qgraph' package!")
+    }
+    ## Fit the sparse partial correlation matrix
+    ggmfit <- qgraph::ggmModSelect(S = corr, ...)
+    iLtheta <- which((abs(ggmfit$graph)>0) & ilp)
+    pCorr0 <- diag(p) - ggmfit$graph
+    L0 <- t(chol(pCorr0))
+    for(i in 1:p)
+      L0[i, ] <- (d0[i]/L0[i,i]) * L0[i,]
+  } else {
+    if(inherits(iLtheta, "graphpcor")) {
+      iLtheta <- which(
+        (as.matrix(attr(iLtheta, "graph"))>0) & ilp)
+    }
+    U0correl <- chol(corr)
+    Qbase <- chol2inv(U0correl) ## C0^{-1}
+    L0 <- t(chol(Qbase))
+    m <- length(iLtheta)
+    if(sum(abs(Qbase)>1e-9)>(2*m+p)) {
+      if(is.character(fmin)) {
+        fmin <- match.arg(toupper(fmin), c("MAE", "MSE", "KLD"))
+      }
+      warning(paste("Searching theta to minimize", fmin))
+      ## 0.5 * [ trace(C0^{-1} C1) - p - log(|C1|) + log(|C0|) ]
+      hl0 <- sum(log(diag(U0correl))) ## log(|C0|)/2
+      qq <- matrix(0, p, p)
+      qq[iLtheta] <- -1
+      qq <- qq + t(qq)
+      diag(qq) <- 1 -colSums(qq)
+      lqq <- t(chol(qq))
+      ill <- which(abs(lqq)>1e-9 & ilp)
+      lfi <- setdiff(ill, iLtheta)
+      lQ1 <- diag(d0, p, p) ## working matrix
+      opt <- optim(L0[iLtheta], function(x) {
+        lQ1[iLtheta] <- x
+        lQ1 <- fillLprec(lQ1, lfi)
+        C1 <- cov2cor(chol2inv(t(lQ1)))
+        if(fmin == "MAE") {
+          return(mean(abs(C1-corr)))
+        }
+        if(fmin == "MSE") {
+          return(mean((C1-corr)^2))
+        }
+        if(fmin == "KLD") {
+          print(Qbase %*% C1)
+          r <- sum(diag(Qbase %*% C1))
+          return((r-p)/2 + hl0 -sum(diag(chol(C1))))
+        }
+      }, method = "BFGS")
+      L0 <- diag(d0, p, p)
+      L0[iLtheta] <- opt$par
+      L0 <- fillLprec(L0, lfi)
+    } else {
+      for(i in 1:p)
+        L0[i, ] <- (d0[i]/L0[i,i]) * L0[i,]
+    }
+  }
+  U0correl <- chol(cov2cor(chol2inv(t(L0))))
+  theta <- L0[iLtheta]
+  attr(theta, "iLtheta") <- iLtheta
+  attr(theta, "L0") <- L0
+  attr(theta, "U0correl") <- U0correl
+  return(theta)
+}
+#' Draw samples from a `basepcor`.
+#' @describeIn basepcor-utils
+#' Sample from the model parameters and map it to the correlation matrix.
+#' @param x the correlation model
+#' @param size the number of samples
+#' @param lambda the penalization parameter
+#' @export
+sample.basepcor <- function(x, size, lambda) {
+  stopifnot((m <- length(x$theta))>0)
+  stopifnot(lambda>0)
+  stopifnot(size>0)
+  p <- ncol(x$base)
+  r <- rexp(size, lambda)
+  theta <- t(sapply(1:size, function(i) {
+    z <- rnorm(m)
+    z <- z / sqrt(sum(z^2))
+  })) * r
+  H <- hessian(x)
+  sHi <- graphpcor:::dspd(H)$sqrtInv
+  theta <- sweep(theta %*% sHi, 2, x$theta)
+  lfi <- setdiff(which(abs(x$L0)>0 & lower.tri(x$L0)),
+                 x$iLtheta)
+  L0 <- diag(x$d0, p, p)
+  if(length(lfi)>0) {
+    out <- sapply(1:size, function(i){
+      L0[x$iLtheta] <- theta[i, ]
+      cov2cor(tcrossprod(fillLprec(L0,lfi)))
+    })
+  } else {
+    out <- sapply(1:size, function(i){
+      L0[x$iLtheta] <- theta[i, ]
+      cov2cor(tcrossprod(L0))
+    })
+  }
+  dim(out) <- c(p, p, size)
+  return(out)
 }

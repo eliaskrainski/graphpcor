@@ -128,9 +128,8 @@ cgeneric_graphpcor <-
       cat("Laplacian is\n")
       print(Q0)
     }
-    Q0 <- as.matrix(Q0)
+    Q0 <- as.matrix(Q0) + diag(1.0, n, n)
 
-    l1 <- t(chol(Q0 + diag(1.0, n, n)))
     qnz <- !is.zero(Q0)
     iLtheta <- which(qnz & lower.tri(Q0, diag = FALSE))
     qij <- list(
@@ -140,7 +139,7 @@ cgeneric_graphpcor <-
     qij$ilq <- which(qnz & lower.tri(Q0, diag = TRUE))
     qij$iuq <- which(qnz & upper.tri(Q0, diag = TRUE))
     qij$ilqpac <- which(qnz[lower.tri(Q0, diag = TRUE)])
-    ll <- t(chol(Q0 + diag(n)))
+    ll <- t(chol(Q0))
     qij$ifil <- setdiff(which(ll!=0), qij$ilq)
     if(dotArgs$debug) {
       print(qij)
@@ -221,8 +220,9 @@ cgeneric_graphpcor <-
     }
 
     if(is.null(I0)) {
+      warning("This is not suppose to happen!")
       I0d <- list(logDeterminant = 0,
-                  sqrt = matrix(0, 0))
+                  sqrt = matrix(1, 1, 1))
     } else {
       I0d <- dspd(I0)
     }

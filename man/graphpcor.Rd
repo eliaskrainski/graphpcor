@@ -6,8 +6,10 @@
 \alias{graphpcor.list}
 \alias{graphpcor.formula}
 \alias{graphpcor.character}
+\alias{graphpcor.numeric}
 \alias{graphpcor.matrix}
 \alias{graphpcor.Matrix}
+\alias{graphpcor.basepcor}
 \alias{print.graphpcor}
 \alias{summary.graphpcor}
 \alias{dim.graphpcor}
@@ -28,9 +30,13 @@ graphpcor(...)
 
 \method{graphpcor}{character}(...)
 
+\method{graphpcor}{numeric}(...)
+
 \method{graphpcor}{matrix}(...)
 
 \method{graphpcor}{Matrix}(...)
+
+\method{graphpcor}{basepcor}(...)
 
 \method{print}{graphpcor}(x, ...)
 
@@ -51,8 +57,12 @@ gphcQ(model, ...)
 \arguments{
 \item{x}{graphpcor}
 
-\item{...}{matrix or Matrix (treated as binary) or a
-vector or list of formula (or character interpreted as formula)}
+\item{...}{matrix or Matrix (treated as binary), or a
+vector or list of formula (or character interpreted as formula),
+or an integer vector for the index of the non-zero pattern of
+a dimensional graph for \code{p} nodes.
+For integer index \code{p} may be provided or a
+guess is made from the provided index.}
 
 \item{object}{graphpcor}
 
@@ -76,9 +86,13 @@ whose non-zero pattern is given from the graph.
 
 \item \code{graphpcor(character)}: Each term represents a node, and each \code{~} an edge.
 
+\item \code{graphpcor(numeric)}: Build a \code{graphpcor} from index for the non-zero pattern.
+
 \item \code{graphpcor(matrix)}: Build a \code{graphpcor} from a matrix object
 
 \item \code{graphpcor(Matrix)}: Build a \code{graphpcor} for a Matrix object
+
+\item \code{graphpcor(basepcor)}: Build a \code{graphpcor} for a \code{basepcor} object
 
 }}
 \section{Methods (by generic)}{

@@ -7,11 +7,11 @@
 \alias{print.basepcor}
 \title{A base precision's Cholesky model for a correlation matrix}
 \usage{
-basepcor(base, p, iLtheta, d0, iparams)
+basepcor(base, p, iLtheta, d0, iparams, ...)
 
-\method{basepcor}{numeric}(base, p, iLtheta, d0, iparams)
+\method{basepcor}{numeric}(base, p, iLtheta, d0, iparams, ...)
 
-\method{basepcor}{matrix}(base, p, iLtheta, d0, iparams)
+\method{basepcor}{matrix}(base, p, iLtheta, d0, iparams, ...)
 
 \method{print}{basepcor}(x, ...)
 }
@@ -23,9 +23,10 @@ the parameter(s) to define correlation matrix.}
 
 \item{iLtheta}{integer vector or 'graphpcor' to specify the (vectorized)
 position where 'theta' is placed in the initial (before the fill-in)
-Cholesky (lower triangle) factor. If missing, default, assumes
-the dense case as \code{iLtheta = which(lower.tri(...))}, giving
-\code{length(theta)=p(p-1)/2}.}
+Cholesky (lower triangle) factor. If missing, it uses the function
+\code{\link[qgraph:ggmModSelect]{qgraph::ggmModSelect()}} to "search for an optimal Gaussian graphical
+model by minimizing the (extended) Bayesian information criterion of
+unregularized GGM models.}
 
 \item{d0}{numeric vector to specify the diagonal of the
 Cholesky factor for the initial precision matrix \code{Q0}.
@@ -38,9 +39,9 @@ Default is \code{1:m}, \code{m=length(theta)}. Example: By setting
 are considered to be the same.
 NOTE: \code{c(1,2,1)} is allowed, but \code{c(2,1,2)} is not.}
 
-\item{x}{a basepcor object.}
-
 \item{...}{further arguments passed on.}
+
+\item{x}{a basepcor object.}
 }
 \value{
 a basepcor object
