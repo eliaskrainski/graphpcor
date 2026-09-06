@@ -169,7 +169,7 @@ cgeneric.basecor <-
     warning("This is not suppose to happen!")
     I0d <- list(
       logDeterminant = 0,
-      sqrt = 0)
+      sqrt = matrix(1,1,1))
   } else {
     I0d <- dspd(I0)
   }

@@ -28,11 +28,11 @@
 #include "graphpcor.h"
 #include "graphpcor_utils.h"
 
-double *inla_cgeneric_stds_dev(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp *data)
+/*double *inla_cgeneric_stds_dev(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp *data)
 {
   return &inla_cgeneric_stds(cmd, &theta[0], &data[0])[0];
 }
-
+*/
 double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneric_data_tp *data)
 {
 
@@ -98,7 +98,9 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 	      }
 	    }
 	  }
-	  assert(nUnk==k);
+	  if(theta) {
+	    assert(nUnk==k);
+	  }
 
 	  for(i=0; i<N; i++) {
 	    actualtheta[i] = th0[data->ints[2]->ints[i]];

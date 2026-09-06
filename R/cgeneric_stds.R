@@ -90,8 +90,8 @@ cgeneric_stds <-
     }
 
     cgmodel <- paste0(
-      "inla_cgeneric_stds",
-      ifelse(dotArgs$useINLAprecomp, "", "_dev"))
+      "inla_cgeneric_stds")
+##      ifelse(dotArgs$useINLAprecomp, "", "_dev"))
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,

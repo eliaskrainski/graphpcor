@@ -12,7 +12,7 @@ fillLprec(L, lfi)
 
 Lprec0(theta, p, iLtheta, d0)
 
-corr2graphpcor_theta(corr, ..., d0, iLtheta)
+corr2graphpcor_theta(corr, ..., d0, iLtheta, fmin = c("mae", "mse", "kld"))
 
 sample.basepcor(x, size, lambda)
 }
@@ -33,9 +33,10 @@ fill-in elements. Must be col then row ordered.}
 
 \item{iLtheta}{integer vector or 'graphpcor' to specify the (vectorized)
 position where 'theta' is placed in the initial (before the fill-in)
-Cholesky (lower triangle) factor. If missing, default, assumes
-the dense case as \code{iLtheta = which(lower.tri(...))}, giving
-\code{length(theta)=p(p-1)/2}.}
+Cholesky (lower triangle) factor. If missing, it uses the function
+\code{\link[qgraph:ggmModSelect]{qgraph::ggmModSelect()}} to "search for an optimal Gaussian graphical
+model by minimizing the (extended) Bayesian information criterion of
+unregularized GGM models.}
 
 \item{d0}{numeric vector to specify the diagonal of the
 Cholesky factor for the initial precision matrix \code{Q0}.
