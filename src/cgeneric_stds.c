@@ -98,7 +98,9 @@ double *inla_cgeneric_stds(inla_cgeneric_cmd_tp cmd, double *theta, inla_cgeneri
 	      }
 	    }
 	  }
-	  assert(nUnk==k);
+	  if(theta) {
+	    assert(nUnk==k);
+	  }
 
 	  for(i=0; i<N; i++) {
 	    actualtheta[i] = th0[data->ints[2]->ints[i]];
