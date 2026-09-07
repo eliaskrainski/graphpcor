@@ -49,7 +49,7 @@ cgeneric_stds <-
       ivs <- packageCheck(
         name = "INLA",
         minimum_version = vs) >= vs
-      if(is.na(ivs) | (ivs>"26.08.07")) {
+      if(is.na(ivs) | (ivs>"26.09.06")) {
         dotArgs$useINLAprecomp = FALSE
       }
     }
@@ -89,9 +89,9 @@ cgeneric_stds <-
       print(pcSigmas)
     }
 
-    cgmodel <- paste0(
-      "inla_cgeneric_stds")
-##      ifelse(dotArgs$useINLAprecomp, "", "_dev"))
+    cgmodel <- "inla_cgeneric_stds"
+    if(!is.null(dotArgs$developing))
+      cgmodel <- paste0(cgmodel, "_dev")
 
     the_model <- do.call(
       what = INLAtools::cgenericBuilder,
