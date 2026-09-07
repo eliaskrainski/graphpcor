@@ -83,17 +83,25 @@ graphpcor.character <- function(...) {
 #' @export
 graphpcor.numeric <- graphpcor.integer <- function(...) {
   args <- list(...)
+  stopifnot(length(args)>0)
+  iidx <- 1:length(args)
+  if(any(names(args)=="nodes")) {
+    nodes <- args$nodes
+    iidx <- setdiff(iidx, which(names(args)=="nodes"))
+    stopifnot(length(args[iidx])>0)
+  }
   if(any(names(args)=="p")) {
     p <- args$p
-    idx <- unlist(args[-which(names(args)=="p")])
+    iidx <- setdiff(iidx, which(names(args)=="p"))
+    stopifnot(length(args[iidx])>0)
   } else {
-    idx <- unlist(args)
-    if(length(idx)==1) {
-      return(graphpcor(diag(idx)))
-    }
-    p <- ceiling(sqrt(max(idx)))
+    p <- ceiling(sqrt(max(unlist(args[iidx]))))
   }
+  if(!any(names(args)=="nodes"))
+    nodes <- paste0("x", 1:p)
   G <- matrix(0L, p, p)
+  dimnames(G) <- list(nodes, nodes)
+  idx <- unlist(args[[iidx]])
   G[idx] <- 1
   return(graphpcor(G))
 }

@@ -101,15 +101,9 @@ cgeneric_graphpcor <-
     lambda <- as.numeric(lambda[1])
     stopifnot(lambda>0)
 
-    if(inherits(model, "matrix")) {
+    if(!inherits(model, "graphpcor")) {
       if(dotArgs$debug) {
-        cat("Building 'graphpcor' from a 'matrix'!")
-      }
-      model <- graphpcor(model)
-    }
-    if(inherits(model, "Matrix")) {
-      if(dotArgs$debug) {
-        cat("Building 'graphpcor' from a 'Matrix'!")
+        cat("Building 'graphpcor' from a", class(model), "!")
       }
       model <- graphpcor(model)
     }
@@ -177,7 +171,7 @@ cgeneric_graphpcor <-
       base <- rep(0, npars2)
     }
 
-    if(missing(d0)) {
+    if(missing(d0) || is.null(d0)) {
       d0 <- n:1
     } else {
       if(is.null(dotArgs$useINLAprecomp) ||
@@ -192,6 +186,10 @@ cgeneric_graphpcor <-
         }
       }
     }
+    if(dotArgs$debug) {
+      print(list(d0 = d0))
+    }
+
     if(inherits(base, "basepcor")) {
       basemodel <- base
     } else {

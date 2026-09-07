@@ -14,13 +14,14 @@ str(stds2)
 
 cgeneric_initial(stds2)
 cgeneric_graph(stds2)
-cgeneric_Q(stds2, theta = 0:1)
-cgeneric_Q(stds2, theta = -1:0)
-cgeneric_Q(stds2, theta = 1:2)
+(Q1 <- cgeneric_Q(stds2, theta = 0:1))
+(Q2 <- cgeneric_Q(stds2, theta = -1:0))
+(Q3 <- cgeneric_Q(stds2, theta = 1:2))
 cgeneric_mu(stds2)
 
 cgeneric_prior(stds2, theta = cbind(0,0:1,-1:0,1:2))
 
+## using pc_correl
 cpc0s2 <- cgeneric(
     model = "pc_correl",
     n = 2L, lambda = 1,
@@ -30,12 +31,15 @@ cpc0s2 <- cgeneric(
 
 cgeneric_initial(cpc0s2)
 cgeneric_graph(cpc0s2)
-cgeneric_Q(cpc0s2, theta = 0:1)
-cgeneric_Q(cpc0s2, theta = -1:0)
-cgeneric_Q(cpc0s2, theta = 1:2)
+
+all.equal(as.matrix(Q1), as.matrix(cgeneric_Q(cpc0s2, theta = 0:1)))
+all.equal(as.matrix(Q2), as.matrix(cgeneric_Q(cpc0s2, theta = -1:0)))
+all.equal(as.matrix(Q3), as.matrix(cgeneric_Q(cpc0s2, theta = 1:2)))
+
 cgeneric_mu(cpc0s2)
 
-cgeneric_prior(stds2, theta = cbind(0,0:1,-1:0,1:2))
+all.equal(cgeneric_prior(stds2, theta = cbind(0,0:1,-1:0,1:2)),
+          cgeneric_prior(cpc0s2, theta = cbind(0,0:1,-1:0,1:2)))
 
 n1 <- 1000
 dataf <- data.frame(
@@ -47,8 +51,8 @@ str(dataf)
 tapply(dataf$y, dataf$i, sd)
 
 fit <- inla(
-###    formula = y ~ f(i, model = stds2, replicate = r),
-    formula = y ~ f(i, model = cpc0s2, replicate = r),
+    formula = y ~ f(i, model = stds2, replicate = r),
+###    formula = y ~ f(i, model = cpc0s2, replicate = r),
     data = dataf,
     control.family = list(hyper = list(prec = list(initial = 10, fixed = TRUE)))
 )
@@ -71,8 +75,10 @@ plot(function(x) exp(cgeneric_prior(stds2, theta = rbind(0, x))), -5, 5)
 ## n = 4, graphpcor
 stds4 <- cgeneric(
     model = 'stds', n = 4,
-    prior.sigma.probability = rep(0.05, 4)
+    sigma.prior.probability = rep(0.05, 4)
 )
+
+cgeneric_initial(stds4)
 
 graphpcor(3L*4L, p = 4L)
 Laplacian(graphpcor(3L*4L, p = 4L))
@@ -81,8 +87,14 @@ cgstds4 <- cgeneric(
     model = graphpcor(3L*4L, p = 4L),
     sigma.prior.probability = rep(0.1, 4),
     lambda = 1, cfixed = 1,
-    d0 = rep(1, 4)
+    d0 = rep(1, 4)##, debug = 1
 )
+
+all.equal(as.matrix(cgeneric_Q(stds4, theta = -1:2)),
+          as.matrix(cgeneric_Q(cgstds4, theta = -1:2)))
+
+all.equal(as.matrix(cgeneric_Q(stds4, theta = -2:1)),
+          as.matrix(cgeneric_Q(cgstds4, theta = -2:1)))
 
 data4 <- data.frame(
     i = rep(1:4, each = n1),
