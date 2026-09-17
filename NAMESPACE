@@ -50,6 +50,7 @@ export(graphpcor)
 export(sample.basecor)
 export(sample.basepcor)
 export(stan_add)
+export(stan_add_code)
 export(tpcQ)
 export(treepcor)
 importFrom(INLAtools,

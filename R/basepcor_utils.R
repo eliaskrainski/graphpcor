@@ -109,7 +109,6 @@ corr2graphpcor_theta <- function(
     ggmfit <- qgraph::ggmModSelect(S = corr, ...)
     iLtheta <- which((abs(ggmfit$graph)>0) & ilp)
     pCorr0 <- diag(p) - ggmfit$graph
-    print(pCorr0)
     L0 <- t(chol(pCorr0))
     for(i in 1:p)
       L0[i, ] <- (d0[i]/L0[i,i]) * L0[i,]
