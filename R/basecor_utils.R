@@ -105,7 +105,8 @@ sample.basecor <- function(x, size, lambda) {
   })) * r
   H <- hessian(x)
   sHi <- graphpcor:::dspd(H)$sqrtInv
-  theta <- sweep(theta %*% sHi, 2, x$theta)
+  theta <- sweep(x = theta %*% sHi,
+                 MARGIN = 2, STATS = x$theta, FUN = "+")
   out <- sapply(1:size, function(i){
     tcrossprod(cholcor(theta[i, ], p))
   })

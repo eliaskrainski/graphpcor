@@ -186,19 +186,20 @@ sample.basepcor <- function(x, size, lambda) {
   })) * r
   H <- hessian(x)
   sHi <- graphpcor:::dspd(H)$sqrtInv
-  theta <- sweep(theta %*% sHi, 2, x$theta)
-  lfi <- setdiff(which(abs(x$L0)>0 & lower.tri(x$L0)),
+  theta <- sweep(x = theta %*% sHi,
+                 MARGIN = 2, STATS = x$theta, FUN = "+")
+  lfi <- setdiff(which(abs(x$L0)>1e-9 & lower.tri(x$L0)),
                  x$iLtheta)
   L0 <- diag(x$d0, p, p)
   if(length(lfi)>0) {
     out <- sapply(1:size, function(i){
       L0[x$iLtheta] <- theta[i, ]
-      cov2cor(tcrossprod(fillLprec(L0,lfi)))
+      cov2cor(chol2inv(t(fillLprec(L0,lfi))))
     })
   } else {
     out <- sapply(1:size, function(i){
       L0[x$iLtheta] <- theta[i, ]
-      cov2cor(tcrossprod(L0))
+      cov2cor(chol2inv(t(L0)))
     })
   }
   dim(out) <- c(p, p, size)

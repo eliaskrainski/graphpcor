@@ -18,13 +18,6 @@
 #' a correlation matrix (parametrized from it's inverse).
 #' The base is used to define an informative prior, as derived in
 #' the pcmultivariate vignette.
-#' @references
-#' Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
-#' Martins and Sigrunn H. S\\o rbye (2017).
-#' Penalising Model Component Complexity:
-#' A Principled, Practical Approach to Constructing Priors.
-#' Statistical Science 2017, Vol. 32, No. 1, 1–28.
-#' <doi 10.1214/16-STS576>
 #' @return a list of two elements, one as a list of three
 #' additional code to be added into a STAN code and
 #' the other with the required additional data.
@@ -33,7 +26,6 @@
 stan_add <- function(x, model, lambda, name) {
   if(missing(x)) stop("Please provide 'x'!")
   if(missing(model)) stop("Please provide 'model'!")
-  if(missing(lambda)) stop("Please provide 'lambda'!")
   if(missing(name)) stop("Please provide 'name'!")
   if(is.character(model)) {
     if(model == 'pc_correl') {
@@ -55,14 +47,14 @@ stan_add <- function(x, model, lambda, name) {
 }
 #' @describeIn stan_add method for `basecor`
 stan_add_pc_correl <- function(x, model, lambda, name) {
-  if(length(lambda)>1) {
-    warning('length(lambda)>1, using lambda[1]!')
-  }
-  lambda <- as.numeric(lambda[1])
-  stopifnot(lambda>0)
-
   if(inherits(x, "list")) {
-  ## build the additional data
+    ## build the additional data
+    if(missing(lambda)) stop("Please provide 'lambda'!")
+    if(length(lambda)>1) {
+      warning('length(lambda)>1, using lambda[1]!')
+    }
+    lambda <- as.numeric(lambda[1])
+    stopifnot(lambda>0)
     aD <- list(
       Lcorrel_dim = ncol(model$base),
       Lcorrel_lambda = lambda)
@@ -158,14 +150,14 @@ stan_add_pc_correl <- function(x, model, lambda, name) {
 }
 #' @describeIn stan_add method for `basepcor`
 stan_add_graphpcor <- function(x, model, lambda, name) {
-  if(length(lambda)>1) {
-    warning('length(lambda)>1, using lambda[1]!')
-  }
-  lambda <- as.numeric(lambda[1])
-  stopifnot(lambda>0)
-
   if(inherits(x, "list")) {
     ## build the additional data
+    if(missing(lambda)) stop("Please provide 'lambda'!")
+    if(length(lambda)>1) {
+      warning('length(lambda)>1, using lambda[1]!')
+    }
+    lambda <- as.numeric(lambda[1])
+    stopifnot(lambda>0)
     aD <- list(
       grpc_dim = ncol(model$base),
       grpc_lambda = lambda)
@@ -251,7 +243,7 @@ stan_add_graphpcor <- function(x, model, lambda, name) {
     }
     matrix[grpc_dim,grpc_dim] grpc_V0 = chol2inv(grpc_L0);
     vector[grpc_dim] grpc_s0inv = inv_sqrt(diagonal(grpc_V0));
-    graphpcor_cov_mat = quad_form_diag(grpc_V0, grpc_s0inv);
+    graphpcor_correl_mat = quad_form_diag(grpc_V0, grpc_s0inv);
     "
 
     ## model part
@@ -263,7 +255,7 @@ stan_add_graphpcor <- function(x, model, lambda, name) {
 
 
     for(i in seq_along(aC)) {
-      aC[[i]] <- gsub("graphpcor_cov_mat", name, aC[[i]], fixed = TRUE)
+      aC[[i]] <- gsub("graphpcor_correl_mat", name, aC[[i]], fixed = TRUE)
     }
 
     return(stan_add_code(x, aC))
@@ -274,6 +266,7 @@ stan_add_graphpcor <- function(x, model, lambda, name) {
 }
 #' @describeIn stan_add add code at the end of each section
 #' @param to_add named list with the code to be added
+#' @export
 stan_add_code <- function(x, to_add) {
   all_sec_names <- c(
     "functions", "data", "transformed data",
@@ -315,7 +308,7 @@ stan_add_code <- function(x, to_add) {
       if(length(j)==0) {
         b <- tail(icurl, 1)
       } else {
-        b <- icurl[icurl<sec_ini[j[1]]]
+        b <- tail(icurl[icurl<sec_ini[j[1]]], 1)
       }
       sec_end[i] <- intersect(a, b)
     }

@@ -94,11 +94,3 @@ Sdata <- stan_add(Sdata0, baseC, lambda = 1, name = "LCorr")
 str(Sdata)
 
 }
-\references{
-Daniel Simpson, H\\aa vard Rue, Andrea Riebler, Thiago G.
-Martins and Sigrunn H. S\\o rbye (2017).
-Penalising Model Component Complexity:
-A Principled, Practical Approach to Constructing Priors.
-Statistical Science 2017, Vol. 32, No. 1, 1–28.
-<doi 10.1214/16-STS576>
-}
