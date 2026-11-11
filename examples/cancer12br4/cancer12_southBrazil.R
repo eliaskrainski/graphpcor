@@ -194,19 +194,13 @@ for(k in 1:length(ffl)) {
 }
 
 sapply(fits, function(fit) length(fit$mode$theta))
-## IndC CICC SStr RBym ICSC 
-##   12   48   12   24   48 
 
 sapply(fits, function(fit) fit$cpu.used)
-##n.s=1191: Total  23.0754509 783.9336100 25.3827488 119.3854756 2894.2066107
 
-sapply(fits, function(r) grep("valuations =", r$logfile, val = TRUE))
 sapply(fits, function(fit) fit$misc$nfunc) ## Total
-##n.s=1191:   751 18858   579  2047 23541
 
 sapply(fits, function(fit) fit$cpu.used["Total"])/
     sapply(fits, function(fit) fit$misc$nfunc)
-## 0.03072630 0.04157035 0.04383894 0.05832217 0.12294323 
 
 names(fits[[1]]$gcpo)
 
@@ -216,10 +210,10 @@ tabf <- sapply(fits, function(r)
       lCPO=-sum(log(r$cpo$cpo)),
       lGCPO=-sum(log(r$gcpo$cv))))
 tabf
-tabf-apply(tabf,1,min)
+round(tabf-apply(tabf,1,min), 2)
 
 nc
-cpars <- sapply(fits[c(2,3,6,7)], function(m)
+cpars <- sapply(fits[c(2,3,4, 7,8,9)], function(m)
     m$mode$theta[nc*2+1:dg[2]])
 cor(cpars, baseC$theta)
 

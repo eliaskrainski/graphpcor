@@ -9,7 +9,7 @@ library(ggplot2)
 library(ggpubr)
 
 ## set the working directory
-setwd(here::here("uci_heart"))
+setwd(here::here("examples", "uci_heart"))
 getwd()
 
 ###########################################################

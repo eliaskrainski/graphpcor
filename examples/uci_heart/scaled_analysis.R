@@ -7,7 +7,7 @@ library(rstan)
 library(graphpcor)
 
 ## set the working directory
-setwd(here::here("uci_heart"))
+setwd(here::here("examples", "uci_heart"))
 getwd()
 
 ## get the data
@@ -44,7 +44,7 @@ Smodel0 <- "
 data {
   int<lower=1> n;
   int<lower=1> p;
-  vector[p] y[n];
+  array[n] vector[p] y;
   vector[p] mu;
 }
 model {
@@ -123,6 +123,8 @@ C1Samples <- mcmc(Reduce("cbind", extract(Ssampl1, rhonams)))
 ##########################################################
 ### Define dense and sparse base models 
 ### based on the correlation with data 1
+hc1dens <- lapply(1:ncol(C1Samples), function(j)
+    density(C1Samples[,j]))
 cc1mode <- sapply(hc1dens, function(d)
     d$x[which.max(d$y)])
 
@@ -283,7 +285,7 @@ Smodel0_sparse <- "
 data {
   int<lower=1> n;
   int<lower=1> p;
-  vector[p] y[n];
+  array[n] vector[p] y;
   vector[p] mu;
 }
 transformed parameters {
