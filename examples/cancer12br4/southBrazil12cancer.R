@@ -12,6 +12,14 @@ getwd()
 
 ## read the dataset and map
 dataf <- readRDS("rds/southBR12cancer.rds")
+
+### the municipalities graph
+graphfl <- paste0("graph", n.s)
+if(!file.exists(graphfl)) {
+    source("mapnb.R")
+}
+
+### the south Brazil municipalities map
 smap <- readRDS("rds/sbrmap.rds")
 
 head(dataf,2)
@@ -62,12 +70,6 @@ cstds <- cgeneric(
 
 ## number of areas selected
 (n.s <- nrow(dataf))
-
-### create a graph
-graphfl <- paste0("graph", n.s)
-if(!file.exists(graphfl)) {
-    source("mapnb.R")
-}
 
 ## build the spatial structure matrix
 ireadgraph <- inla.read.graph(graphfl)
@@ -127,7 +129,7 @@ head(ldat,2)
 
 (nthetas <- length(cgeneric_initial(cstds)) +
      length(cgeneric_initial(grpc0Besag)))
-(nth <- c(available = min(parallel::detectCores()-8,4),
+(nth <- c(available = max(parallel::detectCores()-4,4),
           optimal = nthetas*2, ## optimal considering biggest model
           ok = nthetas+1)) ## ok, if optimal is not possible
 
@@ -174,6 +176,7 @@ for(k in 1:length(ffl)) {
             control.compute = ccomp,
             verbose = !TRUE,
             num.threads = nth[1]
+##            num.threads = nth[3], inla.call = "remote"
         )
         print(Sys.time()-t0)
         cat("Evaluating model", names(ffl)[k], "\n")
