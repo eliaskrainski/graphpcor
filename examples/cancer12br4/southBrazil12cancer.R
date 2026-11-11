@@ -13,6 +13,9 @@ getwd()
 ## read the dataset and map
 dataf <- readRDS("rds/southBR12cancer.rds")
 
+## number of areas
+(n.s <- nrow(dataf))
+
 ### the municipalities graph
 graphfl <- paste0("graph", n.s)
 if(!file.exists(graphfl)) {
@@ -67,9 +70,6 @@ cstds <- cgeneric(
     sigma.prior.reference = rep(0.5,nc),
     sigma.prior.probability = rep(0.05,nc),
     developing = TRUE)
-
-## number of areas selected
-(n.s <- nrow(dataf))
 
 ## build the spatial structure matrix
 ireadgraph <- inla.read.graph(graphfl)
