@@ -95,13 +95,19 @@ graphpcor.numeric <- graphpcor.integer <- function(...) {
     iidx <- setdiff(iidx, which(names(args)=="p"))
     stopifnot(length(args[iidx])>0)
   } else {
-    p <- ceiling(sqrt(max(unlist(args[iidx]))))
+    if(any(names(args)=="n")) {
+      p <- args$n
+      iidx <- setdiff(iidx, which(names(args)=="n"))
+      stopifnot(length(args[iidx])>0)
+    } else {
+      p <- ceiling(sqrt(max(unlist(args[iidx]))))
+    }
   }
   if(!any(names(args)=="nodes"))
     nodes <- paste0("x", 1:p)
   G <- matrix(0L, p, p)
   dimnames(G) <- list(nodes, nodes)
-  idx <- unlist(args[[iidx]])
+  idx <- unlist(args[iidx])
   G[idx] <- 1
   return(graphpcor(G))
 }
