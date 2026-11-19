@@ -26,7 +26,7 @@ Scode0 <- '
 data {
   int<lower=1> n;
   int<lower=1> p;
-  vector[p] y[n];
+  array[n]vector[p] y;
   real<lower=0> mu_sigma;
   real<lower=0> sigmas_lambda;
 }

@@ -89,8 +89,6 @@ Sgrpc <- stan_add(
     Scode0, 'graphpcor',
     lambda = 1, name = "rho")
 
-##Sgrpc <- Scode0
-
 cat(Sgrpc)
 
 ## STEP 3:  compile STAN code
