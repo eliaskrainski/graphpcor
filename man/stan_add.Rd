@@ -7,7 +7,7 @@
 \alias{stan_add_code}
 \title{Build/add STAN code/data for the correlation's PC-prior.}
 \usage{
-stan_add(x, model, lambda, name)
+stan_add(x, model, name, lambda)
 
 stan_add_pc_correl(x, model, lambda, name)
 
@@ -23,13 +23,13 @@ a STAN model.}
 a \code{basecor} or a \code{basepcor} object to define the
 base correlation model. See \code{\link[=basecor]{basecor()}} or \code{\link[=basepcor]{basepcor()}}.}
 
-\item{lambda}{the parameter for the exponential prior on
-the radius of the sphere, see details in the
-PC-multivariate vignette.}
-
 \item{name}{character to provide the name for the
 Cholesky of a correlation matrix or the correlation matrix.
 See details.}
+
+\item{lambda}{positive numeric (to be added in the data) as
+the parameter for the exponential prior on
+the radius of the sphere, see details.}
 
 \item{to_add}{named list with the code to be added}
 }
@@ -49,6 +49,10 @@ If a \code{basepcor} is provided, the prior would be considered for
 a correlation matrix (parametrized from it's inverse).
 The base is used to define an informative prior, as derived in
 the pcmultivariate vignette.
+The added code consider the \eqn{lambda} parameter named as
+\code{Lcorrel_lambda} for the dense case and named as
+\code{grpc_lambda} for the sparse (graphpcor) case.
+See details in the PC-multivariate vignette
 }
 \section{Functions}{
 \itemize{
