@@ -4,7 +4,7 @@ Scode0 <- "
 data {
   int<lower=1> p;
   int<lower=1> n;
-  vector[p] y[n];
+  array[y] vector[p] y;
   vector[p] mu;
 }
 model {
@@ -17,7 +17,7 @@ generated quantities {
 
 ## add the pc_correl code
 Scode <- stan_add(Scode0, 'pc_correl', lambda = 1, name = "LCorr")
-Scode
+cat(Scode)
 
 Sdata0 <- list(
   p = as.integer(3), 
@@ -30,4 +30,3 @@ baseC <- basecor(rep(0,3), 3)
 
 Sdata <- stan_add(Sdata0, baseC, lambda = 1, name = "LCorr")
 str(Sdata)
-

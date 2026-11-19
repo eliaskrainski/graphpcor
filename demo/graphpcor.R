@@ -23,8 +23,11 @@ g <- graphpcor(x ~ y + v, z ~ y + v)
 class(g)
 g
 
-par(mfrow=c(1,1))
-plot(g)
+par(mfrow = c(2,2), mar = c(0,0,0,0))
+plot(g) ## default 
+plot(g, Rgraphviz = TRUE)
+plot(g, igraph = TRUE)
+plot(g, qgraph = TRUE)
 
 summary(g) ## the graph: nodes and edges (nodes ordered as given)
 
@@ -77,4 +80,41 @@ vcov(g, theta = c(log(sigmas), rep(0, ne[2]))) ## IID
 vcov(g, theta = c(log(sigmas), theta0l))
 
 vcov(g, theta = rep(-3, ne[2])) ## no edge 2~3 but high correlation!!!
+
+## A correlation matrix from Figure 3 in
+## https://doi.org/10.1002/sim.6423
+
+nc <- 12
+Corr <- diag(0.5,nc,nc);
+Corr[upper.tri(Corr)] <- c(
+    41,
+    36,38,
+    27,37,45,
+    46,33,35,35,
+    46,36,48,46,37,
+    69,51,22,20,32,25,
+    70,52,48,39,48,49,57,
+    20,37,22,20,06,37,28,30,
+    61,43,45,59,45,45,51,76,31,
+    51,34,45,48,28,48,40,48,18,46,
+    39,30,51,42,54,48,34,40,37,49,38
+)/100; Corr <- Corr + t(Corr)
+caus <- c(
+    "Oral", "Stom", "Coln", "Rect", "Livr", "Panc",
+    "Larx", "Lung", "Prst", "Blad", "Lymp", "Leuk")
+dimnames(Corr) <- list(caus, caus)
+round(100*Corr)
+
+baseCorr <- basepcor(
+    base = Corr, d0 = (nc:1)^2,
+    n = 540, gamma = 1.0, start = "empty")
+
+gg <- graphpcor(baseCorr)
+gg
+
+par(mfrow = c(2,2), mar = c(0,0,0,0))
+plot(gg) ## default 
+plot(gg, Rgraphviz = TRUE)
+plot(gg, igraph = TRUE)
+plot(gg, qgraph = TRUE)
 

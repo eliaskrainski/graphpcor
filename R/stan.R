@@ -33,24 +33,24 @@ stan_add <- function(x, model, name, lambda) {
   if(missing(name)) stop("Please provide 'name'!")
   if(is.character(model)) {
     if(model == 'pc_correl') {
-      return(stan_add_pc_correl(x, model, name, lambda))
+      return(stan_add_pc_correl(x, model = model, name = name, lambda = lambda))
     }
     if(model == 'graphpcor') {
-      return(stan_add_graphpcor(x, model, name, lambda))
+      return(stan_add_graphpcor(x, model = model, name = name, lambda = lambda))
     }
   } else {
     if(inherits(model, "basecor")) {
-      return(stan_add_pc_correl(x, model, name, lambda))
+      return(stan_add_pc_correl(x, model = model, name = name, lambda = lambda))
     }
     if(inherits(model, "basepcor")) {
-      return(stan_add_graphpcor(x, model, name, lambda))
+      return(stan_add_graphpcor(x, model = model, name = name, lambda = lambda))
     }
   }
   warning("Nothing done!")
   return(x)
 }
 #' @describeIn stan_add method for `basecor`
-stan_add_pc_correl <- function(x, model, lambda, name) {
+stan_add_pc_correl <- function(x, model, name, lambda) {
   if(inherits(x, "list")) {
     ## build the additional data
     if(missing(lambda)) stop("Please provide 'lambda'!")
@@ -153,7 +153,7 @@ stan_add_pc_correl <- function(x, model, lambda, name) {
   return(x)
 }
 #' @describeIn stan_add method for `basepcor`
-stan_add_graphpcor <- function(x, model, lambda, name) {
+stan_add_graphpcor <- function(x, model, name, lambda) {
   if(inherits(x, "list")) {
     ## build the additional data
     if(missing(lambda)) stop("Please provide 'lambda'!")

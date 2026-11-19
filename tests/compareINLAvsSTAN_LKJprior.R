@@ -28,7 +28,7 @@ model.eta <- "
 data {
   int<lower=1> p;
   int<lower=1> n;
-  vector[p] y[n];
+  array[n]vector[p] y;
   vector[p] mu;
   real<lower=0> eta;
 }

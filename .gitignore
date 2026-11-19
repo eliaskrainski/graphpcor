@@ -4,6 +4,8 @@
 .Ruserdata
 R/*~
 demo/*~
+examples/*~
+examples/*/*~
 src/*~
 src/*.o
 src/*.so

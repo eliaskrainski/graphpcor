@@ -9,9 +9,9 @@
 \usage{
 stan_add(x, model, name, lambda)
 
-stan_add_pc_correl(x, model, lambda, name)
+stan_add_pc_correl(x, model, name, lambda)
 
-stan_add_graphpcor(x, model, lambda, name)
+stan_add_graphpcor(x, model, name, lambda)
 
 stan_add_code(x, to_add)
 }

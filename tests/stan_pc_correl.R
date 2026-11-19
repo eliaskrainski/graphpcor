@@ -24,7 +24,7 @@ Scode0 <- '
 data {
   int n;
   int p;
-  vector[p] y[n];
+  array[n] vector[p] y;
   vector[p] ymu;
 }
 model {
@@ -44,6 +44,7 @@ Scode <- stan_add(
     Scode0, "pc_correl",
     lambda = 1, name = "LC"
 )
+cat(Scode)
 
 ##   compile STAN code
 library(rstan)
@@ -87,7 +88,7 @@ corr
 th.obs <- basecor(ycorr)$theta
 (th.true <- basecor(corr)$theta)
 
-## base model definition
+## base model definition, at different than the true correlation
 m <- p * (p-1)/2
 set.seed(2)
 th.base <- rnorm(m)

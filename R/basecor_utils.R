@@ -99,10 +99,13 @@ sample.basecor <- function(x, size, lambda) {
   stopifnot(size>0)
   p <- ncol(x$base)
   r <- rexp(size, lambda)
-  theta <- t(sapply(1:size, function(i) {
+  theta <- sapply(1:size, function(i) {
     z <- rnorm(m)
     z <- z / sqrt(sum(z^2))
-  })) * r
+  }) * r
+  if(length(x$theta)>1) {
+    theta <- t(theta)
+  }
   H <- hessian(x)
   sHi <- graphpcor:::dspd(H)$sqrtInv
   theta <- sweep(x = theta %*% sHi,
