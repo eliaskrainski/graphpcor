@@ -4,12 +4,12 @@
 #' @param model either a character ("pc_correl" or "graphcor") or
 #' a `basecor` or a `basepcor` object to define the
 #' base correlation model. See [basecor()] or [basepcor()].
-#' @param lambda the parameter for the exponential prior on
-#' the radius of the sphere, see details in the
-#' PC-multivariate vignette.
 #' @param name character to provide the name for the
 #' Cholesky of a correlation matrix or the correlation matrix.
 #' See details.
+#' @param lambda positive numeric (to be added in the data) as
+#' the parameter for the exponential prior on
+#' the radius of the sphere, see details.
 #' @details
 #' The parametrization is set as in [basecor()] or [basepcor()].
 #' If a `basecor` is provided, the prior would be considered for
@@ -18,35 +18,39 @@
 #' a correlation matrix (parametrized from it's inverse).
 #' The base is used to define an informative prior, as derived in
 #' the pcmultivariate vignette.
+#' The added code consider the \eqn{lambda} parameter named as
+#' `Lcorrel_lambda` for the dense case and named as
+#' `grpc_lambda` for the sparse (graphpcor) case.
+#' See details in the PC-multivariate vignette
 #' @return a list of two elements, one as a list of three
 #' additional code to be added into a STAN code and
 #' the other with the required additional data.
 #' @example demo/stan.R
 #' @export
-stan_add <- function(x, model, lambda, name) {
+stan_add <- function(x, model, name, lambda) {
   if(missing(x)) stop("Please provide 'x'!")
   if(missing(model)) stop("Please provide 'model'!")
   if(missing(name)) stop("Please provide 'name'!")
   if(is.character(model)) {
     if(model == 'pc_correl') {
-      return(stan_add_pc_correl(x, model, lambda, name))
+      return(stan_add_pc_correl(x, model = model, name = name, lambda = lambda))
     }
     if(model == 'graphpcor') {
-      return(stan_add_graphpcor(x, model, lambda, name))
+      return(stan_add_graphpcor(x, model = model, name = name, lambda = lambda))
     }
   } else {
     if(inherits(model, "basecor")) {
-      return(stan_add_pc_correl(x, model, lambda, name))
+      return(stan_add_pc_correl(x, model = model, name = name, lambda = lambda))
     }
     if(inherits(model, "basepcor")) {
-      return(stan_add_graphpcor(x, model, lambda, name))
+      return(stan_add_graphpcor(x, model = model, name = name, lambda = lambda))
     }
   }
   warning("Nothing done!")
   return(x)
 }
 #' @describeIn stan_add method for `basecor`
-stan_add_pc_correl <- function(x, model, lambda, name) {
+stan_add_pc_correl <- function(x, model, name, lambda) {
   if(inherits(x, "list")) {
     ## build the additional data
     if(missing(lambda)) stop("Please provide 'lambda'!")
@@ -149,7 +153,7 @@ stan_add_pc_correl <- function(x, model, lambda, name) {
   return(x)
 }
 #' @describeIn stan_add method for `basepcor`
-stan_add_graphpcor <- function(x, model, lambda, name) {
+stan_add_graphpcor <- function(x, model, name, lambda) {
   if(inherits(x, "list")) {
     ## build the additional data
     if(missing(lambda)) stop("Please provide 'lambda'!")

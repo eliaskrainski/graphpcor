@@ -95,13 +95,19 @@ graphpcor.numeric <- graphpcor.integer <- function(...) {
     iidx <- setdiff(iidx, which(names(args)=="p"))
     stopifnot(length(args[iidx])>0)
   } else {
-    p <- ceiling(sqrt(max(unlist(args[iidx]))))
+    if(any(names(args)=="n")) {
+      p <- args$n
+      iidx <- setdiff(iidx, which(names(args)=="n"))
+      stopifnot(length(args[iidx])>0)
+    } else {
+      p <- ceiling(sqrt(max(unlist(args[iidx]))))
+    }
   }
   if(!any(names(args)=="nodes"))
     nodes <- paste0("x", 1:p)
   G <- matrix(0L, p, p)
   dimnames(G) <- list(nodes, nodes)
-  idx <- unlist(args[[iidx]])
+  idx <- unlist(args[iidx])
   G[idx] <- 1
   return(graphpcor(G))
 }
@@ -148,7 +154,7 @@ graphpcor.matrix <- function(...) {
 graphpcor.Matrix <- function(...) {
   a <- list(...)[[1]]
   diag(a) <- 0
-  a <- (abs(a) + abs(t(a)))>0 + 0L ## no directional edges
+  a <- Sparse(((abs(a) + abs(t(a)))>0) + 0L) ## no directional edges
   x <- upperPadding(
     M = a, na.rm = TRUE, zeros.rm = TRUE)
   nNames <- colnames(a)
@@ -226,98 +232,132 @@ dim.graphpcor <- function(x, ...) {
 #' @method plot graphpcor
 #' @export
 plot.graphpcor <- function(x, y, ...) {
-    ne <- dim(x)
-    nodes <- attr(x, "nodes")
-    stopifnot(!is.null(nodes))
-    stopifnot(ne[1]==length(nodes))
-    edgl <- edges(x)
-    dotArgs <- list(...)
-    if(is.null(dotArgs$Rgraphviz) ||
-       !dotArgs$Rgraphviz) { ## depends on igraph
-      higraph <- try(do.call(
-        what = "require",
-        args = list(package = "igraph")), silent = TRUE)
-      if(inherits(higraph, "try-error")) {
-        cat(higraph)
-        stop("Please install 'igraph'!")
-      }
-      a <- upperPadding(attr(x, "graph"))
-      g <- igraph::graph_from_adjacency_matrix(
-        adjmatrix = a
-      )
-      if(is.null(list(...)$arrow.mode)) {
-        plot(g, edge.arrow.mode = 0, ...)
-      } else {
-        plot(g, ...)
-      }
+  ne <- dim(x)
+  nodes <- attr(x, "nodes")
+  stopifnot(!is.null(nodes))
+  stopifnot(ne[1]==length(nodes))
+  adj <- attr(x, "graph")
+  dotArgs <- list(...)
+  if(!is.null(dotArgs$igraph) &&
+     dotArgs$igraph) { ## depends on igraph
+    have_igraph <- try(do.call(
+      what = "require",
+      args = list(package = "igraph")), silent = TRUE)
+    if(inherits(have_igraph, "try-error")) {
+      cat(have_igraph)
+      stop("Please install 'igraph'!")
+    }
+    a <- upperPadding(adj)
+    g <- igraph::graph_from_adjacency_matrix(
+      adjmatrix = a
+    )
+    if(is.null(list(...)$arrow.mode)) {
+      return(invisible(plot(g, edge.arrow.mode = 0, ...)))
     } else {
-      havegraph <- do.call(
-        what = "require",
-        args = list(package = "Rgraphviz"))
-      if(havegraph) {
-        gr <- do.call(
-          what = "graphNEL",
-          args = list(nodes = nodes,
-                      edgeL = edgl,
-                      edgemode = 'undirected')
-        )
-        mc <- lapply(
-          match.call(expand.dots = TRUE)[-1],
-          eval)
-        nargs <- names(mc)
-        nattr <- list(color = {
-          if(any(nargs=="color")) mc$color
-          else rep("blue", ne[1])
-        },
-        fillcolor = {
-          if(any(nargs == "fillcolor"))
-            mc$fillcolor
-          else rep("lightblue", ne[1])
-        },
-        shape = {
-          if(any(nargs == "shape"))
-            mc$shape
-          else
-            rep("circle", ne[1])
-        },
-        height = {
-          if(any(nargs == "height"))
-            mc$height
-          else
-            rep(0.5, ne[1])
-        },
-        width = {
-          if(any(nargs == "width"))
-            mc$width
-          else
-            rep(1.5, ne[1])
-        },
-        fontsize = {
-          if(any(nargs == "fontsize"))
-            mc$fontsize
-          else
-            rep(14, ne[1])
-        }
-        )
-        for(i in 1:length(nattr))
-          names(nattr[[i]]) <- nodes
-
-        ag <- do.call(
-          what = "agopen",
-          args = list(
-            graph = gr,
-            name = "",
-            nodeAttrs = nattr)
-        )
-        for(k in 1:length(ag@AgEdge)) {
-          ag@AgEdge[[k]]@color <- "red"
-        }
-        getMethod("plot", "Ragraph")(ag)
-      } else {
-        stop("'Rgraphviz' is not available!")
-      }
+      return(invisible(plot(g, ...)))
     }
   }
+  mc <- lapply(
+    match.call(expand.dots = TRUE)[-1],
+    eval)
+  nargs <- names(mc)
+  nattr <- list(color = {
+    if(any(nargs=="color")) mc$color
+    else rep("blue", ne[1])
+  },
+  fillcolor = {
+    if(any(nargs == "fillcolor"))
+      mc$fillcolor
+    else rep("lightblue", ne[1])
+  },
+  shape = {
+    if(any(nargs == "shape"))
+      mc$shape
+    else
+      rep("circle", ne[1])
+  },
+  height = {
+    if(any(nargs == "height"))
+      mc$height
+    else
+      rep(0.5, ne[1])
+  },
+  width = {
+    if(any(nargs == "width"))
+      mc$width
+    else
+      rep(1.5, ne[1])
+  },
+  fontsize = {
+    if(any(nargs == "fontsize"))
+      mc$fontsize
+    else
+      rep(14, ne[1])
+  }
+  )
+  if(!is.null(dotArgs$Rgraphviz) &&
+     dotArgs$Rgraphviz) { ## depends on Rgraphviz
+    have_Rgraphviz <- try(do.call(
+      what = "require",
+      args = list(package = "Rgraphviz")), silent = TRUE)
+    if(inherits(have_Rgraphviz, "try-error")) {
+      cat(have_Rgraphviz)
+      stop("Please install 'Rgraphviz'!")
+    }
+    edgl <- edges(x)
+    gr <- do.call(
+      what = "graphNEL",
+      args = list(nodes = nodes,
+                  edgeL = edgl,
+                  edgemode = 'undirected')
+    )
+    for(i in 1:length(nattr))
+      names(nattr[[i]]) <- nodes
+
+    ag <- do.call(
+      what = "agopen",
+      args = list(
+        graph = gr,
+        name = "",
+        nodeAttrs = nattr)
+    )
+    for(k in 1:length(ag@AgEdge)) {
+      ag@AgEdge[[k]]@color <- "red"
+    }
+    return(invisible(getMethod("plot", "Ragraph")(ag)))
+  }
+  if(!is.null(dotArgs$qgraph) &&
+     dotArgs$qgraph) { ## depends on igraph
+    have_qgraph <- try(do.call(
+      what = "require",
+      args = list(package = "qgraph")), silent = TRUE)
+    if(inherits(have_qgraph, "try-error")) {
+      cat(have_qgraph)
+      stop("Please install 'qgraph'!")
+    }
+    return(invisible(qgraph::qgraph(attr(x, "graph"))))
+  }
+  th <- head(seq(5*pi/2, pi/2, length.out = ne[1]+1), ne[1])
+  x <- cos(th)
+  y <- sin(th)
+  xyr <- c(range(x), range(y))
+  a <- (xyr[2]-xyr[1]+xyr[4]-xyr[3])*0.25/ne[1]
+  plot(x, y,
+       xlim = xyr[1:2] + c(-1, 1)*a,
+       ylim = xyr[3:4] + c(-1, 1)*a,
+       axes = FALSE, xlab = '', ylab = '', bty = "n", ...)
+  segments(x[adj@i + 1L], y[adj@i + 1L],
+           x[adj@j + 1L], y[adj@j + 1L],
+           col = gray(0.5), lwd = 1.5)
+  symbols(x, y,
+          circles = rep(a*sqrt(max(nchar(nodes))), ne[1]),
+          inches = FALSE,
+          add = TRUE,
+          fg = "transparent",
+          bg = nattr$fillcolor[1])
+  text(x, y, nodes)
+  return(invisible(NULL))
+}
 #' @describeIn graphpcor
 #' The `vcov` method for a `graphpcor`
 #' @export

@@ -1,7 +1,7 @@
 Package: graphpcor
 Type: Package
 Title: Models for Correlation Matrices Based on Graphs
-Version: 0.1.25.912
+Version: 0.1.25.913
 Maintainer: Elias Teixeira Krainski <elias.krainski@kaust.edu.sa>
 Authors@R: c(
  person(given = c("Elias"),
@@ -59,7 +59,7 @@ Imports:
     methods,
     stats,
     utils,
-    igraph
+    qgraph
 Suggests:
     knitr,
     INLA (>= 24.02.09)
@@ -67,4 +67,4 @@ BuildVignettes: true
 VignetteBuilder: knitr
 LazyData: true
 LazyDataCompression: xz
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
