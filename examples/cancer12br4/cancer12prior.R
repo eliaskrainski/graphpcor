@@ -90,4 +90,56 @@ if(FALSE) {
     plot(cGraph, Rgraphviz = TRUE)
     dev.off()
 
+    ## Drawn samples and visualize
+    plot_corr_samples <- function(A, R, labels = NULL, n_overlay = 0,
+                                  pal = colorRampPalette(c("firebrick", "white", "steelblue"))(201)) {
+        p <- dim(A)[1]
+        if (is.null(labels)) labels <- paste0("V", seq_len(p))
+        if(missing(R) || is.null(R)) R <- apply(A, c(1, 2), mean)
+        ## ellipse glyph for a correlation r, centred at 0, fitting in [-1, 1]
+        ell <- function(r, scale = 0.9, k = 100) {
+            t <- seq(0, 2 * pi, length.out = k)
+            d <- acos(max(min(r, 1), -1))
+            cbind(scale * cos(t + d / 2) / sqrt(2),
+                  scale * cos(t - d / 2) / sqrt(2)) * sqrt(2)
+        }
+        col_of <- function(r) pal[round((r + 1) / 2 * 200) + 1]
+        op <- par(mfrow = c(p, p), mar = c(0.3, 0.3, 0.3, 0.3)*0, oma = c(1, 1, 1, 1))
+        on.exit(par(op))
+        for (i in seq_len(p)) {
+            for (j in seq_len(p)) {
+                if (i == j) {       ## diagonal: labels
+                    plot.new(); box()
+                    text(0.5, 0.5, labels[i], cex = 1.5, font = 2)
+                } else if (i > j) { ## lower: ellipses
+                    plot(NA, xlim = c(-1, 1), ylim = c(-1, 1), asp = 1,
+                         axes = FALSE, xlab = "", ylab = "")
+                    box()
+                    polygon(ell(R[i, j]), col = col_of(R[i, j]), border = "black")
+                    ## optional: faint ellipses for a few individual samples
+                    if (n_overlay > 0) {
+                        idx <- sample(dim(A)[3], min(n_overlay, dim(A)[3]))
+                        for (s in idx) lines(ell(A[i, j, s]), col = adjustcolor("grey40", 0.3))
+                    }
+                    text(-0.95*sign(R[i,j]), 0.9, sprintf("%.2f", R[i, j]),
+                         adj = c(0.5,0.5), cex = 0.8)   
+                } else {      ## upper: boxplots
+                    boxplot(A[i, j, ], ylim = c(-1, 1), axes = FALSE,## outline = FALSE,
+                            col = col_of(R[i,j]), border = "grey50",
+                            outcol = "grey40", pch = 20, cex = 0.5)
+                    abline(h = 0, lty = 2, col = "grey60")
+                    box()
+                }
+            }
+        }
+    }
+
+    set.seed(1)
+    scorrels <- sample.basepcor(baseC0, 2000, lambda = 0.7)
+
+    ## compare this plot with Figure 3 of
+    ## Botella-Rocamora, P. et. al. (2015)
+    plot_corr_samples(scorrels, baseC0$base, labels = causes)
+    ##plot_corr_samples(scorrels, baseC0$base, n_overlay = 50)   ## overlay 20 sample ellipses
+
 }
